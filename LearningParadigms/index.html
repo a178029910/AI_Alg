@@ -875,38 +875,38 @@ tr:hover td { background: var(--c-primary-ghost); }
 <line x1="450" y1="46" x2="450" y2="70" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
 <rect x="340" y="75" width="220" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
 <text x="450" y="95" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">有充足标注数据？</text>
-<!-- Yes → 有监督 -->
-<line x1="340" y1="90" x2="180" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<!-- Q1 Yes → 有监督 -->
+<line x1="340" y1="90" x2="160" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
 <text x="240" y="120" fill="#059669" font-size="11" font-weight="600">是</text>
-<rect x="100" y="135" width="160" height="30" rx="15" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-<text x="180" y="155" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">有监督学习</text>
-<!-- No → Q2 -->
-<line x1="560" y1="90" x2="720" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
-<text x="660" y="120" fill="#dc2626" font-size="11" font-weight="600">否</text>
-<rect x="620" y="135" width="260" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
-<text x="750" y="155" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">是否可自动构造监督信号？</text>
+<rect x="80" y="135" width="160" height="30" rx="15" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="160" y="155" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">有监督学习</text>
+<!-- Q1 No → Q2 -->
+<line x1="560" y1="90" x2="700" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="640" y="120" fill="#dc2626" font-size="11" font-weight="600">否</text>
+<rect x="560" y="135" width="280" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="700" y="155" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">是否可自动构造监督信号？</text>
 <!-- Q2 Yes → 自监督 -->
-<line x1="620" y1="150" x2="520" y2="195" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
-<text x="560" y="180" fill="#059669" font-size="11" font-weight="600">是</text>
-<rect x="420" y="200" width="160" height="30" rx="15" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-<text x="500" y="220" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">自监督学习</text>
-<!-- Q2 No → Q3 -->
-<line x1="880" y1="150" x2="880" y2="195" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
-<text x="890" y="180" fill="#dc2626" font-size="11" font-weight="600">否</text>
-<rect x="750" y="200" width="260" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
-<text x="880" y="220" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">有少量标注 + 大量无标注？</text>
+<line x1="560" y1="150" x2="440" y2="195" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="500" y="180" fill="#059669" font-size="11" font-weight="600">是</text>
+<rect x="360" y="200" width="160" height="30" rx="15" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="440" y="220" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">自监督学习</text>
+<!-- Q2 No → Q3 (正下方) -->
+<line x1="840" y1="150" x2="700" y2="195" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="850" y="175" fill="#dc2626" font-size="11" font-weight="600">否</text>
+<rect x="560" y="200" width="280" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="700" y="220" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">有少量标注 + 大量无标注？</text>
 <!-- Q3 Yes → 半监督 -->
-<line x1="800" y1="230" x2="720" y2="275" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
-<text x="740" y="260" fill="#059669" font-size="11" font-weight="600">是</text>
-<rect x="620" y="280" width="160" height="30" rx="15" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
-<text x="700" y="300" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">半监督学习</text>
+<line x1="560" y1="230" x2="460" y2="275" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="510" y="260" fill="#059669" font-size="11" font-weight="600">是</text>
+<rect x="380" y="280" width="160" height="30" rx="15" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="460" y="300" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">半监督学习</text>
 <!-- Q3 No → 无监督/弱监督 -->
-<line x1="950" y1="230" x2="950" y2="275" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
-<text x="960" y="260" fill="#dc2626" font-size="11" font-weight="600">否</text>
-<rect x="850" y="280" width="160" height="30" rx="15" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
-<text x="930" y="300" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">无监督/弱监督</text>
+<line x1="840" y1="230" x2="710" y2="275" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="850" y="260" fill="#dc2626" font-size="11" font-weight="600">否</text>
+<rect x="620" y="280" width="180" height="30" rx="15" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="710" y="300" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">无监督/弱监督</text>
 <!-- 底部注释 -->
-<line x1="80" y1="340" x2="870" y2="340" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,3"/>
+<line x1="80" y1="340" x2="840" y2="340" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,3"/>
 <text x="450" y="365" fill="#94a3b8" font-size="11" text-anchor="middle">实际场景中常组合多种范式：自监督预训练 → 少量有监督微调 → RLHF 对齐</text>
 </svg>
 </div>
