@@ -98,6 +98,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 #back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 #back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
 #menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
 @media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
 @media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
 @media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
@@ -130,6 +134,7 @@ tr:hover td { background: var(--c-primary-ghost); }
     <a href="#ch13">十三、演进时间线与总结</a>
     <a href="#refs">参考文献</a>
   </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
 </aside>
 <main id="main">
 
