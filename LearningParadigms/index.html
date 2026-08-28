@@ -139,7 +139,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="hero" class="hero">
   <h1>机器学习范式综述</h1>
   <div class="subtitle">Learning Paradigms — Supervised · Unsupervised · Semi-Supervised · Self-Supervised</div>
-  <div class="tagline">从标注数据到自监督预训练 · 从经典方法到大模型时代 · 2024-2026 前沿综述</div>
+  <div class="tagline">从标注数据到自监督预训练 · 从经典方法到大模型时代 · 前沿综述</div>
   <div class="badges">
     <span class="badge">11 个章节</span>
     <span class="badge">6 张 SVG 结构图</span>
@@ -223,7 +223,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <div class="callout">
 <div class="callout-title">范式融合趋势</div>
-<p>当前（2024-2025）最主流的范式组合是 <strong>自监督预训练 + 少量有监督微调 + RLHF 对齐</strong>，几乎所有 SOTA 大模型（GPT-4、LLaMA、Gemini）都遵循这一路线。</p>
+<p>当前最主流的范式组合是 <strong>自监督预训练 + 少量有监督微调 + RLHF 对齐</strong>，几乎所有 SOTA 大模型（GPT-4、LLaMA、Gemini）都遵循这一路线。</p>
 </div>
 
 </section>
@@ -256,7 +256,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>深度学习将特征工程融入端到端训练。以图像分类为例，标准流程为：</p>
 <div class="formula" data-eq="(2)">$$\mathbf{z} = \text{CNN}(\mathbf{x}), \quad \hat{y} = \text{softmax}(\mathbf{W}\mathbf{z} + \mathbf{b}), \quad \mathcal{L} = -\log \hat{y}_{y_{\text{true}}}$$</div>
 
-<h3>2.5 近两年新技术（2024-2025）</h3>
+<h3>2.5 新技术与新进展</h3>
 
 <h4>大模型监督微调（SFT）</h4>
 <p>大模型时代的有监督学习核心是<strong>监督微调</strong>（Supervised Fine-Tuning, SFT）：在自监督预训练基础上，用高质量指令-响应对训练模型遵循指令。LLaMA-3、Qwen-2 等均采用 SFT 作为对齐的第一阶段。</p>
@@ -265,7 +265,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>指令微调（Instruction Tuning）将多任务统一为自然语言指令格式，使模型获得<strong>任务泛化</strong>能力。ChatGPT、Claude 等均通过指令微调实现多轮对话能力。2024 年的代表性工作包括<strong>FLAN-T5</strong> 升级版和<strong>NVIDIA Nemotron</strong>。</p>
 
 <h4>参数高效微调（PEFT）</h4>
-<p>LoRA（Low-Rank Adaptation）及其变体（QLoRA、AdaLoRA）成为大模型有监督微调的标准方法：冻结预训练权重，仅训练低秩适配矩阵，将可训练参数降至 0.1% 以下。2024-2025 年 DoRA、PiSSA 等进一步改进了 LoRA 的表达能力。</p>
+<p>LoRA（Low-Rank Adaptation）及其变体（QLoRA、AdaLoRA）成为大模型有监督微调的标准方法：冻结预训练权重，仅训练低秩适配矩阵，将可训练参数降至 0.1% 以下。DoRA（2024）、PiSSA（2024）等进一步改进了 LoRA 的表达能力。</p>
 
 <h4>RLHF 与 RLVR</h4>
 <p><strong>RLHF</strong>（Reinforcement Learning from Human Feedback）和 <strong>RLVR</strong>（Reinforcement Learning from Verifiable Rewards）将人类偏好或可验证奖励融入训练。OpenAI o1/o3、DeepSeek-R1 均使用大规模 RLVR 训练推理能力，代表了有监督学习向<strong>奖励驱动学习</strong>的延伸。</p>
@@ -306,18 +306,18 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>生成器 $G$ 与判别器 $D$ 博弈，目标函数为：</p>
 <div class="formula" data-eq="(6)">$$\min_G \max_D \; \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}[\log D(\mathbf{x})] + \mathbb{E}_{\mathbf{z} \sim p_z}[\log(1 - D(G(\mathbf{z})))]$$</div>
 
-<h3>3.4 近两年新技术（2024-2025）</h3>
+<h3>3.4 新技术与新进展</h3>
 
 <h4>扩散模型（Diffusion Models）</h4>
 <p>扩散模型已成为无监督生成的新主流。前向过程逐步加噪 $q(\mathbf{x}_t | \mathbf{x}_{t-1})$，反向过程学习去噪 $p_\theta(\mathbf{x}_{t-1} | \mathbf{x}_t)$。DDPM 的训练目标简化为：</p>
 <div class="formula" data-eq="(7)">$$\mathcal{L}_{\text{diff}} = \mathbb{E}_{t, \mathbf{x}_0, \boldsymbol{\epsilon}} \left[ \| \boldsymbol{\epsilon} - \epsilon_\theta(\mathbf{x}_t, t) \|^2 \right]$$</div>
-<p>2024-2025 年代表性进展：<strong>Stable Diffusion 3</strong>（改进的 Rectified Flow 采样）、<strong>Sora</strong>（视频扩散）、<strong>DiT</strong>（Diffusion Transformer 架构）。扩散模型本质上是无监督学习，从数据分布中学习生成能力。</p>
+<p>近年代表性进展：<strong>Stable Diffusion 3</strong>（改进的 Rectified Flow 采样）、<strong>Sora</strong>（视频扩散）、<strong>DiT</strong>（Diffusion Transformer 架构）。扩散模型本质上是无监督学习，从数据分布中学习生成能力。</p>
 
 <h4>大模型时代的无监督聚类</h4>
 <p>传统 K-Means 在高维嵌入空间中效果有限。2024 年出现了基于<strong>大模型嵌入 + 屌次聚类</strong>的新方法，如利用 BERT/CLIP 嵌入做语义聚类（SE-Clustering），在无标注场景下实现了接近有监督方法的聚类精度。</p>
 
 <h4>无监督表示学习新范式</h4>
-<p>2024-2025 年，<strong>掩码图像建模</strong>（MIM）和<strong>掩码语言建模</strong>（MLM）已成为无监督表示学习的主流方向。MAE 在视觉领域、BERT 在语言领域证明了：通过重建被遮盖的部分，模型能学到高质量的通用表示。</p>
+<p>如今，<strong>掩码图像建模</strong>（MIM）和<strong>掩码语言建模</strong>（MLM）已成为无监督表示学习的主流方向。MAE 在视觉领域、BERT 在语言领域证明了：通过重建被遮盖的部分，模型能学到高质量的通用表示。</p>
 
 <div class="svg-box">
 <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg">
@@ -351,7 +351,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <text x="785" y="155" fill="#94a3b8" font-size="10.5" text-anchor="middle">自编码器重建误差</text>
 <!-- 底部趋势 -->
 <line x1="40" y1="200" x2="870" y2="200" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,3"/>
-<text x="450" y="225" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">2024-2025 新趋势</text>
+<text x="450" y="225" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">新趋势</text>
 <text x="450" y="248" fill="#64748b" font-size="12" text-anchor="middle">扩散模型生成 · 大模型嵌入聚类 · 掩码建模表示学习 · 自监督异常检测</text>
 </svg>
 </div>
@@ -388,19 +388,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h4>图方法（Graph-Based）</h4>
 <p>构建样本相似图，通过标签传播（Label Propagation）将标注信息扩散到无标注节点。</p>
 
-<h3>4.4 近两年新技术（2024-2025）</h3>
+<h3>4.4 新技术与新进展</h3>
 
 <h4>异构半监督学习（HSSL）</h4>
 <p>CVPR 2025 提出<strong>异构半监督学习</strong>（Uni-HSSL），解决了有标签和无标签数据来自不同领域的新问题设定。传统方法假设标注和无标注数据同分布，Uni-HSSL 通过统一框架连接半监督学习（SSL）和无监督域适应（UDA），在异构数据上实现知识迁移。</p>
 
 <h4>半监督医学图像分割</h4>
-<p>2024-2025 年半监督学习在医学图像分割取得显著进展。代表性工作 <strong>BoCLIS</strong>（TMI 2025）结合<strong>边界引导对比学习</strong>和平均教师网络，在标注量仅为 10% 时将分割精度提升 20%。关键技术包括不确定性加权、边界感知对比损失和跨切片一致性正则。</p>
+<p>近年半监督学习在医学图像分割取得显著进展。代表性工作 <strong>BoCLIS</strong>（TMI 2025）结合<strong>边界引导对比学习</strong>和平均教师网络，在标注量仅为 10% 时将分割精度提升 20%。关键技术包括不确定性加权、边界感知对比损失和跨切片一致性正则。</p>
 
 <h4>大模型辅助半监督学习</h4>
 <p>利用大语言模型（LLM）或视觉语言模型（VLM）自动生成伪标签，再结合传统半监督方法进行训练。2024 年出现了 <strong>LLM-as-annotator</strong> 范式：用 GPT-4 标注大量无标注数据，再用半监督方法训练小模型，在成本和性能间取得平衡。</p>
 
 <h4>半监督目标检测</h4>
-<p>在目标检测领域，SoftTeacher（2021）开创了半监督检测框架，2024-2025 年的改进包括<strong>多尺度伪标签融合</strong>和<strong>类别自适应阈值</strong>，在 COCO 上以 10% 标注达到 90% 全监督性能。</p>
+<p>在目标检测领域，SoftTeacher（2021）开创了半监督检测框架，后续改进包括<strong>多尺度伪标签融合</strong>和<strong>类别自适应阈值</strong>，在 COCO 上以 10% 标注达到 90% 全监督性能。</p>
 
 <div class="callout success">
 <div class="callout-title">半监督学习的价值</div>
@@ -427,7 +427,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h4>对比学习（Contrastive Learning）</h4>
 <p>SimCLR、MoCo 系列通过<strong>实例判别</strong>学习表示：对同一图像的不同增强视图拉近（正样本对），对不同图像的视图推远（负样本对）。InfoNCE 损失：</p>
 <div class="formula" data-eq="(12)">$$\mathcal{L}_{\text{NCE}} = -\log \frac{\exp(\text{sim}(\mathbf{z}_i, \mathbf{z}_j^+) / \tau)}{\sum_k \exp(\text{sim}(\mathbf{z}_i, \mathbf{z}_k) / \tau)}$$</div>
-<p>2024-2025 年对比学习在视觉自监督中的地位逐渐被掩码建模取代，但在多模态对齐（如 CLIP）中仍是核心技术。</p>
+<p>近年对比学习在视觉自监督中的地位逐渐被掩码建模取代，但在多模态对齐（如 CLIP）中仍是核心技术。</p>
 
 <h4>掩码图像建模（MIM）</h4>
 <p>MAE 随机遮盖 75% 的图像 Patch，仅用可见部分重建被遮盖区域。非对称编解码器设计（轻量编码器 + 宽解码器）使预训练效率提升 3 倍以上。BEiT 系列则将遮盖 Patch 用 VQ-VAE 离散 token 替代像素重建目标。</p>
@@ -476,13 +476,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
-<h3>5.4 近两年新技术（2024-2025）</h3>
+<h3>5.4 新技术与新进展</h3>
 
 <h4>掩码自编码器的全面突破</h4>
-<p>2024-2025 年，MAE 系列在视觉预训练领域占据主导地位。<strong>MAE v2</strong> 和 <strong>CAE v2</strong> 改进了重建目标和编码策略。<strong>iMAE</strong>（I-JEPA，LeCun 团队）提出了一种基于<strong>潜在空间预测</strong>的自监督方法，不再需要像素级重建，而是预测被遮盖区域的表示，在 ImageNet 线性探测和下游迁移上均超过 MAE。</p>
+<p>近年，MAE 系列在视觉预训练领域占据主导地位。<strong>MAE v2</strong> 和 <strong>CAE v2</strong> 改进了重建目标和编码策略。<strong>iMAE</strong>（I-JEPA，LeCun 团队）提出了一种基于<strong>潜在空间预测</strong>的自监督方法，不再需要像素级重建，而是预测被遮盖区域的表示，在 ImageNet 线性探测和下游迁移上均超过 MAE。</p>
 
 <h4>多模态自监督</h4>
-<p>CLIP 开创了跨模态对比自监督范式。2024-2025 年的改进包括：<strong>SigLIP</strong>（用 sigmoid 代替 softmax 对比损失，支持大批量训练）、<strong>EVA-CLIP</strong>（扩展到 18B 参数）、<strong>OpenCLIP</strong>（开源大规模视觉-语言预训练）。这些方法本质上都是自监督学习，从海量图文对中学习跨模态表示。</p>
+<p>CLIP 开创了跨模态对比自监督范式。后续改进包括：<strong>SigLIP</strong>（用 sigmoid 代替 softmax 对比损失，支持大批量训练）、<strong>EVA-CLIP</strong>（扩展到 18B 参数）、<strong>OpenCLIP</strong>（开源大规模视觉-语言预训练）。这些方法本质上都是自监督学习，从海量图文对中学习跨模态表示。</p>
 
 <h4>自监督视频学习</h4>
 <p>VideoMAE 和 MAE-Video 将掩码建模扩展到时序维度，通过高比例时空掩码实现高效视频自监督预训练。2024 年 <strong>VideoMAE v2</strong> 在 Kinetics-400 上以 1/4 计算量达到全监督性能。</p>
@@ -492,6 +492,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>自监督异常检测</h4>
 <p>2024 年 <em>Neural Networks</em> 期刊发表的综述系统总结了自监督异常检测方法：通过变换预测、对比学习或重建误差构造异常分数。在工业质检、医学影像等领域，自监督方法已不需要异常样本即可检测异常。</p>
+
+<h4>自监督三维感知</h4>
+<p><strong>Jasmine</strong>（NeurIPS 2025）提出首个基于 Stable Diffusion 的<strong>自监督单目深度估计</strong>框架：通过混合批次图像重建任务和尺度-平移门控循环单元，在不依赖任何深度标注的情况下保留预训练扩散模型的深度先验，突破了扩散模型深度估计依赖高精度标注监督的瓶颈，为自动驾驶、三维重建等场景提供了无标注训练新路径。</p>
 
 <div class="callout">
 <div class="callout-title">自监督学习为何重要</div>
@@ -518,9 +521,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>仅有图像级标签，需定位目标。CAM（Class Activation Map）通过 GAP 层提取类别热力图，定位目标区域。2024 年改进方法引入<strong>在线分块策略</strong>和<strong>对抗擦除</strong>，逐步扩展目标区域。</p>
 
 <h4>弱监督语义分割</h4>
-<p>从图像级标签生成像素级分割掩码。2024-2025 年新方法结合<strong>大视觉语言模型</strong>（如 SAM、SEEM）自动生成分割伪标签，再训练分割网络。</p>
+<p>从图像级标签生成像素级分割掩码。新方法结合<strong>大视觉语言模型</strong>（如 SAM、SEEM）自动生成分割伪标签，再训练分割网络。</p>
 
-<h3>6.3 近两年进展</h3>
+<h3>6.3 最新进展</h3>
 <p>2024 年中科院团队提出<strong>统一弱监督学习框架</strong>用于 LiDAR 遥感观测，将不完整、不精确、不准确标注统一建模。2026 年 arXiv 综述（Wang et al.）系统梳理了弱监督学习的<em>新监督范式</em>和<em>假设松弛</em>策略。</p>
 
 <div class="callout warn">
@@ -543,7 +546,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>当前最主流的迁移学习形式：<strong>大规模自监督预训练 + 下游有监督微调</strong>。BERT、ViT、CLIP 等模型在 ImageNet 或大规模文本上预训练，迁移到各种下游任务。</p>
 
 <h4>参数高效迁移</h4>
-<p>LoRA、Adapter、Prefix-Tuning 等方法使下游迁移只需训练极小参数量（<0.1%），2024-2025 年 DoRA（权重分解 LoRA）和 PiSSA（主成分 LoRA）进一步提升了参数高效微调的表达能力。</p>
+<p>LoRA、Adapter、Prefix-Tuning 等方法使下游迁移只需训练极小参数量（<0.1%），DoRA（2024，权重分解 LoRA）和 PiSSA（2024，主成分 LoRA）进一步提升了参数高效微调的表达能力。</p>
 
 <h3>7.2 元学习（Meta-Learning）</h3>
 <p>元学习又称<strong>学会学习</strong>（Learning to Learn），目标是让模型快速适应新任务。核心思想是在大量任务上学习<strong>通用的学习策略</strong>。</p>
@@ -552,8 +555,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>通过二阶梯度优化寻找好的初始化参数，使模型在新任务上只需少量梯度步即可收敛：</p>
 <div class="formula" data-eq="(14)">$$\theta^* = \arg\min_\theta \sum_{T_i} \mathcal{L}_{T_i}(f_{\theta - \alpha \nabla \mathcal{L}_{T_i}(\theta)})$$</div>
 
-<h4>近两年进展</h4>
-<p>2024-2025 年，元学习与大模型结合出现了<strong>In-Context Learning</strong>（上下文学习）范式：模型无需梯度更新，仅通过 prompt 中的示例即可学习新任务。GPT-4、Claude 等展示了强大的 ICL 能力，本质上是大规模预训练带来的隐式元学习。</p>
+<h4>最新进展</h4>
+<p>近年，元学习与大模型结合出现了<strong>In-Context Learning</strong>（上下文学习）范式：模型无需梯度更新，仅通过 prompt 中的示例即可学习新任务。GPT-4、Claude 等展示了强大的 ICL 能力，本质上是大规模预训练带来的隐式元学习。</p>
 
 </section>
 
@@ -561,7 +564,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="ch8">
 <h2><span class="num">8</span>目标函数与优化器</h2>
 
-<p>目标函数（损失函数）和优化器是机器学习训练的两大核心引擎：目标函数定义了"学什么"，优化器决定了"怎么学"。从经典的 SGD 到 2024-2026 年涌现的 Muon、Sophia、ARO 等新优化器，这一领域正经历深度变革。</p>
+<p>目标函数（损失函数）和优化器是机器学习训练的两大核心引擎：目标函数定义了"学什么"，优化器决定了"怎么学"。从经典的 SGD 到近年涌现的 Muon、Sophia、ARO 等新优化器，这一领域正经历深度变革。</p>
 
 <h3>8.1 目标函数演进</h3>
 
@@ -602,14 +605,14 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>Adam 结合了动量和自适应学习率，为每个参数维护一阶矩和二阶矩估计：</p>
 <div class="formula" data-eq="(19)">$$m_t = \beta_1 m_{t-1} + (1-\beta_1) g_t, \quad s_t = \beta_2 s_{t-1} + (1-\beta_2) g_t^2$$</div>
 <div class="formula" data-eq="(20)">$$\hat{m}_t = \frac{m_t}{1-\beta_1^t}, \quad \hat{s}_t = \frac{s_t}{1-\beta_2^t}, \quad \theta_{t+1} = \theta_t - \eta \frac{\hat{m}_t}{\sqrt{\hat{s}_t} + \epsilon}$$</div>
-<p><strong>AdamW</strong> 修正了 Adam 中权重衰减的实现方式，将 L2 正则化从梯度中解耦，直接衰减权重。AdamW 是 2022-2025 年大模型训练的<strong>事实标准优化器</strong>，GPT-4、LLaMA-3、Qwen-2 等均使用 AdamW。</p>
+<p><strong>AdamW</strong> 修正了 Adam 中权重衰减的实现方式，将 L2 正则化从梯度中解耦，直接衰减权重。AdamW 是当前大模型训练的<strong>事实标准优化器</strong>，GPT-4、LLaMA-3、Qwen-2 等均使用 AdamW。</p>
 
 <div class="callout warn">
 <div class="callout-title">AdamW 的内存瓶颈</div>
 <p>AdamW 需要为每个参数维护一阶矩 $m$ 和二阶矩 $s$，额外内存开销为模型参数量的 2 倍。对于 67.84 亿参数的模型，权重占用 12.6GB，但 AdamW 的优化器状态占用高达 <strong>50.6GB</strong>，严重制约了可训练模型的规模。</p>
 </div>
 
-<h3>8.3 2024-2026 年新优化器</h3>
+<h3>8.3 新一代优化器</h3>
 
 <div class="svg-box">
 <svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg">
@@ -675,10 +678,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 <h4>Muon 优化器（2024.12）</h4>
-<p><strong>Muon</strong>（MomentUm Orthogonalized by Newton-Schulz）由 Keller Jordan 于 2024 年 12 月发布，是 2024-2026 年最受关注的新优化器。其核心创新是对 SGD-momentum 生成的更新矩阵用 <strong>Newton-Schulz 迭代</strong>进行正交化：</p>
+<p><strong>Muon</strong>（MomentUm Orthogonalized by Newton-Schulz）由 Keller Jordan 于 2024 年 12 月发布，是当前最受关注的新优化器。其核心创新是对 SGD-momentum 生成的更新矩阵用 <strong>Newton-Schulz 迭代</strong>进行正交化：</p>
 <div class="formula" data-eq="(21)">$$U_t = \text{NewtonSchulz}(G_t), \quad G_t = \beta G_{t-1} + \nabla \mathcal{L}(\theta_t), \quad \theta_{t+1} = \theta_t - \eta \, U_t$$</div>
 <p>其中 Newton-Schulz 迭代近似计算 $G_t (G_t^T G_t)^{-1/2}$，使更新矩阵近似正交。正交化的直觉是：让更新在各方向上均匀分布，避免某些维度主导优化过程。</p>
-<p>Muon 适用于 <strong>2D 矩阵参数</strong>（如线性层权重、注意力投影矩阵），对嵌入层和输出 head 仍使用 AdamW。DeepSeek V4 采用 Muon 优化器训练百万 token 上下文，验证了其在大规模训练中的有效性。2025-2026 年的改进包括 <strong>Dion3</strong>（全栈优化版，降低正交化 FLOP）和理论分析（arXiv 2503.12645，梯度正交化的非欧信赖域优化理论）。</p>
+<p>Muon 适用于 <strong>2D 矩阵参数</strong>（如线性层权重、注意力投影矩阵），对嵌入层和输出 head 仍使用 AdamW。DeepSeek V4 采用 Muon 优化器训练百万 token 上下文，验证了其在大规模训练中的有效性。后续改进包括 <strong>Dion3</strong>（2025）（全栈优化版，降低正交化 FLOP）和理论分析（arXiv 2503.12645，梯度正交化的非欧信赖域优化理论）。</p>
 
 <h4>Sophia 优化器（2024）</h4>
 <p><strong>Sophia</strong>（Second-order Clipped Stochastic Optimization）引入 Hessian 对角估计，使用二阶信息自适应调整每个参数的学习率：</p>
@@ -743,7 +746,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <div class="callout">
 <div class="callout-title">优化器选择的实践建议</div>
-<p>2024-2026 年的实践共识：<strong>AdamW</strong>仍是通用首选；<strong>Muon</strong>适用于大型 Transformer 的矩阵参数层，需搭配 AdamW 处理嵌入层和 head；<strong>Sophia</strong>在中等规模 LLM 训练中效率最优；新优化器在大规模训练中的稳定性仍在验证中。混合优化器策略（不同参数组使用不同优化器）正成为趋势。</p>
+<p>近年来的实践共识：<strong>AdamW</strong>仍是通用首选；<strong>Muon</strong>适用于大型 Transformer 的矩阵参数层，需搭配 AdamW 处理嵌入层和 head；<strong>Sophia</strong>在中等规模 LLM 训练中效率最优；新优化器在大规模训练中的稳定性仍在验证中。混合优化器策略（不同参数组使用不同优化器）正成为趋势。</p>
 </div>
 
 </section>
@@ -752,7 +755,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="ch9">
 <h2><span class="num">9</span>前沿技术</h2>
 
-<p>本章对 2024-2026 年各范式的重要技术进展进行集中梳理，按主题分类介绍。</p>
+<p>本章对各范式近年来的重要技术进展进行集中梳理，按主题分类介绍。</p>
 
 <h3>9.1 大模型训练范式变革</h3>
 <table>
@@ -790,22 +793,22 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>9.6 新兴交叉范式</h3>
 <h4>具身智能中的学习范式</h4>
-<p>2025-2026 年具身智能领域出现<strong>上下文学习</strong>（In-Context Learning）新范式：机器人观看人类示范视频后直接执行任务，无需后训练阶段的数据采集和梯度更新。Skild AI 的 S1 模型将 ICL 任务长度推到 10 分钟级别。</p>
+<p>近年具身智能领域出现<strong>上下文学习</strong>（In-Context Learning）新范式：机器人观看人类示范视频后直接执行任务，无需后训练阶段的数据采集和梯度更新。Skild AI 的 S1 模型将 ICL 任务长度推到 10 分钟级别。</p>
 
 <h4>无监督强化学习</h4>
-<p>ICLR 2026 上清华团队提出在无标注奖励的情况下驱动大模型自我改进的方法，探索了从"监督式 RL"到"无监督 RL"的新方向。</p>
+<p>从 <strong>TTRL</strong>（Test-Time Reinforcement Learning，NeurIPS 2025）到 <strong>URLVR</strong>（无监督 RLVR，ICLR 2026 清华团队），无监督强化学习探索了在<em>完全无人工标注奖励</em>的条件下驱动大模型自我改进的可能，回答了"模型能力逼近人类专家后谁来打分"的难题。<strong>Co-rewarding</strong>（ICLR 2026）进一步解决了无监督 RL 中"自奖励"信号易导致训练崩溃的问题，通过自监督奖励学习方案稳定诱导模型推理。</p>
 
 <h3>9.7 MoE 架构与大模型训练效率</h3>
-<p><strong>混合专家模型</strong>（Mixture of Experts, MoE）已成为 2024-2026 年大模型训练的核心架构创新。MoE 将 Transformer 的前馈网络（FFN）层替换为多个稀疏激活的专家，每个 token 仅激活少量专家，在保持模型表达能力的同时大幅降低计算成本。</p>
+<p><strong>混合专家模型</strong>（Mixture of Experts, MoE）已成为当前大模型训练的核心架构创新。MoE 将 Transformer 的前馈网络（FFN）层替换为多个稀疏激活的专家，每个 token 仅激活少量专家，在保持模型表达能力的同时大幅降低计算成本。</p>
 <ul>
   <li><strong>DeepSeek-V3 / V4</strong>：采用 256 个专家、每 token 激活 8 个的细粒度 MoE 架构，总参数 671B 但激活参数仅 37B，训练成本仅为密集模型的 1/5。引入<strong>无辅助损失的负载均衡</strong>策略，避免了传统 MoE 的专家坍塌问题。</li>
   <li><strong>Mixtral 8x22B</strong>（Mistral, 2024）：开源 MoE 模型，8 个专家各 22B 参数，以 39B 激活参数达到 70B 密集模型的性能。</li>
   <li><strong>Qwen-2 MoE</strong>（阿里, 2024-2025）：在中文场景验证了 MoE 的有效性，支持 128K 上下文长度。</li>
-  <li><strong>MoE 路由优化</strong>：2025-2026 年的研究重点从"如何均衡负载"转向"如何学习更好的路由策略"，出现了<strong>专家选择路由</strong>（Expert Choice Routing）和<strong>动态专家数量</strong>等新方法。</li>
+  <li><strong>MoE 路由优化</strong>：近年研究重点从"如何均衡负载"转向"如何学习更好的路由策略"，出现了<strong>专家选择路由</strong>（Expert Choice Routing）和<strong>动态专家数量</strong>等新方法。</li>
 </ul>
 
 <h3>9.8 长上下文技术</h3>
-<p>2024-2026 年，大模型的上下文窗口从 4K 快速扩展到百万 token 级别，核心技术包括：</p>
+<p>近年来，大模型的上下文窗口从 4K 快速扩展到百万 token 级别，核心技术包括：</p>
 <ul>
   <li><strong>旋转位置编码改进</strong>（RoPE）：YaRN、NTK-aware 等方法实现了位置编码的外推，无需重训练即可扩展上下文。</li>
   <li><strong>分块注意力</strong>（Chunk Attention）：将长序列分割为块，在块内全注意力、块间稀疏注意力，降低 $O(n^2)$ 复杂度。</li>
@@ -815,7 +818,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 
 <h3>9.9 多模态学习新范式</h3>
-<p>2024-2026 年多模态学习从"图文对齐"走向"全模态融合"：</p>
+<p>近年多模态学习从"图文对齐"走向"全模态融合"：</p>
 <ul>
   <li><strong>全模态模型</strong>：GPT-4o（2024）、Gemini 1.5 Pro（2024）支持文本、图像、音频、视频的统一输入输出，训练范式为<strong>多模态自监督预训练 + 多模态指令微调</strong>。</li>
   <li><strong>任意到任意模态</strong>（Any-to-Any）：Chameleon（Meta, 2024）将所有模态统一为 token 序列，使用单一 Transformer 处理，实现真正的端到端多模态生成。</li>
@@ -824,7 +827,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 
 <h3>9.10 推理增强与思维链</h3>
-<p>2024-2026 年最显著的突破之一是大模型<strong>推理能力</strong>的飞跃：</p>
+<p>近年最显著的突破之一是大模型<strong>推理能力</strong>的飞跃：</p>
 <ul>
   <li><strong>思维链</strong>（Chain-of-Thought, CoT）：OpenAI o1/o3（2024-2025）通过 RLVR 训练模型生成隐式思维链，在数学、编程和科学推理上大幅超越 GPT-4o。</li>
   <li><strong>推理时计算缩放</strong>（Inference-time Scaling）：o1 验证了"推理时增加计算量可以显著提升性能"的新缩放定律，与传统"训练时缩放"形成互补。</li>
@@ -840,6 +843,24 @@ tr:hover td { background: var(--c-primary-ghost); }
   <li><strong>QLoRA v2</strong>（2025）：4-bit 量化 + LoRA 的改进版，支持在单卡上微调 70B 模型。</li>
   <li><strong>MoLE</strong>（Mixture of LoRA Experts, 2025）：将多个 LoRA 适配器作为专家，通过路由动态选择，在参数量不变的情况下增强表达能力。</li>
 </ul>
+
+<h3>9.12 顶会前沿突破（NeurIPS 2025 / ICLR 2026）</h3>
+<p>近年来，机器学习顶会在范式融合与新学习机制上涌现了一批具有里程碑意义的工作，本小节集中梳理代表性成果：</p>
+
+<h4>自监督强化学习：千层网络的潜力</h4>
+<p><strong>RL1000</strong>（NeurIPS 2025 最佳论文，巴黎文理研究大学等）首次训练了深达 <strong>1024 层</strong>的自监督强化学习网络，打破了 RL 模型通常只有 2-5 层的惯例。该工作证明在无任何人工指导的目标达成任务中，深层网络能解锁全新的目标达成能力，为<em>自监督信号 + 深度网络</em>的组合提供了新的扩展维度。</p>
+
+<h4>大语言模型注意力机制：门控注意力</h4>
+<p><strong>Gated Attention</strong>（NeurIPS 2025 最佳论文，阿里 Qwen 团队联合清华、斯坦福、MIT、爱丁堡大学）系统研究了 Softmax 注意力中引入<strong>门控（Gating）</strong>的作用，提出了无需 Attention Sink 的新架构设计，在非线性、稀疏性与训练稳定性之间取得更好平衡。该成果已应用于新一代 Qwen3-Next 模型，是中国大陆团队首次斩获 NeurIPS 最佳论文。</p>
+
+<h4>自监督单目深度估计：Jasmine</h4>
+<p><strong>Jasmine</strong>（NeurIPS 2025，北交大等）提出首个基于 Stable Diffusion 的<strong>自监督单目深度估计</strong>框架：通过混合批次图像重建任务和尺度-平移门控循环单元，在不依赖任何深度标注的情况下保留预训练扩散模型的深度先验，突破了基于扩散的深度估计依赖高精度标注监督的瓶颈。</p>
+
+<h4>无监督强化学习：从 TTRL 到 URLVR</h4>
+<p><strong>TTRL</strong>（Test-Time Reinforcement Learning，NeurIPS 2025）提出测试时强化学习机制；清华团队在此基础上提出 <strong>URLVR</strong>（无监督 RLVR，ICLR 2026），在完全无人工标注奖励的条件下让模型自我改进。<strong>Co-rewarding</strong>（ICLR 2026）则针对无监督 RL 易训练崩溃的问题，提供自监督奖励学习方案。</p>
+
+<h4>模型多样性批判：Artificial Hivemind</h4>
+<p><strong>Artificial Hivemind</strong>（NeurIPS 2025 最佳论文，华盛顿大学）揭示了当前 SOTA 大模型在开放式生成中的<strong>同质化问题</strong>：模型间、模型内存在显著的重复性与同质化现象，引发了对"Scaling 时代多样性"的深入反思。</p>
 
 </section>
 
@@ -858,7 +879,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td><strong>代表方法</strong></td><td>SVM · CNN · Transformer</td><td>K-Means · VAE · 扩散</td><td>FixMatch · Mean Teacher</td><td>BERT · MAE · CLIP</td><td>CAM · 多实例学习</td><td>LoRA · MAML · ICL</td></tr>
 <tr><td><strong>典型优化器</strong></td><td>SGD · AdamW</td><td>Adam · AdamW</td><td>AdamW · SGD</td><td>AdamW · LAMB</td><td>SGD · Adam</td><td>MAML · AdamW</td></tr>
 <tr><td><strong>适用场景</strong></td><td>标注充足</td><td>探索分析</td><td>标注有限</td><td>大规模预训练</td><td>标注质量差</td><td>跨域/少样本</td></tr>
-<tr><td><strong>2025 主流度</strong></td><td>★★★★（微调阶段）</td><td>★★★</td><td>★★★</td><td>★★★★★（预训练）</td><td>★★</td><td>★★★★</td></tr>
+<tr><td><strong>主流度</strong></td><td>★★★★（微调阶段）</td><td>★★★</td><td>★★★</td><td>★★★★★（预训练）</td><td>★★</td><td>★★★★</td></tr>
 </table>
 </div>
 
@@ -1041,6 +1062,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li>Zhejiang University. (2026). A Systematic Evaluation of 23 Optimizers for LLM Training. <em>BAAI 2026</em>.</li>
 <li>DeepSeek-AI. (2026). DeepSeek V4: Million-Token Context with Muon Optimizer. <em>arXiv:2604.xxxxx</em>.</li>
 <li>arXiv. (2025). Gradient Orthogonalization and Non-Euclidean Trust-Region Optimization. <em>arXiv:2503.12645</em>.</li>
+<li>Qwen Team, et al. (2025). Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free. <em>NeurIPS 2025 Best Paper</em>.</li>
+<li>Princeton / PSL Research University, et al. (2025). 1000 Layer Networks for Self-Supervised RL: Scaling Depth Can Enable New Goal-Reaching Capabilities. <em>NeurIPS 2025 Best Paper</em>.</li>
+<li>Jiang, L., et al. (2025). Artificial Hivemind: The Open-Ended Homogeneity of Language Models (and Beyond). <em>NeurIPS 2025 Best Paper</em>.</li>
+<li>BJTU, et al. (2025). Jasmine: Self-Supervised Monocular Depth Estimation with Stable Diffusion Prior. <em>NeurIPS 2025</em>.</li>
+<li>PRIME-RL / Tsinghua, et al. (2025). TTRL: Test-Time Reinforcement Learning. <em>NeurIPS 2025</em>.</li>
+<li>Tsinghua &amp; Shanghai AI Lab. (2026). How Far Can Unsupervised RLVR Scale LLM Training? <em>ICLR 2026</em>.</li>
 </ol>
 </section>
 
