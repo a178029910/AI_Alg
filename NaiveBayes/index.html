@@ -830,44 +830,50 @@ grid = <span class="cls">GridSearchCV</span>(pipeline, param_grid, cv=<span clas
 <p>其中 $\text{Pa}(X_i)$ 是 $X_i$ 的父节点集合。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
-<text x="80" y="20" fill="#0f172a" font-size="14" font-weight="700">朴素贝叶斯（星形）</text>
-<circle cx="160" cy="50" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
-<text x="150" y="55" fill="#1e293b" font-size="12">y</text>
-<line x1="160" y1="78" x2="80" y2="140" stroke="#334155" stroke-width="1.5"/>
-<line x1="160" y1="78" x2="130" y2="140" stroke="#334155" stroke-width="1.5"/>
-<line x1="160" y1="78" x2="190" y2="140" stroke="#334155" stroke-width="1.5"/>
-<line x1="160" y1="78" x2="240" y2="140" stroke="#334155" stroke-width="1.5"/>
-<circle cx="80" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="73" y="155" fill="#1e293b" font-size="11">x₁</text>
-<circle cx="130" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="123" y="155" fill="#1e293b" font-size="11">x₂</text>
-<circle cx="190" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="183" y="155" fill="#1e293b" font-size="11">x₃</text>
-<circle cx="240" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="228" y="155" fill="#1e293b" font-size="11">x_d</text>
-<text x="100" y="200" fill="#64748b" font-size="11">所有特征条件独立于 y</text>
-<line x1="360" y1="50" x2="440" y2="50" stroke="#7c3aed" stroke-width="3" stroke-dasharray="8,4" class="flow-line"/>
-<text x="370" y="40" fill="#7c3aed" font-size="12" font-weight="700">一般化</text>
-<text x="450" y="20" fill="#0f172a" font-size="14" font-weight="700">贝叶斯网络（DAG）</text>
-<circle cx="500" cy="50" r="24" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
-<text x="492" y="55" fill="#1e293b" font-size="11">A</text>
-<line x1="500" y1="74" x2="500" y2="110" stroke="#334155" stroke-width="1.5"/>
-<line x1="520" y1="65" x2="560" y2="110" stroke="#334155" stroke-width="1.5"/>
-<circle cx="500" cy="130" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="493" y="135" fill="#1e293b" font-size="11">B</text>
-<circle cx="570" cy="130" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="563" y="135" fill="#1e293b" font-size="11">C</text>
-<line x1="500" y1="150" x2="540" y2="185" stroke="#334155" stroke-width="1.5"/>
-<line x1="570" y1="150" x2="540" y2="185" stroke="#334155" stroke-width="1.5"/>
-<circle cx="540" cy="200" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="533" y="205" fill="#1e293b" font-size="11">D</text>
-<circle cx="660" cy="80" r="20" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
-<text x="653" y="85" fill="#1e293b" font-size="11">E</text>
-<line x1="660" y1="100" x2="640" y2="185" stroke="#334155" stroke-width="1.5"/>
-<circle cx="640" cy="200" r="20" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
-<text x="633" y="205" fill="#1e293b" font-size="11">F</text>
-<text x="450" y="240" fill="#64748b" font-size="11">变量间可表达任意依赖关系</text>
+<svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="nbA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+  <marker id="nbNP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#7c3aed"/></marker>
+</defs>
+<!-- 左图：朴素贝叶斯（星形） -->
+<text x="150" y="28" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">朴素贝叶斯（星形）</text>
+<circle cx="150" cy="62" r="26" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="150" y="68" fill="#1e293b" font-size="13" text-anchor="middle" font-weight="600">y</text>
+<line x1="150" y1="90" x2="60" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<line x1="150" y1="90" x2="115" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<line x1="150" y1="90" x2="185" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<line x1="150" y1="90" x2="240" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<circle cx="60" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="60" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x₁</text>
+<circle cx="115" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="115" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x₂</text>
+<circle cx="185" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="185" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x₃</text>
+<circle cx="240" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="240" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x_d</text>
+<text x="150" y="215" fill="#64748b" font-size="11" text-anchor="middle">所有特征条件独立于 y，互不连接</text>
+<text x="150" y="236" fill="#94a3b8" font-size="10.5" text-anchor="middle">P(y, x₁…x_d) = P(y) Π P(xᵢ|y)</text>
+
+<!-- 中间：一般化箭头 -->
+<line x1="320" y1="120" x2="400" y2="120" stroke="#7c3aed" stroke-width="3" stroke-dasharray="8,4" class="flow-line" marker-end="url(#nbNP)"/>
+<text x="360" y="105" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">一般化</text>
+
+<!-- 右图：贝叶斯网络（DAG） -->
+<text x="600" y="28" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">贝叶斯网络（DAG）</text>
+<circle cx="600" cy="62" r="24" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="600" y="68" fill="#1e293b" font-size="12" text-anchor="middle" font-weight="600">A</text>
+<line x1="560" y1="86" x2="485" y2="148" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<line x1="640" y1="86" x2="715" y2="148" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<circle cx="470" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="470" y="183" fill="#1e293b" font-size="12" text-anchor="middle">B</text>
+<circle cx="730" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="730" y="183" fill="#1e293b" font-size="12" text-anchor="middle">C</text>
+<line x1="470" y1="191" x2="560" y2="248" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<line x1="730" y1="191" x2="640" y2="248" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<circle cx="600" cy="268" r="21" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="600" y="283" fill="#1e293b" font-size="12" text-anchor="middle">D</text>
+<text x="600" y="215" fill="#64748b" font-size="11" text-anchor="middle">A→B、A→C、B→D、C→D：任意依赖</text>
+<text x="600" y="240" fill="#94a3b8" font-size="10.5" text-anchor="middle">P(A,B,C,D) = P(A)P(B|A)P(C|A)P(D|B,C)</text>
 </svg>
 </div>
 
