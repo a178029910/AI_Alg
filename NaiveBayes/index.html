@@ -143,7 +143,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">13 个章节</span>
     <span class="badge">4 张 SVG 结构图</span>
-    <span class="badge">17 个公式</span>
+    <span class="badge">19 个公式</span>
     <span class="badge">6 段 Python 代码</span>
     <span class="badge">15 篇参考文献</span>
   </div>
@@ -288,13 +288,58 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>参数 $\mu_{y,i}$ 和 $\sigma_{y,i}^2$ 分别为类别 $y$ 下特征 $x_i$ 的均值和方差，通过训练数据的<strong>极大似然估计</strong>获得。</p>
 
 <div class="callout">
-<div class="callout-title">简单例子：水果识别</div>
-<p>假设要根据<strong>重量（克）</strong>和<strong>甜度（%）</strong>两个连续指标判断一个水果是<em>苹果</em>还是<em>橙子</em>。训练数据统计出：苹果平均重量 $\mu=150$g、甜度 $\mu=12\%$；橙子平均重量 $\mu=200$g、甜度 $\mu=9\%$。现在来了一个重量 160g、甜度 11% 的未知水果：</p>
+<div class="callout-title">生活化示例：水果识别（含完整计算过程）</div>
+<p>假设要根据<strong>重量（克）</strong>和<strong>甜度（%）</strong>两个连续指标判断一个水果是<em>苹果</em>还是<em>橙子</em>。已有 10 个苹果和 10 个橙子的标记数据作为<strong>预训练集</strong>（为便于阅读已排序）：</p>
+<div class="table-wrap">
+<table>
+<tr><th>类别</th><th>重量（g）</th><th>甜度（%）</th></tr>
+<tr><td rowspan="10">苹果<br>（10 个）</td><td>140</td><td>10</td></tr>
+<tr><td>145</td><td>11</td></tr>
+<tr><td>150</td><td>12</td></tr>
+<tr><td>155</td><td>13</td></tr>
+<tr><td>160</td><td>14</td></tr>
+<tr><td>140</td><td>10</td></tr>
+<tr><td>145</td><td>11</td></tr>
+<tr><td>150</td><td>12</td></tr>
+<tr><td>155</td><td>13</td></tr>
+<tr><td>160</td><td>14</td></tr>
+<tr><td rowspan="10">橙子<br>（10 个）</td><td>190</td><td>7</td></tr>
+<tr><td>195</td><td>8</td></tr>
+<tr><td>200</td><td>9</td></tr>
+<tr><td>205</td><td>10</td></tr>
+<tr><td>210</td><td>11</td></tr>
+<tr><td>190</td><td>7</td></tr>
+<tr><td>195</td><td>8</td></tr>
+<tr><td>200</td><td>9</td></tr>
+<tr><td>205</td><td>10</td></tr>
+<tr><td>210</td><td>11</td></tr>
+</table>
+</div>
+<p><strong>第一步：预训练（MLE 估计参数）</strong>。苹果的重量均值为 $\mu_{\text{apple,w}}=(140+145+\cdots+160)/10=150$g，方差为 $\sigma^2_{\text{apple,w}}=50$；甜度均值 $\mu_{\text{apple,s}}=12\%$、方差 $2$。橙子同理：重量均值 $\mu_{\text{orange,w}}=200$g、方差 $50$，甜度均值 $\mu_{\text{orange,s}}=9\%$、方差 $2$。</p>
+<p>接下来来了三个待测水果：</p>
 <ul>
-  <li>把它代入两条<strong>高斯曲线</strong>（苹果和橙子各自的均值、方差），分别算出「在这个重量和甜度下，像苹果的概率」和「像橙子的概率」。</li>
-  <li>再乘以类别先验（比如水果摊苹果占 60%），后验概率更大的那类获胜。</li>
+  <li><strong>样本 A</strong>：重量 170g、甜度 10.5%</li>
+  <li><strong>样本 B</strong>：重量 190g、甜度 8.5%</li>
+  <li><strong>样本 C</strong>：重量 155g、甜度 11.5%</li>
 </ul>
-<p>直观理解：160g 介于两种均值之间，但甜度 11% 更接近苹果的 12%，所以高斯模型大概率判为<strong>苹果</strong>。特征越接近某类的均值，该类得分越高。</p>
+
+<p><strong>第二步：预测</strong>。把每个样本代入公式 (7) 的高斯曲线。先看样本 A（170g, 10.5%）：</p>
+<p>苹果类：$P(170 \mid \text{apple}) = \frac{1}{\sqrt{2\pi \cdot 50}} e^{-\frac{(170-150)^2}{2\cdot 50}} \approx 0.00103$，$P(10.5\% \mid \text{apple}) = \frac{1}{\sqrt{2\pi \cdot 2}} e^{-\frac{(10.5-12)^2}{2\cdot 2}} \approx 0.1607$。</p>
+<p>橙子类：$P(170 \mid \text{orange}) = \frac{1}{\sqrt{2\pi \cdot 50}} e^{-\frac{(170-200)^2}{2\cdot 50}} \approx 6.96\times10^{-6}$，$P(10.5\% \mid \text{orange}) = \frac{1}{\sqrt{2\pi \cdot 2}} e^{-\frac{(10.5-9)^2}{2\cdot 2}} \approx 0.1607$。</p>
+<p>乘以先验（苹果 60%、橙子 40%）：苹果后验 $\propto 0.6 \times 0.00103 \times 0.1607 \approx 9.97\times10^{-5}$，橙子后验 $\propto 0.4 \times 6.96\times10^{-6} \times 0.1607 \approx 4.48\times10^{-7}$。<strong>苹果后验约是橙子的 222 倍</strong>，判为<strong>苹果</strong>。</p>
+<p>样本 B（190g, 8.5%）代入后：苹果后验 $\propto 0.6 \times 6.35\times10^{-9} \times 0.0132 \approx 5.03\times10^{-11}$，橙子后验 $\propto 0.4 \times 0.0208 \times 0.265 \approx 2.20\times10^{-3}$。橙子后验远大于苹果，判为<strong>橙子</strong>。</p>
+<p>样本 C（155g, 11.5%）：苹果后验 $\propto 0.6 \times 0.0439 \times 0.265 \approx 6.99\times10^{-3}$，橙子后验 $\propto 0.4 \times 9.06\times10^{-11} \times 0.0591 \approx 2.14\times10^{-12}$。判为<strong>苹果</strong>。</p>
+
+<p><strong>第三步：增量更新模型</strong>。把预测结果带回训练集——样本 A 确认为苹果、样本 B 确认为橙子（本例 C 暂不加入），重新估计参数：</p>
+<div class="table-wrap">
+<table>
+<tr><th>类别</th><th>更新前</th><th>加入新样本</th><th>更新后</th></tr>
+<tr><td>苹果（11 个）</td><td>$\mu_{\text{w}}=150,\ \sigma^2_{\text{w}}=50$；$\mu_{\text{s}}=12,\ \sigma^2_{\text{s}}=2$</td><td>170g, 10.5%</td><td>$\mu_{\text{w}}\approx 151.8,\ \sigma^2_{\text{w}}\approx 78.5$；$\mu_{\text{s}}\approx 11.9,\ \sigma^2_{\text{s}}\approx 2.0$</td></tr>
+<tr><td>橙子（11 个）</td><td>$\mu_{\text{w}}=200,\ \sigma^2_{\text{w}}=50$；$\mu_{\text{s}}=9,\ \sigma^2_{\text{s}}=2$</td><td>190g, 8.5%</td><td>$\mu_{\text{w}}\approx 199.1,\ \sigma^2_{\text{w}}\approx 53.7$；$\mu_{\text{s}}\approx 9.0,\ \sigma^2_{\text{s}}\approx 1.8$</td></tr>
+</table>
+</div>
+<p>更新后的 $\mu$ 和 $\sigma^2$ 用于后续样本的预测，模型随着新数据<strong>持续进化</strong>，这就是朴素贝叶斯能够做在线学习的原因。</p>
+<p>直观理解：A 的甜度 10.5% 正好卡在两类中间，但重量 170g 离苹果均值 150g 更近（差 20）而离橙子均值 200g 更远（差 30），高斯密度差异让苹果胜出。<strong>特征越接近某类的均值，该类得分越高</strong>。</p>
 </div>
 
 <h3>3.2 多项式朴素贝叶斯（计数特征）</h3>
@@ -303,15 +348,40 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>其中 $\theta_{y,i} = P(x_i \mid y)$ 是类别 $y$ 下特征 $i$ 出现的概率，$\sum_i \theta_{y,i} = 1$。这是<strong>文本分类</strong>最常用的模型。</p>
 
 <div class="callout">
-<div class="callout-title">简单例子：新闻分类</div>
-<p>把新闻分成<em>体育</em>和<em>科技</em>两类，特征就是每个词在文章中出现的<strong>次数</strong>。训练阶段统计：在体育新闻里，「进球」出现 500 次、「球队」出现 400 次；在科技新闻里，「芯片」出现 600 次、「算法」出现 450 次。</p>
-<p>新来一篇文章，其中「进球」出现 3 次、「算法」出现 1 次：</p>
+<div class="callout-title">生活化示例：新闻分类（含完整计算过程）</div>
+<p>把新闻分成<em>体育</em>和<em>科技</em>两类，特征就是每个词在文章中出现的<strong>次数</strong>。词表取 4 个词：进球、球队、芯片、算法。<strong>预训练集</strong>共 20 篇文章（体育、科技各 10 篇），统计得到两类各自的词频总数（每类总词数均为 1000）：</p>
+<div class="table-wrap">
+<table>
+<tr><th>类别</th><th>进球</th><th>球队</th><th>芯片</th><th>算法</th><th>总词数</th></tr>
+<tr><td>体育（10 篇）</td><td>400</td><td>300</td><td>100</td><td>200</td><td>1000</td></tr>
+<tr><td>科技（10 篇）</td><td>100</td><td>50</td><td>450</td><td>400</td><td>1000</td></tr>
+</table>
+</div>
+
+<p><strong>第一步：预训练（MLE + 拉普拉斯平滑）</strong>。用公式 (13)（$\alpha=1$，词表大小 $d=4$）估计每个词的条件概率 $\theta_{y,i}$。以体育类为例：</p>
+<p>$\theta_{\text{sport,goal}} = \frac{400+1}{1000+4} \approx 0.399$，$\theta_{\text{sport,team}} = \frac{300+1}{1000+4} \approx 0.300$，$\theta_{\text{sport,chip}} = \frac{100+1}{1000+4} \approx 0.101$，$\theta_{\text{sport,algo}} = \frac{200+1}{1000+4} \approx 0.200$。科技类（tech）：$\theta_{\text{tech,goal}} \approx 0.101$，$\theta_{\text{tech,team}} \approx 0.051$，$\theta_{\text{tech,chip}} \approx 0.449$，$\theta_{\text{tech,algo}} \approx 0.399$。</p>
+
+<p><strong>第二步：预测</strong>。来了三篇新文章：</p>
 <ul>
-  <li>计算体育类条件概率：体育类中「进球」的概率的 3 次方 × 体育类中「算法」的概率的 1 次方 × 体育类先验。</li>
-  <li>计算科技类条件概率：科技类中「进球」的概率的 3 次方 × 科技类中「算法」的概率的 1 次方 × 科技类先验。</li>
-  <li>比较两者，概率大者即为预测类别。</li>
+  <li><strong>文章 D1</strong>：「进球」出现 3 次、「算法」出现 1 次</li>
+  <li><strong>文章 D2</strong>：「芯片」出现 3 次、「算法」出现 2 次</li>
+  <li><strong>文章 D3</strong>：「进球」出现 1 次、「球队」出现 2 次</li>
 </ul>
-<p>直观理解：词<strong>出现得越多</strong>，对所属类别的影响越大。这篇文章“进球”占了多数，哪怕出现了一个“算法”词，整体仍更可能判为<strong>体育</strong>。</p>
+<p>代入公式 (8) 计算各类条件概率（先验均为 0.5，可忽略）：</p>
+<p>文章 D1：$P(D1 \mid \text{sport}) \propto 0.399^3 \times 0.200 \approx 0.0128$；$P(D1 \mid \text{tech}) \propto 0.101^3 \times 0.399 \approx 4.07\times10^{-4}$。体育类的条件概率约是科技类的 <strong>31 倍</strong>，判为<strong>体育</strong>。</p>
+<p>文章 D2：$P(D2 \mid \text{sport}) \propto 0.101^3 \times 0.200^2 \approx 4.08\times10^{-5}$；$P(D2 \mid \text{tech}) \propto 0.449^3 \times 0.399^2 \approx 0.0145$。科技类远超体育类，判为<strong>科技</strong>。</p>
+<p>文章 D3：$P(D3 \mid \text{sport}) \propto 0.399 \times 0.300^2 \approx 0.0359$；$P(D3 \mid \text{tech}) \propto 0.101 \times 0.051^2 \approx 2.60\times10^{-4}$。判为<strong>体育</strong>。</p>
+
+<p><strong>第三步：增量更新模型</strong>。D1 确认为体育、D2 确认为科技，把词频累加回对应类别，重新估计参数：</p>
+<div class="table-wrap">
+<table>
+<tr><th>类别</th><th>更新前</th><th>累加新词频</th><th>更新后</th></tr>
+<tr><td>体育</td><td>总词数 1000，进球 400、算法 200</td><td>进球 +3、算法 +1</td><td>总词数 1004，$\theta_{\text{goal}} \approx 0.401$、$\theta_{\text{algo}} \approx 0.200$</td></tr>
+<tr><td>科技</td><td>总词数 1000，芯片 450、算法 400</td><td>芯片 +3、算法 +2</td><td>总词数 1005，$\theta_{\text{chip}} \approx 0.450$、$\theta_{\text{algo}} \approx 0.400$</td></tr>
+</table>
+</div>
+<p>词频表随新文章<strong>滚动累加</strong>，模型不断吸收新知识。</p>
+<p>直观理解：词<strong>出现得越多</strong>，对所属类别的影响越大。D1 里"进球"出现 3 次，哪怕有一个"算法"词，整体仍更可能判为<strong>体育</strong>。</p>
 </div>
 
 <h3>3.3 伯努利朴素贝叶斯（二值特征）</h3>
@@ -320,14 +390,38 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>与多项式模型不同，伯努利模型<strong>考虑了词不出现</strong>的概率，适合短文本或特征稀疏的场景。</p>
 
 <div class="callout">
-<div class="callout-title">简单例子：垃圾短信识别</div>
-<p>特征只记录短信里每个词<strong>是否出现</strong>（出现记 1，不出现记 0），不管出现几次。训练阶段统计：垃圾短信中「中奖」出现的概率 $\theta=0.9$、「免费」$\theta=0.8$；正常短信中「中奖」$\theta=0.05$、「免费」$\theta=0.1$。</p>
-<p>新来一条短信：「恭喜您中奖了，点击链接免费领取」：</p>
+<div class="callout-title">生活化示例：垃圾短信识别（含完整计算过程）</div>
+<p>特征只记录短信里关键词<strong>是否出现</strong>（出现记 1，不出现记 0），不管出现几次。我们跟踪两个词：「中奖」和「免费」。<strong>预训练集</strong>共 20 条短信（垃圾 10 条、正常 10 条），统计每个词在各类中出现的频次：</p>
+<div class="table-wrap">
+<table>
+<tr><th>类别</th><th>中奖 = 1 的条数</th><th>免费 = 1 的条数</th><th>总条数</th></tr>
+<tr><td>垃圾（10 条）</td><td>8</td><td>7</td><td>10</td></tr>
+<tr><td>正常（10 条）</td><td>1</td><td>2</td><td>10</td></tr>
+</table>
+</div>
+
+<p><strong>第一步：预训练（MLE 估计参数）</strong>。直接用频次除以总条数：$\theta_{\text{spam,prize}} = 8/10 = 0.8$，$\theta_{\text{spam,free}} = 7/10 = 0.7$；$\theta_{\text{ham,prize}} = 1/10 = 0.1$，$\theta_{\text{ham,free}} = 2/10 = 0.2$。先验 $P(\text{spam}) = P(\text{ham}) = 0.5$。</p>
+
+<p><strong>第二步：预测</strong>。来了三条新短信：</p>
 <ul>
-  <li>“中奖”=1、“免费”=1 时，垃圾类的条件概率 $= 0.9 \times 0.8 \times (1-0.9)^0 \times (1-0.8)^0$。</li>
-  <li>正常类的条件概率 $= 0.01 \times 0.1$，明显小得多，因此判为<strong>垃圾短信</strong>。</li>
+  <li><strong>S1</strong>：「恭喜您中奖了，点击链接免费领取」→ 中奖 = 1、免费 = 1</li>
+  <li><strong>S2</strong>：「您中奖了，请到柜台领取」→ 中奖 = 1、免费 = 0</li>
+  <li><strong>S3</strong>：「明天下午开会，请准时参加」→ 中奖 = 0、免费 = 0</li>
 </ul>
-<p>关键差异：伯努利模型对<strong>“某词没出现”</strong>也计概率（$1-\theta$ 项），所以“这次短信里没出现‘中奖’”（$x=0$）会直接拉低垃圾类得分，这种敏感性对短文本非常有用。</p>
+<p>代入公式 (9)（注意 $x_i=0$ 时用 $1-\theta_{y,i}$ 项）：</p>
+<p>S1：$P \propto 0.5 \times 0.8^1 \times 0.7^1 = 0.280$（垃圾）；$P \propto 0.5 \times 0.1^1 \times 0.2^1 = 0.010$（正常）。比值 28:1，判为<strong>垃圾短信</strong>。</p>
+<p>S2：$P \propto 0.5 \times 0.8 \times (1-0.7) = 0.120$（垃圾）；$P \propto 0.5 \times 0.1 \times (1-0.2) = 0.040$（正常）。比值 3:1，判为<strong>垃圾短信</strong>。</p>
+<p>S3：$P \propto 0.5 \times (1-0.8) \times (1-0.7) = 0.030$（垃圾）；$P \propto 0.5 \times (1-0.1) \times (1-0.2) = 0.360$（正常）。比值 0.083，判为<strong>正常短信</strong>。</p>
+
+<p><strong>第三步：增量更新模型</strong>。S1、S2 判为垃圾，S3 判为正常，加入训练集后用拉普拉斯平滑（$\alpha=1$，$|V|=2$）重估参数：</p>
+<div class="table-wrap">
+<table>
+<tr><th>类别</th><th>更新前</th><th>加入新样本</th><th>更新后（$\alpha=1, |V|=2$）</th></tr>
+<tr><td>垃圾（12 条）</td><td>中奖 8、免费 7</td><td>S1（1,1）+ S2（1,0）</td><td>$\theta_{\text{prize}} = \frac{8+2+1}{12+2} = 0.786$；$\theta_{\text{free}} = \frac{7+1+1}{12+2} = 0.643$</td></tr>
+<tr><td>正常（11 条）</td><td>中奖 1、免费 2</td><td>S3（0,0）</td><td>$\theta_{\text{prize}} = \frac{1+0+1}{11+2} = 0.154$；$\theta_{\text{free}} = \frac{2+0+1}{11+2} = 0.231$</td></tr>
+</table>
+</div>
+<p>关键差异：伯努利模型对<strong>"某词没出现"</strong>也计概率（$1-\theta$ 项）。S3 中"中奖"和"免费"都没出现，$0.2 \times 0.3 = 0.06$（垃圾类）远小于 $0.9 \times 0.8 = 0.72$（正常类），模型正确识别为正常——这种敏感性对短文本非常有用。</p>
 </div>
 
 <table>
