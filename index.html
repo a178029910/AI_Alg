@@ -104,15 +104,15 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 <section class="hero">
   <h1>人工智能算法精华介绍</h1>
   <div class="subtitle">从经典机器学习到前沿深度学习 — 完整技术文档系列</div>
-  <div class="tagline">20 个核心算法与基础 · 浅色主题 · KaTeX 公式编号 · SVG 结构图 · PyTorch 代码 · 响应式布局</div>
+  <div class="tagline">21 个核心算法与基础 · 浅色主题 · KaTeX 公式编号 · SVG 结构图 · PyTorch 代码 · 响应式布局</div>
 </section>
 
 <nav class="filter-bar">
   <span class="label">筛选：</span>
   <button class="filter-btn active" data-cat="all">全部</button>
   <button class="filter-btn" data-cat="math">数学基础</button>
-  <button class="filter-btn" data-cat="ml">经典机器学习</button>
-  <button class="filter-btn" data-cat="deep">深度学习基础</button>
+  <button class="filter-btn" data-cat="ml">机器学习</button>
+  <button class="filter-btn" data-cat="deep">深度学习</button>
   <button class="filter-btn" data-cat="cv">计算机视觉</button>
   <button class="filter-btn" data-cat="nlp">自然语言处理</button>
   <button class="filter-btn" data-cat="graph">图学习</button>
@@ -221,6 +221,18 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
       <p class="desc">OpenAI 提出的多模态对比学习模型，通过对齐图像和文本的嵌入空间实现零样本分类，是视觉-语言模型的里程碑。</p>
       <div class="tags"><span class="tag tag-green">多模态</span><span class="tag tag-purple">对比学习</span></div>
       <div class="meta"><span class="count">18 公式 / 5 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- LearningParadigms -->
+    <a class="card" href="LearningParadigms/index.html" data-cat="ml" data-name="学习范式 综述 有监督 无监督 半监督 自监督 弱监督 迁移学习 元学习 RLHF RLVR DPO FixMatch SimCLR MAE CLIP BERT 预训练 微调 对齐 大模型">
+      <div class="icon cat-ml">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6l3 6M7 18l3-6M14 12l3-6M14 12l3 6"/><path d="M5 8v8M19 8v8" stroke-dasharray="2 2" opacity="0.4"/></svg>
+      </div>
+      <h3>机器学习范式综述</h3>
+      <div class="en-name">Learning Paradigms Review · Supervised · Unsupervised · SSL · Self-Supervised</div>
+      <p class="desc">系统综述有监督、无监督、半监督、自监督、弱监督、迁移与元学习六大范式，涵盖基本原理、核心公式与 2024-2025 前沿新技术（RLHF/RLVR/DPO、FixMatch、I-JEPA、扩散模型、异构半监督等），附选型决策流程与演进时间线。</p>
+      <div class="tags"><span class="tag tag-red">机器学习</span><span class="tag tag-blue">综述</span><span class="tag tag-purple">范式</span><span class="tag tag-green">2025前沿</span></div>
+      <div class="meta"><span class="count">14 公式 / 3 SVG / 2 代码</span><span class="arrow">&#8594;</span></div>
     </a>
 
     <!-- NaiveBayes -->
@@ -378,7 +390,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 const filterBtns = document.querySelectorAll('.filter-btn');
 const cards = document.querySelectorAll('.card');
 const resultTitle = document.getElementById('resultTitle');
-const catNames = { all: '全部算法', deep: '深度学习基础', cv: '计算机视觉', nlp: '自然语言处理', ml: '经典机器学习', graph: '图学习', prob: '概率与随机过程', math: '数学基础' };
+  const catNames = { all: '全部算法', deep: '深度学习', cv: '计算机视觉', nlp: '自然语言处理', ml: '机器学习', graph: '图学习', prob: '概率与随机过程', math: '数学基础' };
 
 filterBtns.forEach(btn => {
   btn.addEventListener('click', () => {

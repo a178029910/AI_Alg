@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机器学习范式综述 — Supervised, Unsupervised, Semi-Supervised & Self-Supervised Learning</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>机器学习范式综述</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、引言：范式概览</a>
+    <a href="#ch2">二、有监督学习</a>
+    <a href="#ch3">三、无监督学习</a>
+    <a href="#ch4">四、半监督学习</a>
+    <a href="#ch5">五、自监督学习</a>
+    <a href="#ch6">六、弱监督学习</a>
+    <a href="#ch7">七、迁移学习与元学习</a>
+    <a href="#ch8">八、2024-2025 前沿技术</a>
+    <a href="#ch9">九、范式对比与选型</a>
+    <a href="#ch10">十、未来趋势与展望</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>机器学习范式综述</h1>
+  <div class="subtitle">Learning Paradigms — Supervised · Unsupervised · Semi-Supervised · Self-Supervised</div>
+  <div class="tagline">从标注数据到自监督预训练 · 从经典方法到大模型时代 · 2024-2025 前沿综述</div>
+  <div class="badges">
+    <span class="badge">10 个章节</span>
+    <span class="badge">3 张 SVG 结构图</span>
+    <span class="badge">12 个公式</span>
+    <span class="badge">2 段 Python 代码</span>
+    <span class="badge">1 张演进时间线</span>
+  </div>
+</section>
+
+<!-- 第一章 -->
+<section id="ch1">
+<h2><span class="num">1</span>引言：机器学习范式概览</h2>
+
+<p>机器学习的<strong>学习范式</strong>（Learning Paradigm）是指模型从数据中获取知识的根本方式。不同的范式在<em>数据标注程度</em>、<em>学习目标</em>和<em>反馈信号</em>上存在本质差异，决定了模型的训练流程、适用场景和性能上限。</p>
+
+<p>理解学习范式的核心框架可以从三个维度切入：</p>
+<ul>
+  <li><strong>标注信号</strong>：数据是否带有人工标注的标签（label），以及标签的完整性和准确性。</li>
+  <li><strong>学习目标</strong>：模型是学习输入到输出的映射、发现数据的内在结构，还是构建可迁移的通用表示。</li>
+  <li><strong>反馈机制</strong>：训练过程中是否有显式的奖励/惩罚信号引导模型优化。</li>
+</ul>
+
+<h3>1.1 范式谱系</h3>
+<p>按照标注信号从强到弱，机器学习范式可排列为如下谱系：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="lpA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+  <marker id="lpP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#7c3aed"/></marker>
+</defs>
+<!-- 根节点 -->
+<rect x="340" y="15" width="220" height="40" rx="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="450" y="40" fill="#1e293b" font-size="15" font-weight="700" text-anchor="middle">机器学习范式</text>
+<!-- 第一层：4 大范式 -->
+<line x1="450" y1="55" x2="130" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<line x1="450" y1="55" x2="360" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<line x1="450" y1="55" x2="590" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<line x1="450" y1="55" x2="810" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<rect x="50" y="105" width="160" height="34" rx="17" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+<text x="130" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">有监督学习</text>
+<rect x="280" y="105" width="160" height="34" rx="17" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="360" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">无监督学习</text>
+<rect x="510" y="105" width="160" height="34" rx="17" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="590" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">半监督学习</text>
+<rect x="730" y="105" width="160" height="34" rx="17" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="810" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">自监督学习</text>
+<!-- 第二层：方法 -->
+<text x="130" y="168" fill="#64748b" font-size="11" text-anchor="middle">标注数据 → 映射</text>
+<text x="360" y="168" fill="#64748b" font-size="11" text-anchor="middle">无标签 → 结构发现</text>
+<text x="590" y="168" fill="#64748b" font-size="11" text-anchor="middle">少量标注 + 大量无标</text>
+<text x="810" y="168" fill="#64748b" font-size="11" text-anchor="middle">自构造 pretext → 表示</text>
+<!-- 第三层：代表方法 -->
+<text x="130" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">SVM · RF · CNN · BERT</text>
+<text x="360" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">K-Means · PCA · VAE · GAN</text>
+<text x="590" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">FixMatch · Mean Teacher</text>
+<text x="810" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">SimCLR · MAE · MoCo</text>
+<!-- 标注强度条 -->
+<text x="450" y="250" fill="#0f172a" font-size="13" font-weight="700" text-anchor="middle">标注信号强度</text>
+<rect x="100" y="265" width="700" height="14" rx="7" fill="url(#lpGrad)"/>
+<defs>
+  <linearGradient id="lpGrad" x1="0%" x2="100%">
+    <stop offset="0%" stop-color="#dc2626"/><stop offset="33%" stop-color="#7c3aed"/><stop offset="66%" stop-color="#ea580c"/><stop offset="100%" stop-color="#059669"/>
+  </linearGradient>
+</defs>
+<text x="130" y="298" fill="#dc2626" font-size="11" font-weight="600" text-anchor="middle">强（全标注）</text>
+<text x="450" y="298" fill="#7c3aed" font-size="11" font-weight="600" text-anchor="middle">中（部分/弱标注）</text>
+<text x="810" y="298" fill="#059669" font-size="11" font-weight="600" text-anchor="middle">弱（自构造）</text>
+</svg>
+</div>
+
+<h3>1.2 范式之间的关系</h3>
+<p>各范式并非完全独立，而是存在递进和融合关系：</p>
+<ul>
+  <li><strong>有监督</strong>是最基础的范式，提供了"从标注中学习"的标准框架。</li>
+  <li><strong>无监督</strong>探索数据自身的结构，不依赖外部标签。</li>
+  <li><strong>半监督</strong>介于两者之间，用少量标注引导大量无标注数据的学习。</li>
+  <li><strong>自监督</strong>从无标注数据中自动构造监督信号（pretext task），是当前大模型预训练的核心范式。</li>
+  <li><strong>弱监督</strong>放宽了对标签质量的要求，包括不完整、不精确和不准确的标注。</li>
+</ul>
+
+<div class="callout">
+<div class="callout-title">范式融合趋势</div>
+<p>当前（2024-2025）最主流的范式组合是 <strong>自监督预训练 + 少量有监督微调 + RLHF 对齐</strong>，几乎所有 SOTA 大模型（GPT-4、LLaMA、Gemini）都遵循这一路线。</p>
+</div>
+
+</section>
+
+<!-- 第二章 -->
+<section id="ch2">
+<h2><span class="num">2</span>有监督学习（Supervised Learning）</h2>
+
+<h3>2.1 定义与基本范式</h3>
+<p>有监督学习从<strong>标注数据集</strong> $\mathcal{D} = \{(\mathbf{x}_i, y_i)\}_{i=1}^{N}$ 中学习一个映射函数 $f: \mathcal{X} \to \mathcal{Y}$，使得对未见输入 $\mathbf{x}$ 能预测正确的输出 $y$。训练目标是最小化经验风险：</p>
+<div class="formula" data-eq="(1)">$$\theta^* = \arg\min_{\theta} \frac{1}{N} \sum_{i=1}^{N} \mathcal{L}(f_\theta(\mathbf{x}_i), y_i) + \lambda \Omega(\theta)$$</div>
+<p>其中 $\mathcal{L}$ 是损失函数（分类用交叉熵、回归用 MSE），$\Omega(\theta)$ 是正则化项，$\lambda$ 控制正则化强度。</p>
+
+<h3>2.2 两大子类</h3>
+<table>
+<tr><th>子类</th><th>输出空间</th><th>损失函数</th><th>典型应用</th></tr>
+<tr><td>分类（Classification）</td><td>离散类别 $\{1, \ldots, K\}$</td><td>交叉熵 $\mathcal{L} = -\sum_k y_k \log \hat{y}_k$</td><td>图像分类、垃圾邮件检测</td></tr>
+<tr><td>回归（Regression）</td><td>连续值 $\mathbb{R}$</td><td>MSE $\mathcal{L} = (f(\mathbf{x}) - y)^2$</td><td>房价预测、温度预测</td></tr>
+</table>
+
+<h3>2.3 经典方法谱系</h3>
+<ul>
+  <li><strong>线性模型</strong>：逻辑回归、线性回归 — 简洁、可解释、适合基线。</li>
+  <li><strong>核方法</strong>：SVM、核岭回归 — 通过核技巧处理非线性。</li>
+  <li><strong>树模型</strong>：决策树（CART、ID3、C4.5）、随机森林、GBDT — 天然处理混合类型特征。</li>
+  <li><strong>深度模型</strong>：CNN（图像）、RNN/Transformer（序列） — 端到端表征学习。</li>
+</ul>
+
+<h3>2.4 深度学习时代的有监督训练</h3>
+<p>深度学习将特征工程融入端到端训练。以图像分类为例，标准流程为：</p>
+<div class="formula" data-eq="(2)">$$\mathbf{z} = \text{CNN}(\mathbf{x}), \quad \hat{y} = \text{softmax}(\mathbf{W}\mathbf{z} + \mathbf{b}), \quad \mathcal{L} = -\log \hat{y}_{y_{\text{true}}}$$</div>
+
+<h3>2.5 近两年新技术（2024-2025）</h3>
+
+<h4>大模型监督微调（SFT）</h4>
+<p>大模型时代的有监督学习核心是<strong>监督微调</strong>（Supervised Fine-Tuning, SFT）：在自监督预训练基础上，用高质量指令-响应对训练模型遵循指令。LLaMA-3、Qwen-2 等均采用 SFT 作为对齐的第一阶段。</p>
+
+<h4>指令微调与对话微调</h4>
+<p>指令微调（Instruction Tuning）将多任务统一为自然语言指令格式，使模型获得<strong>任务泛化</strong>能力。ChatGPT、Claude 等均通过指令微调实现多轮对话能力。2024 年的代表性工作包括<strong>FLAN-T5</strong> 升级版和<strong>NVIDIA Nemotron</strong>。</p>
+
+<h4>参数高效微调（PEFT）</h4>
+<p>LoRA（Low-Rank Adaptation）及其变体（QLoRA、AdaLoRA）成为大模型有监督微调的标准方法：冻结预训练权重，仅训练低秩适配矩阵，将可训练参数降至 0.1% 以下。2024-2025 年 DoRA、PiSSA 等进一步改进了 LoRA 的表达能力。</p>
+
+<h4>RLHF 与 RLVR</h4>
+<p><strong>RLHF</strong>（Reinforcement Learning from Human Feedback）和 <strong>RLVR</strong>（Reinforcement Learning from Verifiable Rewards）将人类偏好或可验证奖励融入训练。OpenAI o1/o3、DeepSeek-R1 均使用大规模 RLVR 训练推理能力，代表了有监督学习向<strong>奖励驱动学习</strong>的延伸。</p>
+
+<div class="callout warn">
+<div class="callout-title">有监督学习的瓶颈</div>
+<p>高质量标注数据的获取成本随任务复杂度指数增长。在医学影像、法律文本等专业领域，单条标注成本可达数百元。这是推动半监督、自监督范式发展的核心动力。</p>
+</div>
+
+</section>
+
+<!-- 第三章 -->
+<section id="ch3">
+<h2><span class="num">3</span>无监督学习（Unsupervised Learning）</h2>
+
+<h3>3.1 定义与目标</h3>
+<p>无监督学习从<strong>无标签数据</strong> $\mathcal{D} = \{\mathbf{x}_i\}_{i=1}^{N}$ 中发现数据的内在结构、分布或关系。没有外部标签指导，模型完全依赖数据自身的统计特性进行学习。其通用目标可表述为：</p>
+<div class="formula" data-eq="(3)">$$\theta^* = \arg\min_{\theta} \frac{1}{N} \sum_{i=1}^{N} \mathcal{L}_{\text{self}}(f_\theta(\mathbf{x}_i))$$</div>
+<p>其中 $\mathcal{L}_{\text{self}}$ 是由任务定义的<em>自驱动</em>损失，如重建误差、聚类紧凑度或散度最小化。</p>
+
+<h3>3.2 核心任务与方法</h3>
+<table>
+<tr><th>任务</th><th>目标</th><th>代表方法</th><th>公式核心</th></tr>
+<tr><td>聚类（Clustering）</td><td>将相似样本归为一组</td><td>K-Means、DBSCAN、层次聚类</td><td>$\min \sum_k \sum_{i \in C_k} \|\mathbf{x}_i - \boldsymbol{\mu}_k\|^2$</td></tr>
+<tr><td>降维（Dimensionality Reduction）</td><td>压缩到低维保留信息</td><td>PCA、t-SNE、UMAP</td><td>$\max \text{Var}(\mathbf{X}\mathbf{w})$</td></tr>
+<tr><td>密度估计（Density Estimation）</td><td>估计数据分布 $p(\mathbf{x})$</td><td>GMM、KDE、VAE</td><td>$\max \sum_i \log p_\theta(\mathbf{x}_i)$</td></tr>
+<tr><td>异常检测（Anomaly Detection）</td><td>识别偏离分布的样本</td><td>Isolation Forest、Autoencoder</td><td>$\text{score} = \|\mathbf{x} - \hat{\mathbf{x}}\|^2$</td></tr>
+</table>
+
+<h3>3.3 深度无监督学习</h3>
+<h4>自编码器（Autoencoder）</h4>
+<p>通过编码器-解码器结构学习压缩表示：$\mathbf{z} = E(\mathbf{x})$，$\hat{\mathbf{x}} = D(\mathbf{z})$，损失为重建误差：</p>
+<div class="formula" data-eq="(4)">$$\mathcal{L}_{\text{AE}} = \|\mathbf{x} - D(E(\mathbf{x}))\|^2$$</div>
+<p>VAE 引入概率建模，优化 ELBO：</p>
+<div class="formula" data-eq="(5)">$$\mathcal{L}_{\text{VAE}} = \mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})}[\log p_\theta(\mathbf{x}|\mathbf{z})] - D_{\text{KL}}(q_\phi(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))$$</div>
+
+<h4>生成对抗网络（GAN）</h4>
+<p>生成器 $G$ 与判别器 $D$ 博弈，目标函数为：</p>
+<div class="formula" data-eq="(6)">$$\min_G \max_D \; \mathbb{E}_{\mathbf{x} \sim p_{\text{data}}}[\log D(\mathbf{x})] + \mathbb{E}_{\mathbf{z} \sim p_z}[\log(1 - D(G(\mathbf{z})))]$$</div>
+
+<h3>3.4 近两年新技术（2024-2025）</h3>
+
+<h4>扩散模型（Diffusion Models）</h4>
+<p>扩散模型已成为无监督生成的新主流。前向过程逐步加噪 $q(\mathbf{x}_t | \mathbf{x}_{t-1})$，反向过程学习去噪 $p_\theta(\mathbf{x}_{t-1} | \mathbf{x}_t)$。DDPM 的训练目标简化为：</p>
+<div class="formula" data-eq="(7)">$$\mathcal{L}_{\text{diff}} = \mathbb{E}_{t, \mathbf{x}_0, \boldsymbol{\epsilon}} \left[ \| \boldsymbol{\epsilon} - \epsilon_\theta(\mathbf{x}_t, t) \|^2 \right]$$</div>
+<p>2024-2025 年代表性进展：<strong>Stable Diffusion 3</strong>（改进的 Rectified Flow 采样）、<strong>Sora</strong>（视频扩散）、<strong>DiT</strong>（Diffusion Transformer 架构）。扩散模型本质上是无监督学习，从数据分布中学习生成能力。</p>
+
+<h4>大模型时代的无监督聚类</h4>
+<p>传统 K-Means 在高维嵌入空间中效果有限。2024 年出现了基于<strong>大模型嵌入 + 屌次聚类</strong>的新方法，如利用 BERT/CLIP 嵌入做语义聚类（SE-Clustering），在无标注场景下实现了接近有监督方法的聚类精度。</p>
+
+<h4>无监督表示学习新范式</h4>
+<p>2024-2025 年，<strong>掩码图像建模</strong>（MIM）和<strong>掩码语言建模</strong>（MLM）已成为无监督表示学习的主流方向。MAE 在视觉领域、BERT 在语言领域证明了：通过重建被遮盖的部分，模型能学到高质量的通用表示。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ulA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+</defs>
+<!-- 标题 -->
+<text x="450" y="25" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">无监督学习核心方法分类</text>
+<!-- 第一层：4 大任务 -->
+<rect x="40" y="50" width="170" height="36" rx="18" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+<text x="125" y="73" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">聚类</text>
+<rect x="260" y="50" width="170" height="36" rx="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="345" y="73" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">降维</text>
+<rect x="480" y="50" width="170" height="36" rx="18" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="565" y="73" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">密度估计 / 生成</text>
+<rect x="700" y="50" width="170" height="36" rx="18" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="785" y="73" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">异常检测</text>
+<!-- 连线到第二层 -->
+<line x1="125" y1="86" x2="125" y2="120" stroke="#334155" stroke-width="1.5" marker-end="url(#ulA)"/>
+<line x1="345" y1="86" x2="345" y2="120" stroke="#334155" stroke-width="1.5" marker-end="url(#ulA)"/>
+<line x1="565" y1="86" x2="565" y2="120" stroke="#334155" stroke-width="1.5" marker-end="url(#ulA)"/>
+<line x1="785" y1="86" x2="785" y2="120" stroke="#334155" stroke-width="1.5" marker-end="url(#ulA)"/>
+<!-- 第二层：方法 -->
+<text x="125" y="138" fill="#64748b" font-size="11" text-anchor="middle" font-weight="600">K-Means · DBSCAN</text>
+<text x="125" y="155" fill="#94a3b8" font-size="10.5" text-anchor="middle">层次聚类 · 谱聚类</text>
+<text x="345" y="138" fill="#64748b" font-size="11" text-anchor="middle" font-weight="600">PCA · t-SNE</text>
+<text x="345" y="155" fill="#94a3b8" font-size="10.5" text-anchor="middle">UMAP · 自编码器</text>
+<text x="565" y="138" fill="#64748b" font-size="11" text-anchor="middle" font-weight="600">VAE · GAN</text>
+<text x="565" y="155" fill="#94a3b8" font-size="10.5" text-anchor="middle">扩散模型 · Normalizing Flow</text>
+<text x="785" y="138" fill="#64748b" font-size="11" text-anchor="middle" font-weight="600">Isolation Forest</text>
+<text x="785" y="155" fill="#94a3b8" font-size="10.5" text-anchor="middle">自编码器重建误差</text>
+<!-- 底部趋势 -->
+<line x1="40" y1="200" x2="870" y2="200" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,3"/>
+<text x="450" y="225" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">2024-2025 新趋势</text>
+<text x="450" y="248" fill="#64748b" font-size="12" text-anchor="middle">扩散模型生成 · 大模型嵌入聚类 · 掩码建模表示学习 · 自监督异常检测</text>
+</svg>
+</div>
+
+</section>
+
+<!-- 第四章 -->
+<section id="ch4">
+<h2><span class="num">4</span>半监督学习（Semi-Supervised Learning）</h2>
+
+<h3>4.1 定义与问题动机</h3>
+<p>半监督学习利用<strong>少量标注数据 + 大量无标注数据</strong>联合训练。设标注集 $\mathcal{D}_L = \{(\mathbf{x}_i, y_i)\}_{i=1}^{L}$ 和无标注集 $\mathcal{D}_U = \{\mathbf{x}_j\}_{j=1}^{U}$，通常 $L \ll U$。目标是比仅用 $L$ 训练获得更好的性能。优化目标可形式化为：</p>
+<div class="formula" data-eq="(8)">$$\theta^* = \arg\min_\theta \left[ \sum_{(\mathbf{x},y) \in \mathcal{D}_L} \mathcal{L}_{\text{sup}}(f_\theta(\mathbf{x}), y) + \lambda_U \sum_{\mathbf{x} \in \mathcal{D}_U} \mathcal{L}_{\text{unsup}}(f_\theta(\mathbf{x})) \right]$$</div>
+
+<h3>4.2 三大假设</h3>
+<p>半监督学习依赖于以下假设才能有效利用无标注数据：</p>
+<ul>
+  <li><strong>平滑假设</strong>（Smoothness）：如果两个样本在输入空间中接近，它们的标签也应相同。</li>
+  <li><strong>聚类假设</strong>（Cluster）：同一聚类中的样本倾向于有相同标签。</li>
+  <li><strong>流形假设</strong>（Manifold）：高维数据集中在一个低维流形上，无标注数据有助于刻画流形结构。</li>
+</ul>
+
+<h3>4.3 经典方法</h3>
+
+<h4>一致性正则（Consistency Regularization）</h4>
+<p>对同一输入施加不同扰动，模型应给出一致预测。代表方法 <strong>Π-Model</strong> 和 <strong>Mean Teacher</strong>：</p>
+<div class="formula" data-eq="(9)">$$\mathcal{L}_{\text{cons}} = \| f_\theta(\mathbf{x}) - f_{\theta'}(\text{aug}(\mathbf{x})) \|^2$$</div>
+<p>Mean Teacher 用 EMA（指数移动平均）更新 $\theta'$，使教师模型更稳定。</p>
+
+<h4>伪标签（Pseudo-Label）</h4>
+<p>用模型对无标注数据的预测生成伪标签，再将高置信度伪标签加入训练集。FixMatch 结合一致性正则和伪标签，在极低标注量下达到全监督性能：</p>
+<div class="formula" data-eq="(10)">$$\mathcal{L}_{\text{FixMatch}} = \mathcal{L}_s + \lambda_u \cdot \mathbb{1}(\max(p) \geq \tau) \cdot \mathcal{L}_u$$</div>
+
+<h4>图方法（Graph-Based）</h4>
+<p>构建样本相似图，通过标签传播（Label Propagation）将标注信息扩散到无标注节点。</p>
+
+<h3>4.4 近两年新技术（2024-2025）</h3>
+
+<h4>异构半监督学习（HSSL）</h4>
+<p>CVPR 2025 提出<strong>异构半监督学习</strong>（Uni-HSSL），解决了有标签和无标签数据来自不同领域的新问题设定。传统方法假设标注和无标注数据同分布，Uni-HSSL 通过统一框架连接半监督学习（SSL）和无监督域适应（UDA），在异构数据上实现知识迁移。</p>
+
+<h4>半监督医学图像分割</h4>
+<p>2024-2025 年半监督学习在医学图像分割取得显著进展。代表性工作 <strong>BoCLIS</strong>（TMI 2025）结合<strong>边界引导对比学习</strong>和平均教师网络，在标注量仅为 10% 时将分割精度提升 20%。关键技术包括不确定性加权、边界感知对比损失和跨切片一致性正则。</p>
+
+<h4>大模型辅助半监督学习</h4>
+<p>利用大语言模型（LLM）或视觉语言模型（VLM）自动生成伪标签，再结合传统半监督方法进行训练。2024 年出现了 <strong>LLM-as-annotator</strong> 范式：用 GPT-4 标注大量无标注数据，再用半监督方法训练小模型，在成本和性能间取得平衡。</p>
+
+<h4>半监督目标检测</h4>
+<p>在目标检测领域，SoftTeacher（2021）开创了半监督检测框架，2024-2025 年的改进包括<strong>多尺度伪标签融合</strong>和<strong>类别自适应阈值</strong>，在 COCO 上以 10% 标注达到 90% 全监督性能。</p>
+
+<div class="callout success">
+<div class="callout-title">半监督学习的价值</div>
+<p>半监督学习是在标注成本和数据规模间取得平衡的实用范式。在标注预算有限时，用少量标注+大量无标注数据往往能获得显著优于纯有监督的性能提升。</p>
+</div>
+
+</section>
+
+<!-- 第五章 -->
+<section id="ch5">
+<h2><span class="num">5</span>自监督学习（Self-Supervised Learning）</h2>
+
+<h3>5.1 定义与核心思想</h3>
+<p>自监督学习从<strong>无标注数据中自动构造监督信号</strong>（pretext task / proxy task），使模型在不依赖人工标注的情况下学习通用表示。其核心是：将数据自身的某一部分作为标签，让模型预测被隐藏或变换的部分。</p>
+
+<div class="formula" data-eq="(11)">$$\theta^* = \arg\min_\theta \mathbb{E}_{\mathbf{x} \sim \mathcal{D}} \left[ \mathcal{L}_{\text{pretext}}(f_\theta(\mathbf{x}), \text{target}(\mathbf{x})) \right]$$</div>
+<p>其中 $\text{target}(\mathbf{x})$ 由数据 $\mathbf{x}$ 本身自动构造，无需人工标注。</p>
+
+<h3>5.2 NLP 领域：掩码语言建模</h3>
+<p>BERT 的<strong>掩码语言建模</strong>（MLM）是自监督学习的经典范例：随机遮盖 15% 的 token，让模型预测被遮盖的词。GPT 系列则使用<strong>因果语言建模</strong>（CLM）：根据上文预测下一个 token。这两种方式均无需人工标注，利用文本自身结构构造监督信号。</p>
+
+<h3>5.3 CV 领域：对比学习与掩码建模</h3>
+
+<h4>对比学习（Contrastive Learning）</h4>
+<p>SimCLR、MoCo 系列通过<strong>实例判别</strong>学习表示：对同一图像的不同增强视图拉近（正样本对），对不同图像的视图推远（负样本对）。InfoNCE 损失：</p>
+<div class="formula" data-eq="(12)">$$\mathcal{L}_{\text{NCE}} = -\log \frac{\exp(\text{sim}(\mathbf{z}_i, \mathbf{z}_j^+) / \tau)}{\sum_k \exp(\text{sim}(\mathbf{z}_i, \mathbf{z}_k) / \tau)}$$</div>
+<p>2024-2025 年对比学习在视觉自监督中的地位逐渐被掩码建模取代，但在多模态对齐（如 CLIP）中仍是核心技术。</p>
+
+<h4>掩码图像建模（MIM）</h4>
+<p>MAE 随机遮盖 75% 的图像 Patch，仅用可见部分重建被遮盖区域。非对称编解码器设计（轻量编码器 + 宽解码器）使预训练效率提升 3 倍以上。BEiT 系列则将遮盖 Patch 用 VQ-VAE 离散 token 替代像素重建目标。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ssA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+  <marker id="ssP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#7c3aed"/></marker>
+</defs>
+<!-- 标题 -->
+<text x="450" y="25" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">自监督学习范式分类</text>
+<!-- 左分支：NLP -->
+<rect x="180" y="50" width="200" height="36" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="280" y="72" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">NLP 自监督</text>
+<!-- 右分支：CV -->
+<rect x="520" y="50" width="200" height="36" rx="18" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="620" y="72" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">CV 自监督</text>
+<!-- NLP 子方法 -->
+<line x1="280" y1="86" x2="220" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<line x1="280" y1="86" x2="340" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<rect x="150" y="120" width="140" height="30" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+<text x="220" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">MLM (BERT)</text>
+<rect x="270" y="120" width="140" height="30" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+<text x="340" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">CLM (GPT)</text>
+<!-- CV 子方法 -->
+<line x1="620" y1="86" x2="560" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<line x1="620" y1="86" x2="680" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<rect x="490" y="120" width="140" height="30" rx="15" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+<text x="560" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">对比学习 (SimCLR)</text>
+<rect x="610" y="120" width="140" height="30" rx="15" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+<text x="680" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">掩码建模 (MAE)</text>
+<!-- 底部：pretext task 说明 -->
+<line x1="220" y1="150" x2="220" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<line x1="340" y1="150" x2="340" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<line x1="560" y1="150" x2="560" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<line x1="680" y1="150" x2="680" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<text x="220" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">预测遮盖 token</text>
+<text x="340" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">预测下一个 token</text>
+<text x="560" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">实例判别对比</text>
+<text x="680" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">重建遮盖 patch</text>
+<!-- 底部：大模型时代 -->
+<line x1="180" y1="235" x2="720" y2="235" stroke="#7c3aed" stroke-width="2" stroke-dasharray="8,4" class="flow-line"/>
+<text x="450" y="262" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">大模型预训练 = 自监督学习 + 规模化</text>
+<text x="450" y="284" fill="#94a3b8" font-size="11" text-anchor="middle">GPT · BERT · LLaMA · ViT-MAE · CLIP 均以自监督为核心训练方式</text>
+</svg>
+</div>
+
+<h3>5.4 近两年新技术（2024-2025）</h3>
+
+<h4>掩码自编码器的全面突破</h4>
+<p>2024-2025 年，MAE 系列在视觉预训练领域占据主导地位。<strong>MAE v2</strong> 和 <strong>CAE v2</strong> 改进了重建目标和编码策略。<strong>iMAE</strong>（I-JEPA，LeCun 团队）提出了一种基于<strong>潜在空间预测</strong>的自监督方法，不再需要像素级重建，而是预测被遮盖区域的表示，在 ImageNet 线性探测和下游迁移上均超过 MAE。</p>
+
+<h4>多模态自监督</h4>
+<p>CLIP 开创了跨模态对比自监督范式。2024-2025 年的改进包括：<strong>SigLIP</strong>（用 sigmoid 代替 softmax 对比损失，支持大批量训练）、<strong>EVA-CLIP</strong>（扩展到 18B 参数）、<strong>OpenCLIP</strong>（开源大规模视觉-语言预训练）。这些方法本质上都是自监督学习，从海量图文对中学习跨模态表示。</p>
+
+<h4>自监督视频学习</h4>
+<p>VideoMAE 和 MAE-Video 将掩码建模扩展到时序维度，通过高比例时空掩码实现高效视频自监督预训练。2024 年 <strong>VideoMAE v2</strong> 在 Kinetics-400 上以 1/4 计算量达到全监督性能。</p>
+
+<h4>大语言模型的自监督训练</h4>
+<p>LLaMA-3、Qwen-2、DeepSeek-V3 等大语言模型的第一阶段训练（预训练）本质上就是自监督的因果语言建模：从万亿 token 的无标注文本中预测下一个 token。这是当前自监督学习规模最大的应用场景。</p>
+
+<h4>自监督异常检测</h4>
+<p>2024 年 <em>Neural Networks</em> 期刊发表的综述系统总结了自监督异常检测方法：通过变换预测、对比学习或重建误差构造异常分数。在工业质检、医学影像等领域，自监督方法已不需要异常样本即可检测异常。</p>
+
+<div class="callout">
+<div class="callout-title">自监督学习为何重要</div>
+<p>自监督学习是当前 AI 发展的<strong>核心驱动力</strong>。它解决了有监督学习的标注瓶颈，使模型能利用互联网上的海量无标注数据（文本、图像、视频）学习通用表示。所有现代大模型的预训练阶段都是自监督学习。</p>
+</div>
+
+</section>
+
+<!-- 第六章 -->
+<section id="ch6">
+<h2><span class="num">6</span>弱监督学习（Weakly Supervised Learning）</h2>
+
+<h3>6.1 定义与分类</h3>
+<p>弱监督学习放宽了对标签完整性和准确性的要求，处理三种不完美标注场景：</p>
+<table>
+<tr><th>类型</th><th>标签特征</th><th>代表场景</th><th>方法</th></tr>
+<tr><td>不完整标注</td><td>部分样本有标签，部分无标签</td><td>半监督学习、主动学习</td><td>伪标签、协同训练</td></tr>
+<tr><td>不精确标注</td><td>标签是粗粒度的（图像级→实例级）</td><td>弱监督目标检测/分割</td><td>Class Activation Map (CAM)、多实例学习</td></tr>
+<tr><td>不准确标注</td><td>标签存在噪声</td><td>众包标注、网页标签</td><td>标签降噪、协同教学</td></tr>
+</table>
+
+<h3>6.2 关键技术</h3>
+<h4>弱监督目标检测</h4>
+<p>仅有图像级标签，需定位目标。CAM（Class Activation Map）通过 GAP 层提取类别热力图，定位目标区域。2024 年改进方法引入<strong>在线分块策略</strong>和<strong>对抗擦除</strong>，逐步扩展目标区域。</p>
+
+<h4>弱监督语义分割</h4>
+<p>从图像级标签生成像素级分割掩码。2024-2025 年新方法结合<strong>大视觉语言模型</strong>（如 SAM、SEEM）自动生成分割伪标签，再训练分割网络。</p>
+
+<h3>6.3 近两年进展</h3>
+<p>2024 年中科院团队提出<strong>统一弱监督学习框架</strong>用于 LiDAR 遥感观测，将不完整、不精确、不准确标注统一建模。2026 年 arXiv 综述（Wang et al.）系统梳理了弱监督学习的<em>新监督范式</em>和<em>假设松弛</em>策略。</p>
+
+<div class="callout warn">
+<div class="callout-title">弱监督 vs 半监督</div>
+<p>弱监督学习强调标签<em>质量</em>的问题（不精确/不准确），半监督学习强调标签<em>数量</em>的问题（部分有标注）。实际场景中两者常交叉出现。</p>
+</div>
+
+</section>
+
+<!-- 第七章 -->
+<section id="ch7">
+<h2><span class="num">7</span>迁移学习与元学习</h2>
+
+<h3>7.1 迁移学习（Transfer Learning）</h3>
+<p>迁移学习将源域 $\mathcal{D}_S$ 上学到的知识迁移到目标域 $\mathcal{D}_T$，核心假设是源域和目标域存在共享知识。形式化地：</p>
+<div class="formula" data-eq="(13)">$$\theta_T^* = \arg\min_\theta \mathcal{L}_T(f_\theta; \mathcal{D}_T) + \lambda \|\theta - \theta_S\|^2$$</div>
+<p>其中 $\theta_S$ 是源域学到的参数，$\|\theta - \theta_S\|^2$ 防止偏离源域知识过远。</p>
+
+<h4>预训练-微调范式</h4>
+<p>当前最主流的迁移学习形式：<strong>大规模自监督预训练 + 下游有监督微调</strong>。BERT、ViT、CLIP 等模型在 ImageNet 或大规模文本上预训练，迁移到各种下游任务。</p>
+
+<h4>参数高效迁移</h4>
+<p>LoRA、Adapter、Prefix-Tuning 等方法使下游迁移只需训练极小参数量（<0.1%），2024-2025 年 DoRA（权重分解 LoRA）和 PiSSA（主成分 LoRA）进一步提升了参数高效微调的表达能力。</p>
+
+<h3>7.2 元学习（Meta-Learning）</h3>
+<p>元学习又称<strong>学会学习</strong>（Learning to Learn），目标是让模型快速适应新任务。核心思想是在大量任务上学习<strong>通用的学习策略</strong>。</p>
+
+<h4>MAML（Model-Agnostic Meta-Learning）</h4>
+<p>通过二阶梯度优化寻找好的初始化参数，使模型在新任务上只需少量梯度步即可收敛：</p>
+<div class="formula" data-eq="(14)">$$\theta^* = \arg\min_\theta \sum_{T_i} \mathcal{L}_{T_i}(f_{\theta - \alpha \nabla \mathcal{L}_{T_i}(\theta)})$$</div>
+
+<h4>近两年进展</h4>
+<p>2024-2025 年，元学习与大模型结合出现了<strong>In-Context Learning</strong>（上下文学习）范式：模型无需梯度更新，仅通过 prompt 中的示例即可学习新任务。GPT-4、Claude 等展示了强大的 ICL 能力，本质上是大规模预训练带来的隐式元学习。</p>
+
+</section>
+
+<!-- 第八章 -->
+<section id="ch8">
+<h2><span class="num">8</span>2024-2025 前沿技术综述</h2>
+
+<p>本章对近两年各范式的重要技术进展进行集中梳理，按主题分类介绍。</p>
+
+<h3>8.1 大模型训练范式变革</h3>
+<table>
+<tr><th>阶段</th><th>范式</th><th>代表模型</th><th>关键技术</th></tr>
+<tr><td>预训练</td><td>自监督（CLM/MLM）</td><td>LLaMA-3 · Qwen-2 · DeepSeek-V3</td><td>万亿 token、MoE 架构、长上下文</td></tr>
+<tr><td>监督微调</td><td>有监督（SFT）</td><td>各开源/闭源模型</td><td>指令微调、对话数据、高质量标注</td></tr>
+<tr><td>对齐</td><td>RLHF / RLVR / DPO</td><td>GPT-4o · Claude · DeepSeek-R1</td><td>奖励模型、可验证奖励、直接偏好优化</td></tr>
+</table>
+
+<h3>8.2 RLHF / RLVR / DPO 演进</h3>
+<p><strong>RLHF</strong>（2022-2023）通过人类偏好数据训练奖励模型，再用 PPO 优化策略。<strong>DPO</strong>（Direct Preference Optimization, 2023-2024）绕过奖励模型，直接从偏好数据优化策略，训练更简单稳定。<strong>RLVR</strong>（2024-2025）用可验证的规则（如数学答案正确性）作为奖励，OpenAI o1/o3 和 DeepSeek-R1 以此训练推理能力。2026 年 ICLR 上清华团队探索了<strong>无监督强化学习</strong>（Unsupervised RL），在无标注奖励的情况下驱动模型自我改进。</p>
+
+<h3>8.3 视觉自监督新进展</h3>
+<ul>
+  <li><strong>I-JEPA</strong>（Meta, 2024）：潜在空间预测式自监督，不依赖像素重建，更接近"概念级"表示学习。</li>
+  <li><strong>MAE 系列成熟</strong>：MAE v2 / CAE v2 在 ImageNet 迁移和检测分割上全面超越有监督预训练。</li>
+  <li><strong>多模态对比</strong>：SigLIP 用 sigmoid 对比损失替代 InfoNCE，训练效率提升 4 倍以上。</li>
+  <li><strong>视频自监督</strong>：VideoMAE v2 将高比例掩码引入视频时序维度，实现高效视频预训练。</li>
+</ul>
+
+<h3>8.4 半监督学习新方向</h3>
+<ul>
+  <li><strong>异构半监督（Uni-HSSL）</strong>：CVPR 2025，统一处理标注和无标注数据来自不同领域的场景。</li>
+  <li><strong>边界引导对比学习</strong>（BoCLIS）：TMI 2025，医学图像半监督分割精度大幅提升。</li>
+  <li><strong>大模型辅助标注</strong>：用 GPT-4 / VLM 生成伪标签，结合半监督方法训练小模型。</li>
+  <li><strong>半监督目标检测</strong>：多尺度伪标签融合 + 类别自适应阈值，10% 标注达 90% 性能。</li>
+</ul>
+
+<h3>8.5 弱监督学习新进展</h3>
+<ul>
+  <li><strong>统一弱监督框架</strong>（中科院, 2024）：不完整/不精确/不准确标注的统一建模。</li>
+  <li><strong>SAM 辅助弱监督</strong>：用 Segment Anything 模型自动生成分割伪标签。</li>
+  <li><strong>弱监督综述</strong>（arXiv 2026）：系统梳理新监督范式和假设松弛策略。</li>
+</ul>
+
+<h3>8.6 新兴交叉范式</h3>
+<h4>具身智能中的学习范式</h4>
+<p>2025-2026 年具身智能领域出现<strong>上下文学习</strong>（In-Context Learning）新范式：机器人观看人类示范视频后直接执行任务，无需后训练阶段的数据采集和梯度更新。Skild AI 的 S1 模型将 ICL 任务长度推到 10 分钟级别。</p>
+
+<h4>无监督强化学习</h4>
+<p>ICLR 2026 上清华团队提出在无标注奖励的情况下驱动大模型自我改进的方法，探索了从"监督式 RL"到"无监督 RL"的新方向。</p>
+
+</section>
+
+<!-- 第九章 -->
+<section id="ch9">
+<h2><span class="num">9</span>范式对比与工程选型</h2>
+
+<h3>9.1 六大范式全面对比</h3>
+<div class="table-wrap">
+<table>
+<tr><th>维度</th><th>有监督</th><th>无监督</th><th>半监督</th><th>自监督</th><th>弱监督</th><th>迁移/元学习</th></tr>
+<tr><td><strong>标注需求</strong></td><td>全标注</td><td>无标注</td><td>少量标注</td><td>无标注</td><td>弱标注</td><td>源域+目标域</td></tr>
+<tr><td><strong>学习目标</strong></td><td>映射函数</td><td>结构/分布</td><td>映射（增强）</td><td>通用表示</td><td>映射（弱标签）</td><td>快速适应</td></tr>
+<tr><td><strong>标注成本</strong></td><td>高</td><td>无</td><td>中</td><td>无</td><td>低</td><td>中</td></tr>
+<tr><td><strong>数据规模需求</strong></td><td>中-大</td><td>中</td><td>大</td><td>极大</td><td>中</td><td>源域大/目标域小</td></tr>
+<tr><td><strong>代表方法</strong></td><td>SVM · CNN · Transformer</td><td>K-Means · VAE · 扩散</td><td>FixMatch · Mean Teacher</td><td>BERT · MAE · CLIP</td><td>CAM · 多实例学习</td><td>LoRA · MAML · ICL</td></tr>
+<tr><td><strong>适用场景</strong></td><td>标注充足</td><td>探索分析</td><td>标注有限</td><td>大规模预训练</td><td>标注质量差</td><td>跨域/少样本</td></tr>
+<tr><td><strong>2025 主流度</strong></td><td>★★★★（微调阶段）</td><td>★★★</td><td>★★★</td><td>★★★★★（预训练）</td><td>★★</td><td>★★★★</td></tr>
+</table>
+</div>
+
+<h3>9.2 选型决策流程</h3>
+<div class="svg-box">
+<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="dsA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+</defs>
+<!-- 起点 -->
+<rect x="330" y="10" width="240" height="36" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="450" y="33" fill="#1e293b" font-size="14" font-weight="700" text-anchor="middle">选择学习范式</text>
+<!-- Q1 -->
+<line x1="450" y1="46" x2="450" y2="70" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<rect x="340" y="75" width="220" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="450" y="95" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">有充足标注数据？</text>
+<!-- Yes → 有监督 -->
+<line x1="340" y1="90" x2="180" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="240" y="120" fill="#059669" font-size="11" font-weight="600">是</text>
+<rect x="100" y="135" width="160" height="30" rx="15" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="180" y="155" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">有监督学习</text>
+<!-- No → Q2 -->
+<line x1="560" y1="90" x2="720" y2="130" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="660" y="120" fill="#dc2626" font-size="11" font-weight="600">否</text>
+<rect x="620" y="135" width="260" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="750" y="155" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">是否可自动构造监督信号？</text>
+<!-- Q2 Yes → 自监督 -->
+<line x1="620" y1="150" x2="520" y2="195" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="560" y="180" fill="#059669" font-size="11" font-weight="600">是</text>
+<rect x="420" y="200" width="160" height="30" rx="15" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="500" y="220" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">自监督学习</text>
+<!-- Q2 No → Q3 -->
+<line x1="880" y1="150" x2="880" y2="195" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="890" y="180" fill="#dc2626" font-size="11" font-weight="600">否</text>
+<rect x="750" y="200" width="260" height="30" rx="15" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="880" y="220" fill="#334155" font-size="12" font-weight="600" text-anchor="middle">有少量标注 + 大量无标注？</text>
+<!-- Q3 Yes → 半监督 -->
+<line x1="800" y1="230" x2="720" y2="275" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="740" y="260" fill="#059669" font-size="11" font-weight="600">是</text>
+<rect x="620" y="280" width="160" height="30" rx="15" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="700" y="300" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">半监督学习</text>
+<!-- Q3 No → 无监督/弱监督 -->
+<line x1="950" y1="230" x2="950" y2="275" stroke="#334155" stroke-width="1.5" marker-end="url(#dsA)"/>
+<text x="960" y="260" fill="#dc2626" font-size="11" font-weight="600">否</text>
+<rect x="850" y="280" width="160" height="30" rx="15" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="930" y="300" fill="#1e293b" font-size="12" font-weight="600" text-anchor="middle">无监督/弱监督</text>
+<!-- 底部注释 -->
+<line x1="80" y1="340" x2="870" y2="340" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,3"/>
+<text x="450" y="365" fill="#94a3b8" font-size="11" text-anchor="middle">实际场景中常组合多种范式：自监督预训练 → 少量有监督微调 → RLHF 对齐</text>
+</svg>
+</div>
+
+<h3>9.3 代码示例：不同范式下的训练流程对比</h3>
+<div class="code-block">
+<div class="code-header">paradigms_comparison.py</div>
+<pre><span class="com"># 有监督学习：标准分类训练</span>
+<span class="kw">def</span> <span class="fn">train_supervised</span>(model, dataloader, optimizer):
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> x, y <span class="kw">in</span> dataloader:               <span class="com"># x: 图像, y: 标签</span>
+        pred = <span class="fn">model</span>(x)
+        loss = <span class="fn">cross_entropy</span>(pred, y)     <span class="com"># 有标签 → 直接算损失</span>
+        optimizer.<span class="fn">zero_grad</span>(); loss.<span class="fn">backward</span>(); optimizer.<span class="fn">step</span>()
+
+<span class="com"># 半监督学习：FixMatch（一致性正则 + 伪标签）</span>
+<span class="kw">def</span> <span class="fn">train_fixmatch</span>(model, labeled_loader, unlabeled_loader, optimizer, tau=<span class="num">0.95</span>):
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> (x_l, y), x_u <span class="kw">in</span> <span class="fn">zip</span>(labeled_loader, unlabeled_loader):
+        <span class="com"># 有标注部分：标准交叉熵</span>
+        loss_s = <span class="fn">cross_entropy</span>(<span class="fn">model</span>(x_l), y)
+        <span class="com"># 无标注部分：弱增强预测伪标签 → 强增强一致性</span>
+        p_weak = <span class="fn">model</span>(<span class="fn">weak_aug</span>(x_u)).<span class="fn">detach</span>()
+        pseudo, conf = p_weak.<span class="fn">max</span>(dim=<span class="num">1</span>)
+        mask = (conf &gt;= tau).<span class="fn">float</span>()           <span class="com"># 仅高置信度伪标签参与</span>
+        loss_u = (<span class="fn">cross_entropy</span>(<span class="fn">model</span>(<span class="fn">strong_aug</span>(x_u)), pseudo, reduction=<span class="str">'none'</span>) * mask).<span class="fn">mean</span>()
+        loss = loss_s + <span class="num">1.0</span> * loss_u
+        optimizer.<span class="fn">zero_grad</span>(); loss.<span class="fn">backward</span>(); optimizer.<span class="fn">step</span>()
+
+<span class="com"># 自监督学习：SimCLR 对比学习</span>
+<span class="kw">def</span> <span class="fn">train_simclr</span>(model, unlabeled_loader, optimizer, temp=<span class="num">0.5</span>):
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> x <span class="kw">in</span> unlabeled_loader:             <span class="com"># 无标签数据</span>
+        x_i, x_j = <span class="fn">different_aug</span>(x), <span class="fn">different_aug</span>(x)  <span class="com"># 同一图像两种增强</span>
+        z_i, z_j = <span class="fn">model</span>(x_i), <span class="fn">model</span>(x_j)
+        <span class="com"># InfoNCE：正样本对拉近，batch 内其余为负样本</span>
+        sim = <span class="fn">cosine_sim</span>(z_i, z_j) / temp
+        labels = <span class="fn">torch</span>.<span class="fn">arange</span>(<span class="fn">len</span>(x))
+        loss = <span class="fn">cross_entropy</span>(sim, labels)
+        optimizer.<span class="fn">zero_grad</span>(); loss.<span class="fn">backward</span>(); optimizer.<span class="fn">step</span>()
+</pre>
+</div>
+
+</section>
+
+<!-- 第十章 -->
+<section id="ch10">
+<h2><span class="num">10</span>未来趋势与展望</h2>
+
+<h3>10.1 自监督预训练持续主导</h3>
+<p>自监督学习已从"辅助手段"上升为 AI 训练的<strong>第一范式</strong>。随着数据规模和算力增长，自监督预训练的表示质量持续提升，与有监督方法的差距不断缩小。预计 2026-2027 年，自监督预训练在视觉领域将全面超越有监督预训练。</p>
+
+<h3>10.2 RLHF / RLVR 演进为"对齐范式"</h3>
+<p>RLHF 及其变体（DPO、RLVR、无监督 RL）正成为与有监督微调并列的<strong>第二大训练阶段</strong>。可验证奖励（如数学答案正确性）降低了对人类标注的依赖，使推理能力训练可规模化。清华团队的<em>无监督强化学习</em>探索了无需标注奖励的新方向。</p>
+
+<h3>10.3 范式融合：预训练 + 微调 + 对齐</h3>
+<p>当前 SOTA 模型的标准训练流程已是多范式的融合：</p>
+<div class="svg-box">
+<svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ftA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+</defs>
+<!-- 三阶段流程 -->
+<rect x="30" y="60" width="240" height="50" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="150" y="82" fill="#1e293b" font-size="14" font-weight="700" text-anchor="middle">自监督预训练</text>
+<text x="150" y="100" fill="#64748b" font-size="11" text-anchor="middle">万亿 token · 无标注</text>
+<line x1="270" y1="85" x2="330" y2="85" stroke="#334155" stroke-width="2" marker-end="url(#ftA)"/>
+<rect x="330" y="60" width="240" height="50" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="450" y="82" fill="#1e293b" font-size="14" font-weight="700" text-anchor="middle">有监督微调 (SFT)</text>
+<text x="450" y="100" fill="#64748b" font-size="11" text-anchor="middle">指令数据 · 少量标注</text>
+<line x1="570" y1="85" x2="630" y2="85" stroke="#334155" stroke-width="2" marker-end="url(#ftA)"/>
+<rect x="630" y="60" width="240" height="50" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+<text x="750" y="82" fill="#1e293b" font-size="14" font-weight="700" text-anchor="middle">RLHF / RLVR 对齐</text>
+<text x="750" y="100" fill="#64748b" font-size="11" text-anchor="middle">偏好数据 / 可验证奖励</text>
+<!-- 底部注释 -->
+<text x="450" y="150" fill="#94a3b8" font-size="12" text-anchor="middle">GPT-4 · Claude · LLaMA-3 · DeepSeek-R1 · Gemini 均遵循此三阶段范式</text>
+<text x="450" y="175" fill="#94a3b8" font-size="11" text-anchor="middle">自监督（预训练） → 有监督（微调） → 强化学习（对齐）</text>
+</svg>
+</div>
+
+<h3>10.4 小模型 + 蒸馏 + 半监督</h3>
+<p>在大模型主导的同时，<strong>小模型高效训练</strong>也是重要方向：用大模型（GPT-4）作为教师蒸馏小模型，结合半监督学习利用无标注数据，在端侧部署场景中兼顾性能和成本。</p>
+
+<h3>10.5 具身智能与新范式</h3>
+<p>具身智能领域出现了<strong>上下文学习</strong>新范式：机器人通过观看示范视频直接执行新任务，无需后训练梯度更新。这暗示着未来可能出现"无优化器学习"的新范式。</p>
+
+<h3>10.6 演进时间线</h3>
+<div class="timeline">
+<div class="timeline-item"><span class="year">1957</span><div class="event">感知机（Rosenblatt）</div><div class="desc">有监督学习的起点：首个可学习线性分类器</div></div>
+<div class="timeline-item"><span class="year">1990s</span><div class="event">SVM · 随机森林 · K-Means 成熟</div><div class="desc">经典有监督 + 无监督方法的黄金时代</div></div>
+<div class="timeline-item"><span class="year">2012</span><div class="event">AlexNet — 深度有监督学习革命</div><div class="desc">CNN + 大规模标注数据 (ImageNet) 引爆深度学习</div></div>
+<div class="timeline-item"><span class="year">2013-2015</span><div class="event">VAE · GAN — 深度无监督生成</div><div class="desc">深度生成模型开辟无监督新方向</div></div>
+<div class="timeline-item"><span class="year">2017</span><div class="event">Transformer — 序列建模新范式</div><div class="desc">自注意力架构成为后续自监督预训练的基石</div></div>
+<div class="timeline-item"><span class="year">2018</span><div class="event">BERT — 自监督预训练元年</div><div class="desc">MLM 证明自监督预训练 + 微调可大幅超越有监督训练</div></div>
+<div class="timeline-item"><span class="year">2020</span><div class="event">SimCLR · MoCo — 视觉对比学习</div><div class="desc">对比学习在 ImageNet 上首次接近有监督性能</div></div>
+<div class="timeline-item"><span class="year">2021</span><div class="event">CLIP — 多模态自监督</div><div class="desc">4 亿图文对对比学习，实现零样本分类</div></div>
+<div class="timeline-item"><span class="year">2022</span><div class="event">MAE · FixMatch 成熟</div><div class="desc">视觉自监督走向高效掩码建模；半监督在低标注场景达全监督性能</div></div>
+<div class="timeline-item"><span class="year">2022-2023</span><div class="event">ChatGPT — RLHF 范式确立</div><div class="desc">自监督预训练 + SFT + RLHF 三阶段范式成为大模型标准</div></div>
+<div class="timeline-item"><span class="year">2024</span><div class="event">DPO · RLVR · I-JEPA · 扩散模型</div><div class="desc">直接偏好优化简化 RLHF；可验证奖励训练推理；自监督表示新突破</div></div>
+<div class="timeline-item"><span class="year">2025</span><div class="event">DeepSeek-R1 · Uni-HSSL · 具身 ICL</div><div class="desc">RLVR 大规模训练推理能力；异构半监督学习；具身上下文学习</div></div>
+<div class="timeline-item"><span class="year">2026</span><div class="event">无监督强化学习 · 统一弱监督框架</div><div class="desc">无标注奖励的自我改进；弱监督假设松弛系统化</div></div>
+</div>
+
+</section>
+
+<!-- 参考文献 -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Devlin, J., et al. (2018). BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. <em>NAACL 2019</em>.</li>
+<li>He, K., et al. (2022). Masked Autoencoders Are Scalable Vision Learners. <em>CVPR 2022</em>.</li>
+<li>Chen, T., et al. (2020). SimCLR: A Simple Framework for Contrastive Learning. <em>ICML 2020</em>.</li>
+<li>Radford, A., et al. (2021). CLIP: Learning Transferable Visual Models. <em>ICML 2021</em>.</li>
+<li>Sohn, K., et al. (2020). FixMatch: Simplifying Semi-Supervised Learning. <em>NeurIPS 2020</em>.</li>
+<li>Tarvainen, A., &amp; Valpola, H. (2017). Mean Teachers are Better Role Models. <em>NeurIPS 2017</em>.</li>
+<li>Oord, A., et al. (2018). Representation Learning with Contrastive Predictive Coding. <em>arXiv:1807.03748</em>.</li>
+<li>Assran, M., et al. (2023). JEPA: Joint-Embedding Predictive Architecture. <em>Meta AI</em>.</li>
+<li>Hu, E., et al. (2021). LoRA: Low-Rank Adaptation of Large Language Models. <em>ICLR 2022</em>.</li>
+<li>Ouyang, L., et al. (2022). Training language models to follow instructions with human feedback (RLHF). <em>NeurIPS 2022</em>.</li>
+<li>Rafailov, R., et al. (2023). DPO: Direct Preference Optimization. <em>NeurIPS 2023</em>.</li>
+<li>DeepSeek-AI. (2025). DeepSeek-R1: Incentivizing Reasoning Capability via RLVR. <em>arXiv:2501.12948</em>.</li>
+<li>Finn, C., et al. (2017). MAML: Model-Agnostic Meta-Learning. <em>ICML 2017</em>.</li>
+<li>Zhou, Z., et al. (2025). Uni-HSSL: Unified Heterogeneous Semi-Supervised Learning. <em>CVPR 2025</em>.</li>
+<li>Wang, W., Niu, G., &amp; Sugiyama, M. (2026). Recent advances in weakly supervised learning. <em>arXiv:2608.06896</em>.</li>
+<li>Ho, J., et al. (2020). Denoising Diffusion Probabilistic Models (DDPM). <em>NeurIPS 2020</em>.</li>
+<li>Zheng, Y., et al. (2025). BoCLIS: Boundary-guided Contrastive Learning for Semi-supervised Medical Image Segmentation. <em>TMI 2025</em>.</li>
+<li>清华团队. (2026). Unsupervised Reinforcement Learning for Large Language Models. <em>ICLR 2026</em>.</li>
+</ol>
+</section>
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+<script>
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.textContent, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>
