@@ -125,9 +125,10 @@ tr:hover td { background: var(--c-primary-ghost); }
     <a href="#ch5">五、自监督学习</a>
     <a href="#ch6">六、弱监督学习</a>
     <a href="#ch7">七、迁移学习与元学习</a>
-    <a href="#ch8">八、2024-2025 前沿技术</a>
-    <a href="#ch9">九、范式对比与选型</a>
-    <a href="#ch10">十、未来趋势与展望</a>
+    <a href="#ch8">八、目标函数与优化器</a>
+    <a href="#ch9">九、前沿技术</a>
+    <a href="#ch10">十、范式对比与选型</a>
+    <a href="#ch11">十一、未来趋势与展望</a>
     <a href="#refs">参考文献</a>
   </nav>
   <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
@@ -138,12 +139,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="hero" class="hero">
   <h1>机器学习范式综述</h1>
   <div class="subtitle">Learning Paradigms — Supervised · Unsupervised · Semi-Supervised · Self-Supervised</div>
-  <div class="tagline">从标注数据到自监督预训练 · 从经典方法到大模型时代 · 2024-2025 前沿综述</div>
+  <div class="tagline">从标注数据到自监督预训练 · 从经典方法到大模型时代 · 2024-2026 前沿综述</div>
   <div class="badges">
-    <span class="badge">10 个章节</span>
-    <span class="badge">3 张 SVG 结构图</span>
-    <span class="badge">12 个公式</span>
-    <span class="badge">2 段 Python 代码</span>
+    <span class="badge">11 个章节</span>
+    <span class="badge">6 张 SVG 结构图</span>
+    <span class="badge">18 个公式</span>
+    <span class="badge">3 段 Python 代码</span>
     <span class="badge">1 张演进时间线</span>
   </div>
 </section>
@@ -558,11 +559,202 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <!-- 第八章 -->
 <section id="ch8">
-<h2><span class="num">8</span>2024-2025 前沿技术综述</h2>
+<h2><span class="num">8</span>目标函数与优化器</h2>
 
-<p>本章对近两年各范式的重要技术进展进行集中梳理，按主题分类介绍。</p>
+<p>目标函数（损失函数）和优化器是机器学习训练的两大核心引擎：目标函数定义了"学什么"，优化器决定了"怎么学"。从经典的 SGD 到 2024-2026 年涌现的 Muon、Sophia、ARO 等新优化器，这一领域正经历深度变革。</p>
 
-<h3>8.1 大模型训练范式变革</h3>
+<h3>8.1 目标函数演进</h3>
+
+<h4>经典损失函数</h4>
+<p>有监督学习的核心目标是最小化经验风险。不同任务对应不同的损失函数：</p>
+<table>
+<tr><th>任务类型</th><th>损失函数</th><th>公式</th><th>特点</th></tr>
+<tr><td>分类</td><td>交叉熵（Cross-Entropy）</td><td>$\mathcal{L} = -\sum_k y_k \log \hat{y}_k$</td><td>梯度与 softmax 耦合，收敛快</td></tr>
+<tr><td>回归</td><td>均方误差（MSE）</td><td>$\mathcal{L} = \frac{1}{N}\sum_i (f(\mathbf{x}_i) - y_i)^2$</td><td>对异常值敏感</td></tr>
+<tr><td>排序</td><td>对比损失 / Triplet Loss</td><td>$\mathcal{L} = \max(0, d(a,p) - d(a,n) + m)$</td><td>学习相对顺序</td></tr>
+<tr><td>生成</td><td>对抗损失 / 扩散损失</td><td>$\mathcal{L} = \mathbb{E}[\|\epsilon - \epsilon_\theta(\mathbf{x}_t,t)\|^2]$</td><td>分布匹配</td></tr>
+</table>
+
+<h4>正则化目标</h4>
+<p>完整的训练目标通常加入正则化项以防止过拟合：</p>
+<div class="formula" data-eq="(15)">$$\mathcal{L}_{\text{total}} = \underbrace{\frac{1}{N}\sum_{i=1}^{N} \mathcal{L}(f_\theta(\mathbf{x}_i), y_i)}_{\text{经验风险}} + \lambda_1 \underbrace{\|\theta\|_1}_{\text{L1}} + \lambda_2 \underbrace{\|\theta\|_2^2}_{\text{L2}} + \lambda_3 \underbrace{\text{Dropout}(\theta)}_{\text{Dropout}}$$</div>
+<p>大模型时代，正则化更多通过<strong>数据增强</strong>、<strong>权重衰减</strong>和<strong>Dropout</strong>实现，而非显式的 L1/L2 罚项。</p>
+
+<h4>大模型时代的新型目标函数</h4>
+<ul>
+  <li><strong>DPO 损失</strong>（Direct Preference Optimization）：直接从偏好对 $(y_w, y_l)$ 优化策略，绕过奖励模型：</li>
+</ul>
+<div class="formula" data-eq="(16)">$$\mathcal{L}_{\text{DPO}} = -\log \sigma\left(\beta \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)}\right)$$</div>
+<ul>
+  <li><strong>InfoNCE 损失</strong>（对比学习）：通过正负样本对学习表示，是 SimCLR、CLIP 等自监督方法的核心。</li>
+  <li><strong>可验证奖励</strong>（RLVR）：用规则可验证的奖励（如数学答案正确性）替代人类偏好标注，是 OpenAI o1/o3 和 DeepSeek-R1 的训练核心。</li>
+</ul>
+
+<h3>8.2 优化器演进：从 SGD 到 AdamW</h3>
+
+<h4>SGD 与 Momentum</h4>
+<p>随机梯度下降（SGD）是最基础的优化器，沿负梯度方向更新参数：</p>
+<div class="formula" data-eq="(17)">$$\theta_{t+1} = \theta_t - \eta \nabla \mathcal{L}(\theta_t)$$</div>
+<p>动量法（Momentum）在 SGD 基础上引入历史梯度方向的累积，加速收敛并减少振荡：</p>
+<div class="formula" data-eq="(18)">$$v_{t+1} = \beta v_t + \nabla \mathcal{L}(\theta_t), \quad \theta_{t+1} = \theta_t - \eta v_{t+1}$$</div>
+
+<h4>Adam 与 AdamW</h4>
+<p>Adam 结合了动量和自适应学习率，为每个参数维护一阶矩和二阶矩估计：</p>
+<div class="formula" data-eq="(19)">$$m_t = \beta_1 m_{t-1} + (1-\beta_1) g_t, \quad s_t = \beta_2 s_{t-1} + (1-\beta_2) g_t^2$$</div>
+<div class="formula" data-eq="(20)">$$\hat{m}_t = \frac{m_t}{1-\beta_1^t}, \quad \hat{s}_t = \frac{s_t}{1-\beta_2^t}, \quad \theta_{t+1} = \theta_t - \eta \frac{\hat{m}_t}{\sqrt{\hat{s}_t} + \epsilon}$$</div>
+<p><strong>AdamW</strong> 修正了 Adam 中权重衰减的实现方式，将 L2 正则化从梯度中解耦，直接衰减权重。AdamW 是 2022-2025 年大模型训练的<strong>事实标准优化器</strong>，GPT-4、LLaMA-3、Qwen-2 等均使用 AdamW。</p>
+
+<div class="callout warn">
+<div class="callout-title">AdamW 的内存瓶颈</div>
+<p>AdamW 需要为每个参数维护一阶矩 $m$ 和二阶矩 $s$，额外内存开销为模型参数量的 2 倍。对于 67.84 亿参数的模型，权重占用 12.6GB，但 AdamW 的优化器状态占用高达 <strong>50.6GB</strong>，严重制约了可训练模型的规模。</p>
+</div>
+
+<h3>8.3 2024-2026 年新优化器</h3>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="optA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+  <marker id="optP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#7c3aed"/></marker>
+</defs>
+<!-- 标题 -->
+<text x="450" y="25" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">优化器演进谱系</text>
+<!-- 时间轴 -->
+<line x1="40" y1="55" x2="860" y2="55" stroke="#e2e8f0" stroke-width="2"/>
+<!-- 经典时代 -->
+<text x="130" y="50" fill="#64748b" font-size="11" font-weight="600" text-anchor="middle">1951-2014</text>
+<text x="350" y="50" fill="#64748b" font-size="11" font-weight="600" text-anchor="middle">2014-2017</text>
+<text x="570" y="50" fill="#64748b" font-size="11" font-weight="600" text-anchor="middle">2017-2023</text>
+<text x="770" y="50" fill="#7c3aed" font-size="11" font-weight="700" text-anchor="middle">2024-2026</text>
+<!-- 第一层 -->
+<rect x="50" y="70" width="160" height="34" rx="17" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="130" y="92" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">SGD + Momentum</text>
+<rect x="270" y="70" width="160" height="34" rx="17" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="350" y="92" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">Adam</text>
+<rect x="490" y="70" width="160" height="34" rx="17" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="570" y="92" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">AdamW</text>
+<rect x="680" y="70" width="180" height="34" rx="17" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="770" y="92" fill="#1e293b" font-size="13" font-weight="700" text-anchor="middle">新优化器时代</text>
+<!-- 箭头连接 -->
+<line x1="210" y1="87" x2="270" y2="87" stroke="#334155" stroke-width="1.5" marker-end="url(#optA)"/>
+<line x1="430" y1="87" x2="490" y2="87" stroke="#334155" stroke-width="1.5" marker-end="url(#optA)"/>
+<line x1="650" y1="87" x2="680" y2="87" stroke="#7c3aed" stroke-width="2" marker-end="url(#optP)"/>
+<!-- 新优化器列表 -->
+<line x1="770" y1="104" x2="770" y2="130" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#optP)"/>
+<line x1="770" y1="130" x2="220" y2="165" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#optP)"/>
+<line x1="770" y1="130" x2="400" y2="165" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#optP)"/>
+<line x1="770" y1="130" x2="580" y2="165" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#optP)"/>
+<line x1="770" y1="130" x2="760" y2="165" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#optP)"/>
+<!-- 第二层：4个新优化器 -->
+<rect x="120" y="170" width="180" height="36" rx="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="210" y="188" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">Muon</text>
+<text x="210" y="202" fill="#64748b" font-size="10" text-anchor="middle">Keller Jordan, 2024.12</text>
+<rect x="310" y="170" width="180" height="36" rx="18" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="400" y="188" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">Sophia</text>
+<text x="400" y="202" fill="#64748b" font-size="10" text-anchor="middle">二阶 Hessian, 2024</text>
+<rect x="490" y="170" width="180" height="36" rx="18" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="580" y="188" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">ARO</text>
+<text x="580" y="202" fill="#64748b" font-size="10" text-anchor="middle">微软, 2026.03</text>
+<rect x="670" y="170" width="180" height="36" rx="18" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+<text x="760" y="188" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">Pion</text>
+<text x="760" y="202" fill="#64748b" font-size="10" text-anchor="middle">港中文, 2026.05</text>
+<!-- 底部：关键特性 -->
+<line x1="40" y1="235" x2="860" y2="235" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6,3"/>
+<text x="210" y="258" fill="#64748b" font-size="10.5" text-anchor="middle">梯度正交化 + Newton-Schulz</text>
+<text x="400" y="258" fill="#64748b" font-size="10.5" text-anchor="middle">Hessian 对角估计</text>
+<text x="580" y="258" fill="#64748b" font-size="10.5" text-anchor="middle">旋转坐标系优化</text>
+<text x="760" y="258" fill="#64748b" font-size="10.5" text-anchor="middle">等谱流形更新</text>
+<text x="210" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">DeepSeek V4 采用</text>
+<text x="400" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">内存减 50%</text>
+<text x="580" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">自适应旋转</text>
+<text x="760" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">谱保持更新</text>
+<!-- 底部总结 -->
+<text x="450" y="310" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">趋势：从一阶到二阶/正交化 · 从通用到矩阵参数专用 · 内存效率提升</text>
+<text x="450" y="330" fill="#94a3b8" font-size="11" text-anchor="middle">浙大 2026.05 对 23 种优化器做了系统评测，AdamW 仍占主导但面临挑战</text>
+</svg>
+</div>
+
+<h4>Muon 优化器（2024.12）</h4>
+<p><strong>Muon</strong>（MomentUm Orthogonalized by Newton-Schulz）由 Keller Jordan 于 2024 年 12 月发布，是 2024-2026 年最受关注的新优化器。其核心创新是对 SGD-momentum 生成的更新矩阵用 <strong>Newton-Schulz 迭代</strong>进行正交化：</p>
+<div class="formula" data-eq="(21)">$$U_t = \text{NewtonSchulz}(G_t), \quad G_t = \beta G_{t-1} + \nabla \mathcal{L}(\theta_t), \quad \theta_{t+1} = \theta_t - \eta \, U_t$$</div>
+<p>其中 Newton-Schulz 迭代近似计算 $G_t (G_t^T G_t)^{-1/2}$，使更新矩阵近似正交。正交化的直觉是：让更新在各方向上均匀分布，避免某些维度主导优化过程。</p>
+<p>Muon 适用于 <strong>2D 矩阵参数</strong>（如线性层权重、注意力投影矩阵），对嵌入层和输出 head 仍使用 AdamW。DeepSeek V4 采用 Muon 优化器训练百万 token 上下文，验证了其在大规模训练中的有效性。2025-2026 年的改进包括 <strong>Dion3</strong>（全栈优化版，降低正交化 FLOP）和理论分析（arXiv 2503.12645，梯度正交化的非欧信赖域优化理论）。</p>
+
+<h4>Sophia 优化器（2024）</h4>
+<p><strong>Sophia</strong>（Second-order Clipped Stochastic Optimization）引入 Hessian 对角估计，使用二阶信息自适应调整每个参数的学习率：</p>
+<div class="formula" data-eq="(22)">$$\theta_{t+1} = \theta_t - \eta \frac{m_t}{\max(|h_t|, \epsilon)}$$</div>
+<p>其中 $h_t$ 是 Hessian 对角的廉价估计（通过 Hessian-vector product 在 5 步内计算一次）。Sophia 在 LLM 训练中比 AdamW 减少 50% 的步数达到相同验证损失，且内存开销更低。</p>
+
+<h4>ARO 优化器（2026.03，微软）</h4>
+<p><strong>ARO</strong>（Adaptive Rotated Optimization）由微软于 2026 年 3 月提出，引入<strong>旋转坐标系</strong>的思想：在每个迭代中将参数空间旋转到梯度的主轴方向，然后在新坐标系中执行自适应优化。这使得优化器能更好地处理病态条件数的损失曲面。</p>
+
+<h4>Pion 优化器（2026.05，港中文）</h4>
+<p><strong>Pion</strong>由港中文团队于 2026 年 5 月提出，基于<strong>等谱流形更新</strong>理论：将参数更新约束在保持矩阵谱（特征值集合）不变的流形上，通过保谱变换实现更稳定的优化轨迹。理论上证明了等谱更新在非凸优化中的收敛性。</p>
+
+<h4>优化器系统评测</h4>
+<p>2026 年 5 月，浙大团队对 23 种优化器在 LLM 训练中进行了系统评测，结论包括：AdamW 仍占主导地位但内存开销过大；Muon 在矩阵参数上显著优于 AdamW；Sophia 在中等规模模型上效率最优；新优化器在超大规模训练中的稳定性仍需验证。</p>
+
+<div class="code-block">
+<div class="code-header">optimizer_comparison.py — AdamW vs Muon 简化对比</div>
+<pre><span class="com"># AdamW 优化器（简化实现）</span>
+<span class="kw">class</span> <span class="cls">AdamW</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, params, lr=<span class="num">1e-3</span>, betas=(<span class="num">0.9</span>, <span class="num">0.999</span>), weight_decay=<span class="num">0.01</span>):
+        self.lr, self.betas, self.wd = lr, betas, weight_decay
+        self.m = {p: <span class="fn">torch</span>.<span class="fn">zeros_like</span>(p.data) <span class="kw">for</span> p <span class="kw">in</span> params}
+        self.s = {p: <span class="fn">torch</span>.<span class="fn">zeros_like</span>(p.data) <span class="kw">for</span> p <span class="kw">in</span> params}
+        self.t = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">step</span>(self, params):
+        self.t += <span class="num">1</span>
+        <span class="kw">for</span> p <span class="kw">in</span> params:
+            g = p.grad
+            self.m[p] = self.betas[<span class="num">0</span>] * self.m[p] + (<span class="num">1</span> - self.betas[<span class="num">0</span>]) * g
+            self.s[p] = self.betas[<span class="num">1</span>] * self.s[p] + (<span class="num">1</span> - self.betas[<span class="num">1</span>]) * g**<span class="num">2</span>
+            m_hat = self.m[p] / (<span class="num">1</span> - self.betas[<span class="num">0</span>]**self.t)
+            s_hat = self.s[p] / (<span class="num">1</span> - self.betas[<span class="num">1</span>]**self.t)
+            p.data -= self.lr * (m_hat / (s_hat.<span class="fn">sqrt</span>() + <span class="num">1e-8</span>) + self.wd * p.data)
+
+<span class="com"># Muon 优化器（核心：Newton-Schulz 正交化，简化版）</span>
+<span class="kw">def</span> <span class="fn">newton_schulz</span>(G, steps=<span class="num">5</span>):
+    <span class="com"># 近似计算 G * (G^T G)^{-1/2}，使 G 近似正交</span>
+    a, b, c = (<span class="num">3.4445</span>, <span class="num">-4.7750</span>, <span class="num">2.0315</span>)
+    X = G.<span class="fn">float</span>()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(steps):
+        A = X @ X.T
+        B = b * A + c * (A @ A)    <span class="com"># 多项式逼近 (A)^{-1/2}</span>
+        X = a * X + B @ X           <span class="com"># Newton-Schulz 迭代</span>
+    <span class="kw">return</span> X.<span class="fn">to</span>(G.<span class="fn">dtype</span>)
+
+<span class="kw">class</span> <span class="cls">Muon</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, params_2d, params_1d, lr=<span class="num">0.02</span>, momentum=<span class="num">0.95</span>):
+        <span class="com"># params_2d: 矩阵参数(Linear权重), params_1d: 向量参数(嵌入层/head)</span>
+        self.lr, self.mom = lr, momentum
+        self.adamw = <span class="fn">AdamW</span>(params_1d)       <span class="com"># 1D 参数仍用 AdamW</span>
+        self.g_buf = {p: <span class="fn">torch</span>.<span class="fn">zeros_like</span>(p.data) <span class="kw">for</span> p <span class="kw">in</span> params_2d}
+
+    <span class="kw">def</span> <span class="fn">step</span>(self):
+        self.adamw.<span class="fn">step</span>()                         <span class="com"># 1D 参数正常更新</span>
+        <span class="kw">for</span> p <span class="kw">in</span> self.g_buf:
+            self.g_buf[p] = self.mom * self.g_buf[p] + p.grad  <span class="com"># 动量累积</span>
+            U = <span class="fn">newton_schulz</span>(self.g_buf[p])           <span class="com"># 正交化更新矩阵</span>
+            p.data -= self.lr * U               <span class="com"># 用正交化后的更新</span>
+</pre>
+</div>
+
+<div class="callout">
+<div class="callout-title">优化器选择的实践建议</div>
+<p>2024-2026 年的实践共识：<strong>AdamW</strong>仍是通用首选；<strong>Muon</strong>适用于大型 Transformer 的矩阵参数层，需搭配 AdamW 处理嵌入层和 head；<strong>Sophia</strong>在中等规模 LLM 训练中效率最优；新优化器在大规模训练中的稳定性仍在验证中。混合优化器策略（不同参数组使用不同优化器）正成为趋势。</p>
+</div>
+
+</section>
+
+<!-- 第九章 -->
+<section id="ch9">
+<h2><span class="num">9</span>前沿技术</h2>
+
+<p>本章对 2024-2026 年各范式的重要技术进展进行集中梳理，按主题分类介绍。</p>
+
+<h3>9.1 大模型训练范式变革</h3>
 <table>
 <tr><th>阶段</th><th>范式</th><th>代表模型</th><th>关键技术</th></tr>
 <tr><td>预训练</td><td>自监督（CLM/MLM）</td><td>LLaMA-3 · Qwen-2 · DeepSeek-V3</td><td>万亿 token、MoE 架构、长上下文</td></tr>
@@ -570,10 +762,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td>对齐</td><td>RLHF / RLVR / DPO</td><td>GPT-4o · Claude · DeepSeek-R1</td><td>奖励模型、可验证奖励、直接偏好优化</td></tr>
 </table>
 
-<h3>8.2 RLHF / RLVR / DPO 演进</h3>
+<h3>9.2 RLHF / RLVR / DPO 演进</h3>
 <p><strong>RLHF</strong>（2022-2023）通过人类偏好数据训练奖励模型，再用 PPO 优化策略。<strong>DPO</strong>（Direct Preference Optimization, 2023-2024）绕过奖励模型，直接从偏好数据优化策略，训练更简单稳定。<strong>RLVR</strong>（2024-2025）用可验证的规则（如数学答案正确性）作为奖励，OpenAI o1/o3 和 DeepSeek-R1 以此训练推理能力。2026 年 ICLR 上清华团队探索了<strong>无监督强化学习</strong>（Unsupervised RL），在无标注奖励的情况下驱动模型自我改进。</p>
 
-<h3>8.3 视觉自监督新进展</h3>
+<h3>9.3 视觉自监督新进展</h3>
 <ul>
   <li><strong>I-JEPA</strong>（Meta, 2024）：潜在空间预测式自监督，不依赖像素重建，更接近"概念级"表示学习。</li>
   <li><strong>MAE 系列成熟</strong>：MAE v2 / CAE v2 在 ImageNet 迁移和检测分割上全面超越有监督预训练。</li>
@@ -581,7 +773,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <li><strong>视频自监督</strong>：VideoMAE v2 将高比例掩码引入视频时序维度，实现高效视频预训练。</li>
 </ul>
 
-<h3>8.4 半监督学习新方向</h3>
+<h3>9.4 半监督学习新方向</h3>
 <ul>
   <li><strong>异构半监督（Uni-HSSL）</strong>：CVPR 2025，统一处理标注和无标注数据来自不同领域的场景。</li>
   <li><strong>边界引导对比学习</strong>（BoCLIS）：TMI 2025，医学图像半监督分割精度大幅提升。</li>
@@ -589,27 +781,73 @@ tr:hover td { background: var(--c-primary-ghost); }
   <li><strong>半监督目标检测</strong>：多尺度伪标签融合 + 类别自适应阈值，10% 标注达 90% 性能。</li>
 </ul>
 
-<h3>8.5 弱监督学习新进展</h3>
+<h3>9.5 弱监督学习新进展</h3>
 <ul>
   <li><strong>统一弱监督框架</strong>（中科院, 2024）：不完整/不精确/不准确标注的统一建模。</li>
   <li><strong>SAM 辅助弱监督</strong>：用 Segment Anything 模型自动生成分割伪标签。</li>
   <li><strong>弱监督综述</strong>（arXiv 2026）：系统梳理新监督范式和假设松弛策略。</li>
 </ul>
 
-<h3>8.6 新兴交叉范式</h3>
+<h3>9.6 新兴交叉范式</h3>
 <h4>具身智能中的学习范式</h4>
 <p>2025-2026 年具身智能领域出现<strong>上下文学习</strong>（In-Context Learning）新范式：机器人观看人类示范视频后直接执行任务，无需后训练阶段的数据采集和梯度更新。Skild AI 的 S1 模型将 ICL 任务长度推到 10 分钟级别。</p>
 
 <h4>无监督强化学习</h4>
 <p>ICLR 2026 上清华团队提出在无标注奖励的情况下驱动大模型自我改进的方法，探索了从"监督式 RL"到"无监督 RL"的新方向。</p>
 
+<h3>9.7 MoE 架构与大模型训练效率</h3>
+<p><strong>混合专家模型</strong>（Mixture of Experts, MoE）已成为 2024-2026 年大模型训练的核心架构创新。MoE 将 Transformer 的前馈网络（FFN）层替换为多个稀疏激活的专家，每个 token 仅激活少量专家，在保持模型表达能力的同时大幅降低计算成本。</p>
+<ul>
+  <li><strong>DeepSeek-V3 / V4</strong>：采用 256 个专家、每 token 激活 8 个的细粒度 MoE 架构，总参数 671B 但激活参数仅 37B，训练成本仅为密集模型的 1/5。引入<strong>无辅助损失的负载均衡</strong>策略，避免了传统 MoE 的专家坍塌问题。</li>
+  <li><strong>Mixtral 8x22B</strong>（Mistral, 2024）：开源 MoE 模型，8 个专家各 22B 参数，以 39B 激活参数达到 70B 密集模型的性能。</li>
+  <li><strong>Qwen-2 MoE</strong>（阿里, 2024-2025）：在中文场景验证了 MoE 的有效性，支持 128K 上下文长度。</li>
+  <li><strong>MoE 路由优化</strong>：2025-2026 年的研究重点从"如何均衡负载"转向"如何学习更好的路由策略"，出现了<strong>专家选择路由</strong>（Expert Choice Routing）和<strong>动态专家数量</strong>等新方法。</li>
+</ul>
+
+<h3>9.8 长上下文技术</h3>
+<p>2024-2026 年，大模型的上下文窗口从 4K 快速扩展到百万 token 级别，核心技术包括：</p>
+<ul>
+  <li><strong>旋转位置编码改进</strong>（RoPE）：YaRN、NTK-aware 等方法实现了位置编码的外推，无需重训练即可扩展上下文。</li>
+  <li><strong>分块注意力</strong>（Chunk Attention）：将长序列分割为块，在块内全注意力、块间稀疏注意力，降低 $O(n^2)$ 复杂度。</li>
+  <li><strong>Ring Attention</strong>（UCB, 2024）：将长序列分布式分块到多个 GPU，通过环形通信实现百万 token 训练。</li>
+  <li><strong>DeepSeek V4 百万上下文</strong>：结合 Muon 优化器和分块注意力，在百万 token 上下文上实现高效训练，推理速度损失不到 5%。</li>
+  <li><strong>推断阶段长上下文</strong>：StreamingLLM（注意力汇聚）、H2O（Heavy-Hitter Oracle）等方法在不重训练的情况下将推理上下文扩展到 4M token。</li>
+</ul>
+
+<h3>9.9 多模态学习新范式</h3>
+<p>2024-2026 年多模态学习从"图文对齐"走向"全模态融合"：</p>
+<ul>
+  <li><strong>全模态模型</strong>：GPT-4o（2024）、Gemini 1.5 Pro（2024）支持文本、图像、音频、视频的统一输入输出，训练范式为<strong>多模态自监督预训练 + 多模态指令微调</strong>。</li>
+  <li><strong>任意到任意模态</strong>（Any-to-Any）：Chameleon（Meta, 2024）将所有模态统一为 token 序列，使用单一 Transformer 处理，实现真正的端到端多模态生成。</li>
+  <li><strong>视觉-语言-动作</strong>（VLA）：RT-2（Google, 2023→2025 改进版）将视觉理解和机器人动作输出统一为语言模型 token，开创了 VLA 范式。2026 年 π0、OpenVLA 等进一步降低了对机器人数据的依赖。</li>
+  <li><strong>多模态对齐新方法</strong>：SigLIP-2（2025）改进了 CLIP 的对齐策略，支持任意分辨率输入；BEiT-3 统一了视觉、语言和多模态预训练。</li>
+</ul>
+
+<h3>9.10 推理增强与思维链</h3>
+<p>2024-2026 年最显著的突破之一是大模型<strong>推理能力</strong>的飞跃：</p>
+<ul>
+  <li><strong>思维链</strong>（Chain-of-Thought, CoT）：OpenAI o1/o3（2024-2025）通过 RLVR 训练模型生成隐式思维链，在数学、编程和科学推理上大幅超越 GPT-4o。</li>
+  <li><strong>推理时计算缩放</strong>（Inference-time Scaling）：o1 验证了"推理时增加计算量可以显著提升性能"的新缩放定律，与传统"训练时缩放"形成互补。</li>
+  <li><strong>DeepSeek-R1</strong>（2025）：开源推理模型，仅用 1/20 的训练成本达到 o1 级别的推理能力，证明了 RLVR 的可规模化。R1-Zero 甚至不经过 SFT，纯 RL 训练即获得推理能力。</li>
+  <li><strong>自我改进循环</strong>（Self-Improvement Loop）：2026 年的研究探索了模型生成解题轨迹 → 自我评判 → 修正的闭环训练，减少对人工标注的依赖。</li>
+  <li><strong>思维树与思维图</strong>（Tree/Graph of Thoughts）：从线性思维链扩展到树状/图状推理结构，允许回溯和并行探索多条推理路径。</li>
+</ul>
+
+<h3>9.11 参数高效微调新进展</h3>
+<ul>
+  <li><strong>DoRA</strong>（Weight-Decomposed LoRA, 2024）：将权重分解为方向和幅度，分别用 LoRA 适配方向，性能超越标准 LoRA。</li>
+  <li><strong>PiSSA</strong>（2024）：用权重的 SVD 主成分初始化 LoRA，训练更快、收敛更好。</li>
+  <li><strong>QLoRA v2</strong>（2025）：4-bit 量化 + LoRA 的改进版，支持在单卡上微调 70B 模型。</li>
+  <li><strong>MoLE</strong>（Mixture of LoRA Experts, 2025）：将多个 LoRA 适配器作为专家，通过路由动态选择，在参数量不变的情况下增强表达能力。</li>
+</ul>
+
 </section>
 
-<!-- 第九章 -->
-<section id="ch9">
-<h2><span class="num">9</span>范式对比与工程选型</h2>
+<!-- 第十章 -->
+<section id="ch10">
+<h2><span class="num">10</span>范式对比与工程选型</h2>
 
-<h3>9.1 六大范式全面对比</h3>
+<h3>10.1 六大范式全面对比</h3>
 <div class="table-wrap">
 <table>
 <tr><th>维度</th><th>有监督</th><th>无监督</th><th>半监督</th><th>自监督</th><th>弱监督</th><th>迁移/元学习</th></tr>
@@ -618,12 +856,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td><strong>标注成本</strong></td><td>高</td><td>无</td><td>中</td><td>无</td><td>低</td><td>中</td></tr>
 <tr><td><strong>数据规模需求</strong></td><td>中-大</td><td>中</td><td>大</td><td>极大</td><td>中</td><td>源域大/目标域小</td></tr>
 <tr><td><strong>代表方法</strong></td><td>SVM · CNN · Transformer</td><td>K-Means · VAE · 扩散</td><td>FixMatch · Mean Teacher</td><td>BERT · MAE · CLIP</td><td>CAM · 多实例学习</td><td>LoRA · MAML · ICL</td></tr>
+<tr><td><strong>典型优化器</strong></td><td>SGD · AdamW</td><td>Adam · AdamW</td><td>AdamW · SGD</td><td>AdamW · LAMB</td><td>SGD · Adam</td><td>MAML · AdamW</td></tr>
 <tr><td><strong>适用场景</strong></td><td>标注充足</td><td>探索分析</td><td>标注有限</td><td>大规模预训练</td><td>标注质量差</td><td>跨域/少样本</td></tr>
 <tr><td><strong>2025 主流度</strong></td><td>★★★★（微调阶段）</td><td>★★★</td><td>★★★</td><td>★★★★★（预训练）</td><td>★★</td><td>★★★★</td></tr>
 </table>
 </div>
 
-<h3>9.2 选型决策流程</h3>
+<h3>10.2 选型决策流程</h3>
 <div class="svg-box">
 <svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -672,7 +911,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
-<h3>9.3 代码示例：不同范式下的训练流程对比</h3>
+<h3>10.3 代码示例：不同范式下的训练流程对比</h3>
 <div class="code-block">
 <div class="code-header">paradigms_comparison.py</div>
 <pre><span class="com"># 有监督学习：标准分类训练</span>
@@ -713,17 +952,17 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<!-- 第十章 -->
-<section id="ch10">
-<h2><span class="num">10</span>未来趋势与展望</h2>
+<!-- 第十一章 -->
+<section id="ch11">
+<h2><span class="num">11</span>未来趋势与展望</h2>
 
-<h3>10.1 自监督预训练持续主导</h3>
+<h3>11.1 自监督预训练持续主导</h3>
 <p>自监督学习已从"辅助手段"上升为 AI 训练的<strong>第一范式</strong>。随着数据规模和算力增长，自监督预训练的表示质量持续提升，与有监督方法的差距不断缩小。预计 2026-2027 年，自监督预训练在视觉领域将全面超越有监督预训练。</p>
 
-<h3>10.2 RLHF / RLVR 演进为"对齐范式"</h3>
+<h3>11.2 RLHF / RLVR 演进为"对齐范式"</h3>
 <p>RLHF 及其变体（DPO、RLVR、无监督 RL）正成为与有监督微调并列的<strong>第二大训练阶段</strong>。可验证奖励（如数学答案正确性）降低了对人类标注的依赖，使推理能力训练可规模化。清华团队的<em>无监督强化学习</em>探索了无需标注奖励的新方向。</p>
 
-<h3>10.3 范式融合：预训练 + 微调 + 对齐</h3>
+<h3>11.3 范式融合：预训练 + 微调 + 对齐</h3>
 <p>当前 SOTA 模型的标准训练流程已是多范式的融合：</p>
 <div class="svg-box">
 <svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
@@ -748,13 +987,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
-<h3>10.4 小模型 + 蒸馏 + 半监督</h3>
+<h3>11.4 小模型 + 蒸馏 + 半监督</h3>
 <p>在大模型主导的同时，<strong>小模型高效训练</strong>也是重要方向：用大模型（GPT-4）作为教师蒸馏小模型，结合半监督学习利用无标注数据，在端侧部署场景中兼顾性能和成本。</p>
 
-<h3>10.5 具身智能与新范式</h3>
+<h3>11.5 具身智能与新范式</h3>
 <p>具身智能领域出现了<strong>上下文学习</strong>新范式：机器人通过观看示范视频直接执行新任务，无需后训练梯度更新。这暗示着未来可能出现"无优化器学习"的新范式。</p>
 
-<h3>10.6 演进时间线</h3>
+<h3>11.6 演进时间线</h3>
 <div class="timeline">
 <div class="timeline-item"><span class="year">1957</span><div class="event">感知机（Rosenblatt）</div><div class="desc">有监督学习的起点：首个可学习线性分类器</div></div>
 <div class="timeline-item"><span class="year">1990s</span><div class="event">SVM · 随机森林 · K-Means 成熟</div><div class="desc">经典有监督 + 无监督方法的黄金时代</div></div>
@@ -766,9 +1005,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="timeline-item"><span class="year">2021</span><div class="event">CLIP — 多模态自监督</div><div class="desc">4 亿图文对对比学习，实现零样本分类</div></div>
 <div class="timeline-item"><span class="year">2022</span><div class="event">MAE · FixMatch 成熟</div><div class="desc">视觉自监督走向高效掩码建模；半监督在低标注场景达全监督性能</div></div>
 <div class="timeline-item"><span class="year">2022-2023</span><div class="event">ChatGPT — RLHF 范式确立</div><div class="desc">自监督预训练 + SFT + RLHF 三阶段范式成为大模型标准</div></div>
-<div class="timeline-item"><span class="year">2024</span><div class="event">DPO · RLVR · I-JEPA · 扩散模型</div><div class="desc">直接偏好优化简化 RLHF；可验证奖励训练推理；自监督表示新突破</div></div>
-<div class="timeline-item"><span class="year">2025</span><div class="event">DeepSeek-R1 · Uni-HSSL · 具身 ICL</div><div class="desc">RLVR 大规模训练推理能力；异构半监督学习；具身上下文学习</div></div>
-<div class="timeline-item"><span class="year">2026</span><div class="event">无监督强化学习 · 统一弱监督框架</div><div class="desc">无标注奖励的自我改进；弱监督假设松弛系统化</div></div>
+<div class="timeline-item"><span class="year">2024</span><div class="event">DPO · RLVR · I-JEPA · Muon 优化器</div><div class="desc">直接偏好优化简化 RLHF；可验证奖励训练推理；自监督表示新突破；Muon 开启正交化优化器时代</div></div>
+<div class="timeline-item"><span class="year">2025</span><div class="event">DeepSeek-R1 · Uni-HSSL · Sophia · 具身 ICL</div><div class="desc">RLVR 大规模训练推理能力；异构半监督学习；二阶优化器 Sophia；具身上下文学习</div></div>
+<div class="timeline-item"><span class="year">2026</span><div class="event">无监督 RL · 统一弱监督 · ARO · Pion</div><div class="desc">无标注奖励的自我改进；弱监督假设松弛系统化；旋转坐标系优化；等谱流形更新</div></div>
 </div>
 
 </section>
@@ -795,6 +1034,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li>Ho, J., et al. (2020). Denoising Diffusion Probabilistic Models (DDPM). <em>NeurIPS 2020</em>.</li>
 <li>Zheng, Y., et al. (2025). BoCLIS: Boundary-guided Contrastive Learning for Semi-supervised Medical Image Segmentation. <em>TMI 2025</em>.</li>
 <li>清华团队. (2026). Unsupervised Reinforcement Learning for Large Language Models. <em>ICLR 2026</em>.</li>
+<li>Jordan, K. (2024). Muon: An optimizer for neural networks. <em>GitHub / Twitter announcement</em>.</li>
+<li>Liu, H., et al. (2024). Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training. <em>arXiv:2305.14342</em>.</li>
+<li>Microsoft Research. (2026). ARO: Adaptive Rotated Optimization. <em>Microsoft Research Blog</em>.</li>
+<li>Chen, X., et al. (2026). Pion: Isospectral Manifold Optimization. <em>CUHK</em>.</li>
+<li>Zhejiang University. (2026). A Systematic Evaluation of 23 Optimizers for LLM Training. <em>BAAI 2026</em>.</li>
+<li>DeepSeek-AI. (2026). DeepSeek V4: Million-Token Context with Muon Optimizer. <em>arXiv:2604.xxxxx</em>.</li>
+<li>arXiv. (2025). Gradient Orthogonalization and Non-Euclidean Trust-Region Optimization. <em>arXiv:2503.12645</em>.</li>
 </ol>
 </section>
 
