@@ -287,15 +287,48 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="formula" data-eq="(7)">$$P(x_i \mid y) = \frac{1}{\sqrt{2\pi\sigma_{y,i}^2}} \exp\left(-\frac{(x_i - \mu_{y,i})^2}{2\sigma_{y,i}^2}\right)$$</div>
 <p>参数 $\mu_{y,i}$ 和 $\sigma_{y,i}^2$ 分别为类别 $y$ 下特征 $x_i$ 的均值和方差，通过训练数据的<strong>极大似然估计</strong>获得。</p>
 
+<div class="callout">
+<div class="callout-title">简单例子：水果识别</div>
+<p>假设要根据<strong>重量（克）</strong>和<strong>甜度（%）</strong>两个连续指标判断一个水果是<em>苹果</em>还是<em>橙子</em>。训练数据统计出：苹果平均重量 $\mu=150$g、甜度 $\mu=12\%$；橙子平均重量 $\mu=200$g、甜度 $\mu=9\%$。现在来了一个重量 160g、甜度 11% 的未知水果：</p>
+<ul>
+  <li>把它代入两条<strong>高斯曲线</strong>（苹果和橙子各自的均值、方差），分别算出「在这个重量和甜度下，像苹果的概率」和「像橙子的概率」。</li>
+  <li>再乘以类别先验（比如水果摊苹果占 60%），后验概率更大的那类获胜。</li>
+</ul>
+<p>直观理解：160g 介于两种均值之间，但甜度 11% 更接近苹果的 12%，所以高斯模型大概率判为<strong>苹果</strong>。特征越接近某类的均值，该类得分越高。</p>
+</div>
+
 <h3>3.2 多项式朴素贝叶斯（计数特征）</h3>
 <p>当特征为<strong>计数/频率</strong>时（如文本中词频），假设特征服从多项式分布：</p>
 <div class="formula" data-eq="(8)">$$P(\mathbf{x} \mid y) \propto \prod_{i=1}^{d} \theta_{y,i}^{x_i}$$</div>
 <p>其中 $\theta_{y,i} = P(x_i \mid y)$ 是类别 $y$ 下特征 $i$ 出现的概率，$\sum_i \theta_{y,i} = 1$。这是<strong>文本分类</strong>最常用的模型。</p>
 
+<div class="callout">
+<div class="callout-title">简单例子：新闻分类</div>
+<p>把新闻分成<em>体育</em>和<em>科技</em>两类，特征就是每个词在文章中出现的<strong>次数</strong>。训练阶段统计：在体育新闻里，「进球」出现 500 次、「球队」出现 400 次；在科技新闻里，「芯片」出现 600 次、「算法」出现 450 次。</p>
+<p>新来一篇文章，其中「进球」出现 3 次、「算法」出现 1 次：</p>
+<ul>
+  <li>计算体育类条件概率：体育类中「进球」的概率的 3 次方 × 体育类中「算法」的概率的 1 次方 × 体育类先验。</li>
+  <li>计算科技类条件概率：科技类中「进球」的概率的 3 次方 × 科技类中「算法」的概率的 1 次方 × 科技类先验。</li>
+  <li>比较两者，概率大者即为预测类别。</li>
+</ul>
+<p>直观理解：词<strong>出现得越多</strong>，对所属类别的影响越大。这篇文章“进球”占了多数，哪怕出现了一个“算法”词，整体仍更可能判为<strong>体育</strong>。</p>
+</div>
+
 <h3>3.3 伯努利朴素贝叶斯（二值特征）</h3>
 <p>当特征为<strong>0/1 二值</strong>时（如词是否出现），假设特征服从伯努利分布：</p>
 <div class="formula" data-eq="(9)">$$P(\mathbf{x} \mid y) = \prod_{i=1}^{d} \theta_{y,i}^{x_i} (1-\theta_{y,i})^{1-x_i}$$</div>
 <p>与多项式模型不同，伯努利模型<strong>考虑了词不出现</strong>的概率，适合短文本或特征稀疏的场景。</p>
+
+<div class="callout">
+<div class="callout-title">简单例子：垃圾短信识别</div>
+<p>特征只记录短信里每个词<strong>是否出现</strong>（出现记 1，不出现记 0），不管出现几次。训练阶段统计：垃圾短信中「中奖」出现的概率 $\theta=0.9$、「免费」$\theta=0.8$；正常短信中「中奖」$\theta=0.05$、「免费」$\theta=0.1$。</p>
+<p>新来一条短信：「恭喜您中奖了，点击链接免费领取」：</p>
+<ul>
+  <li>“中奖”=1、“免费”=1 时，垃圾类的条件概率 $= 0.9 \times 0.8 \times (1-0.9)^0 \times (1-0.8)^0$。</li>
+  <li>正常类的条件概率 $= 0.01 \times 0.1$，明显小得多，因此判为<strong>垃圾短信</strong>。</li>
+</ul>
+<p>关键差异：伯努利模型对<strong>“某词没出现”</strong>也计概率（$1-\theta$ 项），所以“这次短信里没出现‘中奖’”（$x=0$）会直接拉低垃圾类得分，这种敏感性对短文本非常有用。</p>
+</div>
 
 <table>
 <tr><th>模型</th><th>数据类型</th><th>分布假设</th><th>典型应用</th><th>参数</th></tr>
