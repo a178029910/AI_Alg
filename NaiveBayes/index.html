@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>朴素贝叶斯详解 — Naive Bayes 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>朴素贝叶斯</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、贝叶斯定理与直觉</a>
+    <a href="#ch2">二、"朴素"假设与条件独立</a>
+    <a href="#ch3">三、三种经典模型</a>
+    <a href="#ch4">四、参数估计与拉普拉斯平滑</a>
+    <a href="#ch5">五、文本分类</a>
+    <a href="#ch6">六、垃圾邮件过滤</a>
+    <a href="#ch7">七、半监督与在线学习变体</a>
+    <a href="#ch8">八、朴素贝叶斯 vs 其他分类器</a>
+    <a href="#ch9">九、Python 代码实现</a>
+    <a href="#ch10">十、优缺点与适用场景</a>
+    <a href="#ch11">十一、调参实践与工程建议</a>
+    <a href="#ch12">十二、贝叶斯网络：从朴素到一般化</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+<section id="hero" class="hero">
+  <h1>朴素贝叶斯详解</h1>
+  <div class="subtitle">Naive Bayes — 基于贝叶斯定理的概率分类器</div>
+  <div class="tagline">最简单有效的概率推断方法 · 1763 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">4 张 SVG 结构图</span>
+    <span class="badge">17 个公式</span>
+    <span class="badge">6 段 Python 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1">
+<h2><span class="num">1</span>贝叶斯定理与直觉</h2>
+
+<h3>1.1 逆概率问题</h3>
+<p>18 世纪英国牧师 Thomas Bayes 解决了一个根本性的问题：<strong>已知结果，如何推断原因？</strong>这就是"逆概率"——从观察到的证据反推隐藏的原因。频率学派只关注"已知原因求结果的概率"（正向概率），而贝叶斯学派开创性地回答了反方向的问题。</p>
+
+<div class="callout">
+<div class="callout-title">经典直觉示例</div>
+<p>医学检测问题：某种疾病患病率为 $1\%$。检测仪器的灵敏度为 $99\%$（患病者阳性概率），特异度为 $95\%$（健康者阴性概率）。如果一个人检测阳性，真正患病的概率是多少？直觉上可能是 $99\%$，但用贝叶斯定理计算后只有 $16.7\%$。这就是<strong>基础概率忽视</strong>（Base Rate Neglect）。</p>
+</div>
+
+<h3>1.2 贝叶斯定理</h3>
+<p>贝叶斯定理描述了在观察到证据 $E$ 后，如何更新假设 $H$ 的概率：</p>
+<div class="formula" data-eq="(1)">$$P(H \mid E) = \frac{P(E \mid H) \cdot P(H)}{P(E)}$$</div>
+
+<table>
+<tr><th>术语</th><th>符号</th><th>含义</th></tr>
+<tr><td><strong>先验概率</strong></td><td>$P(H)$</td><td>观察到证据前对假设的信念</td></tr>
+<tr><td><strong>似然</strong></td><td>$P(E \mid H)$</td><td>假设为真时观察到证据的概率</td></tr>
+<tr><td><strong>后验概率</strong></td><td>$P(H \mid E)$</td><td>观察到证据后对假设的更新信念</td></tr>
+<tr><td><strong>证据</strong></td><td>$P(E)$</td><td>归一化常数，确保概率和为 1</td></tr>
+</table>
+
+<p>对于分类问题，我们将假设 $H$ 替换为类别 $y$，证据 $E$ 替换为特征向量 $\mathbf{x}$：</p>
+<div class="formula" data-eq="(2)">$$P(y \mid \mathbf{x}) = \frac{P(\mathbf{x} \mid y) \cdot P(y)}{P(\mathbf{x})}$$</div>
+
+<p>由于 $P(\mathbf{x})$ 对所有类别相同，分类决策只需最大化分子：</p>
+<div class="formula" data-eq="(3)">$$\hat{y} = \arg\max_y \; P(y) \cdot P(\mathbf{x} \mid y)$$</div>
+
+<h3>1.3 贝叶斯决策的图示</h3>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="an1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
+  <marker id="an1g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#059669"/></marker>
+</defs>
+<!-- 输入：先验与似然 -->
+<rect x="30" y="60" width="170" height="60" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="72" y="85" fill="#1e293b" font-size="13" font-weight="700">先验 P(y)</text>
+<text x="55" y="105" fill="#64748b" font-size="11">类别分布</text>
+<rect x="30" y="190" width="170" height="60" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="57" y="215" fill="#1e293b" font-size="13" font-weight="700">似然 P(x|y)</text>
+<text x="48" y="235" fill="#64748b" font-size="11">特征条件概率</text>
+<!-- 两路输入汇聚到贝叶斯定理 -->
+<line x1="200" y1="90" x2="292" y2="122" stroke="#334155" stroke-width="2" marker-end="url(#an1)" class="flow-line"/>
+<line x1="200" y1="220" x2="292" y2="158" stroke="#334155" stroke-width="2" marker-end="url(#an1)" class="flow-line"/>
+<circle cx="338" cy="140" r="38" fill="#d1fae5" stroke="#059669" stroke-width="2.5" class="pulse-node"/>
+<text x="324" y="134" fill="#1e293b" font-size="12" font-weight="700">贝叶斯</text>
+<text x="326" y="150" fill="#1e293b" font-size="12" font-weight="700">定理</text>
+<!-- 贝叶斯定理 → 后验 -->
+<line x1="376" y1="140" x2="455" y2="100" stroke="#059669" stroke-width="2.5" marker-end="url(#an1g)"/>
+<rect x="470" y="70" width="210" height="60" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="505" y="95" fill="#1e293b" font-size="13" font-weight="700">后验 P(y|x)</text>
+<text x="498" y="115" fill="#64748b" font-size="11">分类决策依据</text>
+<!-- 后验 → MAP 决策 -->
+<line x1="575" y1="130" x2="575" y2="188" stroke="#ea580c" stroke-width="2" marker-end="url(#an1)"/>
+<rect x="470" y="190" width="210" height="60" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="487" y="217" fill="#1e293b" font-size="12" font-weight="600">ŷ = argmax_y P(y)·P(x|y)</text>
+<text x="490" y="237" fill="#64748b" font-size="11">MAP 最大后验决策</text>
+<!-- 底部流程说明 -->
+<text x="400" y="295" text-anchor="middle" font-size="13" fill="#64748b">先验 × 似然 → 贝叶斯定理 → 后验 → 取最大后验类别作为预测 ŷ</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch2">
+<h2><span class="num">2</span>"朴素"假设与条件独立</h2>
+
+<h3>2.1 指数级概率难题</h3>
+<p>直接使用贝叶斯定理进行分类有一个致命问题：计算 $P(\mathbf{x} \mid y)$ 需要估计特征向量的<strong>联合概率分布</strong>。如果 $\mathbf{x} = (x_1, x_2, \ldots, x_d)$ 有 $d$ 个特征，每个特征有 $k$ 个取值，则需要估计 $k^d$ 个参数——这随特征维度<strong>指数增长</strong>，在数据和计算上都不可行。</p>
+
+<h3>2.2 条件独立假设</h3>
+<p>朴素贝叶斯做出了一个大胆的"朴素"假设：<strong>在给定类别 $y$ 的条件下，各特征之间相互独立</strong>。即：</p>
+<div class="formula" data-eq="(4)">$$P(\mathbf{x} \mid y) = P(x_1, x_2, \ldots, x_d \mid y) = \prod_{i=1}^{d} P(x_i \mid y)$$</div>
+<p>这个假设将联合概率分解为 $d$ 个独立的一维条件概率的乘积，参数量从 $k^d$ 降为 $d \times k$，是<strong>线性</strong>增长而非指数增长。</p>
+
+<div class="callout warn">
+<div class="callout-title">"朴素"在哪里？</div>
+<p>这个假设在现实中几乎从不严格成立。例如在垃圾邮件分类中，"免费"和"优惠"这两个词的出现显然不独立——它们经常一起出现。但令人惊讶的是，即使条件独立假设不成立，朴素贝叶斯的<strong>分类性能</strong>依然出色——因为它只需要排序正确，不需要概率估计精确。</p>
+</div>
+
+<h3>2.3 朴素贝叶斯分类器</h3>
+<p>结合公式 (3) 和 (4)，朴素贝叶斯分类器为：</p>
+<div class="formula" data-eq="(5)">$$\hat{y} = \arg\max_y \; P(y) \prod_{i=1}^{d} P(x_i \mid y)$$</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="an2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker></defs>
+<!-- 顶部：类别节点 -->
+<circle cx="400" cy="44" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5" class="glow-ring"/>
+<text x="400" y="39" text-anchor="middle" fill="#1e293b" font-size="14" font-weight="700">类别 y</text>
+<text x="400" y="58" text-anchor="middle" fill="#64748b" font-size="11">P(y)</text>
+<!-- 从类别到特征的箭头 -->
+<line x1="400" y1="72" x2="165" y2="142" stroke="#334155" stroke-width="2" marker-end="url(#an2)" class="flow-line"/>
+<line x1="400" y1="72" x2="330" y2="142" stroke="#334155" stroke-width="2" marker-end="url(#an2)" class="flow-line"/>
+<line x1="400" y1="72" x2="490" y2="142" stroke="#334155" stroke-width="2" marker-end="url(#an2)" class="flow-line"/>
+<line x1="400" y1="72" x2="650" y2="142" stroke="#334155" stroke-width="2" marker-end="url(#an2)" class="flow-line"/>
+<!-- 特征节点 -->
+<circle cx="160" cy="170" r="30" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="160" y="165" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="600">x₁</text>
+<text x="160" y="182" text-anchor="middle" fill="#64748b" font-size="10">P(x₁|y)</text>
+<circle cx="325" cy="170" r="30" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="325" y="165" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="600">x₂</text>
+<text x="325" y="182" text-anchor="middle" fill="#64748b" font-size="10">P(x₂|y)</text>
+<circle cx="490" cy="170" r="30" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="490" y="165" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="600">x₃</text>
+<text x="490" y="182" text-anchor="middle" fill="#64748b" font-size="10">P(x₃|y)</text>
+<!-- 省略号 -->
+<text x="585" y="176" text-anchor="middle" fill="#94a3b8" font-size="22">···</text>
+<circle cx="650" cy="170" r="30" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="650" y="165" text-anchor="middle" fill="#1e293b" font-size="13" font-weight="600">x_d</text>
+<text x="650" y="182" text-anchor="middle" fill="#64748b" font-size="10">P(x_d|y)</text>
+<!-- 底部：条件独立说明 -->
+<rect x="100" y="234" width="600" height="64" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="400" y="258" text-anchor="middle" fill="#059669" font-size="14" font-weight="700">条件独立假设：P(x₁,x₂,…,x_d | y) = ∏ᵢ P(xᵢ|y)</text>
+<text x="400" y="282" text-anchor="middle" fill="#64748b" font-size="12">特征之间无连线 → 在给定类别 y 下特征相互独立</text>
+</svg>
+</div>
+
+<h3>2.4 对数概率与数值稳定性</h3>
+<p>当特征维度 $d$ 很大时，$\prod_i P(x_i \mid y)$ 的乘积可能下溢为 0。实践中取对数将乘法变为加法：</p>
+<div class="formula" data-eq="(6)">$$\hat{y} = \arg\max_y \; \left[ \log P(y) + \sum_{i=1}^{d} \log P(x_i \mid y) \right]$$</div>
+<p>取对数不改变 $\arg\max$ 结果，但避免了数值下溢问题，且加法计算比乘法更高效。</p>
+
+</section>
+
+<section id="ch3">
+<h2><span class="num">3</span>三种经典模型</h2>
+
+<p>朴素贝叶斯的核心是估计 $P(x_i \mid y)$，而特征的类型决定了使用哪种分布模型。三种最经典的变体对应不同的数据类型。</p>
+
+<h3>3.1 高斯朴素贝叶斯（连续特征）</h3>
+<p>当特征为<strong>连续值</strong>时，假设在给定类别下特征服从高斯分布：</p>
+<div class="formula" data-eq="(7)">$$P(x_i \mid y) = \frac{1}{\sqrt{2\pi\sigma_{y,i}^2}} \exp\left(-\frac{(x_i - \mu_{y,i})^2}{2\sigma_{y,i}^2}\right)$$</div>
+<p>参数 $\mu_{y,i}$ 和 $\sigma_{y,i}^2$ 分别为类别 $y$ 下特征 $x_i$ 的均值和方差，通过训练数据的<strong>极大似然估计</strong>获得。</p>
+
+<h3>3.2 多项式朴素贝叶斯（计数特征）</h3>
+<p>当特征为<strong>计数/频率</strong>时（如文本中词频），假设特征服从多项式分布：</p>
+<div class="formula" data-eq="(8)">$$P(\mathbf{x} \mid y) \propto \prod_{i=1}^{d} \theta_{y,i}^{x_i}$$</div>
+<p>其中 $\theta_{y,i} = P(x_i \mid y)$ 是类别 $y$ 下特征 $i$ 出现的概率，$\sum_i \theta_{y,i} = 1$。这是<strong>文本分类</strong>最常用的模型。</p>
+
+<h3>3.3 伯努利朴素贝叶斯（二值特征）</h3>
+<p>当特征为<strong>0/1 二值</strong>时（如词是否出现），假设特征服从伯努利分布：</p>
+<div class="formula" data-eq="(9)">$$P(\mathbf{x} \mid y) = \prod_{i=1}^{d} \theta_{y,i}^{x_i} (1-\theta_{y,i})^{1-x_i}$$</div>
+<p>与多项式模型不同，伯努利模型<strong>考虑了词不出现</strong>的概率，适合短文本或特征稀疏的场景。</p>
+
+<table>
+<tr><th>模型</th><th>数据类型</th><th>分布假设</th><th>典型应用</th><th>参数</th></tr>
+<tr><td><strong>高斯 NB</strong></td><td>连续值</td><td>正态分布</td><td>鸢尾花分类、传感器数据</td><td>$\mu_{y,i},\sigma_{y,i}^2$</td></tr>
+<tr><td><strong>多项式 NB</strong></td><td>计数/频率</td><td>多项式分布</td><td>文本分类、情感分析</td><td>$\theta_{y,i}$</td></tr>
+<tr><td><strong>伯努利 NB</strong></td><td>0/1 二值</td><td>伯努利分布</td><td>短文本分类、spam 检测</td><td>$\theta_{y,i}$</td></tr>
+</table>
+
+<div class="callout success">
+<div class="callout-title">模型选择直觉</div>
+<p>选模型的本质是选数据分布假设。<strong>连续→高斯，计数→多项式，二值→伯努利</strong>。不确定时先试多项式（兼容性最好），再试高斯（连续数据效果好）。</p>
+</div>
+
+</section>
+
+<section id="ch4">
+<h2><span class="num">4</span>参数估计与拉普拉斯平滑</h2>
+
+<h3>4.1 极大似然估计</h3>
+<p>朴素贝叶斯的参数通过<strong>极大似然估计</strong>（MLE）从训练数据中学习：</p>
+<p>类别先验：</p>
+<div class="formula" data-eq="(10)">$$\hat{P}(y) = \frac{N_y}{N}$$</div>
+<p>条件概率（离散特征）：</p>
+<div class="formula" data-eq="(11)">$$\hat{P}(x_i = v \mid y) = \frac{N_{y, x_i=v}}{N_y}$$</div>
+<p>其中 $N_y$ 是类别 $y$ 的样本数，$N_{y, x_i=v}$ 是类别 $y$ 中特征 $x_i$ 取值 $v$ 的样本数。</p>
+
+<h3>4.2 零概率问题</h3>
+<div class="callout danger">
+<div class="callout-title">致命问题</div>
+<p>如果某个特征值 $v$ 在类别 $y$ 的训练数据中<strong>从未出现</strong>，则 $\hat{P}(x_i=v \mid y) = 0$。由于各特征概率相乘，一个零值会导致<strong>整个后验为零</strong>——即使其他特征强烈支持类别 $y$，分类器也会完全忽略它。这就是"零概率问题"。</p>
+</div>
+
+<h3>4.3 拉普拉斯平滑</h3>
+<p>解决方案是<strong>拉普拉斯平滑</strong>（又称加一平滑）：</p>
+<div class="formula" data-eq="(12)">$$\hat{P}(x_i = v \mid y) = \frac{N_{y, x_i=v} + \alpha}{N_y + \alpha |V_i|}$$</div>
+<p>其中 $\alpha > 0$ 是平滑参数（$\alpha=1$ 为标准拉普拉斯平滑），$|V_i|$ 是特征 $x_i$ 的取值数。平滑确保了所有概率为正，且满足 $\sum_v \hat{P}(x_i=v \mid y) = 1$。</p>
+
+<table>
+<tr><th>$\alpha$ 值</th><th>效果</th><th>适用场景</th></tr>
+<tr><td>$\alpha = 0$</td><td>无平滑，MLE</td><td>不推荐（零概率风险）</td></tr>
+<tr><td>$\alpha = 1$</td><td>标准拉普拉斯平滑</td><td>默认选择</td></tr>
+<tr><td>$0 < \alpha < 1$</td><td>弱平滑（Lidstone 平滑）</td><td>大数据集、避免过度平滑</td></tr>
+<tr><td>$\alpha > 1$</td><td>强平滑</td><td>小数据集、高稀疏特征</td></tr>
+</table>
+
+<h3>4.4 多项式模型的平滑</h3>
+<p>对于多项式朴素贝叶斯（文本分类），平滑后的参数为：</p>
+<div class="formula" data-eq="(13)">$$\hat{\theta}_{y,i} = \frac{N_{y,i} + \alpha}{N_y + \alpha d}$$</div>
+<p>其中 $N_{y,i}$ 是类别 $y$ 中词 $i$ 的总出现次数，$N_y = \sum_i N_{y,i}$ 是类别 $y$ 的总词数，$d$ 是词表大小。</p>
+
+<h3>4.5 朴素贝叶斯完整算法流程</h3>
+<p>至此，我们已经掌握了朴素贝叶斯的全部核心组件——贝叶斯定理、条件独立假设、三种概率模型、参数估计与拉普拉斯平滑。下面将它们串联为一个完整的通用算法流程，适用于任意数据类型。</p>
+
+<h4>训练阶段</h4>
+<ol>
+<li><strong>统计类别先验</strong>：计算每个类别 $y$ 的先验概率 $\hat{P}(y) = N_y / N$，其中 $N_y$ 是类别 $y$ 的样本数，$N$ 是总样本数。</li>
+<li><strong>估计条件概率</strong>：根据数据类型选择模型，估计每个特征在每个类别下的条件概率 $\hat{P}(x_i \mid y)$：
+<ul>
+<li>连续特征 → 高斯模型，估计均值 $\mu_{y,i}$ 和方差 $\sigma_{y,i}^2$</li>
+<li>计数特征 → 多项式模型，估计 $\theta_{y,i} = N_{y,i} / N_y$</li>
+<li>二值特征 → 伯努利模型，估计 $\theta_{y,i} = N_{y,i} / N_y$</li>
+</ul>
+</li>
+<li><strong>拉普拉斯平滑</strong>：对离散特征施加平滑 $\hat{P}(x_i = v \mid y) = (N_{y, x_i=v} + \alpha) / (N_y + \alpha |V_i|)$，避免零概率（见 4.3 节）。</li>
+<li><strong>取对数存储</strong>：将所有概率取对数存储为 $\log \hat{P}(y)$ 和 $\log \hat{P}(x_i \mid y)$，避免预测时连乘下溢（见 2.4 节）。</li>
+</ol>
+
+<h4>预测阶段</h4>
+<ol>
+<li><strong>提取特征</strong>：对新样本 $\mathbf{x} = (x_1, x_2, \ldots, x_d)$ 提取特征向量（与训练阶段使用相同的特征空间）。</li>
+<li><strong>计算各类别得分</strong>：对每个候选类别 $y$，利用条件独立假设计算对数后验得分：
+$$\text{score}(y) = \log \hat{P}(y) + \sum_{i=1}^{d} \log \hat{P}(x_i \mid y)$$</li>
+<li><strong>输出预测</strong>：取得分最高的类别作为预测结果 $\hat{y} = \arg\max_y \, \text{score}(y)$。</li>
+</ol>
+
+<div class="callout success">
+<div class="callout-title">流程特点</div>
+<p>整个训练过程只需<strong>一次遍历</strong>训练数据即可完成所有统计，时间复杂度 $O(nd)$；预测时对每个类别做一次求和，复杂度 $O(dK)$（$K$ 为类别数）。无需迭代优化，这是朴素贝叶斯在大规模场景下依然广泛使用的核心优势。</p>
+</div>
+
+</section>
+
+<section id="ch5">
+<h2><span class="num">5</span>文本分类</h2>
+
+<h3>5.1 文本表示：从文档到特征向量</h3>
+<p>文本分类的第一步是将文档转化为数值特征向量。常用的表示方法有：</p>
+<table>
+<tr><th>方法</th><th>描述</th><th>配合模型</th></tr>
+<tr><td><strong>词袋模型</strong>（BoW）</td><td>统计每个词的出现次数</td><td>多项式 NB</td></tr>
+<tr><td><strong>TF-IDF</strong></td><td>词频 × 逆文档频率</td><td>多项式 / 伯努利 NB</td></tr>
+<tr><td><strong>二值化</strong></td><td>只记录词是否出现（0/1）</td><td>伯努利 NB</td></tr>
+</table>
+
+<h3>5.2 TF-IDF 加权</h3>
+<p>TF-IDF 衡量词对文档的重要性：</p>
+<div class="formula" data-eq="(14)">$$\text{TF-IDF}(t, d) = \text{TF}(t, d) \times \log\frac{N}{\text{DF}(t) + 1}$$</div>
+<p>其中 TF 是词频，DF 是包含词 $t$ 的文档数，$N$ 是总文档数。高频通用词（"的"、"是"）的 IDF 低，稀有词的 IDF 高。</p>
+
+<h3>5.3 文本分类流程</h3>
+<p>文本分类的完整流程分为<strong>训练阶段</strong>与<strong>预测阶段</strong>两部分，每部分又分若干步骤：</p>
+
+<h4>训练阶段（离线）</h4>
+<ol>
+<li><strong>文本预处理</strong>：对原始文档进行分词（中文按词切分，英文按空格/标点切分），去除停用词（"的"、"是"、"了"等高频无意义词）与噪声符号（HTML 标签、URL、表情）。</li>
+<li><strong>特征提取</strong>：将清洗后的词序列转化为数值向量。可选词袋（BoW）统计词频，或进一步做 TF-IDF 加权（见 5.2 节），得到特征向量 $\mathbf{x}$。</li>
+<li><strong>参数估计</strong>：统计每个类别的先验 $\hat{P}(y)$ 与条件概率 $\hat{P}(x_i \mid y)$，并施加拉普拉斯平滑（见 4.3 节）避免零概率。训练整体复杂度为 $O(nd)$，$n$ 为文档数，$d$ 为词表大小。</li>
+</ol>
+
+<h4>预测阶段（在线）</h4>
+<ol>
+<li><strong>预处理与特征提取</strong>：对新文档执行与训练阶段相同的分词、清洗与特征转换，保证特征空间一致。</li>
+<li><strong>计算得分</strong>：对每个候选类别 $y$，计算对数后验得分 $\log P(y) + \sum_i \log P(x_i \mid y)$（见 2.4 节，取对数避免下溢）。</li>
+<li><strong>输出决策</strong>：取得分最大的类别 $\hat{y} = \arg\max_y \left[\log P(y) + \sum_i \log P(x_i \mid y)\right]$，即最终分类结果。</li>
+</ol>
+
+<div class="callout">
+<div class="callout-title">为什么这套流程这么快？</div>
+<p>训练阶段只需<strong>一次扫描</strong>统计词频与类别计数；预测阶段对每个类别做一次求和即可，复杂度 $O(dK)$（$K$ 为类别数）。相比 SVM、深度学习等方法，无需迭代优化，因此特别适合大规模文本分类场景，如新闻分类、垃圾邮件过滤。</p>
+</div>
+
+<h3>5.4 多项式 NB vs 伯努利 NB 文本分类对比</h3>
+<table>
+<tr><th>维度</th><th>多项式 NB</th><th>伯努利 NB</th></tr>
+<tr><td>特征值</td><td>词频（整数）</td><td>0/1（是否出现）</td></tr>
+<tr><td>不出现的词</td><td>不影响（$0^0=1$）</td><td>显式建模 $P(x_i=0|y)$</td></tr>
+<tr><td>适合文档</td><td>中长文本（新闻、论文）</td><td>短文本（邮件、推文）</td></tr>
+<tr><td>词频信息</td><td>利用</td><td>忽略</td></tr>
+</table>
+
+</section>
+
+<section id="ch6">
+<h2><span class="num">6</span>垃圾邮件过滤</h2>
+
+<h3>6.1 问题设定</h3>
+<p>垃圾邮件过滤是朴素贝叶斯最经典的应用之一。给定一封邮件，判断它是"垃圾邮件"（spam）还是"正常邮件"（ham）。这是一个二分类问题，$y \in \{\text{spam}, \text{ham}\}$。</p>
+
+<h3>6.2 多项式 NB 垃圾过滤流程</h3>
+<p>假设邮件包含 $n$ 个词 $\mathbf{x} = (w_1, w_2, \ldots, w_n)$，用多项式 NB：</p>
+<div class="formula" data-eq="(15)">$$P(\text{spam} \mid \mathbf{x}) \propto P(\text{spam}) \prod_{i=1}^{n} P(w_i \mid \text{spam})$$</div>
+<p>预测规则：</p>
+<div class="formula" data-eq="(16)">$$\text{预测} = \begin{cases} \text{spam} & \text{if } \frac{P(\text{spam} \mid \mathbf{x})}{P(\text{ham} \mid \mathbf{x})} > \tau \\ \text{ham} & \text{otherwise} \end{cases}$$</div>
+<p>其中 $\tau$ 是决策阈值。$\tau > 1$ 时更保守（需更强证据才判 spam），$\tau < 1$ 时更激进。</p>
+
+<h3>6.3 词频表示例</h3>
+<table>
+<tr><th>词</th><th>$P(w \mid \text{spam})$</th><th>$P(w \mid \text{ham})$</th><th>倾向</th></tr>
+<tr><td>"免费"</td><td>0.080</td><td>0.005</td><td><span class="tag tag-orange">spam</span></td></tr>
+<tr><td>"点击"</td><td>0.050</td><td>0.010</td><td><span class="tag tag-orange">spam</span></td></tr>
+<tr><td>"会议"</td><td>0.002</td><td>0.030</td><td><span class="tag tag-blue">ham</span></td></tr>
+<tr><td>"附件"</td><td>0.010</td><td>0.040</td><td><span class="tag tag-blue">ham</span></td></tr>
+<tr><td>"的"</td><td>0.150</td><td>0.140</td><td><span class="tag" style="background:#f1f5f9;color:#64748b">中性</span></td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-title">实际工程中的改进</div>
+<ul>
+<li><strong>停用词过滤</strong>：去除"的、是、在"等高频无信息词</li>
+<li><strong>n-gram 特征</strong>：使用二元组（如"免费"+"领取"→"免费领取"）捕捉词序信息</li>
+<li><strong>阈值调优</strong>：设置 $\tau = 999$（强保守），避免误删正常邮件</li>
+<li><strong>增量学习</strong>：用户标记的新spam邮件可在线更新模型参数</li>
+</ul>
+</div>
+
+</section>
+
+<section id="ch7">
+<h2><span class="num">7</span>半监督与在线学习变体</h2>
+
+<h3>7.1 EM 半监督朴素贝叶斯</h3>
+<p>在标注数据稀缺时，可以用<strong>EM 算法</strong>（Expectation-Maximization）结合未标注数据训练朴素贝叶斯：</p>
+<ol>
+<li><strong>E 步</strong>：用当前模型对未标注数据预测 $P(y \mid \mathbf{x})$（软标签）</li>
+<li><strong>M 步</strong>：用标注数据 + 软标签数据重新估计参数 $P(y)$ 和 $P(x_i \mid y)$</li>
+<li>重复 E、M 步直到收敛</li>
+</ol>
+
+<h3>7.2 在线学习</h3>
+<p>朴素贝叶斯天然支持<strong>在线更新</strong>：当新样本到来时，只需更新计数器（$N_y$ 和 $N_{y,x_i}$），无需重新训练。这使它在流式数据场景中极其高效。</p>
+<div class="formula" data-eq="(17)">$$\hat{P}(x_i \mid y)^{(t+1)} = \frac{N_{y,x_i}^{(t)} + \mathbb{I}(x_i^{(t)}, y^{(t)}) + \alpha}{N_y^{(t)} + \mathbb{I}(y^{(t)}) + \alpha|V_i|}$$</div>
+<p>其中上标 $(t)$ 表示时刻，$\mathbb{I}$ 是指示函数。</p>
+
+<h3>7.3 补充朴素贝叶斯</h3>
+<p>当数据类别<strong>极度不平衡</strong>时，标准朴素贝叶斯的先验会偏向多数类。<strong>补充朴素贝叶斯</strong>（Complement NB）不直接计算每类的概率，而是计算<strong>不属于该类的概率</strong>，然后选择补集概率最小的类：</p>
+<div class="formula" data-eq="(18)">$$\hat{y} = \arg\min_y \; \sum_{i} x_i \log\frac{N_{\bar{y},i} + \alpha}{N_{\bar{y}} + \alpha d}$$</div>
+<p>其中 $\bar{y}$ 表示除 $y$ 以外的所有类别。Complement NB 在文本分类的不平衡数据集上表现优于标准多项式 NB。</p>
+
+</section>
+
+<section id="ch8">
+<h2><span class="num">8</span>朴素贝叶斯 vs 其他分类器</h2>
+
+<table>
+<tr><th>维度</th><th>朴素贝叶斯</th><th>逻辑回归</th><th>SVM</th><th>随机森林</th></tr>
+<tr><td>训练速度</td><td>$O(nd)$ 极快</td><td>$O(nd \cdot T)$</td><td>$O(n^2 \sim n^3)$</td><td>$O(n \log n \cdot T)$</td></tr>
+<tr><td>预测速度</td><td>$O(dK)$ 极快</td><td>$O(d)$</td><td>$O(n_{sv} \cdot d)$</td><td>$O(d \cdot T)$</td></tr>
+<tr><td>概率输出</td><td>天然概率</td><td>天然概率</td><td>需后处理</td><td>投票概率</td></tr>
+<tr><td>特征独立假设</td><td>需要（核心假设）</td><td>不需要</td><td>不需要</td><td>不需要</td></tr>
+<tr><td>小样本表现</td><td>优秀</td><td>好</td><td>优秀</td><td>好</td></tr>
+<tr><td>大数据可扩展性</td><td>优秀</td><td>优秀</td><td>差</td><td>好</td></tr>
+<tr><td>可解释性</td><td>高（概率表可读）</td><td>中</td><td>低</td><td>中</td></tr>
+<tr><td>在线学习</td><td>天然支持</td><td>支持(SGD)</td><td>有限支持</td><td>不支持</td></tr>
+</table>
+
+<div class="callout success">
+<div class="callout-title">何时选择朴素贝叶斯？</div>
+<ul>
+<li><strong>基线模型</strong>：快速建立分类基线，再尝试更复杂模型</li>
+<li><strong>文本分类</strong>：高维稀疏特征，NB 训练极快且效果好</li>
+<li><strong>实时系统</strong>：训练和预测都极快，适合在线更新</li>
+<li><strong>小数据集</strong>：参数少，不易过拟合</li>
+<li><strong>需要概率输出</strong>：天然输出类后验概率</li>
+<li><strong>多分类</strong>：天然支持，无需 OvR/OvO 分解</li>
+</ul>
+</div>
+
+</section>
+
+<section id="ch9">
+<h2><span class="num">9</span>Python 代码实现</h2>
+
+<h3>9.1 高斯朴素贝叶斯（纯 NumPy）</h3>
+<div class="code-block">
+<div class="code-header">gaussian_nb.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">GaussianNB</span>:
+    <span class="str">"""高斯朴素贝叶斯：连续特征"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, var_smoothing=<span class="num">1e-9</span>):
+        <span class="kw">self</span>.var_smoothing = var_smoothing
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, <span class="fn">y</span>):
+        <span class="kw">self</span>.classes_ = <span class="cls">np</span>.<span class="fn">unique</span>(<span class="fn">y</span>)
+        n_features = X.<span class="fn">shape</span>[<span class="num">1</span>]
+        <span class="kw">self</span>.mean_ = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">len</span>(<span class="kw">self</span>.classes_), n_features))
+        <span class="kw">self</span>.var_ = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">len</span>(<span class="kw">self</span>.classes_), n_features))
+        <span class="kw">self</span>.priors_ = <span class="cls">np</span>.<span class="fn">zeros</span>(<span class="fn">len</span>(<span class="kw">self</span>.classes_))
+        <span class="kw">for</span> idx, <span class="fn">c</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="kw">self</span>.classes_):
+            X_c = X[<span class="fn">y</span> == <span class="fn">c</span>]
+            <span class="kw">self</span>.mean_[idx] = X_c.<span class="fn">mean</span>(axis=<span class="num">0</span>)
+            <span class="kw">self</span>.var_[idx] = X_c.<span class="fn">var</span>(axis=<span class="num">0</span>) + <span class="kw">self</span>.var_smoothing
+            <span class="kw">self</span>.priors_[idx] = <span class="fn">len</span>(X_c) / <span class="fn">len</span>(<span class="fn">y</span>)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> <span class="fn">_log_likelihood</span>(<span class="kw">self</span>, X, cls_idx):
+        <span class="fn">mean</span> = <span class="kw">self</span>.mean_[cls_idx]
+        <span class="fn">var</span> = <span class="kw">self</span>.var_[cls_idx]
+        log_prob = -<span class="num">0.5</span> * <span class="cls">np</span>.<span class="fn">sum</span>(<span class="cls">np</span>.<span class="fn">log</span>(<span class="num">2</span> * <span class="cls">np</span>.pi * <span class="fn">var</span>))
+        log_prob -= <span class="num">0.5</span> * <span class="cls">np</span>.<span class="fn">sum</span>((X - <span class="fn">mean</span>) ** <span class="num">2</span> / <span class="fn">var</span>, axis=<span class="num">1</span>)
+        <span class="kw">return</span> log_prob
+
+    <span class="kw">def</span> <span class="fn">predict_log_proba</span>(<span class="kw">self</span>, X):
+        log_probs = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">len</span>(X), <span class="fn">len</span>(<span class="kw">self</span>.classes_)))
+        <span class="kw">for</span> idx, <span class="fn">c</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="kw">self</span>.classes_):
+            log_probs[:, idx] = <span class="kw">self</span>.<span class="fn">_log_likelihood</span>(X, idx) + <span class="cls">np</span>.<span class="fn">log</span>(<span class="kw">self</span>.priors_[idx])
+        <span class="kw">return</span> log_probs
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        log_probs = <span class="kw">self</span>.<span class="fn">predict_log_proba</span>(X)
+        <span class="kw">return</span> <span class="kw">self</span>.classes_[<span class="cls">np</span>.<span class="fn">argmax</span>(log_probs, axis=<span class="num">1</span>)]
+</pre>
+</div>
+
+<h3>9.2 多项式朴素贝叶斯（文本分类）</h3>
+<div class="code-block">
+<div class="code-header">multinomial_nb.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">MultinomialNB</span>:
+    <span class="str">"""多项式朴素贝叶斯：计数/频率特征"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, alpha=<span class="num">1.0</span>):
+        <span class="kw">self</span>.alpha = alpha
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, <span class="fn">y</span>):
+        <span class="kw">self</span>.classes_ = <span class="cls">np</span>.<span class="fn">unique</span>(<span class="fn">y</span>)
+        n_classes = <span class="fn">len</span>(<span class="kw">self</span>.classes_)
+        n_features = X.<span class="fn">shape</span>[<span class="num">1</span>]
+        <span class="kw">self</span>.feature_log_prob_ = <span class="cls">np</span>.<span class="fn">zeros</span>((n_classes, n_features))
+        <span class="kw">self</span>.class_log_prior_ = <span class="cls">np</span>.<span class="fn">zeros</span>(n_classes)
+        <span class="kw">for</span> idx, <span class="fn">c</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="kw">self</span>.classes_):
+            X_c = X[<span class="fn">y</span> == <span class="fn">c</span>]
+            <span class="com"># 拉普拉斯平滑后的条件概率</span>
+            count = X_c.<span class="fn">sum</span>(axis=<span class="num">0</span>) + <span class="kw">self</span>.alpha
+            total = count.<span class="fn">sum</span>()
+            <span class="kw">self</span>.feature_log_prob_[idx] = <span class="cls">np</span>.<span class="fn">log</span>(count) - <span class="cls">np</span>.<span class="fn">log</span>(total)
+            <span class="com"># 类先验</span>
+            <span class="kw">self</span>.class_log_prior_[idx] = <span class="cls">np</span>.<span class="fn">log</span>(X_c.<span class="fn">shape</span>[<span class="num">0</span>] / X.<span class="fn">shape</span>[<span class="num">0</span>])
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        log_probs = X @ <span class="kw">self</span>.feature_log_prob_.<span class="fn">T</span> + <span class="kw">self</span>.class_log_prior_
+        <span class="kw">return</span> <span class="kw">self</span>.classes_[<span class="cls">np</span>.<span class="fn">argmax</span>(log_probs, axis=<span class="num">1</span>)]
+</pre>
+</div>
+
+<h3>9.3 伯努利朴素贝叶斯</h3>
+<div class="code-block">
+<div class="code-header">bernoulli_nb.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">BernoulliNB</span>:
+    <span class="str">"""伯努利朴素贝叶斯：二值特征"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, alpha=<span class="num">1.0</span>):
+        <span class="kw">self</span>.alpha = alpha
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, <span class="fn">y</span>):
+        <span class="kw">self</span>.classes_ = <span class="cls">np</span>.<span class="fn">unique</span>(<span class="fn">y</span>)
+        n_classes = <span class="fn">len</span>(<span class="kw">self</span>.classes_)
+        n_features = X.<span class="fn">shape</span>[<span class="num">1</span>]
+        <span class="kw">self</span>.feature_prob_ = <span class="cls">np</span>.<span class="fn">zeros</span>((n_classes, n_features))
+        <span class="kw">self</span>.class_log_prior_ = <span class="cls">np</span>.<span class="fn">zeros</span>(n_classes)
+        <span class="kw">for</span> idx, <span class="fn">c</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="kw">self</span>.classes_):
+            X_c = X[<span class="fn">y</span> == <span class="fn">c</span>]
+            <span class="com"># P(x_i=1 | y) 拉普拉斯平滑</span>
+            <span class="kw">self</span>.feature_prob_[idx] = (X_c.<span class="fn">sum</span>(axis=<span class="num">0</span>) + <span class="kw">self</span>.alpha) / (X_c.<span class="fn">shape</span>[<span class="num">0</span>] + <span class="num">2</span> * <span class="kw">self</span>.alpha)
+            <span class="kw">self</span>.class_log_prior_[idx] = <span class="cls">np</span>.<span class="fn">log</span>(X_c.<span class="fn">shape</span>[<span class="num">0</span>] / X.<span class="fn">shape</span>[<span class="num">0</span>])
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        log_probs = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">len</span>(X), <span class="fn">len</span>(<span class="kw">self</span>.classes_)))
+        <span class="kw">for</span> idx <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(<span class="kw">self</span>.classes_)):
+            p = <span class="kw">self</span>.feature_prob_[idx]
+            log_prob = X @ <span class="cls">np</span>.<span class="fn">log</span>(p) + (<span class="num">1</span> - X) @ <span class="cls">np</span>.<span class="fn">log</span>(<span class="num">1</span> - p)
+            log_probs[:, idx] = log_prob + <span class="kw">self</span>.class_log_prior_[idx]
+        <span class="kw">return</span> <span class="kw">self</span>.classes_[<span class="cls">np</span>.<span class="fn">argmax</span>(log_probs, axis=<span class="num">1</span>)]
+</pre>
+</div>
+
+<h3>9.4 文本分类完整 Pipeline</h3>
+<div class="code-block">
+<div class="code-header">text_classification.py</div>
+<pre>
+<span class="kw">from</span> sklearn.feature_extraction.text <span class="kw">import</span> <span class="cls">TfidfVectorizer</span>
+<span class="kw">from</span> sklearn.naive_bayes <span class="kw">import</span> <span class="cls">MultinomialNB</span>
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> <span class="cls">Pipeline</span>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> <span class="cls">cross_val_score</span>
+
+<span class="kw">def</span> <span class="fn">build_nb_pipeline</span>(alpha=<span class="num">1.0</span>, max_features=<span class="num">10000</span>):
+    <span class="str">"""构建文本分类 Pipeline"""</span>
+    <span class="kw">return</span> <span class="cls">Pipeline</span>([
+        (<span class="str">'tfidf'</span>, <span class="cls">TfidfVectorizer</span>(max_features=max_features, stop_words=<span class="str">'english'</span>)),
+        (<span class="str">'nb'</span>, <span class="cls">MultinomialNB</span>(alpha=alpha))
+    ])
+
+<span class="com"># 使用示例</span>
+texts = [<span class="str">"免费领取优惠券"</span>, <span class="str">"会议纪要请查收"</span>, <span class="str">"点击链接赢大奖"</span>, <span class="str">"项目进度报告"</span>]
+labels = [<span class="str">"spam"</span>, <span class="str">"ham"</span>, <span class="str">"spam"</span>, <span class="str">"ham"</span>]
+
+pipeline = <span class="fn">build_nb_pipeline</span>(alpha=<span class="num">0.5</span>)
+scores = <span class="cls">cross_val_score</span>(pipeline, texts, labels, cv=<span class="num">3</span>, scoring=<span class="str">'f1_macro'</span>)
+<span class="fn">print</span>(f<span class="str">"5-Fold F1: {scores.mean():.4f} +/- {scores.std():.4f}"</span>)
+
+pipeline.<span class="fn">fit</span>(texts, labels)
+test = [<span class="str">"免费的报告请查收"</span>]
+<span class="fn">print</span>(f<span class="str">"预测: {pipeline.predict(test)}"</span>)
+</pre>
+</div>
+
+<h3>9.5 补充朴素贝叶斯（Complement NB）</h3>
+<div class="code-block">
+<div class="code-header">complement_nb.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">ComplementNB</span>:
+    <span class="str">"""补充朴素贝叶斯：适合不平衡数据"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, alpha=<span class="num">1.0</span>):
+        <span class="kw">self</span>.alpha = alpha
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, <span class="fn">y</span>):
+        <span class="kw">self</span>.classes_ = <span class="cls">np</span>.<span class="fn">unique</span>(<span class="fn">y</span>)
+        n_classes = <span class="fn">len</span>(<span class="kw">self</span>.classes_)
+        n_features = X.<span class="fn">shape</span>[<span class="num">1</span>]
+        <span class="com"># 计算每个类的补集统计</span>
+        <span class="kw">self</span>.complement_log_prob_ = <span class="cls">np</span>.<span class="fn">zeros</span>((n_classes, n_features))
+        <span class="kw">self</span>.class_log_prior_ = <span class="cls">np</span>.<span class="fn">zeros</span>(n_classes)
+        <span class="kw">for</span> idx, <span class="fn">c</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="kw">self</span>.classes_):
+            X_not_c = X[<span class="fn">y</span> != <span class="fn">c</span>]  <span class="com"># 补集数据</span>
+            count = X_not_c.<span class="fn">sum</span>(axis=<span class="num">0</span>) + <span class="kw">self</span>.alpha
+            total = count.<span class="fn">sum</span>()
+            <span class="kw">self</span>.complement_log_prob_[idx] = <span class="cls">np</span>.<span class="fn">log</span>(count) - <span class="cls">np</span>.<span class="fn">log</span>(total)
+            <span class="kw">self</span>.class_log_prior_[idx] = <span class="cls">np</span>.<span class="fn">log</span>(<span class="cls">np</span>.<span class="fn">sum</span>(<span class="fn">y</span> != <span class="fn">c</span>) / <span class="fn">len</span>(<span class="fn">y</span>))
+        <span class="com"># 权重归一化（帮助不平衡数据）</span>
+        w = <span class="cls">np</span>.<span class="fn">exp</span>(<span class="kw">self</span>.complement_log_prob_)
+        <span class="kw">self</span>.complement_log_prob_ = <span class="cls">np</span>.<span class="fn">log</span>(w / w.<span class="fn">sum</span>(axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>))
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        <span class="com"># 选择补集得分最小的类</span>
+        scores = X @ <span class="kw">self</span>.complement_log_prob_.<span class="fn">T</span>
+        <span class="kw">return</span> <span class="kw">self</span>.classes_[<span class="cls">np</span>.<span class="fn">argmin</span>(scores, axis=<span class="num">1</span>)]
+</pre>
+</div>
+
+<h3>9.6 在线学习朴素贝叶斯</h3>
+<div class="code-block">
+<div class="code-header">online_nb.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+<span class="kw">from</span> collections <span class="kw">import</span> <span class="cls">defaultdict</span>
+
+<span class="kw">class</span> <span class="cls">OnlineBernoulliNB</span>:
+    <span class="str">"""在线学习伯努利朴素贝叶斯"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, alpha=<span class="num">1.0</span>):
+        <span class="kw">self</span>.alpha = alpha
+        <span class="kw">self</span>.class_counts_ = <span class="cls">defaultdict</span>(<span class="fn">int</span>)
+        <span class="kw">self</span>.feature_counts_ = <span class="cls">defaultdict</span>(<span class="kw">lambda</span>: <span class="cls">defaultdict</span>(<span class="fn">int</span>))
+        <span class="kw">self</span>.n_features = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">partial_fit</span>(<span class="kw">self</span>, X, <span class="fn">y</span>, classes=<span class="kw">None</span>):
+        <span class="kw">if</span> classes <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span> <span class="kw">and</span> <span class="kw">not</span> <span class="kw">self</span>.class_counts_:
+            <span class="kw">for</span> <span class="fn">c</span> <span class="kw">in</span> classes:
+                <span class="kw">self</span>.class_counts_[<span class="fn">c</span>] = <span class="num">0</span>
+        <span class="kw">for</span> xi, yi <span class="kw">in</span> <span class="fn">zip</span>(X, <span class="fn">y</span>):
+            <span class="kw">self</span>.class_counts_[yi] += <span class="num">1</span>
+            <span class="kw">self</span>.n_features = <span class="fn">max</span>(<span class="kw">self</span>.n_features, <span class="fn">len</span>(xi))
+            <span class="kw">for</span> j, val <span class="kw">in</span> <span class="fn">enumerate</span>(xi):
+                <span class="kw">if</span> val == <span class="num">1</span>:
+                    <span class="kw">self</span>.feature_counts_[yi][j] += <span class="num">1</span>
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> <span class="fn">predict_one</span>(<span class="kw">self</span>, <span class="fn">x</span>):
+        best_class, best_score = <span class="kw">None</span>, -<span class="cls">np</span>.inf
+        total = <span class="fn">sum</span>(<span class="kw">self</span>.class_counts_.values())
+        <span class="kw">for</span> <span class="fn">c</span> <span class="kw">in</span> <span class="kw">self</span>.class_counts_:
+            log_prob = <span class="cls">np</span>.<span class="fn">log</span>(<span class="kw">self</span>.class_counts_[<span class="fn">c</span>] / total)
+            n_c = <span class="kw">self</span>.class_counts_[<span class="fn">c</span>]
+            <span class="kw">for</span> j, val <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="fn">x</span>):
+                p = (<span class="kw">self</span>.feature_counts_[<span class="fn">c</span>][j] + <span class="kw">self</span>.alpha) / (n_c + <span class="num">2</span> * <span class="kw">self</span>.alpha)
+                <span class="kw">if</span> val == <span class="num">1</span>:
+                    log_prob += <span class="cls">np</span>.<span class="fn">log</span>(p)
+                <span class="kw">else</span>:
+                    log_prob += <span class="cls">np</span>.<span class="fn">log</span>(<span class="num">1</span> - p)
+            <span class="kw">if</span> log_prob > best_score:
+                best_score = log_prob
+                best_class = <span class="fn">c</span>
+        <span class="kw">return</span> best_class
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">array</span>([<span class="kw">self</span>.<span class="fn">predict_one</span>(<span class="fn">x</span>) <span class="kw">for</span> <span class="fn">x</span> <span class="kw">in</span> X])
+</pre>
+</div>
+
+</section>
+
+<section id="ch10">
+<h2><span class="num">10</span>优缺点与适用场景</h2>
+
+<h3>10.1 优势</h3>
+<ul>
+<li><strong>训练极快</strong>：只需统计频率，$O(nd)$ 复杂度，无迭代优化</li>
+<li><strong>预测极快</strong>：$O(dK)$ 矩阵乘法</li>
+<li><strong>天然多分类</strong>：无需 OvR/OvO 分解</li>
+<li><strong>天然概率输出</strong>：直接给出后验概率</li>
+<li><strong>在线学习</strong>：增量更新，天然支持流式数据</li>
+<li><strong>小样本鲁棒</strong>：参数少（$O(dK)$），不易过拟合</li>
+<li><strong>高维友好</strong>：特征独立假设使高维空间可行</li>
+</ul>
+
+<h3>10.2 劣势</h3>
+<ul>
+<li><strong>条件独立假设过强</strong>：特征相关时性能下降</li>
+<li><strong>概率估计不准</strong>：虽然分类准确，但输出概率往往过自信（接近 0 或 1）</li>
+<li><strong>零概率问题</strong>：需要平滑处理</li>
+<li><strong>决策边界简单</strong>：线性边界，无法捕捉复杂模式</li>
+<li><strong>对特征缩放敏感</strong>（高斯 NB）：需要标准化</li>
+</ul>
+
+<h3>10.3 适用场景</h3>
+<table>
+<tr><th>场景</th><th>推荐模型</th><th>理由</th></tr>
+<tr><td>文本分类</td><td>多项式 / 补充 NB</td><td>高维稀疏 + 快速训练</td></tr>
+<tr><td>垃圾邮件过滤</td><td>伯努利 NB</td><td>二值特征 + 在线更新</td></tr>
+<tr><td>情感分析</td><td>多项式 NB</td><td>词频特征 + 快速基线</td></tr>
+<tr><td>医疗诊断辅助</td><td>高斯 NB</td><td>连续生理指标 + 概率输出</td></tr>
+<tr><td>实时推荐基线</td><td>伯努利 NB</td><td>用户行为二值化 + 在线更新</td></tr>
+<tr><td>多分类基线</td><td>任意 NB</td><td>快速建立基线，天然多分类</td></tr>
+</table>
+
+</section>
+
+<section id="ch11">
+<h2><span class="num">11</span>调参实践与工程建议</h2>
+
+<h3>11.1 超参数总结</h3>
+<table>
+<tr><th>参数</th><th>模型</th><th>范围</th><th>默认</th><th>作用</th></tr>
+<tr><td>$\alpha$</td><td>多项式/伯努利</td><td>$[0.01, 10]$</td><td>$1.0$</td><td>拉普拉斯平滑强度</td></tr>
+<tr><td>var_smoothing</td><td>高斯 NB</td><td>$[10^{-12}, 10^{-3}]$</td><td>$10^{-9}$</td><td>方差下限，防除零</td></tr>
+<tr><td>max_features</td><td>TF-IDF</td><td>$10^3 \sim 10^5$</td><td>$10^4$</td><td>词表大小</td></tr>
+<tr><td>ngram_range</td><td>TF-IDF</td><td>(1,1)→(1,3)</td><td>(1,1)</td><td>n-gram 阶数</td></tr>
+<tr><td>阈值 $\tau$</td><td>决策</td><td>$1 \sim 999$</td><td>$1$</td><td>spam 召回率 vs 精确率</td></tr>
+</table>
+
+<h3>11.2 调参策略</h3>
+<div class="code-block">
+<div class="code-header">Python — GridSearchCV 调参</div>
+<pre><code><span class="com"># 多项式 NB 调参示例</span>
+param_grid = {
+    <span class="str">'tfidf__max_features'</span>: [<span class="num">5000</span>, <span class="num">10000</span>, <span class="num">20000</span>],
+    <span class="str">'tfidf__ngram_range'</span>: [(<span class="num">1</span>,<span class="num">1</span>), (<span class="num">1</span>,<span class="num">2</span>)],
+    <span class="str">'nb__alpha'</span>: [<span class="num">0.01</span>, <span class="num">0.1</span>, <span class="num">0.5</span>, <span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">5.0</span>],
+}
+grid = <span class="cls">GridSearchCV</span>(pipeline, param_grid, cv=<span class="num">5</span>, scoring=<span class="str">'f1_macro'</span>)</code></pre>
+</div>
+
+<div class="callout warn">
+<div class="callout-title">常见坑</div>
+<ul>
+<li><strong>忘记平滑</strong>：$\alpha=0$ 导致零概率，必须 $\alpha > 0$</li>
+<li><strong>高斯 NB 未标准化</strong>：连续特征尺度不一致影响方差估计</li>
+<li><strong>忽略 TF-IDF</strong>：纯词频不如 TF-IDF 加权效果好</li>
+<li><strong>概率未校准</strong>：NB 输出的概率通常偏极端，需 Platt Scaling 或 Isotonic Regression 校准</li>
+</ul>
+</div>
+
+</section>
+
+<section id="ch12">
+<h2><span class="num">12</span>贝叶斯网络：从朴素到一般化</h2>
+
+<h3>12.1 朴素假设的局限</h3>
+<p>朴素贝叶斯假设所有特征条件独立，相当于一个<strong>星形贝叶斯网络</strong>：类别节点指向所有特征节点，特征节点之间无连接。当特征之间存在强依赖时，这一假设过于简化。</p>
+
+<h3>12.2 贝叶斯网络</h3>
+<p><strong>贝叶斯网络</strong>（Bayesian Network）是朴素贝叶斯的推广：一个有向无环图（DAG），节点表示随机变量，边表示直接依赖关系。每对父子节点之间对应一个条件概率 $P(\text{子} \mid \text{父})$。联合分布分解为：</p>
+<div class="formula" data-eq="(19)">$$P(X_1, X_2, \ldots, X_n) = \prod_{i=1}^{n} P(X_i \mid \text{Pa}(X_i))$$</div>
+<p>其中 $\text{Pa}(X_i)$ 是 $X_i$ 的父节点集合。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
+<text x="80" y="20" fill="#0f172a" font-size="14" font-weight="700">朴素贝叶斯（星形）</text>
+<circle cx="160" cy="50" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="150" y="55" fill="#1e293b" font-size="12">y</text>
+<line x1="160" y1="78" x2="80" y2="140" stroke="#334155" stroke-width="1.5"/>
+<line x1="160" y1="78" x2="130" y2="140" stroke="#334155" stroke-width="1.5"/>
+<line x1="160" y1="78" x2="190" y2="140" stroke="#334155" stroke-width="1.5"/>
+<line x1="160" y1="78" x2="240" y2="140" stroke="#334155" stroke-width="1.5"/>
+<circle cx="80" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="73" y="155" fill="#1e293b" font-size="11">x₁</text>
+<circle cx="130" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="123" y="155" fill="#1e293b" font-size="11">x₂</text>
+<circle cx="190" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="183" y="155" fill="#1e293b" font-size="11">x₃</text>
+<circle cx="240" cy="150" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="228" y="155" fill="#1e293b" font-size="11">x_d</text>
+<text x="100" y="200" fill="#64748b" font-size="11">所有特征条件独立于 y</text>
+<line x1="360" y1="50" x2="440" y2="50" stroke="#7c3aed" stroke-width="3" stroke-dasharray="8,4" class="flow-line"/>
+<text x="370" y="40" fill="#7c3aed" font-size="12" font-weight="700">一般化</text>
+<text x="450" y="20" fill="#0f172a" font-size="14" font-weight="700">贝叶斯网络（DAG）</text>
+<circle cx="500" cy="50" r="24" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="492" y="55" fill="#1e293b" font-size="11">A</text>
+<line x1="500" y1="74" x2="500" y2="110" stroke="#334155" stroke-width="1.5"/>
+<line x1="520" y1="65" x2="560" y2="110" stroke="#334155" stroke-width="1.5"/>
+<circle cx="500" cy="130" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="493" y="135" fill="#1e293b" font-size="11">B</text>
+<circle cx="570" cy="130" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="563" y="135" fill="#1e293b" font-size="11">C</text>
+<line x1="500" y1="150" x2="540" y2="185" stroke="#334155" stroke-width="1.5"/>
+<line x1="570" y1="150" x2="540" y2="185" stroke="#334155" stroke-width="1.5"/>
+<circle cx="540" cy="200" r="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="533" y="205" fill="#1e293b" font-size="11">D</text>
+<circle cx="660" cy="80" r="20" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="653" y="85" fill="#1e293b" font-size="11">E</text>
+<line x1="660" y1="100" x2="640" y2="185" stroke="#334155" stroke-width="1.5"/>
+<circle cx="640" cy="200" r="20" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="633" y="205" fill="#1e293b" font-size="11">F</text>
+<text x="450" y="240" fill="#64748b" font-size="11">变量间可表达任意依赖关系</text>
+</svg>
+</div>
+
+<h3>12.3 从朴素贝叶斯到贝叶斯网络的谱系</h3>
+<table>
+<tr><th>模型</th><th>结构假设</th><th>表达能力</th><th>推理复杂度</th></tr>
+<tr><td>朴素贝叶斯</td><td>星形，全条件独立</td><td>弱</td><td>$O(dK)$</td></tr>
+<tr><td>树增强 NB (TAN)</td><td>类别 + 特征间树形依赖</td><td>中</td><td>$O(d^2 K)$</td></tr>
+<tr><td>半朴素贝叶斯 (AODE)</td><td>每个特征依赖一个父特征</td><td>中</td><td>$O(d^2 K)$</td></tr>
+<tr><td>一般贝叶斯网络</td><td>任意 DAG</td><td>强</td><td>NP-hard（最坏情况）</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-title">实践建议</div>
+<p>朴素贝叶斯是贝叶斯网络的最简特例。当特征独立假设严重不满足时，可以尝试<strong>TAN（Tree Augmented Naive Bayes）</strong>：允许特征之间形成一棵依赖树，在实践中往往比纯朴素贝叶斯有明显提升，且推理仍然高效。</p>
+</div>
+
+</section>
+
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">1763</div>
+<div class="event">Bayes 定理发表</div>
+<div class="desc">Thomas Bayes 去世后两年，其论文被 Royal Society 发表，奠定贝叶斯推断基础</div>
+</div>
+<div class="timeline-item">
+<div class="year">1812</div>
+<div class="event">Laplace 独立重新发现贝叶斯定理</div>
+<div class="desc">Laplace 将贝叶斯定理系统化，并提出了拉普拉斯平滑</div>
+</div>
+<div class="timeline-item">
+<div class="year">1960s</div>
+<div class="event">朴素贝叶斯在信息检索中应用</div>
+<div class="desc">Maron 和 Kuhns 将贝叶斯方法用于文档自动分类</div>
+</div>
+<div class="timeline-item">
+<div class="year">1996</div>
+<div class="event">Joachims 提出文本分类中的 NB 方法</div>
+<div class="desc">系统验证朴素贝叶斯在文本分类中的有效性</div>
+</div>
+<div class="timeline-item">
+<div class="year">1998</div>
+<div class="event">Sahami 将朴素贝叶斯应用于垃圾邮件过滤</div>
+<div class="desc">开创了 NB 垃圾过滤的工程实践范式</div>
+</div>
+<div class="timeline-item">
+<div class="year">2001</div>
+<div class="event">McCallum 提出 TAN 和补充朴素贝叶斯</div>
+<div class="desc">通过树增强和补集方法改进朴素贝叶斯的性能</div>
+</div>
+<div class="timeline-item">
+<div class="year">2003</div>
+<div class="event">Rennie 等提出 Complement NB 优化不平衡文本</div>
+<div class="desc">解决类别不平衡导致的偏差问题</div>
+</div>
+<div class="timeline-item">
+<div class="year">2007</div>
+<div class="event">scikit-learn 集成朴素贝叶斯</div>
+<div class="desc">NB 成为工业界文本分类的标准基线</div>
+</div>
+<div class="timeline-item">
+<div class="year">2014</div>
+<div class="event">分布式 NB 框架用于大规模文本</div>
+<div class="desc">Spark MLlib / Mahout 等框架支持亿级文本分类</div>
+</div>
+<div class="timeline-item">
+<div class="year">2020+</div>
+<div class="event">深度学习时代 NB 仍作为强基线</div>
+<div class="desc">在快速原型开发和资源受限场景中，NB 仍是首选基线之一</div>
+</div>
+</div>
+
+<div class="callout success">
+<div class="callout-title">总结</div>
+<p>朴素贝叶斯以其极简的设计——一个条件独立假设加上贝叶斯定理——实现了惊人的分类效果。它的价值不在于追求极致精度，而在于<strong>速度、简单和鲁棒性</strong>的完美平衡：训练只需一次数据扫描，预测只需矩阵乘法，天然支持多分类和在线学习，在文本分类领域仍是不可替代的强基线。理解朴素贝叶斯，就是理解贝叶斯思维的精髓——用先验知识和观测数据，理性更新信念。</p>
+</div>
+
+</section>
+
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Bayes, T. (1763). An essay towards solving a problem in the doctrine of chances. <em>Phil. Trans. Royal Society, 53, 370-418</em>.</li>
+<li>Laplace, P. S. (1812). Théorie analytique des probabilités. <em>Courcier</em>. (拉普拉斯平滑)</li>
+<li>Maron, M. E. (1961). Automatic indexing: an experimental inquiry. <em>JACM, 8(3), 404-417</em>. (信息检索中的 NB)</li>
+<li>Duda, R. O., &amp; Hart, P. E. (1973). Pattern Classification and Scene Analysis. <em>Wiley</em>. (经典教材)</li>
+<li>Lewis, D. D. (1998). Naive (Bayes) at forty: The independence assumption in IR. <em>ECML 1998</em>. (NB 在 IR 中的独立假设分析)</li>
+<li>Joachims, T. (1997). A probabilistic analysis of the Rocchio algorithm with TFIDF for text categorization. <em>ICML 1997</em>.</li>
+<li>Sahami, M., et al. (1998). A Bayesian approach to filtering junk e-mail. <em>AAAI Workshop on Learning for Text Categorization</em>. (垃圾邮件过滤)</li>
+<li>McCallum, A., &amp; Nigam, K. (1998). A comparison of event models for Naive Bayes text classification. <em>AAAI Workshop</em>. (多项式 vs 伯努利 NB)</li>
+<li>Rennie, J. D., et al. (2003). Tackling the poor assumptions of Naive Bayes text classifiers. <em>ICML 2003</em>. (Complement NB)</li>
+<li>Friedman, N., Geiger, D., &amp; Goldszmidt, M. (1997). Bayesian network classifiers. <em>Machine Learning, 29, 131-163</em>. (TAN)</li>
+<li>Webb, G. I., et al. (2005). Not so naive Bayes: aggregating one-dependence estimators. <em>Machine Learning, 58, 5-24</em>. (AODE)</li>
+<li>Domingos, P., &amp; Pazzani, M. (1997). On the optimality of the simple Bayesian classifier under zero-one loss. <em>Machine Learning, 29, 103-130</em>. (NB 为何有效的理论分析)</li>
+<li>Ng, A. Y., &amp; Jordan, M. I. (2002). On discriminative vs. generative classifiers. <em>NIPS 2002</em>. (NB vs 逻辑回归)</li>
+<li>Elkan, C. (1997). Boosting and naive Bayesian learning. <em>Technical Report, UCSD</em>.</li>
+<li>Kibriya, A. M., et al. (2004). Multinomial naive Bayes for text categorization revisited. <em>AI 2004</em>.</li>
+</ol>
+</section>
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+<script>
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.textContent, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

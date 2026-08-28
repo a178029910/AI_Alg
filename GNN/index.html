@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图神经网络详解 — GNN 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>图神经网络</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、图数据与图论基础</a>
+    <a href="#ch2">二、从谱图论到图傅里叶变换</a>
+    <a href="#ch3">三、图卷积的两种范式</a>
+    <a href="#ch4">四、GCN：图卷积网络</a>
+    <a href="#ch5">五、GraphSAGE：归纳学习</a>
+    <a href="#ch6">六、GAT：图注意力网络</a>
+    <a href="#ch7">七、消息传递框架（MPNN）</a>
+    <a href="#ch8">八、图池化与图分类</a>
+    <a href="#ch9">九、过平滑与深层GNN</a>
+    <a href="#ch10">十、应用场景</a>
+    <a href="#ch11">十一、Python 代码实现</a>
+    <a href="#ch12">十二、GNN 变体与前沿</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+<section id="hero" class="hero">
+  <h1>图神经网络详解</h1>
+  <div class="subtitle">Graph Neural Network — 在非欧结构上学习</div>
+  <div class="tagline">从谱图论到消息传递 · 2005 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">4 张 SVG 结构图</span>
+    <span class="badge">18 个公式</span>
+    <span class="badge">6 段 Python 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1">
+<h2><span class="num">1</span>图数据与图论基础</h2>
+
+<h3>1.1 为什么需要图神经网络</h3>
+<p>传统深度学习（CNN、Transformer 等）处理的数据通常具有<strong>规则的网格结构</strong>——图像是二维像素网格，文本是一维 token 序列。然而现实世界中大量数据天然以<strong>图</strong>的形式存在：社交网络、分子结构、知识图谱、交通路网、引文网络等。这些数据具有<strong>非欧几里得结构</strong>：节点没有固定顺序，邻居数量不一，不存在平移不变性。</p>
+
+<p><strong>图神经网络</strong>（Graph Neural Network, GNN）正是为处理这类非欧数据而生的。它的核心思想是：通过<strong>消息传递</strong>（Message Passing）机制，让每个节点聚合邻居的信息，从而学习到包含拓扑结构的节点表示。</p>
+
+<h3>1.2 图的基本定义</h3>
+<p>一个图 $G = (V, E)$ 由节点集 $V$ 和边集 $E$ 组成。设 $n = |V|$ 为节点数，$m = |E|$ 为边数。</p>
+<p><strong>邻接矩阵</strong> $A \in \mathbb{R}^{n \times n}$ 定义为：</p>
+<div class="formula" data-eq="(1)">$$A_{ij} = \begin{cases} 1, & \text{如果 } (i, j) \in E \\ 0, & \text{否则} \end{cases}$$</div>
+<p>对于加权图，$A_{ij} = w_{ij}$ 表示边权重。<strong>度矩阵</strong> $D$ 是对角矩阵，$D_{ii} = \sum_j A_{ij}$。</p>
+
+<h3>1.3 拉普拉斯矩阵</h3>
+<p>图的<strong>组合拉普拉斯矩阵</strong>（Combinatorial Laplacian）定义为：</p>
+<div class="formula" data-eq="(2)">$$L = D - A$$</div>
+<p>它满足以下性质：</p>
+<ul>
+  <li>$L$ 是半正定矩阵（$x^\top L x \geq 0$）</li>
+  <li>特征值 $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_n$，最小特征值为 0</li>
+  <li>零特征值的个数等于图的连通分量数</li>
+  <li>$x^\top L x = \sum_{(i,j) \in E} (x_i - x_j)^2$，衡量图上信号的平滑度</li>
+</ul>
+
+<p><strong>归一化拉普拉斯矩阵</strong>（Normalized Laplacian）：</p>
+<div class="formula" data-eq="(3)">$$L_{\text{sym}} = I - D^{-1/2} A D^{-1/2} = D^{-1/2} L D^{-1/2}$$</div>
+<p>其特征值范围为 $[0, 2]$，在 GCN 等模型中被广泛使用。</p>
+
+<div class="callout">
+<div class="callout-title">直觉理解</div>
+拉普拉斯矩阵是图上的"二阶差分算子"：如果相邻节点的特征值相近（信号平滑），则 $Lx$ 在这些位置取值小；如果相邻节点差异大（信号不光滑），则 $Lx$ 取值大。图傅里叶变换就是以 $L$ 的特征向量为基展开信号。
+</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="mk1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"></path></marker>
+</defs>
+<circle cx="120" cy="100" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+<text x="120" y="106" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="600">$v_1$</text>
+<circle cx="280" cy="60" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" class="pulse-node"/>
+<text x="280" y="66" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="600">$v_2$</text>
+<circle cx="280" cy="140" r="28" fill="#d1fae5" stroke="#059669" stroke-width="2" class="pulse-node"/>
+<text x="280" y="146" text-anchor="middle" font-size="14" fill="#059669" font-weight="600">$v_3$</text>
+<circle cx="440" cy="100" r="28" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="pulse-node"/>
+<text x="440" y="106" text-anchor="middle" font-size="14" fill="#ea580c" font-weight="600">$v_4$</text>
+<circle cx="600" cy="60" r="28" fill="#fee2e2" stroke="#dc2626" stroke-width="2" class="pulse-node"/>
+<text x="600" y="66" text-anchor="middle" font-size="14" fill="#dc2626" font-weight="600">$v_5$</text>
+<circle cx="600" cy="140" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+<text x="600" y="146" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="600">$v_6$</text>
+<line x1="148" y1="92" x2="252" y2="68" stroke="#334155" stroke-width="2"/>
+<line x1="148" y1="108" x2="252" y2="132" stroke="#334155" stroke-width="2"/>
+<line x1="280" y1="88" x2="280" y2="112" stroke="#334155" stroke-width="2"/>
+<line x1="308" y1="68" x2="412" y2="92" stroke="#334155" stroke-width="2"/>
+<line x1="308" y1="132" x2="412" y2="108" stroke="#334155" stroke-width="2"/>
+<line x1="468" y1="92" x2="572" y2="68" stroke="#334155" stroke-width="2"/>
+<line x1="468" y1="108" x2="572" y2="132" stroke="#334155" stroke-width="2"/>
+<line x1="600" y1="88" x2="600" y2="112" stroke="#334155" stroke-width="2"/>
+<text x="400" y="180" text-anchor="middle" font-size="13" fill="#64748b">图 $G=(V,E)$：6 个节点、8 条边，邻接矩阵 $A$ 描述连接关系</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch2">
+<h2><span class="num">2</span>从谱图论到图傅里叶变换</h2>
+
+<h3>2.1 图拉普拉斯的特征分解</h3>
+<p>归一化拉普拉斯矩阵 $L_{\text{sym}}$ 可做特征分解：</p>
+<div class="formula" data-eq="(4)">$$L_{\text{sym}} = U \Lambda U^\top, \quad \Lambda = \text{diag}(\lambda_1, \ldots, \lambda_n)$$</div>
+<p>其中 $U = [u_1, u_2, \ldots, u_n]$ 是特征向量矩阵，特征向量 $u_k$ 构成图上的一组正交基，对应频率 $\lambda_k$。</p>
+
+<h3>2.2 图傅里叶变换</h3>
+<p>类比经典信号处理中的傅里叶变换，<strong>图傅里叶变换</strong>（Graph Fourier Transform, GFT）将图信号 $x \in \mathbb{R}^n$ 变换到谱域：</p>
+<div class="formula" data-eq="(5)">$$\hat{x} = U^\top x, \quad x = U \hat{x}$$</div>
+<p>特征值 $\lambda_k$ 起到"频率"的作用：$\lambda_k$ 小对应低频（信号在图上变化缓慢），$\lambda_k$ 大对应高频（信号在相邻节点间剧烈变化）。</p>
+
+<h3>2.3 谱图卷积</h3>
+<p>在谱域中定义图卷积：对图信号 $x$ 应用滤波器 $g_\theta$，再变换回空域：</p>
+<div class="formula" data-eq="(6)">$$g_\theta \star x = U g_\theta(\Lambda) U^\top x$$</div>
+<p>其中 $g_\theta(\Lambda)$ 是对角矩阵，对角元素为滤波器在各个频率上的响应。直接计算需要对 $L_{\text{sym}}$ 做完整特征分解，复杂度 $O(n^3)$，且依赖具体图结构，<strong>不可迁移</strong>。</p>
+
+<h3>2.4 切比雪夫多项式近似</h3>
+<p>Defferrard 等人（2016）提出用 $K$ 阶切比雪夫多项式 $T_k$ 近似 $g_\theta(\Lambda)$：</p>
+<div class="formula" data-eq="(7)">$$g_\theta \star x \approx \sum_{k=0}^{K} \theta_k T_k(\tilde{L}) x$$</div>
+<p>其中 $\tilde{L} = \frac{2}{\lambda_{\max}} L_{\text{sym}} - I$ 是归一化后的拉普拉斯，$T_k$ 满足递推 $T_k(x) = 2x T_{k-1}(x) - T_{k-2}(x)$。这避免了完整特征分解，且滤波器仅依赖 $K$ 阶邻居，复杂度降为 $O(K \cdot m)$。</p>
+
+</section>
+
+<section id="ch3">
+<h2><span class="num">3</span>图卷积的两种范式</h2>
+
+<h3>3.1 谱方法 vs 空间方法</h3>
+<p>图卷积的发展形成了两大范式：</p>
+<div class="table-wrap">
+<table>
+<tr><th>维度</th><th>谱方法（Spectral）</th><th>空间方法（Spatial）</th></tr>
+<tr><td>理论基础</td><td>图傅里叶变换</td><td>邻居聚合</td></tr>
+<tr><td>卷积定义</td><td>$U g_\theta(\Lambda) U^\top x$</td><td>$\text{AGG}(\{h_j : j \in \mathcal{N}(i)\})$</td></tr>
+<tr><td>代表模型</td><td>Spectral CNN, ChebNet, GCN</td><td>GraphSAGE, GAT, MPNN</td></tr>
+<tr><td>图依赖</td><td>依赖拉普拉斯特征向量</td><td>仅依赖邻接关系</td></tr>
+<tr><td>可迁移性</td><td>同结构图间可迁移</td><td>不同图间天然可迁移</td></tr>
+<tr><td>计算瓶颈</td><td>特征分解 $O(n^3)$</td><td>邻居采样</td></tr>
+</table>
+</div>
+
+<h3>3.2 从谱到空的统一</h3>
+<p>GCN 是谱方法与空间方法的<strong>桥梁</strong>：Kipf & Welling（2017）对切比雪夫多项式取 $K=1$，并重新参数化，得到了一个纯空间操作的公式。此后 GAT、GraphSAGE 等完全在空间域定义，不再依赖谱理论，但谱视角提供了理论分析的工具。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 220" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="mk2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#2563eb"></path></marker>
+</defs>
+<rect x="30" y="30" width="160" height="50" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="110" y="60" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="600">谱方法 Spectral</text>
+<rect x="230" y="30" width="160" height="50" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="310" y="60" text-anchor="middle" font-size="14" fill="#7c3aed" font-weight="600">ChebNet (K阶近似)</text>
+<rect x="430" y="30" width="160" height="50" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="510" y="60" text-anchor="middle" font-size="14" fill="#059669" font-weight="600">GCN (K=1 简化)</text>
+<rect x="630" y="30" width="140" height="50" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+<text x="700" y="60" text-anchor="middle" font-size="14" fill="#ea580c" font-weight="600">空间方法 Spatial</text>
+<line x1="190" y1="55" x2="225" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
+<line x1="390" y1="55" x2="425" y2="55" stroke="#7c3aed" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
+<line x1="590" y1="55" x2="625" y2="55" stroke="#059669" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
+<text x="400" y="110" text-anchor="middle" font-size="13" fill="#64748b">图卷积方法的演进：从谱理论到空间操作</text>
+<rect x="80" y="130" width="120" height="36" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+<text x="140" y="153" text-anchor="middle" font-size="12" fill="#1d4ed8">Spectral CNN</text>
+<rect x="230" y="130" width="120" height="36" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+<text x="290" y="153" text-anchor="middle" font-size="12" fill="#7c3aed">ChebNet</text>
+<rect x="380" y="130" width="120" height="36" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+<text x="440" y="153" text-anchor="middle" font-size="12" fill="#059669">GCN</text>
+<rect x="530" y="130" width="100" height="36" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+<text x="580" y="153" text-anchor="middle" font-size="12" fill="#059669">GraphSAGE</text>
+<rect x="660" y="130" width="100" height="36" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+<text x="710" y="153" text-anchor="middle" font-size="12" fill="#059669">GAT</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch4">
+<h2><span class="num">4</span>GCN：图卷积网络</h2>
+
+<h3>4.1 GCN 的核心公式</h3>
+<p>Kipf & Welling 在 2017 年提出 GCN，将切比雪夫近似取 $K=1$ 并引入归一化技巧，得到简洁的逐层传播规则：</p>
+<div class="formula" data-eq="(8)">$$H^{(l+1)} = \sigma\left(\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2} H^{(l)} W^{(l)}\right)$$</div>
+<p>其中：</p>
+<ul>
+  <li>$\tilde{A} = A + I_N$：添加自环的邻接矩阵</li>
+  <li>$\tilde{D}_{ii} = \sum_j \tilde{A}_{ij}$：对应的度矩阵</li>
+  <li>$H^{(l)} \in \mathbb{R}^{n \times d_l}$：第 $l$ 层的节点特征矩阵</li>
+  <li>$W^{(l)} \in \mathbb{R}^{d_l \times d_{l+1}}$：可训练权重</li>
+  <li>$\sigma$：激活函数（通常 ReLU）</li>
+</ul>
+
+<h3>4.2 归一化的作用</h3>
+<p>$\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2}$ 是<strong>对称归一化邻接矩阵</strong>，它的作用是：</p>
+<ul>
+  <li><strong>防止度数大的节点主导聚合</strong>：高维节点在聚合时其特征被自身度数归一化</li>
+  <li><strong>保持对称性</strong>：保证传播矩阵的特征值在 $[-1, 1]$ 范围内，数值稳定</li>
+  <li>直观等价于对每个节点做邻居特征的<strong>加权平均</strong></li>
+</ul>
+
+<h3>4.3 多层 GCN 的感受野</h3>
+<p>一层 GCN 聚合一阶邻居，$L$ 层 GCN 的感受野为 $L$ 跳。实际中通常用 2-3 层效果最佳——层数过多会导致<strong>过平滑</strong>问题（所有节点表示趋同）。</p>
+<div class="formula" data-eq="(9)">$$Z = \text{softmax}\left(\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2} \cdot \text{ReLU}\left(\tilde{D}^{-1/2} \tilde{A} \tilde{D}^{-1/2} X W^{(0)}\right) W^{(1)}\right)$$</div>
+<p>这是两层 GCN 的完整前向传播，用于节点分类。</p>
+
+<div class="callout warn">
+<div class="callout-title">关键洞察</div>
+GCN 的优雅之处在于：它从一个纯粹的谱方法（图傅里叶变换）出发，经过切比雪夫近似和 $K=1$ 简化，最终得到一个可以用"邻居加权平均"来理解的空间操作。谱理论与空间直觉在这里完美统一。
+</div>
+
+</section>
+
+<section id="ch5">
+<h2><span class="num">5</span>GraphSAGE：归纳学习</h2>
+
+<h3>5.1 直推式 vs 归纳式</h3>
+<p>GCN 是<strong>直推式</strong>（transductive）学习——它需要看到图中所有节点，无法泛化到未见节点。GraphSAGE（Sample and Aggregate, Hamilton et al., 2017）提出<strong>归纳式</strong>（inductive）学习框架：通过采样邻居并学习聚合函数，可以对完全未见过的图进行预测。</p>
+
+<h3>5.2 GraphSAGE 的算法</h3>
+<p>对每个节点 $v$，在第 $l$ 层：</p>
+<div class="formula" data-eq="(10)">$$h_v^{(l)} = \sigma\left(W^{(l)} \cdot \text{CONCAT}\left(h_v^{(l-1)}, \text{AGG}^{(l)}\left(\{h_u^{(l-1)} : u \in \mathcal{N}(v)\}\right)\right)\right)$$</div>
+<p>GraphSAGE 支持多种聚合函数：</p>
+<ul>
+  <li><strong>Mean 聚合</strong>：$\text{AGG} = \frac{1}{|\mathcal{N}(v)|} \sum_{u \in \mathcal{N}(v)} h_u$</li>
+  <li><strong>Max 聚合</strong>：逐元素取最大值</li>
+  <li><strong>LSTM 聚合</strong>：将邻居随机排列后输入 LSTM</li>
+</ul>
+
+<h3>5.3 邻居采样</h3>
+<p>为处理大规模图，GraphSAGE 对每个节点<em>采样固定数量</em> $S$ 的邻居（而非全部聚合），复杂度降为 $O(S^K \cdot d)$，与图规模无关。这使得 GraphSAGE 可以训练在百万级节点的图上。</p>
+
+</section>
+
+<section id="ch6">
+<h2><span class="num">6</span>GAT：图注意力网络</h2>
+
+<h3>6.1 注意力机制引入图</h3>
+<p>GCN 和 GraphSAGE 对邻居的聚合权重是固定的（由度数决定或均匀平均），无法区分不同邻居的重要性。GAT（Graph Attention Network, Veličković et al., 2018）引入<strong>注意力机制</strong>，让模型自适应学习邻居的聚合权重。</p>
+
+<h3>6.2 GAT 的计算流程</h3>
+<p>首先计算节点对 $(i, j)$ 的注意力系数：</p>
+<div class="formula" data-eq="(11)">$$e_{ij} = \text{LeakyReLU}\left(a^\top [W h_i \| W h_j]\right)$$</div>
+<p>然后对邻居做 softmax 归一化：</p>
+<div class="formula" data-eq="(12)">$$\alpha_{ij} = \frac{\exp(e_{ij})}{\sum_{k \in \mathcal{N}(i)} \exp(e_{ik})}$$</div>
+<p>最终聚合：</p>
+<div class="formula" data-eq="(13)">$$h_i' = \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij} W h_j\right)$$</div>
+
+<h3>6.3 多头注意力</h3>
+<p>类比 Transformer 的多头注意力，GAT 使用 $K$ 个独立的注意力头，拼接或平均输出：</p>
+<div class="formula" data-eq="(14)">$$h_i' = \|_{k=1}^{K} \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij}^{(k)} W^{(k)} h_j\right)$$</div>
+<p>多头注意力使模型能同时关注不同子空间的邻居关系，提升表达能力。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+<circle cx="400" cy="140" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5" class="glow-ring"/>
+<text x="400" y="146" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700">$v_i$</text>
+<circle cx="160" cy="60" r="24" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" class="pulse-node"/>
+<text x="160" y="66" text-anchor="middle" font-size="12" fill="#7c3aed">$v_1$</text>
+<circle cx="160" cy="220" r="24" fill="#d1fae5" stroke="#059669" stroke-width="2" class="pulse-node"/>
+<text x="160" y="226" text-anchor="middle" font-size="12" fill="#059669">$v_2$</text>
+<circle cx="640" cy="60" r="24" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="pulse-node"/>
+<text x="640" y="66" text-anchor="middle" font-size="12" fill="#ea580c">$v_3$</text>
+<circle cx="640" cy="220" r="24" fill="#fee2e2" stroke="#dc2626" stroke-width="2" class="pulse-node"/>
+<text x="640" y="226" text-anchor="middle" font-size="12" fill="#dc2626">$v_4$</text>
+<line x1="184" y1="75" x2="376" y2="135" stroke="#7c3aed" stroke-width="4" opacity="0.8"/>
+<text x="260" y="95" font-size="12" fill="#7c3aed" font-weight="600">$0.6$</text>
+<line x1="184" y1="205" x2="376" y2="145" stroke="#059669" stroke-width="2" opacity="0.5"/>
+<text x="260" y="190" font-size="12" fill="#059669" font-weight="600">$0.1$</text>
+<line x1="616" y1="75" x2="424" y2="135" stroke="#ea580c" stroke-width="3" opacity="0.7"/>
+<text x="540" y="95" font-size="12" fill="#ea580c" font-weight="600">$0.2$</text>
+<line x1="616" y1="205" x2="424" y2="145" stroke="#dc2626" stroke-width="1.5" opacity="0.4"/>
+<text x="540" y="190" font-size="12" fill="#dc2626" font-weight="600">$0.1$</text>
+<text x="400" y="265" text-anchor="middle" font-size="13" fill="#64748b">GAT 注意力聚合：边宽 ∝ 注意力权重 $alpha_{ij}$</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch7">
+<h2><span class="num">7</span>消息传递框架（MPNN）</h2>
+
+<h3>7.1 统一的消息传递视角</h3>
+<p>Gilmer 等人（2017）提出<strong>消息传递神经网络</strong>（MPNN）框架，将 GCN、GraphSAGE、GAT 等统一为以下范式：</p>
+<div class="formula" data-eq="(15)">$$m_i^{(l)} = \text{AGG}_{j \in \mathcal{N}(i)} \left( \phi^{(l)}\left(h_i^{(l-1)}, h_j^{(l-1)}, e_{ij}\right) \right)$$</div>
+<div class="formula" data-eq="(16)">$$h_i^{(l)} = \psi^{(l)}\left(h_i^{(l-1)}, m_i^{(l)}\right)$$</div>
+<p>其中 $\phi$ 是消息函数，$\psi$ 是更新函数，AGG 是置换不变的聚合操作（sum/mean/max），$e_{ij}$ 是边特征。</p>
+
+<h3>7.2 各模型的消息传阅读</h3>
+<div class="table-wrap">
+<table>
+<tr><th>模型</th><th>消息函数 $\phi$</th><th>聚合 AGG</th><th>更新 $\psi$</th></tr>
+<tr><td>GCN</td><td>$\tilde{D}^{-1/2}_{ii}\tilde{A}_{ij}\tilde{D}^{-1/2}_{jj} \cdot W h_j$</td><td>Sum</td><td>$\sigma(\cdot)$</td></tr>
+<tr><td>GraphSAGE</td><td>$h_j$</td><td>Mean / Max</td><td>$\sigma(W \cdot [h_i \| \text{AGG}])$</td></tr>
+<tr><td>GAT</td><td>$\alpha_{ij} W h_j$</td><td>Sum</td><td>$\sigma(\cdot)$</td></tr>
+<tr><td>GIN</td><td>$h_j$</td><td>Sum</td><td>$\text{MLP}((1+\epsilon) h_i + \sum h_j)$</td></tr>
+</table>
+</div>
+
+<h3>7.3 聚合函数的选择原则</h3>
+<p>Xu 等人（GIN, 2019）证明了 GNN 的表达能力取决于聚合函数：</p>
+<ul>
+  <li><strong>Sum 聚合</strong>：可区分不同的多重集，表达能力最强（GIN）</li>
+  <li><strong>Mean 聚合</strong>：对节点数量不敏感，无法区分 $\{1,1,1\}$ 和 $\{1\}$</li>
+  <li><strong>Max 聚合</strong>：仅敏感于最大值，无法区分 $\{1,2\}$ 和 $\{1,2,2\}$</li>
+</ul>
+<div class="formula" data-eq="(17)">$$h_i^{(l)} = \text{MLP}^{(l)}\left((1 + \epsilon^{(l)}) \cdot h_i^{(l-1)} + \sum_{j \in \mathcal{N}(i)} h_j^{(l-1)}\right)$$</div>
+<p>GIN 使用 Sum 聚合 + MLP 更新，在理论上与 Weisfeiler-Lehman（WL）同构测试等价。</p>
+
+</section>
+
+<section id="ch8">
+<h2><span class="num">8</span>图池化与图分类</h2>
+
+<h3>8.1 从节点级到图级</h3>
+<p>节点级任务（分类/回归）只需输出每个节点的预测。图级任务需要将所有节点表示聚合为<strong>图级表示</strong>，这一步称为<strong>图池化</strong>（Graph Pooling）或读出函数（Readout）。</p>
+
+<h3>8.2 简单读出函数</h3>
+<p>最基础的读出函数对所有节点表示做置换不变操作：</p>
+<ul>
+  <li><strong>求和</strong>：$h_G = \sum_{i \in V} h_i$（保留数量信息）</li>
+  <li><strong>平均</strong>：$h_G = \frac{1}{n} \sum_{i \in V} h_i$（对图规模不敏感）</li>
+  <li><strong>最大</strong>：$h_G = \max_{i \in V} h_i$（提取最显著特征）</li>
+</ul>
+
+<h3>8.3 层次化池化</h3>
+<p>更高级的方法通过<strong>层次化聚类</strong>逐步压缩图结构：</p>
+<ul>
+  <li><strong>DiffPool</strong>（Ying et al., 2018）：学习软分配矩阵 $S$，逐层将节点分配到超节点</li>
+  <li><strong>TopKPool</strong>：按得分选 top-k 节点，丢弃其余</li>
+  <li><strong>SAGPool</strong>：用 GNN 计算节点重要性得分后选择</li>
+</ul>
+<div class="formula" data-eq="(18)">$$H^{(l+1)} = S^{(l)} H^{(l)}, \quad A^{(l+1)} = S^{(l)} {A^{(l)}}^\top S^{(l)}$$</div>
+<p>DiffPool 的软分配矩阵 $S \in \mathbb{R}^{n \times k}$ 将 $n$ 个节点映射到 $k$ 个超节点。</p>
+
+</section>
+
+<section id="ch9">
+<h2><span class="num">9</span>过平滑与深层GNN</h2>
+
+<h3>9.1 过平滑问题</h3>
+<p>GCN 等模型在层数增加时性能下降，这是因为<strong>过平滑</strong>（Over-smoothing）：经过多层传播后，所有节点的表示趋于相同，丧失区分能力。理论上，层数 $\to \infty$ 时节点表示收敛到与度相关的常向量。</p>
+
+<h3>9.2 缓解策略</h3>
+<div class="table-wrap">
+<table>
+<tr><th>方法</th><th>核心思想</th><th>代表工作</th></tr>
+<tr><td>残差连接</td><td>$h' = h + \text{GCN}(h)$，保留原始信息</td><td>JK-Net (2018)</td></tr>
+<tr><td>DropEdge</td><td>训练时随机删边，减缓信息过度混合</td><td>DropEdge (2020)</td></tr>
+<tr><td>归一化</td><td>PairNorm / BatchNorm 保持节点间方差</td><td>PairNorm (2020)</td></tr>
+<tr><td>频域分析</td><td>设计自适应高频/低频滤波器</td><td>GCNII (2020)</td></tr>
+<tr><td>门控机制</td><td>学习每层的保留比例</td><td>APPNP (2019)</td></tr>
+</table>
+</div>
+
+<div class="callout">
+<div class="callout-title">设计原则</div>
+实践中 2-3 层 GCN 通常效果最佳。若需更大感受野，优先考虑增加每层的表达能力（如 GAT、GIN），而非简单堆叠层数。如确实需要深层模型，应结合残差、归一化等防过平滑技术。
+</div>
+
+</section>
+
+<section id="ch10">
+<h2><span class="num">10</span>应用场景</h2>
+
+<h3>10.1 节点级任务</h3>
+<p><strong>节点分类</strong>是 GNN 最经典的任务：已知部分节点标签，预测其余节点标签。例如在引文网络中预测论文的学科领域，在社交网络中预测用户兴趣。</p>
+
+<h3>10.2 边级任务</h3>
+<p><strong>链路预测</strong>预测两个节点之间是否存在边：用于社交网络好友推荐、知识图谱补全。方法包括编码-解码模型、自编码器等。</p>
+
+<h3>10.3 图级任务</h3>
+<p><strong>图分类</strong>对整个图预测一个标签：分子属性预测（毒性、溶解度）、蛋白质功能预测、程序语义分析等。需要图池化将节点表示聚合为图级表示。</p>
+
+<h3>10.4 大规模应用</h3>
+<div class="table-wrap">
+<table>
+<tr><th>领域</th><th>任务</th><th>代表性工作</th></tr>
+<tr><td>药物发现</td><td>分子属性预测、虚拟筛选</td><td>MPNN, D-MPNN</td></tr>
+<tr><td>推荐系统</td><td>用户-物品图建模</td><td>PinSage, LightGCN</td></tr>
+<tr><td>交通预测</td><td>路网时空预测</td><td>STGCN, DCRNN</td></tr>
+<tr><td>知识图谱</td><td>关系预测、实体对齐</td><td>R-GCN, CompGCN</td></tr>
+<tr><td>物理模拟</td><td>粒子系统模拟</td><td>GNS, MeshGraphNets</td></tr>
+<tr><td>组合优化</td><td>TSP、最大割等</td><td>GNN + RL, GNN + Search</td></tr>
+</table>
+</div>
+
+</section>
+
+<section id="ch11">
+<h2><span class="num">11</span>Python 代码实现</h2>
+
+<h3>11.1 GCN 层（纯 NumPy）</h3>
+<div class="code-block">
+<div class="code-header">gcn_numpy.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">GCNLayer</span>:
+    <span class="str">"""图卷积层（NumPy 实现）"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, out_dim):
+        <span class="com"># Glorot 初始化</span>
+        limit = <span class="cls">np</span>.<span class="fn">sqrt</span>(<span class="num">6.0</span> / (in_dim + out_dim))
+        <span class="kw">self</span>.W = <span class="cls">np</span>.<span class="fn">random</span>.<span class="fn">uniform</span>(-limit, limit, (in_dim, out_dim))
+        <span class="kw">self</span>.b = <span class="cls">np</span>.<span class="fn">zeros</span>(out_dim)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, A_hat, D_hat):
+        <span class="str">"""前向传播
+        X: (n, in_dim) 节点特征
+        A_hat: (n, n) 带自环邻接矩阵
+        D_hat: (n, n) 带自环度矩阵的对角矩阵
+        """</span>
+        <span class="com"># 对称归一化: D^{-1/2} A D^{-1/2}</span>
+        D_inv_sqrt = <span class="cls">np</span>.linalg.<span class="fn">inv</span>(<span class="cls">np</span>.<span class="fn">sqrt</span>(D_hat))
+        A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt
+        <span class="com"># 图卷积: A_norm X W + b</span>
+        out = A_norm @ X @ <span class="kw">self</span>.W + <span class="kw">self</span>.b
+        <span class="kw">return</span> out
+
+<span class="kw">def</span> <span class="fn">relu</span>(x):
+    <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">maximum</span>(<span class="num">0</span>, x)
+
+<span class="kw">def</span> <span class="fn">softmax</span>(x):
+    x = x - x.<span class="fn">max</span>(axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>)
+    exp_x = <span class="cls">np</span>.<span class="fn">exp</span>(x)
+    <span class="kw">return</span> exp_x / exp_x.<span class="fn">sum</span>(axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>)
+
+<span class="com"># 构建示例图</span>
+A = <span class="cls">np</span>.<span class="fn">array</span>([
+    [<span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>],
+    [<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>],
+    [<span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>],
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>],
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>],
+], dtype=<span class="fn">float</span>)
+
+<span class="com"># 添加自环</span>
+A_hat = A + <span class="cls">np</span>.<span class="fn">eye</span>(<span class="num">5</span>)
+D_hat = <span class="cls">np</span>.<span class="fn">diag</span>(A_hat.<span class="fn">sum</span>(axis=<span class="num">1</span>))
+
+<span class="com"># 随机节点特征 (5 节点 x 4 维)</span>
+X = <span class="cls">np</span>.<span class="fn">random</span>.<span class="fn">randn</span>(<span class="num">5</span>, <span class="num">4</span>)
+
+<span class="com"># 两层 GCN</span>
+layer1 = <span class="cls">GCNLayer</span>(<span class="num">4</span>, <span class="num">8</span>)
+layer2 = <span class="cls">GCNLayer</span>(<span class="num">8</span>, <span class="num">3</span>)
+h = <span class="fn">relu</span>(layer1.<span class="fn">forward</span>(X, A_hat, D_hat))
+z = <span class="fn">softmax</span>(layer2.<span class="fn">forward</span>(h, A_hat, D_hat))
+<span class="fn">print</span>(<span class="str">"节点分类预测:"</span>, z.<span class="fn">argmax</span>(axis=<span class="num">1</span>))
+</pre>
+</div>
+
+<h3>11.2 GAT 层（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">gat.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn.functional <span class="kw">as</span> <span class="cls">F</span>
+
+<span class="kw">class</span> <span class="cls">GATLayer</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""图注意力层"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, out_dim, n_heads=<span class="num">4</span>, dropout=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.n_heads = n_heads
+        <span class="kw">self</span>.out_dim = out_dim
+        <span class="com"># 每个头的投影</span>
+        <span class="kw">self</span>.W = <span class="cls">nn</span>.Linear(in_dim, out_dim * n_heads, bias=<span class="kw">False</span>)
+        <span class="com"># 注意力参数 a = [a_l || a_r]</span>
+        <span class="kw">self</span>.a_l = <span class="cls">nn</span>.Parameter(<span class="cls">torch</span>.empty(n_heads, out_dim, <span class="num">1</span>))
+        <span class="kw">self</span>.a_r = <span class="cls">nn</span>.Parameter(<span class="cls">torch</span>.empty(n_heads, out_dim, <span class="num">1</span>))
+        <span class="cls">nn</span>.init.<span class="fn">xavier_uniform_</span>(<span class="kw">self</span>.W.weight)
+        <span class="cls">nn</span>.init.<span class="fn">xavier_uniform_</span>(<span class="kw">self</span>.a_l)
+        <span class="cls">nn</span>.init.<span class="fn">xavier_uniform_</span>(<span class="kw">self</span>.a_r)
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.Dropout(dropout)
+        <span class="kw">self</span>.leaky_relu = <span class="cls">nn</span>.LeakyReLU(<span class="num">0.2</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj):
+        <span class="str">"""X: (n, in_dim), adj: (n, n) 邻接矩阵"""</span>
+        n = X.size(<span class="num">0</span>)
+        <span class="com"># 线性变换 -> (n, n_heads, out_dim)</span>
+        h = <span class="kw">self</span>.W(X).<span class="fn">view</span>(n, <span class="kw">self</span>.n_heads, <span class="kw">self</span>.out_dim)
+        <span class="com"># 计算注意力系数</span>
+        e_l = <span class="cls">torch</span>.<span class="fn">einsum</span>(<span class="str">'nhd,hdo->nho'</span>, h, <span class="kw">self</span>.a_l).<span class="fn">squeeze</span>(-<span class="num">1</span>)  <span class="com"># (n, n_heads)</span>
+        e_r = <span class="cls">torch</span>.<span class="fn">einsum</span>(<span class="str">'nhd,hdo->nho'</span>, h, <span class="kw">self</span>.a_r).<span class="fn">squeeze</span>(-<span class="num">1</span>)  <span class="com"># (n, n_heads)</span>
+        e = e_l.<span class="fn">unsqueeze</span>(<span class="num">1</span>) + e_r.<span class="fn">unsqueeze</span>(<span class="num">0</span>)  <span class="com"># (n, n, n_heads)</span>
+        e = <span class="kw">self</span>.leaky_relu(e)
+        <span class="com"># Mask: 非邻居设为 -inf</span>
+        mask = adj.<span class="fn">unsqueeze</span>(-<span class="num">1</span>) + <span class="cls">torch</span>.<span class="fn">eye</span>(n, device=X.device).<span class="fn">unsqueeze</span>(-<span class="num">1</span>)
+        e = e.<span class="fn">masked_fill</span>(mask == <span class="num">0</span>, <span class="fn">float</span>(<span class="str">'-inf'</span>))
+        alpha = <span class="cls">F</span>.<span class="fn">softmax</span>(e, dim=<span class="num">1</span>)  <span class="com"># (n, n, n_heads)</span>
+        alpha = <span class="kw">self</span>.dropout(alpha)
+        <span class="com"># 加权聚合</span>
+        out = <span class="cls">torch</span>.<span class="fn">einsum</span>(<span class="str">'ijh,jhd->ihd'</span>, alpha, h)  <span class="com"># (n, n_heads, out_dim)</span>
+        <span class="kw">return</span> out.reshape(n, -<span class="num">1</span>)  <span class="com"># (n, n_heads * out_dim)</span>
+
+<span class="kw">class</span> <span class="cls">GAT</span>(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, hidden_dim, n_classes, n_heads=<span class="num">4</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.layer1 = <span class="cls">GATLayer</span>(in_dim, hidden_dim, n_heads)
+        <span class="kw">self</span>.layer2 = <span class="cls">GATLayer</span>(hidden_dim * n_heads, n_classes, <span class="num">1</span>)
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.Dropout(<span class="num">0.5</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj):
+        h = <span class="cls">F</span>.<span class="fn">elu</span>(<span class="kw">self</span>.layer1(X, adj))
+        h = <span class="kw">self</span>.dropout(h)
+        h = <span class="kw">self</span>.layer2(h, adj)
+        <span class="kw">return</span> <span class="cls">F</span>.<span class="fn">log_softmax</span>(h, dim=<span class="num">1</span>)
+</pre>
+</div>
+
+<h3>11.3 GraphSAGE 层（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">graphsage.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn.functional <span class="kw">as</span> <span class="cls">F</span>
+
+<span class="kw">class</span> <span class="cls">GraphSAGELayer</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""GraphSAGE 层（Mean 聚合）"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, out_dim):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.W_self = <span class="cls">nn</span>.Linear(in_dim, out_dim)
+        <span class="kw">self</span>.W_neigh = <span class="cls">nn</span>.Linear(in_dim, out_dim)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj):
+        <span class="str">"""X: (n, in_dim), adj: (n, n) 邻接矩阵"""</span>
+        <span class="com"># 邻居均值聚合</span>
+        deg = adj.<span class="fn">sum</span>(dim=<span class="num">1</span>, keepdim=<span class="kw">True</span>).<span class="fn">clamp</span>(min=<span class="num">1</span>)
+        neigh_mean = adj @ X / deg  <span class="com"># (n, in_dim)</span>
+        <span class="com"># 拼接自身与邻居，分别线性变换</span>
+        h = <span class="kw">self</span>.W_self(X) + <span class="kw">self</span>.W_neigh(neigh_mean)
+        <span class="kw">return</span> <span class="cls">F</span>.<span class="fn">normalize</span>(h, dim=<span class="num">1</span>)
+
+<span class="kw">class</span> <span class="cls">GraphSAGE</span>(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, hidden_dim, n_classes, n_layers=<span class="num">2</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.layers = <span class="cls">nn</span>.ModuleList()
+        <span class="kw">self</span>.layers.<span class="fn">append</span>(<span class="cls">GraphSAGELayer</span>(in_dim, hidden_dim))
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_layers - <span class="num">1</span>):
+            <span class="kw">self</span>.layers.<span class="fn">append</span>(<span class="cls">GraphSAGELayer</span>(hidden_dim, hidden_dim))
+        <span class="kw">self</span>.classifier = <span class="cls">nn</span>.Linear(hidden_dim, n_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj):
+        h = X
+        <span class="kw">for</span> layer <span class="kw">in</span> <span class="kw">self</span>.layers:
+            h = <span class="cls">F</span>.<span class="fn">relu</span>(layer(h, adj))
+        <span class="kw">return</span> <span class="kw">self</span>.classifier(h)
+</pre>
+</div>
+
+<h3>11.4 GIN 层（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">gin.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn.functional <span class="kw">as</span> <span class="cls">F</span>
+
+<span class="kw">class</span> <span class="cls">GINLayer</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""图同构网络层（GIN）"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, out_dim, eps=<span class="num">0.0</span>, train_eps=<span class="kw">True</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.mlp = <span class="cls">nn</span>.Sequential(
+            <span class="cls">nn</span>.Linear(in_dim, out_dim),
+            <span class="cls">nn</span>.ReLU(),
+            <span class="cls">nn</span>.Linear(out_dim, out_dim)
+        )
+        <span class="kw">if</span> train_eps:
+            <span class="kw">self</span>.eps = <span class="cls">nn</span>.Parameter(<span class="cls">torch</span>.tensor(eps))
+        <span class="kw">else</span>:
+            <span class="kw">self</span>.register_buffer(<span class="str">'eps'</span>, <span class="cls">torch</span>.tensor(eps))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj):
+        <span class="str">"""X: (n, in_dim), adj: (n, n)"""</span>
+        <span class="com"># Sum 聚合 + (1+eps) * 自身</span>
+        neigh_sum = adj @ X
+        out = (<span class="num">1</span> + <span class="kw">self</span>.eps) * X + neigh_sum
+        <span class="kw">return</span> <span class="kw">self</span>.mlp(out)
+
+<span class="kw">class</span> <span class="cls">GIN</span>(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, hidden_dim, n_classes, n_layers=<span class="num">3</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.layers = <span class="cls">nn</span>.ModuleList()
+        <span class="kw">self</span>.bns = <span class="cls">nn</span>.ModuleList()
+        <span class="kw">self</span>.layers.<span class="fn">append</span>(<span class="cls">GINLayer</span>(in_dim, hidden_dim))
+        <span class="kw">self</span>.bns.<span class="fn">append</span>(<span class="cls">nn</span>.BatchNorm1d(hidden_dim))
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_layers - <span class="num">1</span>):
+            <span class="kw">self</span>.layers.<span class="fn">append</span>(<span class="cls">GINLayer</span>(hidden_dim, hidden_dim))
+            <span class="kw">self</span>.bns.<span class="fn">append</span>(<span class="cls">nn</span>.BatchNorm1d(hidden_dim))
+        <span class="kw">self</span>.classifier = <span class="cls">nn</span>.Linear(hidden_dim, n_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj):
+        h = X
+        <span class="kw">for</span> i, (layer, bn) <span class="kw">in</span> enumerate(zip(<span class="kw">self</span>.layers, <span class="kw">self</span>.bns)):
+            h = layer(h, adj)
+            h = bn(h)
+            <span class="kw">if</span> i < <span class="fn">len</span>(<span class="kw">self</span>.layers) - <span class="num">1</span>:
+                h = <span class="cls">F</span>.<span class="fn">relu</span>(h)
+        <span class="kw">return</span> <span class="kw">self</span>.classifier(h)
+</pre>
+</div>
+
+<h3>11.5 图分类管道</h3>
+<div class="code-block">
+<div class="code-header">graph_classification.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn.functional <span class="kw">as</span> <span class="cls">F</span>
+
+<span class="kw">class</span> <span class="cls">GraphClassifier</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""GNN + Readout 图分类模型"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, hidden_dim, n_classes, n_layers=<span class="num">3</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.layers = <span class="cls">nn</span>.ModuleList()
+        <span class="kw">self</span>.layers.<span class="fn">append</span>(<span class="cls">nn</span>.Linear(in_dim, hidden_dim))
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_layers - <span class="num">1</span>):
+            <span class="kw">self</span>.layers.<span class="fn">append</span>(<span class="cls">nn</span>.Linear(hidden_dim, hidden_dim))
+        <span class="kw">self</span>.classifier = <span class="cls">nn</span>.Linear(hidden_dim, n_classes)
+
+    <span class="kw">def</span> gcn_forward(<span class="kw">self</span>, X, adj, W):
+        <span class="str">"""单层 GCN 传播"""</span>
+        deg = adj.<span class="fn">sum</span>(dim=<span class="num">1</span>, keepdim=<span class="kw">True</span>).<span class="fn">clamp</span>(min=<span class="num">1</span>)
+        D_inv_sqrt = <span class="cls">torch</span>.<span class="fn">diag</span>(<span class="num">1.0</span> / <span class="cls">torch</span>.<span class="fn">sqrt</span>(deg.<span class="fn">squeeze</span>()))
+        A_hat = adj + <span class="cls">torch</span>.<span class="fn">eye</span>(adj.size(<span class="num">0</span>), device=adj.device)
+        D_hat = <span class="cls">torch</span>.<span class="fn">diag</span>(<span class="num">1.0</span> / <span class="cls">torch</span>.<span class="fn">sqrt</span>(A_hat.<span class="fn">sum</span>(dim=<span class="num">1</span>)))
+        A_norm = D_hat @ A_hat @ D_hat
+        <span class="kw">return</span> A_norm @ X @ W
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj, batch):
+        <span class="str">"""batch: (n,) 每个节点所属图的索引"""</span>
+        h = X
+        <span class="kw">for</span> W <span class="kw">in</span> <span class="kw">self</span>.layers:
+            h = <span class="cls">F</span>.<span class="fn">relu</span>(<span class="kw">self</span>.gcn_forward(h, adj, W))
+        <span class="com"># 全局读出: 每个图的节点求和</span>
+        n_graphs = batch.<span class="fn">max</span>().item() + <span class="num">1</span>
+        graph_repr = <span class="cls">torch</span>.<span class="fn">zeros</span>(n_graphs, h.size(<span class="num">1</span>), device=h.device)
+        graph_repr = graph_repr.<span class="fn">scatter_add_</span>(<span class="num">0</span>, batch.<span class="fn">unsqueeze</span>(<span class="num">1</span>).expand(-<span class="num">1</span>, h.size(<span class="num">1</span>)), h)
+        <span class="kw">return</span> <span class="kw">self</span>.classifier(graph_repr)
+</pre>
+</div>
+
+<h3>11.6 PageRank 式消息传递</h3>
+<div class="code-block">
+<div class="code-header">pagerank_gnn.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">APPNP</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""Approximate Personalized Propagation of Neural Predictions
+    用 PageRank 式传播修正 GNN 过平滑问题
+    """</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, in_dim, hidden_dim, n_classes, K=<span class="num">10</span>, alpha=<span class="num">0.1</span>, dropout=<span class="num">0.5</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.lin1 = <span class="cls">nn</span>.Linear(in_dim, hidden_dim)
+        <span class="kw">self</span>.lin2 = <span class="cls">nn</span>.Linear(hidden_dim, n_classes)
+        <span class="kw">self</span>.K = K          <span class="com"># 传播步数</span>
+        <span class="kw">self</span>.alpha = alpha   <span class="com"># 跳跃/teleport 概率</span>
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.Dropout(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X, adj):
+        <span class="com"># 先用 MLP 提取特征</span>
+        h = <span class="cls">F</span>.<span class="fn">relu</span>(<span class="kw">self</span>.lin1(X))
+        h = <span class="kw">self</span>.dropout(h)
+        z = <span class="kw">self</span>.lin2(h)
+        <span class="com"># 构建归一化邻接矩阵</span>
+        A_hat = adj + <span class="cls">torch</span>.<span class="fn">eye</span>(adj.size(<span class="num">0</span>), device=adj.device)
+        deg = A_hat.<span class="fn">sum</span>(dim=<span class="num">1</span>)
+        D_inv_sqrt = <span class="cls">torch</span>.<span class="fn">diag</span>(<span class="num">1.0</span> / <span class="cls">torch</span>.<span class="fn">sqrt</span>(deg))
+        A_norm = D_inv_sqrt @ A_hat @ D_inv_sqrt
+        <span class="com"># APPNP 传播: 平衡 z 与 A_norm^k z</span>
+        z_k = z
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.K):
+            z_k = (<span class="num">1</span> - <span class="kw">self</span>.alpha) * (A_norm @ z_k) + <span class="kw">self</span>.alpha * z
+        <span class="kw">return</span> <span class="cls">F</span>.<span class="fn">log_softmax</span>(z_k, dim=<span class="num">1</span>)
+</pre>
+</div>
+
+</section>
+
+<section id="ch12">
+<h2><span class="num">12</span>GNN 变体与前沿</h2>
+
+<h3>12.1 异质图神经网络</h3>
+<p>现实图通常是<strong>异质图</strong>（Heterogeneous Graph），包含多种节点类型和边类型。R-GCN、HGT、HAN 等模型为每种边类型设计独立的变换矩阵，再融合不同类型的信息。</p>
+
+<h3>12.2 时空图神经网络</h3>
+<p>交通、天气等数据同时具有空间（图结构）和时间（序列）维度。STGCN、DCRNN、Graph WaveNet 等将 GNN 与 RNN/TCN 结合，在空间维度做图卷积，在时间维度做序列建模。</p>
+
+<h3>12.3 图对比学习</h3>
+<p>受视觉/文本对比学习启发，图对比学习通过数据增强（边删除、特征掩码）构造正样本对，在无标签图上学到有效表示。代表方法：GraphCL、DGI（Deep Graph Infomax）、GRACE。</p>
+
+<h3>12.4 图 Transformer</h3>
+<p>将 Transformer 的全局注意力引入图学习：Graphormer 用最短路径距离作为注意力偏置，GraphGPS 混合局部消息传递与全局注意力，在分子建模等任务上取得 SOTA。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="mk3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#2563eb"></path></marker>
+</defs>
+<text x="400" y="20" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">GNN 生态全景</text>
+<rect x="30" y="40" width="130" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="95" y="65" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="600">谱方法</text>
+<rect x="190" y="40" width="130" height="40" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="255" y="65" text-anchor="middle" font-size="12" fill="#7c3aed" font-weight="600">空间方法</text>
+<rect x="350" y="40" width="130" height="40" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="415" y="65" text-anchor="middle" font-size="12" fill="#059669" font-weight="600">异质/时空</text>
+<rect x="510" y="40" width="130" height="40" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="575" y="65" text-anchor="middle" font-size="12" fill="#ea580c" font-weight="600">对比学习</text>
+<rect x="670" y="40" width="110" height="40" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+<text x="725" y="65" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="600">Graph Transformer</text>
+<line x1="160" y1="60" x2="185" y2="60" stroke="#2563eb" stroke-width="1.5" marker-end="url(#mk3)" class="flow-line"/>
+<line x1="320" y1="60" x2="345" y2="60" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#mk3)" class="flow-line"/>
+<line x1="480" y1="60" x2="505" y2="60" stroke="#059669" stroke-width="1.5" marker-end="url(#mk3)" class="flow-line"/>
+<line x1="640" y1="60" x2="665" y2="60" stroke="#ea580c" stroke-width="1.5" marker-end="url(#mk3)" class="flow-line"/>
+<text x="95" y="110" text-anchor="middle" font-size="11" fill="#64748b">Spectral CNN</text>
+<text x="95" y="126" text-anchor="middle" font-size="11" fill="#64748b">ChebNet</text>
+<text x="95" y="142" text-anchor="middle" font-size="11" fill="#64748b">GCN</text>
+<text x="255" y="110" text-anchor="middle" font-size="11" fill="#64748b">GraphSAGE</text>
+<text x="255" y="126" text-anchor="middle" font-size="11" fill="#64748b">GAT / GIN</text>
+<text x="255" y="142" text-anchor="middle" font-size="11" fill="#64748b">MPNN</text>
+<text x="415" y="110" text-anchor="middle" font-size="11" fill="#64748b">R-GCN / HGT</text>
+<text x="415" y="126" text-anchor="middle" font-size="11" fill="#64748b">STGCN / DCRNN</text>
+<text x="415" y="142" text-anchor="middle" font-size="11" fill="#64748b">HAN</text>
+<text x="575" y="110" text-anchor="middle" font-size="11" fill="#64748b">DGI / GraphCL</text>
+<text x="575" y="126" text-anchor="middle" font-size="11" fill="#64748b">GRACE</text>
+<text x="725" y="110" text-anchor="middle" font-size="11" fill="#64748b">Graphormer</text>
+<text x="725" y="126" text-anchor="middle" font-size="11" fill="#64748b">GraphGPS</text>
+<text x="725" y="142" text-anchor="middle" font-size="11" fill="#64748b">SAN</text>
+<text x="400" y="175" text-anchor="middle" font-size="12" fill="#334155" font-weight="600">核心任务</text>
+<text x="120" y="200" text-anchor="middle" font-size="11" fill="#64748b">节点分类</text>
+<text x="280" y="200" text-anchor="middle" font-size="11" fill="#64748b">链路预测</text>
+<text x="440" y="200" text-anchor="middle" font-size="11" fill="#64748b">图分类</text>
+<text x="600" y="200" text-anchor="middle" font-size="11" fill="#64748b">图生成</text>
+<text x="720" y="200" text-anchor="middle" font-size="11" fill="#64748b">时空预测</text>
+<text x="400" y="230" text-anchor="middle" font-size="11" fill="#94a3b8">2005 — 2024 GNN 发展全景</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">2005</div>
+<div class="event">Gori 等提出图神经网络概念</div>
+<div class="desc">首次将神经网络扩展到图结构数据，使用递归方式定义节点状态</div>
+</div>
+<div class="timeline-item">
+<div class="year">2009</div>
+<div class="event">Scarselli 等形式化 GNN 框架</div>
+<div class="desc">GNN 理论框架正式建立，基于不动点理论的消息传递</div>
+</div>
+<div class="timeline-item">
+<div class="year">2013</div>
+<div class="event">Bruna 等提出谱图卷积</div>
+<div class="desc">首次将图傅里叶变换引入卷积定义，开创谱方法路线</div>
+</div>
+<div class="timeline-item">
+<div class="year">2016</div>
+<div class="event">Defferrard 提出 ChebNet</div>
+<div class="desc">用切比雪夫多项式近似谱卷积，避免完整特征分解</div>
+</div>
+<div class="timeline-item">
+<div class="year">2017</div>
+<div class="event">GCN & GraphSAGE 同年发表</div>
+<div class="desc">Kipf & Welling 的 GCN 简化谱卷积为空间操作；Hamilton 的 GraphSAGE 开创归纳学习</div>
+</div>
+<div class="timeline-item">
+<div class="year">2018</div>
+<div class="event">GAT 引入注意力机制</div>
+<div class="desc">Veličković 等将注意力机制引入图学习，自适应学习邻居权重</div>
+</div>
+<div class="timeline-item">
+<div class="year">2019</div>
+<div class="event">GIN 理论分析与 MPNN 统一框架</div>
+<div class="desc">Xu 等证明 GIN 与 WL 测试等价；Gilmer 等统一 MPNN 框架</div>
+</div>
+<div class="timeline-item">
+<div class="year">2020</div>
+<div class="event">GCNII 与深层 GNN</div>
+<div class="desc">解决过平滑问题，实现可扩展的深层图卷积</div>
+</div>
+<div class="timeline-item">
+<div class="year">2021</div>
+<div class="event">Graphormer 等图 Transformer</div>
+<div class="desc">将 Transformer 全局注意力引入图建模，在 OGB 等基准上取得 SOTA</div>
+</div>
+<div class="timeline-item">
+<div class="year">2024</div>
+<div class="event">大规模 GNN 与图基础模型</div>
+<div class="desc">子图采样训练、图预训练模型在大规模图上实现高效推理</div>
+</div>
+</div>
+
+<div class="callout success">
+<div class="callout-title">总结</div>
+图神经网络从 2005 年的递归框架出发，经过谱图论的严格基础，逐步演化为空间域的消息传递范式。GCN 的提出是关键转折点——它将谱方法简化为可直观理解的空间操作。此后 GAT 引入注意力、GraphSAGE 实现归纳学习、GIN 提供理论分析，GNN 生态日趋成熟。当前前沿正走向图 Transformer、对比学习和大规模图预训练。
+</div>
+
+</section>
+
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Gori, M., Monfardini, G., & Scarselli, F. (2005). A new model for learning in graph domains. <em>IJCNN</em>.</li>
+<li>Scarselli, F. et al. (2009). The graph neural network model. <em>IEEE TNN</em>, 20(1), 61-80.</li>
+<li>Bruna, J., Zaremba, W., Szlam, A., & LeCun, Y. (2013). Spectral networks and locally connected networks on graphs. <em>ICLR</em>.</li>
+<li>Defferrard, M., Bresson, X., & Vandergheynst, P. (2016). Convolutional neural networks on graphs with fast localized spectral filtering. <em>NIPS</em>.</li>
+<li>Kipf, T. N., & Welling, M. (2017). Semi-supervised classification with graph convolutional networks. <em>ICLR</em>.</li>
+<li>Hamilton, W., Ying, Z., & Leskovec, J. (2017). Inductive representation learning on large graphs. <em>NIPS</em>.</li>
+<li>Veličković, P. et al. (2018). Graph attention networks. <em>ICLR</em>.</li>
+<li>Gilmer, J. et al. (2017). Neural message passing for quantum chemistry. <em>ICML</em>.</li>
+<li>Xu, K., Hu, W., Leskovec, J., & Jegelka, S. (2019). How powerful are graph neural networks? <em>ICLR</em>.</li>
+<li>Ying, R. et al. (2018). Hierarchical graph representation learning with differentiable pooling. <em>NeurIPS</em>.</li>
+<li>Klicpera, J., Bojchevski, A., & Günnemann, S. (2019). Predict then propagate: Graph neural networks meet personalized PageRank. <em>ICLR</em>.</li>
+<li>Chen, M. et al. (2020). Simple and deep graph convolutional networks. <em>ICML</em> (GCNII).</li>
+<li>Veličković, P. et al. (2019). Deep graph infomax. <em>ICLR</em>.</li>
+<li>Hussain, M. et al. (2022). Global self-attention as a replacement for graph convolution. <em>KDD</em> (Graphormer).</li>
+<li>Rong, Y. et al. (2020). DropEdge: Towards deep graph convolutional networks on node classification. <em>ICLR</em>.</li>
+</ol>
+</section>
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+<script>
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

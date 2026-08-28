@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>强化学习 详解 — Reinforcement Learning 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>强化学习</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、起源与直觉</a>
+    <a href="#ch2">二、马尔可夫决策过程</a>
+    <a href="#ch3">三、动态规划：策略与价值迭代</a>
+    <a href="#ch4">四、蒙特卡洛方法</a>
+    <a href="#ch5">五、时序差分与 Q-Learning</a>
+    <a href="#ch6">六、深度 Q 网络（DQN）</a>
+    <a href="#ch7">七、策略梯度与 REINFORCE</a>
+    <a href="#ch8">八、Actor-Critic 与 A3C</a>
+    <a href="#ch9">九、PPO：近端策略优化</a>
+    <a href="#ch10">十、连续控制：DDPG 与 TD3</a>
+    <a href="#ch11">十一、PyTorch 代码实现</a>
+    <a href="#ch12">十二、算法对比与工程选型</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>强化学习</h1>
+  <div class="subtitle">Reinforcement Learning — 智能体从交互中学习</div>
+  <div class="tagline">MDP · 贝尔曼方程 · Q-Learning · DQN · 策略梯度 · Actor-Critic · PPO</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">6 张 SVG 结构图</span>
+    <span class="badge">24 个公式</span>
+    <span class="badge">6 段 Python 代码</span>
+    <span class="badge">14 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">一</span> 起源与直觉</h2>
+
+<h3>1.1 什么是强化学习</h3>
+<p><strong>强化学习（Reinforcement Learning, RL）</strong> 是机器学习三大范式之一：智能体（Agent）在与环境（Environment）的反复交互中，通过<strong>试错</strong>（trial-and-error）积累经验，以最大化长期累积奖励为目标，逐步学会最优决策策略。与监督学习直接给定答案不同，强化学习只给出<strong>奖励信号</strong>（reward），智能体必须自己判断"哪些行为带来了好结果"。</p>
+
+<div class="callout">
+<div class="callout-title">核心直觉</div>
+<p>想象训练一只小狗：做了正确动作就奖励零食（正奖励），做了错误动作就轻轻呵斥（负奖励）。小狗并不理解"奖励"背后的数学公式，但它能通过无数次试错逐渐学会：什么动作在什么状态下最有利。强化学习的本质，就是把这一过程用数学语言形式化。</p>
+</div>
+
+<h4>与监督学习、无监督学习的对比</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>维度</th><th>监督学习</th><th>无监督学习</th><th>强化学习</th></tr>
+</thead>
+<tbody>
+<tr><td>数据来源</td><td>带标签样本 $(x, y)$</td><td>无标签数据 $x$</td><td>交互产生的经验 $(s, a, r, s')$</td></tr>
+<tr><td>学习信号</td><td>明确的误差</td><td>数据内在结构</td><td>延迟的稀疏奖励</td></tr>
+<tr><td>目标</td><td>拟合映射 $f: x \to y$</td><td>发现隐藏结构</td><td>最大化累积奖励</td></tr>
+<tr><td>探索</td><td>不需要</td><td>不需要</td><td>核心要素（探索 vs 利用）</td></tr>
+<tr><td>典型场景</td><td>图像分类、翻译</td><td>聚类、降维</td><td>游戏、机器人、推荐</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>强化学习面临独特的<strong>信用分配问题（Credit Assignment Problem）</strong>：一步动作的后果可能要在许多步之后才显现。例如棋局中某一步看似无用的棋，几十步之后才决定胜负——算法必须能判断"功劳"和"过错"究竟应归因于哪一步。这正是价值函数（value function）与折扣回报（discounted return）要解决的问题。</p>
+
+<h3>1.2 强化学习的经典应用</h3>
+<ul>
+<li><strong>AlphaGo 系列</strong>：2016 年战胜李世石，利用策略网络 + 价值网络 + 蒙特卡洛树搜索，是 RL 最出圈的里程碑。</li>
+<li><strong>机器人控制</strong>：机械臂抓取、四足机器人行走、无人机编队，通过真实或仿真环境学习连续动作策略。</li>
+<li><strong>推荐系统</strong>：把"给用户推荐什么"建模为序贯决策，以点击率、停留时长、长期留存作为奖励。</li>
+<li><strong>电信网络优化</strong>：基站资源分配、网络切片调度、5G/6G 频谱管理，把时变网络状态当作环境状态。</li>
+<li><strong>RLHF（基于人类反馈的强化学习）</strong>：ChatGPT 等大模型用人类偏好训练奖励模型，再以 PPO 微调语言模型以对齐人类价值观。</li>
+</ul>
+
+<h3>1.3 智能体与环境：交互回路</h3>
+<p>强化学习的一切都建立在这个循环上：智能体观察状态 → 选择动作 → 环境转移并给出奖励 → 智能体再次观察。下面 SVG 展示了这一交互回路：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+  </marker>
+  <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/>
+    <stop offset="100%" stop-color="#eff6ff"/>
+  </linearGradient>
+  <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#d1fae5"/>
+    <stop offset="100%" stop-color="#ecfdf5"/>
+  </linearGradient>
+</defs>
+
+<rect x="120" y="80" width="250" height="140" rx="16" fill="url(#gBlue)" stroke="#2563eb" stroke-width="2"/>
+<text x="245" y="140" text-anchor="middle" font-size="26" font-weight="700" fill="#1d4ed8">智能体 Agent</text>
+<text x="245" y="172" text-anchor="middle" font-size="14" fill="#475569">策略 pi(a|s) · 价值估计</text>
+<text x="245" y="196" text-anchor="middle" font-size="14" fill="#475569">选择动作、更新参数</text>
+
+<rect x="530" y="80" width="250" height="140" rx="16" fill="url(#gGreen)" stroke="#059669" stroke-width="2"/>
+<text x="655" y="140" text-anchor="middle" font-size="24" font-weight="700" fill="#047857">环境 Environment</text>
+<text x="655" y="172" text-anchor="middle" font-size="14" fill="#475569">状态转移 P(s'|s,a)</text>
+<text x="655" y="196" text-anchor="middle" font-size="14" fill="#475569">奖励函数 R(s,a)</text>
+
+<line x1="375" y1="115" x2="525" y2="115" class="flow-line" stroke="#2563eb" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mBlue)"/>
+<text x="450" y="100" text-anchor="middle" font-size="16" font-weight="600" fill="#1d4ed8">动作 a</text>
+
+<line x1="525" y1="185" x2="375" y2="185" class="flow-line" stroke="#059669" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mGreen)"/>
+<text x="450" y="210" text-anchor="middle" font-size="16" font-weight="600" fill="#047857">状态 s' 与奖励 r</text>
+
+<text x="450" y="270" text-anchor="middle" font-size="14" fill="#334155">智能体依据策略选择动作，环境据此转移到下一状态并返回奖励，</text>
+<text x="450" y="292" text-anchor="middle" font-size="14" fill="#334155">智能体依据新的观测更新策略，如此循环直至任务结束。</text>
+</svg>
+</div>
+
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">二</span> 马尔可夫决策过程</h2>
+
+<p>马尔可夫决策过程（Markov Decision Process, MDP）是强化学习的标准数学框架，几乎所有经典 RL 算法都建立在 MDP 之上。</p>
+
+<h3>2.1 MDP 五元组</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>元素</th><th>符号</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td>状态集合</td><td>$S$</td><td>环境所有可能的状态，如棋盘局面、传感器读数</td></tr>
+<tr><td>动作集合</td><td>$A$</td><td>智能体可执行的动作，如落子、前进、推荐</td></tr>
+<tr><td>状态转移概率</td><td>$P(s' \mid s, a)$</td><td>在状态 $s$ 执行动作 $a$ 后转移到 $s'$ 的概率</td></tr>
+<tr><td>奖励函数</td><td>$R(s, a, s')$</td><td>转移发生时环境返回的即时奖励</td></tr>
+<tr><td>折扣因子</td><td>$\gamma \in [0, 1]$</td><td>权衡即时奖励与未来奖励的权重</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>一个 MDP 可记为五元组 $M = \langle S, A, P, R, \gamma \rangle$。当 $\gamma = 0$ 时智能体只看眼前利益；$\gamma$ 越接近 1，越有"长远眼光"。</p>
+
+<h3>2.2 马尔可夫性质与轨迹</h3>
+<p><strong>马尔可夫性质</strong>：未来的状态只与当前状态有关，与更早的历史无关，即"无记忆性"。</p>
+
+<div class="formula" data-eq="(1)">$$P(s_{t+1} \mid s_t, a_t, s_{t-1}, a_{t-1}, \dots) = P(s_{t+1} \mid s_t, a_t)$$</div>
+
+<p>智能体与环境交互产生一条<strong>轨迹（trajectory）</strong>：状态、动作、奖励的交替序列。</p>
+
+<div class="formula" data-eq="(2)">$$\tau = s_0, a_0, r_1, s_1, a_1, r_2, s_2, a_2, \dots$$</div>
+
+<h3>2.3 策略与折扣回报</h3>
+<p><strong>策略（policy）</strong> $\pi(a \mid s)$ 定义了智能体在每个状态下选择动作的概率分布。给定一条轨迹，其<strong>折扣回报（discounted return）</strong>为未来奖励的加权和：</p>
+
+<div class="formula" data-eq="(3)">$$G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}$$</div>
+
+<p>折扣因子 $\gamma$ 有三个作用：① 数学上保证无限步求和收敛；② 反映"近期奖励比远期更重要"；③ 在实际工程中可以限制回报的视界长度。</p>
+
+<h3>2.4 价值函数</h3>
+<p><strong>状态价值函数</strong> $V^{\pi}(s)$ 表示从状态 $s$ 出发、遵循策略 $\pi$ 所能获得的期望回报：</p>
+
+<div class="formula" data-eq="(4)">$$V^{\pi}(s) = \mathbb{E}_{\pi}\left[ G_t \mid S_t = s \right]$$</div>
+
+<p><strong>动作价值函数</strong> $Q^{\pi}(s, a)$ 表示在状态 $s$ 先执行动作 $a$、之后遵循策略 $\pi$ 的期望回报：</p>
+
+<div class="formula" data-eq="(5)">$$Q^{\pi}(s, a) = \mathbb{E}_{\pi}\left[ G_t \mid S_t = s, A_t = a \right]$$</div>
+
+<p>两者关系：$V^{\pi}(s) = \sum_a \pi(a \mid s) \, Q^{\pi}(s, a)$，即状态价值是动作价值按策略概率的加权平均。</p>
+
+<h3>2.5 最优价值函数与最优策略</h3>
+<p>在有限 MDP 中，一定存在一个（或多个）最优策略 $\pi^*$，其价值不低于任何其他策略。最优价值函数定义为：</p>
+
+<div class="formula" data-eq="(6)">$$V^*(s) = \max_{\pi} V^{\pi}(s), \qquad Q^*(s, a) = \max_{\pi} Q^{\pi}(s, a)$$</div>
+
+<p>最优策略即为在每个状态下贪心地选取最优动作价值对应的动作：</p>
+
+<div class="formula" data-eq="(7)">$$\pi^*(a \mid s) = \begin{cases} 1 & \text{if } a = \arg\max_{a'} Q^*(s, a') \\ 0 & \text{otherwise} \end{cases}$$</div>
+
+<h3>2.6 贝尔曼方程</h3>
+<p>贝尔曼方程（Bellman Equation）是价值函数与<strong>自举（bootstrap）</strong>思想的数学表达：当前状态的价值 = 即时奖励 + 下一状态的（折扣）期望价值。这一递归关系是所有价值类强化学习算法的基石。</p>
+
+<h4>贝尔曼期望方程（Bellman Expectation Equation）</h4>
+<p>把式 (4) 按"状态 → 动作 → 下一状态"两步展开：</p>
+
+<div class="formula" data-eq="(8)">$$V^{\pi}(s) = \sum_{a} \pi(a \mid s) \sum_{s'} P(s' \mid s, a)\left[ R(s, a, s') + \gamma V^{\pi}(s') \right]$$</div>
+
+<div class="formula" data-eq="(9)">$$Q^{\pi}(s, a) = \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma \sum_{a'} \pi(a' \mid s') Q^{\pi}(s', a') \right]$$</div>
+
+<h4>贝尔曼最优方程（Bellman Optimality Equation）</h4>
+<p>把式 (6)、(7) 代入期望方程，把"对策略求期望"替换为"对动作取最大值"：</p>
+
+<div class="formula" data-eq="(10)">$$V^*(s) = \max_{a} \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V^*(s') \right]$$</div>
+
+<div class="formula" data-eq="(11)">$$Q^*(s, a) = \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma \max_{a'} Q^*(s', a') \right]$$</div>
+
+<div class="callout success">
+<div class="callout-title">贝尔曼方程的作用</div>
+<p>贝尔曼方程把"评估一整条轨迹"的难题，转化为"评估当前一步 + 下一步"的递归问题。后面的动态规划、时序差分、DQN，本质上都是在用不同方式求解（或逼近）这组方程。</p>
+</div>
+
+</section>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">三</span> 动态规划：策略与价值迭代</h2>
+
+<p>动态规划（Dynamic Programming, DP）是求解 MDP 的第一类系统性方法，其前提是<strong>已知完整的环境模型</strong>（状态转移概率 $P$ 与奖励函数 $R$）。DP 通过"自举"（用后继状态的估计值更新当前状态）迭代求解贝尔曼方程。</p>
+
+<h3>3.1 策略评估（Policy Evaluation）</h3>
+<p>给定一个策略 $\pi$，策略评估迭代地计算其状态价值函数。利用贝尔曼期望方程 (8) 构造迭代公式：第 $k+1$ 轮的新估值，由第 $k$ 轮的旧估值代入方程右端得到。</p>
+
+<div class="formula" data-eq="(12)">$$V_{k+1}(s) = \sum_{a} \pi(a \mid s) \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V_k(s') \right]$$</div>
+
+<p>当 $k \to \infty$ 时，$V_k \to V^{\pi}$。实际中通常在两次迭代差值小于阈值时提前停止。</p>
+
+<h3>3.2 策略改进（Policy Improvement）</h3>
+<p>有了 $V^{\pi}$ 之后，就可以"贪心"地改进策略：在每个状态下选择能使 $Q$ 值最大的动作：</p>
+
+<div class="formula">$$\pi'(s) = \arg\max_{a} \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V^{\pi}(s') \right]$$</div>
+
+<p><strong>策略改进定理</strong>保证：只要 $\pi'$ 至少在一个状态下严格优于 $\pi$，那么 $V^{\pi'}(s) \geq V^{\pi}(s)$ 对所有状态成立。评估 → 改进 → 再评估 → 再改进……最终收敛到最优策略。</p>
+
+<h3>3.3 策略迭代与价值迭代</h3>
+<p><strong>策略迭代（Policy Iteration）</strong>：交替执行完整的策略评估与策略改进，直到策略不再变化。每轮评估需要多次扫描整个状态空间，收敛缓慢但保证单调。</p>
+
+<p><strong>价值迭代（Value Iteration）</strong>：把策略改进"折叠"进评估过程，每一步直接取最大值，即把贝尔曼最优方程 (10) 变为迭代公式：</p>
+
+<div class="formula" data-eq="(13)">$$V_{k+1}(s) = \max_{a} \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V_k(s') \right]$$</div>
+
+<div class="callout warn">
+<div class="callout-title">DP 方法的两大局限</div>
+<ul>
+<li><strong>需要完美模型</strong>：真实环境中 $P$ 与 $R$ 往往未知或难以精确估计。</li>
+<li><strong>状态空间爆炸（curse of dimensionality）</strong>：状态每增加一个维度，数量就指数增长，全量扫描不可行。</li>
+</ul>
+<p>这两大局限促使强化学习走向<strong>无模型（model-free）</strong>方法：不假设转移概率已知，直接从经验中学习——这就是蒙特卡洛与时序差分方法。</p>
+</div>
+
+</section>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">四</span> 蒙特卡洛方法</h2>
+
+<p>蒙特卡洛（Monte Carlo, MC）方法不再假设已知环境模型，而是<strong>用完整经验轨迹的实际回报来估计价值</strong>。它只从真实（或采样）的轨迹中学习。</p>
+
+<h3>4.1 First-Visit 与 Every-Visit MC</h3>
+<ul>
+<li><strong>First-visit MC</strong>：对于每条轨迹，只在状态 $s$ 第一次被访问时，才用该次轨迹的回报 $G_t$ 更新 $V(s)$ 的均值估计。理论性质更好（无偏、依概率收敛）。</li>
+<li><strong>Every-visit MC</strong>：状态 $s$ 每次被访问都参与回报均值更新。方差可能略大，但实践中同样常用。</li>
+</ul>
+
+<div class="callout">
+<div class="callout-title">MC 策略评估</div>
+<p>核心更新式：$V(s) \leftarrow V(s) + \alpha\left[ G_t - V(s) \right]$，其中 $G_t$ 是整条轨迹的实际折扣回报，$\alpha$ 是学习率。注意：MC 依赖<strong>实际经历的完整轨迹</strong>，是<span class="tag tag-blue">无偏估计</span>，且不使用自举（不利用其他状态的估计值）。</p>
+</div>
+
+<h3>4.2 MC 控制：探索与 epsilon-greedy</h3>
+<p>MC 控制的目标是同时逼近最优价值与最优策略。核心难点是<strong>探索（exploration）</strong>：如果始终贪心选择当前最优动作，就永远发现不了更优动作。解决办法是 $\epsilon$-greedy：以概率 $1 - \epsilon$ 选择贪心动作，以概率 $\epsilon$ 随机探索，并让 $\epsilon$ 随训练衰减，使策略最终收敛。</p>
+
+<h3>4.3 MC 与 DP、TD 的关系</h3>
+<p>MC 代表"纯经验"路线：用样本均值估计价值；DP 代表"纯模型"路线：用模型推导价值；时序差分（TD）介于两者之间——既用经验，又用自举。三者的关系见下图：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
+  </marker>
+  <linearGradient id="gPurple" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ede9fe"/>
+    <stop offset="100%" stop-color="#f5f3ff"/>
+  </linearGradient>
+</defs>
+
+<rect x="60" y="90" width="220" height="110" rx="14" fill="url(#gPurple)" stroke="#7c3aed" stroke-width="2"/>
+<text x="170" y="130" text-anchor="middle" font-size="20" font-weight="700" fill="#6d28d9">DP 动态规划</text>
+<text x="170" y="156" text-anchor="middle" font-size="13" fill="#475569">完全模型 + 自举</text>
+<text x="170" y="176" text-anchor="middle" font-size="13" fill="#475569">迭代求解贝尔曼方程</text>
+
+<rect x="340" y="90" width="220" height="110" rx="14" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+<text x="450" y="130" text-anchor="middle" font-size="20" font-weight="700" fill="#c2410c">MC 蒙特卡洛</text>
+<text x="450" y="156" text-anchor="middle" font-size="13" fill="#4b5563">经验样本 + 无自举</text>
+<text x="450" y="176" text-anchor="middle" font-size="13" fill="#4b5563">完整轨迹回报取均值</text>
+
+<rect x="620" y="90" width="220" height="110" rx="14" fill="#ecfeff" stroke="#0891b2" stroke-width="2"/>
+<text x="730" y="130" text-anchor="middle" font-size="20" font-weight="700" fill="#0e7490">TD 时序差分</text>
+<text x="730" y="156" text-anchor="middle" font-size="13" fill="#475569">经验样本 + 自举</text>
+<text x="730" y="176" text-anchor="middle" font-size="13" fill="#475569">一步之后立即更新</text>
+
+<text x="450" y="72" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">三者差异：经验 vs 模型、自举 vs 无自举</text>
+
+<line x1="282" y1="145" x2="336" y2="145" stroke="#64748b" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#mPurple)"/>
+<line x1="562" y1="145" x2="616" y2="145" stroke="#64748b" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#mPurple)"/>
+
+<text x="450" y="252" text-anchor="middle" font-size="14" fill="#334155">MC 与 TD 都不需要环境模型（model-free），TD 引入自举后可逐步在线学习，</text>
+<text x="450" y="276" text-anchor="middle" font-size="14" fill="#334155">是 Q-Learning、DQN 等现代算法的基础。</text>
+</svg>
+</div>
+
+</section>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">五</span> 时序差分与 Q-Learning</h2>
+
+<p>时序差分（Temporal Difference, TD）方法结合了 MC 的"经验采样"与 DP 的"自举"：<strong>每走一步就立即更新</strong>，不必等轨迹结束。这使得 TD 可用于非终止型任务，且方差远小于 MC。</p>
+
+<h3>5.1 TD(0)：一步自举</h3>
+<p>TD(0) 用"当前奖励 + 下一状态的估计价值"作为更新目标，取代 MC 中的完整回报 $G_t$，从而把等待时间从"轨迹结束"缩短到"一步之后"：</p>
+
+<div class="formula" data-eq="(14)">$$V(s) \leftarrow V(s) + \alpha \left[ R + \gamma V(s') - V(s) \right]$$</div>
+
+<p>方括号中的 $R + \gamma V(s') - V(s)$ 称为<strong>TD 误差（TD error）</strong>。与 MC 相比：TD 偏差更大但方差小得多；两者充分学习后都会收敛到真实价值函数。</p>
+
+<h3>5.2 SARSA：同策略控制</h3>
+<p>SARSA 的名字来自其更新元组 $(s, a, r, s', a')$。它每一步用一个五元组做自举更新，且用来采样的策略与要学习的策略是同一个（on-policy）：</p>
+
+<div class="formula" data-eq="(15)">$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma Q(s', a') - Q(s, a) \right]$$</div>
+
+<p>SARSA 的探索机制（如 $\epsilon$-greedy）会影响它最终学到的策略，因此对探索参数比较敏感。</p>
+
+<h3>5.3 Q-Learning：off-policy 控制</h3>
+<p>Q-Learning 是强化学习中最经典的算法。其更新不再使用"实际执行的 $a'$"，而是取下一状态所有动作的<strong>最大值</strong> $\max_{a'} Q(s', a')$。即使当前行为策略在探索，学习目标始终指向最优策略，因此是 <strong>off-policy</strong>：</p>
+
+<div class="formula" data-eq="(16)">$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right]$$</div>
+
+<p>Q-Learning 的收敛性有严格理论保证：只要每个状态-动作对被无限次探索，且学习率满足 Robbins-Monro 条件，$Q$ 将以概率 1 收敛到 $Q^*$。</p>
+
+<h3>5.3 epsilon-greedy 探索</h3>
+<p>$\epsilon$-greedy 是权衡"探索 vs 利用"的最简单策略：以大概率选择当前最优动作，以小概率随机探索：</p>
+
+<div class="formula" data-eq="(17)">$$\pi(a \mid s) = \begin{cases} 1 - \epsilon + \frac{\epsilon}{|A|} & \text{if } a = \arg\max_{a'} Q(s, a') \\ \frac{\epsilon}{|A|} & \text{otherwise} \end{cases}$$</div>
+
+<h3>5.4 On-policy vs Off-policy 对比</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>维度</th><th>On-policy（如 SARSA）</th><th>Off-policy（如 Q-Learning）</th></tr>
+</thead>
+<tbody>
+<tr><td>行为策略</td><td>即目标策略本身</td><td>可与目标策略不同（如引入经验回放）</td></tr>
+<tr><td>学到的策略</td><td>包含探索在内的策略</td><td>始终指向贪心最优策略</td></tr>
+<tr><td>样本效率</td><td>较低，探索轨迹被"浪费"</td><td>较高，可复用历史经验</td></tr>
+<tr><td>风险</td><td>更保守，适合带风险场景</td><td>有过估计风险，需额外处理</td></tr>
+<tr><td>典型算法</td><td>SARSA、A2C 等</td><td>Q-Learning、DQN、DDPG、TD3、SAC</td></tr>
+</tbody>
+</table>
+</div>
+
+</section>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">六</span> 深度 Q 网络（DQN）</h2>
+
+<p>经典 Q-Learning 用表格存储 $Q(s, a)$，当状态空间巨大（如 Atari 游戏的像素画面）时表格必然爆炸。<strong>深度 Q 网络（Deep Q-Network, DQN）</strong>用神经网络 $Q_\theta(s, a)$ 近似 Q 函数，并借助两项关键技巧让深度 Q-learning 稳定训练。</p>
+
+<h3>6.1 DQN 核心思想</h3>
+<p>DQN 的网络输入是状态 $s$（如图像），输出是每个动作的 Q 值向量。训练目标是最小化预测与贝尔曼最优目标之间的均方误差：</p>
+
+<div class="formula" data-eq="(18)">$$\mathcal{L}(\theta) = \mathbb{E}_{(s, a, r, s') \sim \mathcal{D}}\left[ \left( r + \gamma \max_{a'} Q_{\theta^-}(s', a') - Q_\theta(s, a) \right)^2 \right]$$</div>
+
+<h3>6.2 经验回放（Experience Replay）</h3>
+<p>智能体把经历的四元组 $(s, a, r, s')$ 存入回放缓冲区 $\mathcal{D}$，训练时<strong>随机采样</strong>小批量。这样带来三大好处：① 打破样本时间相关性，稳定梯度；② 提高样本复用率；③ 平滑训练分布，减少灾难性遗忘。</p>
+
+<h3>6.3 目标网络（Target Network）</h3>
+<p>如果更新时用同一个网络既算目标又算预测，目标会随参数变化而"移动"，导致训练震荡。DQN 维护一个延迟更新的<strong>目标网络</strong> $Q_{\theta^-}$（每 $C$ 步从在线网络拷贝一次权重），使目标相对稳定，如式 (18) 所示。</p>
+
+<h3>6.4 Double DQN：缓解过估计</h3>
+<p>标准 DQN 的 $\max_{a'} Q(s', a')$ 会系统性高估价值。Double DQN 用<strong>在线网络选动作、目标网络估值</strong>，把"选择"与"评估"解耦，显著降低过估计：</p>
+
+<div class="formula" data-eq="(19)">$$y = r + \gamma Q_{\theta^-}\left(s', \arg\max_{a'} Q_\theta(s', a')\right)$$</div>
+
+<h3>6.5 Dueling DQN：分离优势与状态价值</h3>
+<p>Dueling 架构把 Q 值拆成两部分：状态价值 $V(s)$ 与动作优势 $A(s, a)$（该动作相对平均水平的优势）。当某些状态下动作选择并不重要时，网络只需学准确的 $V$ 即可：</p>
+
+<div class="formula" data-eq="(20)">$$Q(s, a) = V(s) + A(s, a) - \max_{a'} A(s, a')$$</div>
+
+<h3>6.6 DQN 架构总览</h3>
+<p>下图展示了 DQN 的完整数据流：状态输入网络，输出各动作 Q 值，经 argmax 选动作与环境交互，经验存入回放池，再抽样训练两个网络。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mBlue2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ea580c"/>
+  </marker>
+  <linearGradient id="gBlue2" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/>
+    <stop offset="100%" stop-color="#eff6ff"/>
+  </linearGradient>
+</defs>
+
+<rect x="40" y="90" width="150" height="100" rx="14" fill="url(#gBlue2)" stroke="#2563eb" stroke-width="2"/>
+<text x="115" y="128" text-anchor="middle" font-size="16" font-weight="700" fill="#1d4ed8">状态 s</text>
+<text x="115" y="152" text-anchor="middle" font-size="12" fill="#475569">观测 / 像素帧</text>
+
+<rect x="250" y="90" width="170" height="100" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="335" y="122" text-anchor="middle" font-size="16" font-weight="700" fill="#6d28d9">Q 网络</text>
+<text x="335" y="146" text-anchor="middle" font-size="12" fill="#4b5563">深度网络 Q(theta)</text>
+<text x="335" y="164" text-anchor="middle" font-size="12" fill="#4b5563">输出各动作 Q 值</text>
+
+<rect x="480" y="90" width="150" height="100" rx="14" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="555" y="128" text-anchor="middle" font-size="16" font-weight="700" fill="#047857">Q 值向量</text>
+<text x="555" y="152" text-anchor="middle" font-size="12" fill="#475569">[Q(a1), Q(a2), ...]</text>
+
+<rect x="690" y="90" width="170" height="100" rx="14" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+<text x="775" y="122" text-anchor="middle" font-size="16" font-weight="700" fill="#c2410c">argmax 选动作</text>
+<text x="775" y="146" text-anchor="middle" font-size="12" fill="#4b5563">a = argmax Q</text>
+<text x="775" y="164" text-anchor="middle" font-size="12" fill="#4b5563">epsilon-greedy</text>
+
+<line x1="172" y1="140" x2="246" y2="140" class="flow-line" stroke="#2563eb" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mBlue2)"/>
+<line x1="422" y1="140" x2="476" y2="140" class="flow-line" stroke="#7c3aed" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mBlue2)"/>
+<line x1="632" y1="140" x2="686" y2="140" class="flow-line" stroke="#059669" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#mBlue2)"/>
+
+<text x="450" y="60" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">DQN 推理链路</text>
+
+<path d="M 775 192 C 775 250 335 250 335 194" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#mOrange)"/>
+<text x="555" y="248" text-anchor="middle" font-size="12" fill="#ea580c">(s, a, r, s') 存入经验回放 → 采样训练</text>
+
+<text x="450" y="286" text-anchor="middle" font-size="13" fill="#64748b">目标网络每 C 步从在线网络复制参数，用于计算训练目标</text>
+</svg>
+</div>
+
+</section>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">七</span> 策略梯度与 REINFORCE</h2>
+
+<p>价值方法（Q-Learning、DQN 等）先学价值函数，再隐式导出策略；<strong>策略梯度方法</strong>则直接参数化策略 $\pi_\theta(a \mid s)$，并通过梯度上升直接优化目标。</p>
+
+<h3>7.1 策略梯度定理</h3>
+<p>策略目标函数 $J(\theta) = \mathbb{E}_{s_0 \sim \rho_0}\left[ V^{\pi_\theta}(s_0) \right]$ 对参数的梯度可由下式给出（策略梯度定理，Policy Gradient Theorem）：</p>
+
+<div class="formula" data-eq="(21)">$$\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[ \nabla_\theta \log \pi_\theta(a \mid s) \, Q^{\pi_\theta}(s, a) \right]$$</div>
+
+<p>注意：该梯度 <strong>不包含对状态分布 $\rho^\pi$ 的导数</strong>，因此可以直接用采样轨迹估计梯度，无需环境模型。</p>
+
+<h3>7.2 REINFORCE 算法</h3>
+<p>REINFORCE 是最简单的策略梯度算法：用蒙特卡洛采样的完整回报 $G_t$ 代替 $Q^{\pi_\theta}(s, a)$，对每条轨迹做一次梯度上升更新：</p>
+
+<div class="formula" data-eq="(22)">$$\theta \leftarrow \theta + \alpha \sum_{t} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \, G_t$$</div>
+
+<div class="callout warn">
+<div class="callout-title">REINFORCE 的局限</div>
+<p>用完整回报 $G_t$ 作为权重意味着<strong>方差极大</strong>：同一轨迹的随机性会导致梯度剧烈波动。因此 REINFORCE 收敛缓慢，常配合<strong>基线（baseline）</strong>使用。</p>
+</div>
+
+<h3>7.3 基线（Baseline）降低方差</h3>
+<p>从回报中减去一个只与状态有关的基线 $b(s)$（如状态价值 $V(s)$），梯度的期望不变，但方差显著下降：</p>
+
+<div class="formula">$$\nabla_\theta J(\theta) = \mathbb{E}_{\tau}\left[ \sum_t \nabla_\theta \log \pi_\theta(a_t \mid s_t) \left( G_t - b(s_t) \right) \right]$$</div>
+
+<p>最常用的基线是状态价值函数 $V(s)$，而 $G_t - V(s_t)$ 就是<strong>优势（advantage）</strong>的概念雏形——这自然引出了下一章的 Actor-Critic 架构。</p>
+
+</section>
+
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">八</span> Actor-Critic 与 A3C</h2>
+
+<p>Actor-Critic（演员-评论家）架构把"策略"与"价值"两个角色分开：<strong>Actor</strong> 负责决策（策略网络），<strong>Critic</strong> 负责评价（价值网络）。Critic 提供低方差的估计，引导 Actor 更新；Actor 的更新又反过来提升 Critic 的评价精度。</p>
+
+<h3>8.1 架构分工</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>模块</th><th>角色</th><th>输入</th><th>输出</th><th>更新方向</th></tr>
+</thead>
+<tbody>
+<tr><td>Actor（策略网络）</td><td>决定"做什么"</td><td>状态 $s$</td><td>动作分布 $\pi_\theta(a \mid s)$</td><td>梯度上升（提升优势）</td></tr>
+<tr><td>Critic（价值网络）</td><td>评价"做得好不好"</td><td>状态 $s$</td><td>价值 $V_\phi(s)$</td><td>TD 误差最小化</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>8.2 优势函数（Advantage）</h3>
+<p>优势函数衡量"在状态 $s$ 采取动作 $a$ 相比平均水平好多少"：</p>
+
+<div class="formula" data-eq="(23)">$$A^{\pi}(s, a) = Q^{\pi}(s, a) - V^{\pi}(s)$$</div>
+
+<p>Actor 的梯度目标改为最大化优势：$\nabla_\theta J = \mathbb{E}\left[ \nabla_\theta \log \pi_\theta(a \mid s) \, A(s, a) \right]$。Critic 提供的优势估计 $A \approx r + \gamma V(s') - V(s)$（即 TD 误差）方差远小于 MC 回报，训练更稳定。</p>
+
+<h3>8.3 A3C：异步并行采集</h3>
+<p><strong>A3C（Asynchronous Advantage Actor-Critic）</strong>的思想：启动多个并行 worker，每个 worker 有独立的环境副本，各自异步采集经验、计算梯度，并定期把梯度同步到共享的全局参数。并行带来的"异步性"本身就起到了类似经验回放的去相关作用，因此 A3C 不再依赖经验回放。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mBlue3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mGreen3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+  </marker>
+  <linearGradient id="gBlue3" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/>
+    <stop offset="100%" stop-color="#eff6ff"/>
+  </linearGradient>
+  <linearGradient id="gOrange3" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ffedd5"/>
+    <stop offset="100%" stop-color="#fff7ed"/>
+  </linearGradient>
+</defs>
+
+<rect x="330" y="75" width="240" height="120" rx="16" fill="url(#gBlue3)" stroke="#2563eb" stroke-width="2"/>
+<text x="450" y="115" text-anchor="middle" font-size="18" font-weight="700" fill="#1d4ed8">全局网络（共享参数）</text>
+<text x="450" y="142" text-anchor="middle" font-size="13" fill="#475569">Actor 策略参数 + Critic 价值参数</text>
+<text x="450" y="162" text-anchor="middle" font-size="13" fill="#475569">汇总各 worker 梯度并更新</text>
+
+<rect x="40" y="40" width="140" height="76" rx="12" fill="url(#gOrange3)" stroke="#ea580c" stroke-width="2"/>
+<text x="110" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#c2410c">Worker 1</text>
+<text x="110" y="92" text-anchor="middle" font-size="11" fill="#4b5563">独立环境副本</text>
+
+<rect x="40" y="150" width="140" height="76" rx="12" fill="url(#gOrange3)" stroke="#ea580c" stroke-width="2"/>
+<text x="110" y="180" text-anchor="middle" font-size="14" font-weight="700" fill="#c2410c">Worker 2</text>
+<text x="110" y="202" text-anchor="middle" font-size="11" fill="#4b5563">独立环境副本</text>
+
+<rect x="40" y="230" width="140" height="40" rx="12" fill="url(#gOrange3)" stroke="#ea580c" stroke-width="2"/>
+<text x="110" y="255" text-anchor="middle" font-size="13" font-weight="700" fill="#c2410c">... Worker N</text>
+
+<line x1="182" y1="78" x2="326" y2="108" class="flow-line" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mBlue3)"/>
+<text x="246" y="84" text-anchor="middle" font-size="11" fill="#2563eb">推梯度</text>
+<line x1="326" y1="142" x2="182" y2="118" class="flow-line" stroke="#059669" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mGreen3)"/>
+<text x="248" y="160" text-anchor="middle" font-size="11" fill="#059669">拉参数</text>
+
+<line x1="182" y1="188" x2="326" y2="158" class="flow-line" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mBlue3)"/>
+<line x1="326" y1="168" x2="182" y2="245" class="flow-line" stroke="#059669" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mGreen3)"/>
+
+<text x="450" y="250" text-anchor="middle" font-size="14" fill="#334155">多个 worker 并行探索各自环境，异步交换梯度与参数，天然去相关、加速训练。</text>
+</svg>
+</div>
+
+</section>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">九</span> PPO：近端策略优化</h2>
+
+<p>PPO（Proximal Policy Optimization）是 OpenAI 在 2017 年提出的算法，也是当今 RLHF 与大模型对齐的事实标准。它解决的是<strong>策略更新步子过大导致训练崩溃</strong>的问题。</p>
+
+<h3>9.1 TRPO 的思路</h3>
+<p>TRPO（Trust Region Policy Optimization）通过<strong>信赖域约束</strong>（trust region）限制每次更新的步长，要求新旧策略的 KL 散度不超过阈值，从而保证更新单调不减。但其共轭梯度求解复杂、实现繁琐。</p>
+
+<h3>9.2 PPO Clip 目标函数</h3>
+<p>PPO 用一阶近似的 Clip 约束替代 TRPO 的二次约束：定义新旧策略的比率 $r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{old}}(a_t \mid s_t)}$，目标函数为：</p>
+
+<div class="formula" data-eq="(24)">$$\mathcal{L}^{CLIP}(\theta) = \mathbb{E}_t\left[ \min\left( r_t(\theta) A_t, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) A_t \right) \right]$$</div>
+
+<p>当优势 $A_t &gt; 0$ 时，目标希望增大动作概率；但当概率比超过 $1 + \epsilon$ 时，收益被截断——防止一步更新过大。当 $A_t &lt; 0$ 时同理。由此，PPO 在保持训练稳定的同时只需要一阶梯度，实现非常简单。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mBlue4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+</defs>
+<!-- 坐标轴 -->
+<line x1="80" y1="220" x2="820" y2="220" stroke="#334155" stroke-width="2"/>
+<line x1="80" y1="220" x2="80" y2="40" stroke="#334155" stroke-width="2"/>
+<text x="450" y="250" text-anchor="middle" font-size="14" fill="#334155">概率比 r_t (theta)</text>
+<text x="45" y="130" text-anchor="middle" font-size="14" fill="#334155" transform="rotate(-90 45 130)">Clip 目标值</text>
+<text x="80" y="240" text-anchor="middle" font-size="12" fill="#64748b">0</text>
+<text x="450" y="240" text-anchor="middle" font-size="12" fill="#64748b">1</text>
+<text x="810" y="240" text-anchor="middle" font-size="12" fill="#64748b">1+epsilon</text>
+<line x1="450" y1="40" x2="450" y2="220" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+<!-- 未 clip 的原始目标：单调递增直线 -->
+<line x1="100" y1="200" x2="800" y2="60" stroke="#2563eb" stroke-width="3"/>
+<text x="700" y="80" text-anchor="middle" font-size="13" fill="#2563eb">未截断的 r*A</text>
+<!-- clip 后目标：折线 -->
+<polyline points="100,200 450,88 450,40" fill="none" stroke="#ea580c" stroke-width="3.5"/>
+<text x="200" y="170" text-anchor="middle" font-size="13" fill="#ea580c">clip 后曲线</text>
+<line x1="450" y1="40" x2="450" y2="88" stroke="#ea580c" stroke-width="1" stroke-dasharray="4 4"/>
+</svg>
+</div>
+
+<h3>9.3 PPO 完整流程</h3>
+<div class="callout">
+<div class="callout-title">PPO 单次迭代</div>
+<ol>
+<li>用当前策略与环境交互，收集一批轨迹（若干 step 或若干 episode）。</li>
+<li>计算每个时间步的优势估计 $A_t$（常用 GAE，广义优势估计）。</li>
+<li>保存数据，用旧策略计算概率比 $r_t(\theta)$。</li>
+<li>对新策略做多次 mini-batch 梯度上升，目标为 Clip 目标 (24)。</li>
+<li>可加入熵正则项鼓励探索，循环往复。</li>
+</ol>
+</div>
+
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">十</span> 连续控制：DDPG 与 TD3</h2>
+
+<p>前文的 Q-Learning、DQN、策略梯度都默认<strong>离散动作</strong>。但机械臂力矩、自动驾驶方向盘角度等是<strong>连续动作</strong>——需要新一代方法：DDPG 与 TD3。</p>
+
+<h3>10.1 DDPG：确定性策略梯度</h3>
+<p><strong>DDPG（Deep Deterministic Policy Gradient）</strong>把 Actor-Critic 应用于连续空间：Actor 网络直接输出一个确定性动作 $a = \mu_\theta(s)$（而不是动作概率分布），Critic 用 DQN 式的经验回放与目标网络训练 Q 值。DDPG 是 DPG + DQN 的深度化结合，适合动作空间连续的机器人控制。</p>
+
+<p>DDPG 的训练目标：Critic 最小化 $L = \mathbb{E}\left[ \left( r + \gamma Q_{\theta^-}(s', \mu_{\phi^-}(s')) - Q_\theta(s, a) \right)^2 \right]$；Actor 的梯度为 $\nabla_\theta J \approx \mathbb{E}\left[ \nabla_a Q_\theta(s, a) \big|_{a=\mu(s)} \nabla_\theta \mu_\theta(s) \right]$。探索通过在动作上叠加高斯噪声 $a = \mu(s) + \mathcal{N}(0, \sigma^2)$ 实现。</p>
+
+<h3>10.2 TD3：三个关键改进</h3>
+<p><strong>TD3（Twin Delayed DDPG）</strong>针对 DDPG 的三个弱点分别提出改进：</p>
+<ol>
+<li><strong>Clipped Double-Q</strong>：训练两个 Critic，目标用两者的较小值，缓解过估计。</li>
+<li><strong>延迟策略更新（Delayed Policy Updates）</strong>：策略网络比价值网络更新更慢（如每 2 步策略更新 1 次），让 Critic 先收敛得更稳。</li>
+<li><strong>目标策略平滑（Target Policy Smoothing）</strong>：目标动作加入噪声，使 Q 对动作的"尖峰"不敏感，增加鲁棒性。</li>
+</ol>
+
+<h3>10.3 算法对比表</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>算法</th><th>动作空间</th><th>核心技巧</th><th>适用场景</th><th>局限性</th></tr>
+</thead>
+<tbody>
+<tr><td>DDPG</td><td>连续</td><td>确定性 Actor + 经验回放</td><td>中低维连续控制</td><td>超参数敏感、易过估计</td></tr>
+<tr><td>TD3</td><td>连续</td><td>Double-Q + 延迟更新 + 平滑</td><td>更高稳定性连续控制</td><td>训练较慢、实现复杂</td></tr>
+<tr><td>PPO（连续版）</td><td>离散或连续</td><td>Clip 稳定更新、随机策略</td><td>通用、稳健</td><td>样本效率一般</td></tr>
+<tr><td>SAC</td><td>连续</td><td>最大熵 + 随机策略</td><td>高样本效率连续控制</td><td>调参敏感</td></tr>
+</tbody>
+</table>
+</div>
+
+</section>
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">十一</span> PyTorch 代码实现</h2>
+
+<p>下面用 6 段可独立运行的 PyTorch 代码演示核心算法。每段都自带简易环境（不依赖 gym），可直接运行验证。所有代码基于 <code>torch</code> 与 <code>torch.nn</code>，并避免在 print 中使用希腊字母（保证 GBK 兼容）。</p>
+
+<h3>11.1 Q-Learning 表格法（GridWorld）</h3>
+<p>在一个 4x4 网格世界中，智能体从左上角出发，走到右下角（目标）获得奖励，撞墙则原地不动并受小惩罚。表格法直接维护 Q 表：</p>
+<div class="code-block">
+<div class="code-header">q_learning.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+
+<span class="com"># GridWorld: 4x4 网格, 0 = 起点, 15 = 终点, 撞墙则停留</span>
+N = <span class="num">4</span>
+GOAL = <span class="num">15</span>
+WALLS = {<span class="num">5</span>, <span class="num">7</span>, <span class="num">11</span>}
+ACTIONS = [(-<span class="num">1</span>, <span class="num">0</span>), (<span class="num">1</span>, <span class="num">0</span>), (<span class="num">0</span>, -<span class="num">1</span>), (<span class="num">0</span>, <span class="num">1</span>)]  <span class="com"># 上 下 左 右</span>
+GAMMA = <span class="num">0.95</span>
+ALPHA = <span class="num">0.1</span>
+EPS = <span class="num">0.3</span>
+EPISODES = <span class="num">3000</span>
+
+
+<span class="kw">def</span> to_state(r, c):
+    <span class="kw">return</span> r * N + c
+
+
+<span class="kw">def</span> <span class="fn">step</span>(state, a_idx):
+    r, c = <span class="fn">divmod</span>(state, N)
+    dr, dc = ACTIONS[a_idx]
+    nr, nc = r + dr, c + dc
+    <span class="kw">if</span> <span class="num">0</span> &lt;= nr &lt; N <span class="kw">and</span> <span class="num">0</span> &lt;= nc &lt; N <span class="kw">and</span> to_state(nr, nc) <span class="kw">not</span> <span class="kw">in</span> WALLS:
+        nxt = to_state(nr, nc)
+    <span class="kw">else</span>:
+        nxt = state
+    <span class="kw">if</span> nxt == GOAL:
+        <span class="kw">return</span> nxt, <span class="num">10.0</span>, <span class="kw">True</span>
+    <span class="kw">return</span> nxt, -<span class="num">0.1</span>, <span class="kw">False</span>
+
+
+<span class="kw">def</span> eps_greedy(Q, s, eps):
+    <span class="kw">if</span> <span class="cls">torch</span>.<span class="fn">rand</span>(<span class="num">1</span>).item() &lt; eps:
+        <span class="kw">return</span> <span class="cls">torch</span>.<span class="fn">randint</span>(<span class="fn">len</span>(ACTIONS), (<span class="num">1</span>,)).item()
+    <span class="kw">return</span> <span class="fn">max</span>(<span class="fn">range</span>(<span class="fn">len</span>(ACTIONS)), key=<span class="kw">lambda</span> a: Q[s][a])
+
+
+<span class="kw">def</span> main():
+    Q = [[<span class="num">0.0</span>] * <span class="fn">len</span>(ACTIONS) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(N * N)]
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(EPISODES):
+        s = <span class="num">0</span>
+        done = <span class="kw">False</span>
+        <span class="kw">while</span> <span class="kw">not</span> done:
+            a = eps_greedy(Q, s, EPS)
+            s2, r, done = <span class="fn">step</span>(s, a)
+            best = <span class="fn">max</span>(Q[s2])
+            Q[s][a] += ALPHA * (r + GAMMA * best - Q[s][a])
+            s = s2
+    path = [<span class="num">0</span>]
+    s = <span class="num">0</span>
+    <span class="kw">while</span> s != GOAL:
+        a = <span class="fn">max</span>(<span class="fn">range</span>(<span class="fn">len</span>(ACTIONS)), key=<span class="kw">lambda</span> x: Q[s][x])
+        s = <span class="fn">step</span>(s, a)[<span class="num">0</span>]
+        path.<span class="fn">append</span>(s)
+    <span class="fn">print</span>(<span class="str">&quot;Q-Learning path:&quot;</span>, <span class="str">&quot; -&gt; &quot;</span>.join(str(p) <span class="kw">for</span> p <span class="kw">in</span> path))
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    main()
+</pre>
+</div>
+
+<h3>11.2 DQN（经验回放 + 目标网络）</h3>
+<p>在简易 CartPole 式环境中，用神经网络近似 Q 值，配合经验回放与目标网络稳定训练：</p>
+<div class="code-block">
+<div class="code-header">dqn.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.optim <span class="kw">as</span> optim
+
+<span class="com"># 简易 CartPole 环境: 状态 4 维, 动作 2 个 (左/右)</span>
+STATE_DIM = <span class="num">4</span>
+ACTION_DIM = <span class="num">2</span>
+
+
+<span class="kw">class</span> MiniCartPole:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        <span class="kw">self</span>.x, <span class="kw">self</span>.xd, <span class="kw">self</span>.theta, <span class="kw">self</span>.td = <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>
+        <span class="kw">self</span>.steps = <span class="num">0</span>
+
+    <span class="kw">def</span> reset(<span class="kw">self</span>):
+        <span class="kw">self</span>.x, <span class="kw">self</span>.xd, <span class="kw">self</span>.theta, <span class="kw">self</span>.td = <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>
+        <span class="kw">self</span>.steps = <span class="num">0</span>
+        <span class="kw">return</span> [<span class="kw">self</span>.x, <span class="kw">self</span>.xd, <span class="kw">self</span>.theta, <span class="kw">self</span>.td]
+
+    <span class="kw">def</span> <span class="fn">step</span>(<span class="kw">self</span>, a):
+        force = <span class="num">10.0</span> <span class="kw">if</span> a == <span class="num">1</span> <span class="kw">else</span> -<span class="num">10.0</span>
+        <span class="com"># 简化物理模型</span>
+        <span class="kw">self</span>.xd += force * <span class="num">0.02</span>
+        <span class="kw">self</span>.x += <span class="kw">self</span>.xd * <span class="num">0.02</span>
+        <span class="kw">self</span>.td += -<span class="kw">self</span>.theta * <span class="num">0.1</span> + <span class="kw">self</span>.xd * <span class="num">0.05</span>
+        <span class="kw">self</span>.theta += <span class="kw">self</span>.td * <span class="num">0.02</span>
+        <span class="kw">self</span>.steps += <span class="num">1</span>
+        done = <span class="fn">abs</span>(<span class="kw">self</span>.theta) &gt; <span class="num">0.3</span> <span class="kw">or</span> <span class="fn">abs</span>(<span class="kw">self</span>.x) &gt; <span class="num">2.4</span>
+        r = <span class="num">1.0</span> <span class="kw">if</span> <span class="kw">not</span> done <span class="kw">else</span> -<span class="num">1.0</span>
+        <span class="kw">return</span> [<span class="kw">self</span>.x, <span class="kw">self</span>.xd, <span class="kw">self</span>.theta, <span class="kw">self</span>.td], r, done
+
+
+<span class="kw">class</span> QNet(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        super().__init__()
+        <span class="kw">self</span>.fc = <span class="cls">nn</span>.Sequential(<span class="cls">nn</span>.Linear(STATE_DIM, <span class="num">32</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">32</span>, <span class="num">32</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">32</span>, ACTION_DIM))
+
+    <span class="kw">def</span> forward(<span class="kw">self</span>, x):
+        <span class="kw">return</span> <span class="kw">self</span>.fc(x)
+
+
+<span class="kw">def</span> main():
+    net = QNet()
+    tnet = QNet()
+    opt = optim.Adam(net.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+    buf = []
+    env = MiniCartPole()
+    BATCH = <span class="num">64</span>
+    GAMMA = <span class="num">0.99</span>
+    <span class="kw">for</span> ep <span class="kw">in</span> <span class="fn">range</span>(<span class="num">400</span>):
+        s = env.reset()
+        done = <span class="kw">False</span>
+        total = <span class="num">0.0</span>
+        <span class="kw">while</span> <span class="kw">not</span> done:
+            eps = <span class="fn">max</span>(<span class="num">0.05</span>, <span class="num">1.0</span> - ep / <span class="num">200.0</span>)
+            q = net(<span class="cls">torch</span>.<span class="fn">tensor</span>(s, dtype=<span class="cls">torch</span>.float32))
+            a = q.<span class="fn">argmax</span>().item() <span class="kw">if</span> <span class="cls">torch</span>.<span class="fn">rand</span>(<span class="num">1</span>).item() &gt; eps <span class="kw">else</span> <span class="cls">torch</span>.<span class="fn">randint</span>(ACTION_DIM, (<span class="num">1</span>,)).item()
+            s2, r, done = env.<span class="fn">step</span>(a)
+            buf = buf + [(s, a, r, s2, done)]
+            <span class="kw">if</span> <span class="fn">len</span>(buf) &gt; <span class="num">5000</span>:
+                buf = buf[-<span class="num">5000</span>:]
+            <span class="kw">if</span> <span class="fn">len</span>(buf) &gt;= <span class="num">256</span>:
+                bs = <span class="num">64</span>
+                idx = <span class="cls">torch</span>.<span class="fn">randint</span>(<span class="fn">len</span>(buf), (bs,))
+                batch = [buf[i] <span class="kw">for</span> i <span class="kw">in</span> idx.<span class="fn">tolist</span>()]
+                st = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">0</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                ac = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">1</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.long)
+                rw = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">2</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                sn = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">3</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                dn = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">4</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                qv = net(st).<span class="fn">gather</span>(<span class="num">1</span>, ac.<span class="fn">unsqueeze</span>(<span class="num">1</span>)).<span class="fn">squeeze</span>(<span class="num">1</span>)
+                <span class="kw">with</span> <span class="cls">torch</span>.<span class="fn">no_grad</span>():
+                    tgt = rw + GAMMA * (<span class="num">1</span> - dn) * tnet(sn).<span class="fn">max</span>(<span class="num">1</span>).values
+                loss = <span class="cls">nn</span>.functional.<span class="fn">mse_loss</span>(qv, tgt)
+                opt.<span class="fn">zero_grad</span>()
+                loss.<span class="fn">backward</span>()
+                opt.<span class="fn">step</span>()
+            <span class="kw">if</span> ep % <span class="num">20</span> == <span class="num">0</span>:
+                tnet.<span class="fn">load_state_dict</span>(net.<span class="fn">state_dict</span>())
+            s = s2
+            total += r
+        <span class="kw">if</span> ep % <span class="num">50</span> == <span class="num">0</span>:
+            <span class="fn">print</span>(<span class="str">&quot;episode&quot;</span>, ep, <span class="str">&quot;reward&quot;</span>, total)
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    main()
+</pre>
+</div>
+
+<h3>11.3 REINFORCE（蒙特卡洛策略梯度）</h3>
+<p>直接参数化策略，用完整回报 $G_t$ 作为更新权重，配合基线归一化降低方差：</p>
+<div class="code-block">
+<div class="code-header">policy_gradient.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.optim <span class="kw">as</span> optim
+
+<span class="com"># REINFORCE: 用完整回报 G 作为权重, 蒙特卡洛策略梯度</span>
+STATE_DIM = <span class="num">4</span>
+ACTION_DIM = <span class="num">2</span>
+
+
+<span class="kw">class</span> MiniEnv:
+    <span class="str">&quot;&quot;</span><span class="str">&quot;极简环境: 状态 4 维, 动作 2 个。右动作偏向更好结果。&quot;</span><span class="str">&quot;&quot;</span>
+    <span class="kw">def</span> reset(<span class="kw">self</span>):
+        <span class="kw">return</span> [<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>]
+
+    <span class="kw">def</span> <span class="fn">step</span>(<span class="kw">self</span>, a):
+        s = [<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>]
+        r = <span class="num">1.0</span> <span class="kw">if</span> a == <span class="num">1</span> <span class="kw">else</span> -<span class="num">0.5</span>
+        done = <span class="kw">True</span>  <span class="com"># 单步回合</span>
+        <span class="kw">return</span> s, r, done
+
+
+<span class="kw">class</span> PolicyNet(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        super().__init__()
+        <span class="kw">self</span>.fc = <span class="cls">nn</span>.Sequential(<span class="cls">nn</span>.Linear(STATE_DIM, <span class="num">32</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">32</span>, ACTION_DIM))
+
+    <span class="kw">def</span> forward(<span class="kw">self</span>, x):
+        <span class="kw">return</span> <span class="kw">self</span>.fc(x)
+
+
+<span class="kw">def</span> main():
+    net = PolicyNet()
+    opt = optim.Adam(net.<span class="fn">parameters</span>(), lr=<span class="num">1e-2</span>)
+    env = MiniEnv()
+    GAMMA = <span class="num">0.99</span>
+    <span class="kw">for</span> ep <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1000</span>):
+        s = env.reset()
+        done = <span class="kw">False</span>
+        log_probs = []
+        rewards = []
+        <span class="kw">while</span> <span class="kw">not</span> done:
+            s_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(s, dtype=<span class="cls">torch</span>.float32)
+            logits = net(s_t)
+            dist = <span class="cls">torch</span>.distributions.Categorical(logits=logits)
+            a = dist.<span class="fn">sample</span>()
+            log_probs.<span class="fn">append</span>(dist.<span class="fn">log_prob</span>(a))
+            s, r, done = env.<span class="fn">step</span>(a.item())
+            rewards.<span class="fn">append</span>(r)
+        G = <span class="num">0.0</span>
+        returns = []
+        <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">reversed</span>(rewards):
+            G = r + GAMMA * G
+            returns.<span class="fn">insert</span>(<span class="num">0</span>, G)
+        returns = <span class="cls">torch</span>.<span class="fn">tensor</span>(returns, dtype=<span class="cls">torch</span>.float32)
+        returns = (returns - returns.<span class="fn">mean</span>()) / (returns.<span class="fn">std</span>() + <span class="num">1e-8</span>)
+        loss = <span class="num">0.0</span>
+        <span class="kw">for</span> lp, Gt <span class="kw">in</span> <span class="fn">zip</span>(log_probs, returns):
+            loss = loss - lp * Gt
+        opt.<span class="fn">zero_grad</span>()
+        loss.<span class="fn">backward</span>()
+        opt.<span class="fn">step</span>()
+        <span class="kw">if</span> ep % <span class="num">100</span> == <span class="num">0</span>:
+            <span class="fn">print</span>(<span class="str">&quot;episode&quot;</span>, ep, <span class="str">&quot;reward&quot;</span>, <span class="fn">sum</span>(rewards))
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    main()
+</pre>
+</div>
+
+<h3>11.4 Actor-Critic</h3>
+<p>Actor 负责选动作，Critic 用 TD 误差评估优劣，两者交替更新：</p>
+<div class="code-block">
+<div class="code-header">actor_critic.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.optim <span class="kw">as</span> optim
+
+<span class="com"># Actor-Critic: Actor 学策略, Critic 学价值, 优势驱动更新</span>
+STATE_DIM = <span class="num">4</span>
+ACTION_DIM = <span class="num">2</span>
+
+
+<span class="kw">class</span> MiniWalk:
+    <span class="com"># 简易环境: 步数越多奖励越高, 鼓励长轨迹</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        <span class="kw">self</span>.t = <span class="num">0</span>
+
+    <span class="kw">def</span> reset(<span class="kw">self</span>):
+        <span class="kw">self</span>.t = <span class="num">0</span>
+        <span class="kw">return</span> [<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>]
+
+    <span class="kw">def</span> <span class="fn">step</span>(<span class="kw">self</span>, a):
+        <span class="kw">self</span>.t += <span class="num">1</span>
+        s = [<span class="fn">float</span>(<span class="kw">self</span>.t)] * STATE_DIM
+        done = <span class="kw">self</span>.t &gt;= <span class="num">20</span>
+        r = <span class="num">1.0</span> <span class="kw">if</span> <span class="kw">not</span> done <span class="kw">else</span> <span class="num">5.0</span>
+        <span class="kw">return</span> s, r, done
+
+
+<span class="kw">class</span> ActorCritic(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        super().__init__()
+        <span class="kw">self</span>.fc = <span class="cls">nn</span>.Sequential(<span class="cls">nn</span>.Linear(STATE_DIM, <span class="num">32</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">32</span>, <span class="num">32</span>), <span class="cls">nn</span>.ReLU())
+        <span class="kw">self</span>.actor = <span class="cls">nn</span>.Linear(<span class="num">32</span>, ACTION_DIM)
+        <span class="kw">self</span>.critic = <span class="cls">nn</span>.Linear(<span class="num">32</span>, <span class="num">1</span>)
+
+    <span class="kw">def</span> forward(<span class="kw">self</span>, x):
+        h = <span class="kw">self</span>.fc(x)
+        <span class="kw">return</span> <span class="kw">self</span>.actor(h), <span class="kw">self</span>.critic(h)
+
+
+<span class="kw">def</span> main():
+    net = ActorCritic()
+    opt = optim.Adam(net.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+    env = MiniWalk()
+    GAMMA = <span class="num">0.99</span>
+    <span class="kw">for</span> ep <span class="kw">in</span> <span class="fn">range</span>(<span class="num">500</span>):
+        s = env.reset()
+        done = <span class="kw">False</span>
+        <span class="kw">while</span> <span class="kw">not</span> done:
+            s_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(s, dtype=<span class="cls">torch</span>.float32)
+            logits, val = net(s_t)
+            dist = <span class="cls">torch</span>.distributions.Categorical(logits=logits)
+            a = dist.<span class="fn">sample</span>()
+            s2, r, done = env.<span class="fn">step</span>(a.item())
+            s2_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(s2, dtype=<span class="cls">torch</span>.float32)
+            _, val2 = net(s2_t)
+            td = r + GAMMA * val2 * (<span class="num">0.0</span> <span class="kw">if</span> done <span class="kw">else</span> <span class="num">1.0</span>) - val
+            pg = -dist.<span class="fn">log_prob</span>(a) * td.<span class="fn">detach</span>()
+            loss = pg + td.pow(<span class="num">2</span>) * <span class="num">0.5</span>
+            opt.<span class="fn">zero_grad</span>()
+            loss.<span class="fn">backward</span>()
+            opt.<span class="fn">step</span>()
+            s = s2
+        <span class="kw">if</span> ep % <span class="num">100</span> == <span class="num">0</span>:
+            <span class="fn">print</span>(<span class="str">&quot;episode&quot;</span>, ep, <span class="str">&quot;done&quot;</span>)
+    <span class="fn">print</span>(<span class="str">&quot;Actor-Critic training finished&quot;</span>)
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    main()
+</pre>
+</div>
+
+<h3>11.5 PPO（Clip 目标）</h3>
+<p>用新旧策略比率加上 Clip 截断，在保持训练稳定的前提下多轮更新：</p>
+<div class="code-block">
+<div class="code-header">ppo.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.optim <span class="kw">as</span> optim
+
+<span class="com"># PPO: Clip 目标函数, 一阶近似信赖域</span>
+STATE_DIM = <span class="num">4</span>
+ACTION_DIM = <span class="num">2</span>
+
+
+<span class="kw">class</span> MiniCart:
+    <span class="com"># 简化 CartPole: 回合内步数越多奖励越高</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        <span class="kw">self</span>.t = <span class="num">0</span>
+
+    <span class="kw">def</span> reset(<span class="kw">self</span>):
+        <span class="kw">self</span>.t = <span class="num">0</span>
+        <span class="kw">return</span> [<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>]
+
+    <span class="kw">def</span> <span class="fn">step</span>(<span class="kw">self</span>, a):
+        <span class="kw">self</span>.t += <span class="num">1</span>
+        s = [<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="fn">float</span>(<span class="kw">self</span>.t), <span class="num">0.0</span>]
+        done = <span class="kw">self</span>.t &gt;= <span class="num">50</span>
+        r = <span class="num">1.0</span>
+        <span class="kw">return</span> s, r, done
+
+
+<span class="kw">class</span> ACNet(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        super().__init__()
+        <span class="kw">self</span>.fc = <span class="cls">nn</span>.Sequential(<span class="cls">nn</span>.Linear(STATE_DIM, <span class="num">32</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">32</span>, <span class="num">32</span>), <span class="cls">nn</span>.ReLU())
+        <span class="kw">self</span>.actor = <span class="cls">nn</span>.Linear(<span class="num">32</span>, ACTION_DIM)
+        <span class="kw">self</span>.critic = <span class="cls">nn</span>.Linear(<span class="num">32</span>, <span class="num">1</span>)
+
+    <span class="kw">def</span> forward(<span class="kw">self</span>, x):
+        h = <span class="kw">self</span>.fc(x)
+        <span class="kw">return</span> <span class="kw">self</span>.actor(h), <span class="kw">self</span>.critic(h)
+
+
+<span class="kw">def</span> main():
+    net = ACNet()
+    opt = optim.Adam(net.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+    env = MiniCart()
+    GAMMA = <span class="num">0.99</span>
+    EPS_CLIP = <span class="num">0.2</span>
+    <span class="kw">for</span> ep <span class="kw">in</span> <span class="fn">range</span>(<span class="num">300</span>):
+        <span class="com"># 采集一批轨迹</span>
+        states, actions, rewards, logps, dones = [], [], [], [], []
+        s = env.reset()
+        done = <span class="kw">False</span>
+        <span class="kw">while</span> <span class="kw">not</span> done:
+            s_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(s, dtype=<span class="cls">torch</span>.float32)
+            logits, val = net(s_t)
+            dist = <span class="cls">torch</span>.distributions.Categorical(logits=logits)
+            a = dist.<span class="fn">sample</span>()
+            states.<span class="fn">append</span>(s)
+            actions.<span class="fn">append</span>(a.item())
+            logps.<span class="fn">append</span>(dist.<span class="fn">log_prob</span>(a).item())
+            s, r, done = env.<span class="fn">step</span>(a.item())
+            rewards.<span class="fn">append</span>(r)
+            dones.<span class="fn">append</span>(done)
+        <span class="com"># 计算回报与优势（简易 GAE）</span>
+        returns = []
+        G = <span class="num">0.0</span>
+        <span class="kw">for</span> r <span class="kw">in</span> <span class="fn">reversed</span>(rewards):
+            G = r + GAMMA * G
+            returns.<span class="fn">insert</span>(<span class="num">0</span>, G)
+        st_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(states, dtype=<span class="cls">torch</span>.float32)
+        ac_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(actions, dtype=<span class="cls">torch</span>.long)
+        rt_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(returns, dtype=<span class="cls">torch</span>.float32)
+        <span class="kw">with</span> <span class="cls">torch</span>.<span class="fn">no_grad</span>():
+            _, vals = net(st_t)
+        adv = rt_t - vals.<span class="fn">squeeze</span>(<span class="num">1</span>)
+        adv = (adv - adv.<span class="fn">mean</span>()) / (adv.<span class="fn">std</span>() + <span class="num">1e-8</span>)
+        <span class="com"># 多次 mini-batch 更新</span>
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+            logits, _ = net(st_t)
+            dist = <span class="cls">torch</span>.distributions.Categorical(logits=logits)
+            new_lp = dist.<span class="fn">log_prob</span>(ac_t)
+            old_lp = <span class="cls">torch</span>.<span class="fn">tensor</span>(logps, dtype=<span class="cls">torch</span>.float32)
+            ratio = <span class="cls">torch</span>.<span class="fn">exp</span>(new_lp - old_lp)
+            surr1 = ratio * adv
+            surr2 = <span class="cls">torch</span>.<span class="fn">clamp</span>(ratio, <span class="num">1</span> - EPS_CLIP, <span class="num">1</span> + EPS_CLIP) * adv
+            pg_loss = -<span class="cls">torch</span>.<span class="fn">min</span>(surr1, surr2).<span class="fn">mean</span>()
+            v_loss = <span class="cls">nn</span>.functional.<span class="fn">mse_loss</span>(dist.logits.new_zeros(dist.logits.size(<span class="num">0</span>)), rt_t)
+            loss = pg_loss + <span class="num">0.5</span> * v_loss
+            opt.<span class="fn">zero_grad</span>()
+            loss.<span class="fn">backward</span>()
+            opt.<span class="fn">step</span>()
+        <span class="kw">if</span> ep % <span class="num">50</span> == <span class="num">0</span>:
+            <span class="fn">print</span>(<span class="str">&quot;episode&quot;</span>, ep, <span class="str">&quot;reward&quot;</span>, <span class="fn">sum</span>(rewards))
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    main()
+</pre>
+</div>
+
+<h3>11.6 DDPG（连续控制）</h3>
+<p>确定性 Actor + 经验回放 + 目标网络软更新，直接输出连续动作：</p>
+<div class="code-block">
+<div class="code-header">ddpg.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.optim <span class="kw">as</span> optim
+
+<span class="com"># DDPG: 确定性策略梯度, 用于连续动作空间</span>
+STATE_DIM = <span class="num">2</span>
+ACTION_DIM = <span class="num">1</span>
+ACTION_BOUND = <span class="num">1.0</span>
+
+
+<span class="kw">class</span> MiniPendulum:
+    <span class="com"># 极简摆锤: 状态 2 维, 动作 1 维连续</span>
+    <span class="kw">def</span> reset(<span class="kw">self</span>):
+        <span class="kw">return</span> [<span class="num">0.1</span>, <span class="num">0.0</span>]
+
+    <span class="kw">def</span> <span class="fn">step</span>(<span class="kw">self</span>, a):
+        th = <span class="kw">self</span>.angle()
+        r = -th * th - <span class="num">0.1</span> * a * a
+        <span class="kw">self</span>.theta += a * <span class="num">0.1</span>
+        <span class="kw">self</span>.omega = a
+        done = <span class="kw">False</span>
+        <span class="kw">return</span> [<span class="kw">self</span>.theta, <span class="kw">self</span>.omega], r, done
+
+    <span class="kw">def</span> angle(<span class="kw">self</span>):
+        <span class="kw">return</span> <span class="kw">self</span>.theta % (<span class="num">2</span> * <span class="num">3.14159</span>) - <span class="num">3.14159</span>
+
+
+<span class="kw">class</span> Actor(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        super().__init__()
+        <span class="kw">self</span>.fc = <span class="cls">nn</span>.Sequential(<span class="cls">nn</span>.Linear(STATE_DIM, <span class="num">64</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">64</span>, <span class="num">64</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">64</span>, ACTION_DIM), <span class="cls">nn</span>.Tanh())
+
+    <span class="kw">def</span> forward(<span class="kw">self</span>, x):
+        <span class="kw">return</span> <span class="kw">self</span>.fc(x) * ACTION_BOUND
+
+
+<span class="kw">class</span> Critic(<span class="cls">nn</span>.Module):
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        super().__init__()
+        <span class="kw">self</span>.fc = <span class="cls">nn</span>.Sequential(<span class="cls">nn</span>.Linear(STATE_DIM + ACTION_DIM, <span class="num">64</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">64</span>, <span class="num">64</span>), <span class="cls">nn</span>.ReLU(),
+                                <span class="cls">nn</span>.Linear(<span class="num">64</span>, <span class="num">1</span>))
+
+    <span class="kw">def</span> forward(<span class="kw">self</span>, x, a):
+        <span class="kw">return</span> <span class="kw">self</span>.fc(<span class="cls">torch</span>.<span class="fn">cat</span>([x, a], dim=<span class="num">1</span>))
+
+
+<span class="kw">def</span> main():
+    actor = Actor()
+    critic = Critic()
+    tactor = Actor()
+    tcritic = Critic()
+    tactor.<span class="fn">load_state_dict</span>(actor.<span class="fn">state_dict</span>())
+    tcritic.<span class="fn">load_state_dict</span>(critic.<span class="fn">state_dict</span>())
+    a_opt = optim.Adam(actor.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+    c_opt = optim.Adam(critic.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+    env = MiniPendulum()
+    buf = []
+    GAMMA = <span class="num">0.99</span>
+    TAU = <span class="num">0.005</span>
+    <span class="kw">for</span> ep <span class="kw">in</span> <span class="fn">range</span>(<span class="num">300</span>):
+        s = env.reset()
+        done = <span class="kw">False</span>
+        total = <span class="num">0.0</span>
+        <span class="kw">while</span> <span class="kw">not</span> done:
+            s_t = <span class="cls">torch</span>.<span class="fn">tensor</span>(s, dtype=<span class="cls">torch</span>.float32).<span class="fn">unsqueeze</span>(<span class="num">0</span>)
+            a = actor(s_t).<span class="fn">detach</span>().<span class="fn">squeeze</span>(<span class="num">0</span>) + <span class="num">0.1</span> * <span class="cls">torch</span>.<span class="fn">randn</span>(ACTION_DIM)
+            a = <span class="cls">torch</span>.<span class="fn">clamp</span>(a, -ACTION_BOUND, ACTION_BOUND)
+            s2, r, done = env.<span class="fn">step</span>(a.<span class="fn">tolist</span>())
+            buf = buf + [(s, a.<span class="fn">tolist</span>(), r, s2, done)]
+            <span class="kw">if</span> <span class="fn">len</span>(buf) &gt; <span class="num">10000</span>:
+                buf = buf[-<span class="num">10000</span>:]
+            <span class="kw">if</span> <span class="fn">len</span>(buf) &gt;= <span class="num">128</span>:
+                bs = <span class="num">128</span>
+                idx = <span class="cls">torch</span>.<span class="fn">randint</span>(<span class="fn">len</span>(buf), (bs,))
+                batch = [buf[i] <span class="kw">for</span> i <span class="kw">in</span> idx.<span class="fn">tolist</span>()]
+                st = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">0</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                ac = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">1</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                rw = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">2</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                sn = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">3</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                dn = <span class="cls">torch</span>.<span class="fn">tensor</span>([b[<span class="num">4</span>] <span class="kw">for</span> b <span class="kw">in</span> batch], dtype=<span class="cls">torch</span>.float32)
+                <span class="kw">with</span> <span class="cls">torch</span>.<span class="fn">no_grad</span>():
+                    a_next = tactor(sn)
+                    target = rw + GAMMA * (<span class="num">1</span> - dn) * tcritic(sn, a_next).<span class="fn">squeeze</span>(<span class="num">1</span>)
+                qv = critic(st, ac).<span class="fn">squeeze</span>(<span class="num">1</span>)
+                c_loss = <span class="cls">nn</span>.functional.<span class="fn">mse_loss</span>(qv, target)
+                c_opt.<span class="fn">zero_grad</span>()
+                c_loss.<span class="fn">backward</span>()
+                c_opt.<span class="fn">step</span>()
+                a_loss = -critic(st, actor(st)).<span class="fn">mean</span>()
+                a_opt.<span class="fn">zero_grad</span>()
+                a_loss.<span class="fn">backward</span>()
+                a_opt.<span class="fn">step</span>()
+                <span class="com"># 软更新目标网络</span>
+                <span class="kw">for</span> p, tp <span class="kw">in</span> <span class="fn">zip</span>(actor.<span class="fn">parameters</span>(), tactor.<span class="fn">parameters</span>()):
+                    tp.data.<span class="fn">copy_</span>(TAU * p.data + (<span class="num">1</span> - TAU) * tp.data)
+                <span class="kw">for</span> p, tp <span class="kw">in</span> <span class="fn">zip</span>(critic.<span class="fn">parameters</span>(), tcritic.<span class="fn">parameters</span>()):
+                    tp.data.<span class="fn">copy_</span>(TAU * p.data + (<span class="num">1</span> - TAU) * tp.data)
+            s = s2
+            total += r
+        <span class="kw">if</span> ep % <span class="num">50</span> == <span class="num">0</span>:
+            <span class="fn">print</span>(<span class="str">&quot;episode&quot;</span>, ep, <span class="str">&quot;reward&quot;</span>, round(total, <span class="num">2</span>))
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    main()
+</pre>
+</div>
+
+</section>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">十二</span> 算法对比与工程选型</h2>
+
+<h3>12.1 主流算法对比表</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>算法</th><th>类型</th><th>on/off-policy</th><th>动作空间</th><th>优点</th><th>缺点</th></tr>
+</thead>
+<tbody>
+<tr><td>Q-Learning</td><td>价值</td><td>off-policy</td><td>离散</td><td>简单、理论完备、表格法</td><td>只能处理小状态空间</td></tr>
+<tr><td>DQN</td><td>价值</td><td>off-policy</td><td>离散</td><td>深度网络泛化、经验回放</td><td>过估计、样本效率一般</td></tr>
+<tr><td>Double DQN</td><td>价值</td><td>off-policy</td><td>离散</td><td>缓解过估计</td><td>仍需目标网络调参</td></tr>
+<tr><td>Dueling DQN</td><td>价值</td><td>off-policy</td><td>离散</td><td>优势与价值分离、更稳</td><td>网络结构略复杂</td></tr>
+<tr><td>REINFORCE</td><td>策略</td><td>on-policy</td><td>离散/连续</td><td>简单、可处理连续动作</td><td>方差大、收敛慢</td></tr>
+<tr><td>Actor-Critic</td><td>策略+价值</td><td>on-policy</td><td>离散/连续</td><td>低方差、通用</td><td>单步偏差、双网络协调</td></tr>
+<tr><td>A3C</td><td>策略+价值</td><td>on-policy</td><td>离散/连续</td><td>异步并行、去相关</td><td>多进程实现复杂</td></tr>
+<tr><td>PPO</td><td>策略+价值</td><td>on-policy</td><td>离散/连续</td><td>稳定、实现简单、工业标准</td><td>样本效率中等</td></tr>
+<tr><td>DDPG</td><td>策略+价值</td><td>off-policy</td><td>连续</td><td>样本效率较高</td><td>超参数敏感、易过估计</td></tr>
+<tr><td>TD3</td><td>策略+价值</td><td>off-policy</td><td>连续</td><td>稳定、鲁棒、缓解过估计</td><td>实现复杂</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>12.2 工程选型建议</h3>
+<ul>
+<li><strong>动作空间离散且规模小</strong>：优先 Q-Learning / DQN 家族（如棋盘、卡片、Atari）。</li>
+<li><strong>动作空间离散但状态巨大</strong>：DQN / Double DQN / Dueling DQN，搭配经验回放与目标网络。</li>
+<li><strong>连续控制（机器人、自动驾驶）</strong>：优先 TD3 / SAC（样本效率与稳定性俱佳），DDPG 可作基线。</li>
+<li><strong>追求通用、稳健、易部署</strong>：PPO 是最稳妥的默认选择，也是 RLHF 的事实标准。</li>
+<li><strong>需要多智能体或大规模并行</strong>：A3C / PPO（分布式版）适合多 worker 扩展。</li>
+</ul>
+
+<div class="callout">
+<div class="callout-title">样本效率 vs 稳定性权衡</div>
+<p>Off-policy 方法（DQN、DDPG、TD3、SAC）通常样本效率更高，但超参数敏感、训练不稳定；on-policy 方法（PPO、A3C）更稳健，但需要更多环境交互。工程上常采用"<strong>先 PPO 验证可行性，再 SAC 提效率</strong>"的路线。</p>
+</div>
+
+<h3>12.3 超参数调优建议</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>超参数</th><th>常见范围</th><th>影响</th><th>调优建议</th></tr>
+</thead>
+<tbody>
+<tr><td>学习率</td><td>1e-5 ~ 1e-3</td><td>过大会发散，过小收敛慢</td><td>从 3e-4 起，按量级网格搜索</td></tr>
+<tr><td>折扣因子</td><td>0.9 ~ 0.999</td><td>越大越"长远"</td><td>长序任务取 0.99+，短回合取 0.9</td></tr>
+<tr><td>探索 epsilon</td><td>0.01 ~ 0.3</td><td>探索与利用平衡</td><td>初始高，随训练指数衰减</td></tr>
+<tr><td>回放缓冲区</td><td>1e4 ~ 1e6</td><td>越大样本越多样</td><td>根据显存与内存折中</td></tr>
+<tr><td>批量大小</td><td>32 ~ 512</td><td>梯度稳定性</td><td>PPO 常用 256，DQN 常用 64</td></tr>
+<tr><td>目标网络更新</td><td>软更新 TAU 0.005</td><td>训练稳定性</td><td>DQN 用硬拷贝每 C 步；AC 系用软更新</td></tr>
+</tbody>
+</table>
+</div>
+
+</section>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">十三</span> 演进时间线与总结</h2>
+
+<h3>13.1 发展时间线</h3>
+<p>从行为主义心理学到 RLHF，强化学习走过了约 70 年。下图给出关键里程碑的总览：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mBlue6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <linearGradient id="gTimeline" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#2563eb"/>
+    <stop offset="100%" stop-color="#7c3aed"/>
+  </linearGradient>
+</defs>
+
+<!-- 时间轴主线 -->
+<line x1="60" y1="60" x2="860" y2="60" stroke="#cbd5e1" stroke-width="3"/>
+<line x1="60" y1="60" x2="860" y2="60" stroke="url(#gTimeline)" stroke-width="3" stroke-dasharray="120 700" class="flow-line"/>
+
+<!-- 里程碑节点（上半部分） -->
+<circle cx="130" cy="60" r="8" class="pulse-node" fill="#2563eb"/>
+<text x="130" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">1989</text>
+<text x="130" y="85" text-anchor="middle" font-size="11" fill="#334155">Q-Learning</text>
+
+<circle cx="260" cy="60" r="8" class="pulse-node" fill="#059669"/>
+<text x="260" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">1992</text>
+<text x="260" y="85" text-anchor="middle" font-size="11" fill="#334155">TD-Gammon</text>
+
+<circle cx="430" cy="60" r="8" class="pulse-node" fill="#7c3aed"/>
+<text x="430" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">2013</text>
+<text x="430" y="85" text-anchor="middle" font-size="11" fill="#334155">DQN 提出</text>
+
+<circle cx="560" cy="60" r="8" class="pulse-node" fill="#ea580c"/>
+<text x="560" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">2016</text>
+<text x="560" y="85" text-anchor="middle" font-size="11" fill="#334155">AlphaGo</text>
+
+<circle cx="700" cy="60" r="8" class="pulse-node" fill="#2563eb"/>
+<text x="700" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">2017</text>
+<text x="700" y="85" text-anchor="middle" font-size="11" fill="#334155">PPO</text>
+
+<circle cx="810" cy="60" r="10" class="glow-ring" fill="#dc2626"/>
+<text x="810" y="35" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">2022</text>
+<text x="810" y="85" text-anchor="middle" font-size="11" fill="#334155">RLHF</text>
+
+<!-- 下半部分说明 -->
+<rect x="120" y="130" width="660" height="110" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+<text x="450" y="160" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">从"表格"到"深度网络"，从"单智能体"到"大模型对齐"</text>
+<text x="220" y="195" text-anchor="middle" font-size="13" fill="#475569">价值方法</text>
+<line x1="300" y1="191" x2="620" y2="191" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="8 6" marker-end="url(#mBlue6)"/>
+<text x="460" y="191" text-anchor="middle" font-size="12" fill="#2563eb">Q-Learning → DQN → Double/Dueling → Rainbow</text>
+<text x="220" y="222" text-anchor="middle" font-size="13" fill="#475569">策略方法</text>
+<line x1="300" y1="218" x2="620" y2="218" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mBlue6)"/>
+<text x="460" y="218" text-anchor="middle" font-size="12" fill="#6d28d9">REINFORCE → AC → A3C → PPO / SAC / TD3</text>
+</svg>
+</div>
+
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">1950s</div>
+<div class="event">操作性条件反射：行为主义心理学</div>
+<div class="desc">Skinner 的强化理论为"试错学习"奠定思想基础。</div>
+</div>
+<div class="timeline-item">
+<div class="year">1957</div>
+<div class="event">Bellman 动态规划 / MDP 框架</div>
+<div class="desc">贝尔曼方程奠定了序贯决策的理论基础。</div>
+</div>
+<div class="timeline-item">
+<div class="year">1989</div>
+<div class="event">Q-Learning 提出（Watkins）</div>
+<div class="desc">off-policy 时序差分控制的经典算法。</div>
+</div>
+<div class="timeline-item">
+<div class="year">1992</div>
+<div class="event">TD-Gammon 击败人类</div>
+<div class="desc">Tesauro 用 TD 方法训练西洋双陆棋程序。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2013</div>
+<div class="event">DQN 发布（Mnih 等）</div>
+<div class="desc">深度网络 + 经验回放，Atari 上超越人类。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2015</div>
+<div class="event">Nature DQN：深度强化学习起点</div>
+<div class="desc">目标网络与 49 个 Atari 游戏的里程碑成果。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2016</div>
+<div class="event">AlphaGo 击败李世石</div>
+<div class="desc">策略网络 + 价值网络 + MCTS，RL 最出圈时刻。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2017</div>
+<div class="event">PPO 与 A3C 提出</div>
+<div class="desc">PPO 成为稳定通用基线；A3C 推动异步训练。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2018</div>
+<div class="event">TD3 / SAC / DDPG 成熟</div>
+<div class="desc">连续控制算法体系走向成熟。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2022</div>
+<div class="event">RLHF 引爆大模型对齐</div>
+<div class="desc">ChatGPT 用 PPO + 人类反馈训练奖励模型。</div>
+</div>
+</div>
+
+<h3>13.2 发展脉络总结</h3>
+<p>强化学习的两条主线——<strong>价值方法</strong>与<strong>策略方法</strong>——从 1989 年 Q-Learning 开始并不断融合：</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>维度</th><th>价值方法</th><th>策略方法</th></tr>
+</thead>
+<tbody>
+<tr><td>代表</td><td>Q-Learning → DQN → Double/Dueling</td><td>REINFORCE → Actor-Critic → PPO</td></tr>
+<tr><td>学什么</td><td>先学 Q/V 函数，再导出策略</td><td>直接学策略参数</td></tr>
+<tr><td>优点</td><td>样本效率高、理论成熟</td><td>可处理连续动作、随机策略</td></tr>
+<tr><td>缺点</td><td>难以处理连续动作、过估计</td><td>方差大、样本效率低</td></tr>
+<tr><td>融合产物</td><td colspan="2">Actor-Critic、DDPG、TD3、SAC、PPO（策略+价值混合）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout success">
+<div class="callout-title">未来趋势</div>
+<p>多智能体强化学习（MARL）、离线强化学习（Offline RL）、基于模型的 RL（MBRL）、RLHF 与多模态对齐，是当前最重要的演进方向。无论哪个方向，贝尔曼方程、策略梯度定理与探索-利用权衡这三块基石都不会过时。</p>
+</div>
+
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Sutton, R. S., &amp; Barto, A. G. (2018). Reinforcement Learning: An Introduction, 2nd Edition. <em>MIT Press</em>. (RL 标准教科书)</li>
+<li>Watkins, C. J. C. H., &amp; Dayan, P. (1992). Q-learning. <em>Machine Learning, 8(3-4), 279-292</em>. (Q-Learning 经典论文)</li>
+<li>Rummery, G. A., &amp; Niranjan, M. (1994). On-line Q-learning using connectionist systems. <em>CUED/F-INFENG/TR 166</em>. (SARSA 雏形)</li>
+<li>Mnih, V., et al. (2013). Playing Atari with deep reinforcement learning. <em>arXiv:1312.5602</em>. (DQN 首篇)</li>
+<li>Mnih, V., et al. (2015). Human-level control through deep reinforcement learning. <em>Nature, 518(7540), 529-533</em>. (Nature DQN)</li>
+<li>Van Hasselt, H., Guez, A., &amp; Silver, D. (2016). Deep reinforcement learning with double Q-learning. <em>AAAI 2016</em>. (Double DQN)</li>
+<li>Wang, Z., et al. (2016). Dueling network architectures for deep reinforcement learning. <em>ICML 2016</em>. (Dueling DQN)</li>
+<li>Williams, R. J. (1992). Simple statistical gradient-following algorithms for connectionist reinforcement learning. <em>Machine Learning, 8(3-4), 229-256</em>. (REINFORCE)</li>
+<li>Mnih, V., et al. (2016). Asynchronous methods for deep reinforcement learning. <em>ICML 2016</em>. (A3C)</li>
+<li>Schulman, J., et al. (2017). Proximal policy optimization algorithms. <em>arXiv:1707.06347</em>. (PPO)</li>
+<li>Schulman, J., et al. (2015). Trust region policy optimization. <em>ICML 2015</em>. (TRPO)</li>
+<li>Lillicrap, T. P., et al. (2016). Continuous control with deep reinforcement learning. <em>ICLR 2016</em>. (DDPG)</li>
+<li>Fujimoto, S., et al. (2018). Addressing function approximation error in actor-critic methods. <em>ICML 2018</em>. (TD3)</li>
+<li>Silver, D., et al. (2016). Mastering the game of Go with deep neural networks and tree search. <em>Nature, 529(7587), 484-489</em>. (AlphaGo)</li>
+</ol>
+</section>
+
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+
+// KaTeX 渲染策略
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

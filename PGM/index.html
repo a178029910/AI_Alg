@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>概率图模型 — 贝叶斯网络 · 马尔可夫随机场 · 推断 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>概率图模型</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、概率图模型概述</a>
+    <a href="#ch2">二、贝叶斯网络基础</a>
+    <a href="#ch3">三、贝叶斯网络的独立性</a>
+    <a href="#ch4">四、马尔可夫随机场</a>
+    <a href="#ch5">五、MRF的独立性</a>
+    <a href="#ch6">六、因子图</a>
+    <a href="#ch7">七、精确推断-变量消除法</a>
+    <a href="#ch8">八、精确推断-信念传播</a>
+    <a href="#ch9">九、近似推断-采样</a>
+    <a href="#ch10">十、近似推断-变分推断</a>
+    <a href="#ch11">十一、PGM参数学习</a>
+    <a href="#ch12">十二、Python代码实践</a>
+    <a href="#ch13">十三、知识体系总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+
+<!-- ==================== HERO ==================== -->
+<section id="hero" class="hero">
+  <h1>概率图模型</h1>
+  <div class="subtitle">Probabilistic Graphical Models: 贝叶斯网络 · 马尔可夫随机场 · 变分推断</div>
+  <div class="tagline">图结构 × 概率推理 · 不确定性建模的统一框架</div>
+  <div class="badges">
+    <span class="badge">13 章节</span>
+    <span class="badge">6 SVG</span>
+    <span class="badge">22 公式</span>
+    <span class="badge">6 代码</span>
+    <span class="badge">15 参考文献</span>
+  </div>
+</section>
+
+<!-- ==================== 第一章 ==================== -->
+<section id="ch1">
+<h2><span class="num">1</span>概率图模型概述</h2>
+
+<h3>1.1 什么是概率图模型</h3>
+<p><strong>概率图模型</strong>（Probabilistic Graphical Models, PGM）是用图论语言描述多元随机变量联合概率分布的框架。它将概率论（处理不确定性）与图论（描述结构关系）有机结合：图中的<strong>节点</strong>表示随机变量，<strong>边</strong>表示变量间的概率依赖关系，从而以紧凑、可解释的方式编码高维联合分布中的结构信息。</p>
+
+<p>在 $n$ 个随机变量的联合分布中，完全表示需要 $O(2^n)$ 个参数。PGM 的核心价值在于利用变量间的<strong>条件独立性</strong>大幅缩减参数规模——将指数级复杂度的联合分布分解为若干局部因子的乘积，使得表示、推断和学习都变得可行。</p>
+
+<h3>1.2 图与概率的关系</h3>
+<p>PGM 中的图 $G = (V, E)$ 包含节点集 $V$（对应随机变量 $X_1, \dots, X_n$）和边集 $E$。图的结构编码了概率分布的<em>因子分解</em>性质：</p>
+<ul>
+  <li><strong>有向图</strong>（贝叶斯网络）：有向边 $X_i \to X_j$ 表示因果关系或时序依赖，分布分解为 $P(X_1, \dots, X_n) = \prod_{i=1}^{n} P(X_i \mid \mathrm{Pa}(X_i))$。</li>
+  <li><strong>无向图</strong>（马尔可夫随机场）：无向边 $X_i - X_j$ 表示对称相关性，分布分解为 $P(X_1, \dots, X_n) = \frac{1}{Z} \prod_{c} \psi_c(X_c)$。</li>
+</ul>
+
+<div class="callout">
+<div class="callout-title">核心思想</div>
+<p>图的<strong>缺失边</strong>意味着对应变量之间存在<strong>条件独立性</strong>。这正是 PGM 紧凑表示的本质：我们不需要存储整张联合分布表，只需存储与图结构一致的局部因子。</p>
+</div>
+
+<h3>1.3 PGM 的三大要素</h3>
+<div class="table-wrap">
+<table>
+<tr><th>要素</th><th>含义</th><th>核心问题</th></tr>
+<tr><td><strong>表示</strong>（Representation）</td><td>如何用图结构编码联合分布</td><td>有向图 vs 无向图 vs 因子图</td></tr>
+<tr><td><strong>推断</strong>（Inference）</td><td>给定模型，回答概率查询</td><td>精确推断（VE, BP）vs 近似推断（MCMC, VI）</td></tr>
+<tr><td><strong>学习</strong>（Learning）</td><td>从数据估计模型参数与结构</td><td>参数学习（MLE, MAP, EM）vs 结构学习</td></tr>
+</table>
+</div>
+
+<p>这三大要素构成 PGM 理论的完整框架。表示定义模型族，推断在给定模型上进行概率计算，学习则从数据中获取模型。三者环环相扣：学习需要推断作为子例程，推断依赖表示给出的因子分解。</p>
+
+</section>
+
+<!-- ==================== 第二章 ==================== -->
+<section id="ch2">
+<h2><span class="num">2</span>贝叶斯网络基础</h2>
+
+<h3>2.1 有向无环图（DAG）</h3>
+<p><strong>贝叶斯网络</strong>（Bayesian Network）用有向无环图（Directed Acyclic Graph, DAG）表示变量间的概率依赖。DAG 中每个节点对应一个随机变量，有向边 $X_i \to X_j$ 表示 $X_j$ 直接依赖于 $X_i$。无环性保证不存在循环依赖，使得联合分布可以被合法地因子分解。</p>
+
+<p>对于节点 $X_i$，其所有直接前驱称为<strong>父节点</strong>集 $\mathrm{Pa}(X_i)$，所有直接后继称为<strong>子节点</strong>集 $\mathrm{Ch}(X_i)$。没有父节点的节点称为<strong>根节点</strong>。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#ede9fe;stop-opacity:1"/>
+    </linearGradient>
+    <marker id="bn-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+  </defs>
+  <text x="300" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">贝叶斯网络 DAG 示例</text>
+  <!-- 节点 -->
+  <circle cx="120" cy="80" r="28" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="120" y="86" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">D</text>
+  <text x="120" y="130" text-anchor="middle" font-size="11" fill="#64748b">（疾病）</text>
+  <circle cx="300" cy="80" r="28" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="300" y="86" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">T</text>
+  <text x="300" y="130" text-anchor="middle" font-size="11" fill="#64748b">（检查）</text>
+  <circle cx="480" cy="80" r="28" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="480" y="86" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">S</text>
+  <text x="480" y="130" text-anchor="middle" font-size="11" fill="#64748b">（症状）</text>
+  <circle cx="210" cy="240" r="28" fill="url(#bn-grad)" stroke="#7c3aed" stroke-width="2" class="pulse-node"/>
+  <text x="210" y="246" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">L</text>
+  <text x="210" y="295" text-anchor="middle" font-size="11" fill="#64748b">（用药）</text>
+  <circle cx="390" cy="240" r="28" fill="url(#bn-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
+  <text x="390" y="246" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">R</text>
+  <text x="390" y="295" text-anchor="middle" font-size="11" fill="#64748b">（康复）</text>
+  <!-- 边 -->
+  <line x1="148" y1="80" x2="272" y2="80" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="328" y1="80" x2="452" y2="80" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="120" y1="108" x2="190" y2="212" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="300" y1="108" x2="225" y2="212" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="480" y1="108" x2="405" y2="212" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="238" y1="240" x2="362" y2="240" stroke="#7c3aed" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <!-- 标注 -->
+  <text x="180" y="70" font-size="11" fill="#94a3b8">Pa(T)={D}</text>
+  <text x="395" y="180" font-size="11" fill="#94a3b8">Pa(R)={L,S}</text>
+</svg>
+</div>
+
+<h3>2.2 条件概率分布（CPD）</h3>
+<p>贝叶斯网络中每个节点 $X_i$ 关联一个<strong>条件概率分布</strong>（Conditional Probability Distribution, CPD）$P(X_i \mid \mathrm{Pa}(X_i))$，描述在给定父节点取值时 $X_i$ 的分布。对于离散变量，CPD 表现为条件概率表（CPT）；对于连续变量，CPD 可用线性高斯等参数化形式。</p>
+
+<h3>2.3 因子分解与链式法则</h3>
+<p>给定 DAG $G$，贝叶斯网络的联合分布按<strong>链式法则</strong>因子分解为各节点 CPD 的乘积：</p>
+<div class="formula" data-eq="(1)">$$P(X_1, X_2, \ldots, X_n) = \prod_{i=1}^{n} P(X_i \mid \mathrm{Pa}(X_i))$$</div>
+<p>这是 PGM 紧凑性的基础：若每个变量最多有 $k$ 个父节点且每个变量取 $r$ 个值，则总参数量为 $O(n \cdot r^k)$，远优于无结构联合分布的 $O(r^n)$。</p>
+
+<h3>2.4 局部马尔可夫性</h3>
+<p>贝叶斯网络满足<strong>局部马尔可夫性</strong>：在给定父节点的条件下，每个节点与其非后代节点条件独立：</p>
+<div class="formula" data-eq="(2)">$$X_i \perp \!\!\! \perp \mathrm{Nd}(X_i) \setminus \mathrm{Pa}(X_i) \mid \mathrm{Pa}(X_i)$$</div>
+<p>其中 $\mathrm{Nd}(X_i)$ 表示 $X_i$ 的所有非后代节点。这一性质是因子分解（公式1）成立的充分条件——链式法则的通用分解 $P(X_1, \dots, X_n) = \prod_i P(X_i \mid X_1, \dots, X_{i-1})$ 在局部马尔可夫性下简化为 $\prod_i P(X_i \mid \mathrm{Pa}(X_i))$。</p>
+
+<div class="callout success">
+<div class="callout-title">等价关系</div>
+<p>对于 DAG $G$ 和分布 $P$：$G$ 是 $P$ 的 I-map（独立性映射） $\Leftrightarrow$ $P$ 满足局部马尔可夫性 $\Leftrightarrow$ $P$ 按 $G$ 因子分解。三者等价，是贝叶斯网络表示的理论基石。</p>
+</div>
+
+</section>
+
+<!-- ==================== 第三章 ==================== -->
+<section id="ch3">
+<h2><span class="num">3</span>贝叶斯网络的独立性</h2>
+
+<h3>3.1 d-分离</h3>
+<p><strong>d-分离</strong>（d-separation，directional separation）是判定贝叶斯网络中条件独立性的图结构准则。对于三个节点 $X$、$Y$、$Z$ 及路径上的中间节点 $W$，路径经过 $W$ 的三种基本结构决定了信息是否"阻断"：</p>
+
+<ul>
+  <li><strong>链式结构</strong>（$X \to W \to Y$）：给定 $W$，则 $X \perp \!\!\! \perp Y \mid W$，信息被阻断。</li>
+  <li><strong>分叉结构</strong>（$X \leftarrow W \to Y$）：给定 $W$，则 $X \perp \!\!\! \perp Y \mid W$，信息被阻断。</li>
+  <li><strong>汇合结构</strong>（$X \to W \leftarrow Y$）：默认 $X \perp \!\!\! \perp Y$（信息阻断）；但<em>给定 $W$ 或其后代</em>时，依赖被激活，$X$ 与 $Y$ 变为相关。</li>
+</ul>
+
+<div class="svg-box">
+<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg">
+  <text x="360" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">d-分离三种基本结构</text>
+  <!-- 链式 -->
+  <text x="120" y="60" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">链式结构</text>
+  <circle cx="60" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="60" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
+  <circle cx="120" cy="120" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="120" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
+  <circle cx="180" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="180" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
+  <line x1="82" y1="120" x2="98" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <line x1="142" y1="120" x2="158" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <text x="120" y="175" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y | W ✓</text>
+  <!-- 分叉 -->
+  <text x="360" y="60" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">分叉结构</text>
+  <circle cx="300" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="300" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
+  <circle cx="360" cy="120" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="360" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
+  <circle cx="420" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="420" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
+  <line x1="352" y1="113" x2="312" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <line x1="368" y1="113" x2="408" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <text x="360" y="175" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y | W ✓</text>
+  <!-- 汇合 -->
+  <text x="600" y="60" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">汇合结构</text>
+  <circle cx="540" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="540" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
+  <circle cx="600" cy="120" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="600" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
+  <circle cx="660" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="660" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
+  <line x1="562" y1="113" x2="578" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <line x1="638" y1="113" x2="622" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <text x="600" y="175" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y 默认；观察W则相关</text>
+  <text x="600" y="195" text-anchor="middle" font-size="11" fill="#dc2626">X ⊥̸ Y | W ✗</text>
+</svg>
+</div>
+
+<h3>3.2 贝叶斯球算法</h3>
+<p><strong>贝叶斯球算法</strong>（Bayes Ball Algorithm）是 d-分离的可达性算法。给定观测集 $\mathbf{Z}$，从节点 $X$ 出发模拟一个"球"在图上的传播：若球无法到达 $Y$，则 $X \perp \!\!\! \perp Y \mid \mathbf{Z}$。球的传播规则依节点方向和是否被观测而定：</p>
+<ul>
+  <li>球到达未观测的分叉/链式节点：穿过并继续传播。</li>
+  <li>球到达已观测的分叉/链式节点：被阻断，停止。</li>
+  <li>球到达未观测的汇合节点：被阻断（默认独立）。</li>
+  <li>球到达已观测的汇合节点（或其后代被观测）：通过并继续传播。</li>
+</ul>
+
+<h3>3.3 I-map、D-map 与忠实性</h3>
+<div class="table-wrap">
+<table>
+<tr><th>概念</th><th>定义</th><th>含义</th></tr>
+<tr><td><strong>I-map</strong>（独立性映射）</td><td>$\mathcal{I}(G) \subseteq \mathcal{I}(P)$</td><td>图中所有独立性都蕴含在分布中</td></tr>
+<tr><td><strong>D-map</strong>（依赖映射）</td><td>$\mathcal{I}(G) \supseteq \mathcal{I}(P)$</td><td>分布中所有独立性都反映在图中</td></tr>
+<tr><td><strong>完美映射</strong>（P-map）</td><td>$\mathcal{I}(G) = \mathcal{I}(P)$</td><td>图与分布独立性完全一致</td></tr>
+<tr><td><strong>忠实性</strong>（Faithfulness）</td><td>$\mathcal{I}(G) = \mathcal{I}(P)$</td><td>分布不包含图中未编码的额外独立性</td></tr>
+</table>
+</div>
+
+<h3>3.4 马尔可夫毯</h3>
+<p>节点 $X$ 的<strong>马尔可夫毯</strong>（Markov Blanket）是在给定该集合时 $X$ 与图中所有其他节点条件独立的最小节点集。对于贝叶斯网络：</p>
+<div class="formula" data-eq="(3)">$$\mathrm{MB}(X_i) = \mathrm{Pa}(X_i) \cup \mathrm{Ch}(X_i) \cup \bigcup_{j \in \mathrm{Ch}(X_i)} \mathrm{Pa}(X_j) \setminus \{X_i\}$$</div>
+<p>即马尔可夫毯包含 $X$ 的<strong>父节点、子节点以及子节点的其他父节点（共父）</strong>。给定马尔可夫毯后，$X$ 与网络其余部分条件独立：$X_i \perp \!\!\! \perp (V \setminus (\mathrm{MB}(X_i) \cup \{X_i\})) \mid \mathrm{MB}(X_i)$。马尔可夫毯在特征选择和因果推断中具有重要应用。</p>
+
+</section>
+
+<!-- ==================== 第四章 ==================== -->
+<section id="ch4">
+<h2><span class="num">4</span>马尔可夫随机场</h2>
+
+<h3>4.1 无向图模型</h3>
+<p><strong>马尔可夫随机场</strong>（Markov Random Field, MRF）用无向图 $H = (V, E)$ 描述变量间的对称依赖关系。与贝叶斯网络不同，MRF 的边没有方向，不编码因果关系，而是表达变量间的相互关联——适合建模空间、图像像素、社交网络等具有对称依赖的场景。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mrf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#d1fae5;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <text x="250" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">马尔可夫随机场（无向图）</text>
+  <!-- 节点 -->
+  <circle cx="150" cy="90" r="26" fill="url(#mrf-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
+  <text x="150" y="96" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">X₁</text>
+  <circle cx="350" cy="90" r="26" fill="url(#mrf-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
+  <text x="350" y="96" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">X₂</text>
+  <circle cx="100" cy="220" r="26" fill="url(#mrf-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
+  <text x="100" y="226" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">X₃</text>
+  <circle cx="250" cy="220" r="26" fill="url(#mrf-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
+  <text x="250" y="226" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">X₄</text>
+  <circle cx="400" cy="220" r="26" fill="url(#mrf-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
+  <text x="400" y="226" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">X₅</text>
+  <circle cx="250" cy="310" r="26" fill="url(#mrf-grad)" stroke="#7c3aed" stroke-width="2" class="glow-ring"/>
+  <text x="250" y="316" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">X₆</text>
+  <!-- 无向边 -->
+  <line x1="176" y1="90" x2="324" y2="90" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="140" y1="116" x2="112" y2="194" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="170" y1="112" x2="232" y2="198" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="360" y1="112" x2="268" y2="198" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="345" y1="116" x2="382" y2="194" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="126" y1="220" x2="224" y2="220" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="276" y1="220" x2="374" y2="220" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="100" y1="246" x2="232" y2="284" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="250" y1="246" x2="250" y2="284" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <line x1="400" y1="246" x2="268" y2="284" stroke="#059669" stroke-width="2" class="flow-line"/>
+  <!-- 团标注 -->
+  <text x="250" y="265" text-anchor="middle" font-size="11" fill="#7c3aed">团 {X₃,X₄,X₆}</text>
+</svg>
+</div>
+
+<h3>4.2 势函数与团</h3>
+<p>MRF 中变量间的依赖通过<strong>势函数</strong>（Potential Function）$\psi_c(X_c)$ 来建模。势函数定义在<strong>团</strong>（Clique）上——团是图中任意两节点都有边相连的子集。非负函数 $\psi_c: \mathrm{Val}(X_c) \to \mathbb{R}^+$，不需要归一化，也不直接对应概率值，而是编码变量子集 $X_c$ 的局部相容性。</p>
+
+<p><strong>极大团</strong>（Maximal Clique）是不能被更大团包含的团。MRF 的联合分布通过极大团上势函数的乘积来表示。</p>
+
+<h3>4.3 Hammersley-Clifford 定理</h3>
+<p><strong>Hammersley-Clifford 定理</strong>建立了正概率分布与无向图因子分解的等价关系：若联合分布 $P(X) > 0$ 处处成立，则 $P$ 满足图 $H$ 上的局部马尔可夫性，当且仅当 $P$ 可以因子分解为极大团上势函数的乘积。</p>
+<div class="formula" data-eq="(4)">$$P(X_1, X_2, \ldots, X_n) = \frac{1}{Z} \prod_{c \in \mathcal{C}} \psi_c(X_c)$$</div>
+<p>其中 $\mathcal{C}$ 为所有极大团集合，$Z$ 为<strong>配分函数</strong>（Partition Function），确保分布归一化：</p>
+<div class="formula" data-eq="(5)">$$Z = \sum_{x_1, \ldots, x_n} \prod_{c \in \mathcal{C}} \psi_c(x_c)$$</div>
+
+<div class="callout warn">
+<div class="callout-title">配分函数的挑战</div>
+<p>$Z$ 的计算需要对所有变量取值求和，复杂度为 $O(r^n)$，这是 MRF 推断的核心难点。在精确推断中需要借助变量消除或信念传播；在近似推断中常通过伪似然或 MCMC 绕过直接计算。</p>
+</div>
+
+<h3>4.4 吉布斯分布</h3>
+<p>当势函数取指数族形式 $\psi_c(X_c) = \exp\{-E_c(X_c)\}$ 时，MRF 的分布称为<strong>吉布斯分布</strong>（Gibbs Distribution），$E(X) = \sum_c E_c(X_c)$ 称为<strong>能量函数</strong>：</p>
+<div class="formula" data-eq="(6)">$$P(X) = \frac{1}{Z} \exp\left(-\sum_{c \in \mathcal{C}} E_c(X_c)\right) = \frac{1}{Z} \exp\left(-E(X)\right)$$</div>
+<p>能量越低的配置概率越高。常见形式如<strong>玻尔兹曼机</strong>（Boltzmann Machine）和<strong>伊辛模型</strong>（Ising Model）都是吉布斯分布的特例。</p>
+
+</section>
+
+<!-- ==================== 第五章 ==================== -->
+<section id="ch5">
+<h2><span class="num">5</span>MRF的独立性</h2>
+
+<h3>5.1 全局马尔可夫性</h3>
+<p>MRF 的<strong>全局马尔可夫性</strong>：若从 $X$ 到 $Y$ 的所有路径都经过 $\mathbf{Z}$，则 $X \perp \!\!\! \perp Y \mid \mathbf{Z}$。形式化地，若 $\mathbf{Z}$ 将图分割为若干连通分量，则不同分量中的变量条件独立：</p>
+<div class="formula" data-eq="(7)">$$\text{若 } \mathbf{Z} \text{ 分离 } X \text{ 与 } Y \text{ 在 } H \text{ 中}, \quad \text{则 } X \perp \!\!\! \perp Y \mid \mathbf{Z}$$</div>
+
+<h3>5.2 局部马尔可夫性</h3>
+<p>MRF 的<strong>局部马尔可夫性</strong>：给定节点的<strong>邻居集</strong> $\mathrm{Nb}(X_i)$（与 $X_i$ 直接相连的节点），$X_i$ 与图中其余节点条件独立：</p>
+<div class="formula" data-eq="(8)">$$X_i \perp \!\!\! \perp V \setminus (\mathrm{Nb}(X_i) \cup \{X_i\}) \mid \mathrm{Nb}(X_i)$$</div>
+<p>在 MRF 中，马尔可夫毯恰好等于邻居集 $\mathrm{MB}(X_i) = \mathrm{Nb}(X_i)$，这比贝叶斯网络（含共父）更简洁。</p>
+
+<h3>5.3 成对马尔可夫性</h3>
+<p><strong>成对马尔可夫性</strong>：若两个非邻接节点 $X_i$、$X_j$ 没有边直接相连，则在给定所有其他节点时条件独立：</p>
+<div class="formula" data-eq="(9)">$$\text{若 } (X_i, X_j) \notin E, \quad \text{则 } X_i \perp \!\!\! \perp X_j \mid V \setminus \{X_i, X_j\}$$</div>
+
+<div class="callout">
+<div class="callout-title">三种马尔可夫性的等价性</div>
+<p>对于正概率分布，全局、局部、成对马尔可夫性三者<em>等价</em>。Hammersley-Clifford 定理保证了：三者中任一成立 $\Leftrightarrow$ 分布可按无向图因子分解为团上势函数的乘积。</p>
+</div>
+
+<h3>5.4 BN 与 MRF 对比</h3>
+<div class="table-wrap">
+<table>
+<tr><th>特性</th><th>贝叶斯网络（BN）</th><th>马尔可夫随机场（MRF）</th></tr>
+<tr><td>图类型</td><td>有向无环图（DAG）</td><td>无向图</td></tr>
+<tr><td>边语义</td><td>因果/时序依赖</td><td>对称相关性</td></tr>
+<tr><td>因子分解</td><td>$\prod_i P(X_i \mid \mathrm{Pa}(X_i))$</td><td>$\frac{1}{Z} \prod_c \psi_c(X_c)$</td></tr>
+<tr><td>独立性判定</td><td>d-分离</td><td>图分离</td></tr>
+<tr><td>马尔可夫毯</td><td>父+子+共父</td><td>邻居集</td></tr>
+<tr><td>能否编码</td><td>汇合结构 $X \to W \leftarrow Y$</td><td>不能直接编码，需三角形化</td></tr>
+<tr><td>配分函数</td><td>无（CPD自动归一化）</td><td>需计算 $Z$</td></tr>
+</table>
+</div>
+
+<p>BN 能自然表达汇合结构（$v$-结构）但难以表达无向相关性；MRF 能自然表达对称依赖但丢失因果方向。实践中，可以通过<strong>道德化</strong>（Moralization）将 DAG 转为无向图：连接所有共父节点后去掉方向。但反之将无向图转有向图则需引入额外节点，且信息可能有损。</p>
+
+</section>
+
+<!-- ==================== 第六章 ==================== -->
+<section id="ch6">
+<h2><span class="num">6</span>因子图</h2>
+
+<h3>6.1 二分图表示</h3>
+<p><strong>因子图</strong>（Factor Graph）是统一表示 BN 和 MRF 的二分图框架。它包含两类节点：<strong>变量节点</strong>（圆圈）和<strong>因子节点</strong>（方块），边只连接变量与因子。因子图将因子分解中的每个因子显式地表示为图中的节点，使得结构更加清晰。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fg-var" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#ede9fe;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <text x="260" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">因子图结构（变量 ⬤ + 因子 ⬛）</text>
+  <!-- 变量节点（圆） -->
+  <circle cx="80" cy="100" r="24" fill="url(#fg-var)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="80" y="106" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">x₁</text>
+  <circle cx="260" cy="100" r="24" fill="url(#fg-var)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="260" y="106" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">x₂</text>
+  <circle cx="440" cy="100" r="24" fill="url(#fg-var)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="440" y="106" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">x₃</text>
+  <circle cx="170" cy="220" r="24" fill="url(#fg-var)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="170" y="226" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">x₄</text>
+  <circle cx="350" cy="220" r="24" fill="url(#fg-var)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="350" y="226" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">x₅</text>
+  <!-- 因子节点（方） -->
+  <rect x="148" y="88" width="44" height="44" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="170" y="116" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">f₁</text>
+  <rect x="328" y="88" width="44" height="44" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="350" y="116" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">f₂</text>
+  <rect x="58" y="208" width="44" height="44" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text x="80" y="236" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">f₃</text>
+  <rect x="238" y="208" width="44" height="44" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="260" y="236" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">f₄</text>
+  <rect x="418" y="208" width="44" height="44" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text x="440" y="236" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">f₅</text>
+  <!-- 边 -->
+  <line x1="104" y1="100" x2="148" y2="100" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="192" y1="100" x2="236" y2="100" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="284" y1="100" x2="328" y2="100" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="372" y1="100" x2="416" y2="100" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="80" y1="124" x2="80" y2="208" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="170" y1="132" x2="170" y2="196" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="260" y1="124" x2="260" y2="208" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="350" y1="132" x2="350" y2="196" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="440" y1="124" x2="440" y2="208" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+</svg>
+</div>
+
+<h3>6.2 因子分解</h3>
+<p>因子图将联合分布显式分解为因子的乘积，每个因子节点 $f_a$ 对应一个势函数：</p>
+<div class="formula" data-eq="(10)">$$P(\mathbf{x}) = \prod_{a} f_a(\mathbf{x}_a)$$</div>
+<p>其中 $\mathbf{x}_a$ 是因子 $f_a$ 所连接的变量子集。因子图的二分结构清晰地将"变量"与"局部函数"分离，是和积算法（Sum-Product）的天然载体。</p>
+
+<h3>6.3 从 BN / MRF 到因子图</h3>
+<ul>
+  <li><strong>BN → 因子图</strong>：每个 CPD $P(X_i \mid \mathrm{Pa}(X_i))$ 对应一个因子节点 $f_i$，连接 $X_i$ 及其所有父节点。</li>
+  <li><strong>MRF → 因子图</strong>：每个极大团的势函数 $\psi_c(X_c)$ 对应一个因子节点 $f_c$，连接团中所有变量。</li>
+</ul>
+
+<div class="callout success">
+<div class="callout-title">因子图的优势</div>
+<p>因子图是 BN 和 MRF 的统一表示。更细粒度的因子分解（将大团分解为多个小因子）在保持分布不变的同时减少冗余计算。和积信念传播算法在因子图上的消息传递规则最自然、最简洁。</p>
+</div>
+
+</section>
+
+<!-- ==================== 第七章 ==================== -->
+<section id="ch7">
+<h2><span class="num">7</span>精确推断-变量消除法</h2>
+
+<h3>7.1 推断问题</h3>
+<p><strong>推断</strong>（Inference）是在给定 PGM 后计算概率查询的过程。最基本的形式是<strong>边缘概率查询</strong>：给定证据 $\mathbf{e}$，查询变量集 $\mathbf{Y}$ 的后验边缘分布：</p>
+<div class="formula" data-eq="(11)">$$P(\mathbf{Y} \mid \mathbf{e}) = \frac{P(\mathbf{Y}, \mathbf{e})}{P(\mathbf{e})} = \frac{\sum_{\mathbf{Z}} P(\mathbf{Y}, \mathbf{Z}, \mathbf{e})}{\sum_{\mathbf{Y}, \mathbf{Z}} P(\mathbf{Y}, \mathbf{Z}, \mathbf{e})}$$</div>
+<p>其中 $\mathbf{Z}$ 为非查询非证据变量（需被消除的"隐藏变量"）。分子分母都需要对所有隐藏变量求和，这是推断复杂度的来源。</p>
+
+<h3>7.2 变量消除算法</h3>
+<p><strong>变量消除法</strong>（Variable Elimination, VE）通过逐步消除（求和消除）隐藏变量来计算边缘分布。核心思想是利用因子分解，每次只将与当前变量相关的因子相乘并求和，生成新的中间因子，避免直接展开整张联合分布表。</p>
+
+<p>VE 算法步骤如下：</p>
+<ol>
+  <li>初始化因子集 $\Phi = \{f_1, \dots, f_m\}$（根据证据证据化后）。</li>
+  <li>按消除顺序 $\pi$ 逐个消除变量 $Z$：
+    <ul>
+      <li>收集所有包含 $Z$ 的因子 $\Phi_Z = \{\phi \in \Phi : Z \in \mathrm{Scope}(\phi)\}$。</li>
+      <li>将 $\Phi_Z$ 中因子相乘：$\tau = \prod_{\phi \in \Phi_Z} \phi$。</li>
+      <li>对 $Z$ 求和消除：$\tau' = \sum_Z \tau$。</li>
+      <li>更新因子集：$\Phi = (\Phi \setminus \Phi_Z) \cup \{\tau'\}$。</li>
+    </ul>
+  </li>
+  <li>最后 $\Phi$ 中剩余因子的乘积即为查询结果。</li>
+</ol>
+
+<h3>7.3 消除顺序与复杂度</h3>
+<p>VE 的计算复杂度高度依赖<strong>消除顺序</strong>（Elimination Ordering）。消除变量 $Z$ 时，新因子 $\tau$ 的scope是所有含 $Z$ 因子的scope之并集。该并集的大小决定计算代价。</p>
+
+<p>定义<strong>诱导宽度</strong>（Induced Width）$w$：在给定消除顺序下，消除过程中产生的最大因子scope大小减 1。VE 的时间复杂度为：</p>
+<div class="formula" data-eq="(12)">$$T_{\text{VE}} = O\left(n \cdot r^{w+1}\right)$$</div>
+<p>其中 $n$ 为变量数，$r$ 为变量取值数，$w$ 为诱导宽度。寻找最优消除顺序使 $w$ 最小化是 NP-hard 问题。启发式策略包括<strong>最小缺失宽度</strong>（Min-Fill）和<strong>最小度</strong>（Min-Degree）。</p>
+
+<div class="callout warn">
+<div class="callout-title">复杂度本质</div>
+<p>精确推断在一般图上是 NP-hard。但对于<strong>树结构图</strong>（单连通图），诱导宽度 $w = 1$，VE 退化为线性复杂度 $O(n \cdot r^2)$，这正是信念传播高效的基础。</p>
+</div>
+
+</section>
+
+<!-- ==================== 第八章 ==================== -->
+<section id="ch8">
+<h2><span class="num">8</span>精确推断-信念传播</h2>
+
+<h3>8.1 和积消息传递</h3>
+<p><strong>信念传播</strong>（Belief Propagation, BP）又称<strong>和积算法</strong>（Sum-Product Algorithm），在因子图上通过消息传递实现高效推断。每个因子节点和变量节点之间沿边交换"消息"，消息编码了从一侧子图传来的边缘概率信息。</p>
+
+<p>在因子图上，变量节点 $x_i$ 向因子节点 $f_a$ 发送消息：</p>
+<div class="formula" data-eq="(13)">$$m_{i \to a}(x_i) = \prod_{b \in \mathrm{Nb}(i) \setminus a} m_{b \to i}(x_i)$$</div>
+<p>因子节点 $f_a$ 向变量节点 $x_i$ 发送消息：</p>
+<div class="formula" data-eq="(14)">$$m_{a \to i}(x_i) = \sum_{\mathbf{x}_a \setminus x_i} f_a(\mathbf{x}_a) \prod_{j \in \mathrm{Nb}(a) \setminus i} m_{j \to a}(x_j)$$</div>
+<p>其中 $\mathrm{Nb}(i)$ 为 $x_i$ 的邻居因子集，$\mathrm{Nb}(a)$ 为 $f_a$ 的邻居变量集。变量节点的信念（边缘概率）为所有入消息的乘积归一化：</p>
+<div class="formula" data-eq="(15)">$$b(x_i) \propto \prod_{a \in \mathrm{Nb}(i)} m_{a \to i}(x_i)$$</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bp-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#ede9fe;stop-opacity:1"/>
+    </linearGradient>
+    <marker id="bp-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+  </defs>
+  <text x="300" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">信念传播消息传递流程</text>
+  <!-- 变量节点 -->
+  <circle cx="100" cy="80" r="22" fill="url(#bp-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="100" y="86" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">x₁</text>
+  <circle cx="300" cy="80" r="22" fill="url(#bp-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="300" y="86" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">x₂</text>
+  <circle cx="500" cy="80" r="22" fill="url(#bp-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="500" y="86" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">x₃</text>
+  <circle cx="200" cy="220" r="22" fill="url(#bp-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="200" y="226" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">x₄</text>
+  <circle cx="400" cy="220" r="22" fill="url(#bp-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="400" y="226" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">x₅</text>
+  <!-- 因子节点 -->
+  <rect x="178" y="68" width="44" height="24" rx="3" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="200" y="85" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">f_a</text>
+  <rect x="378" y="68" width="44" height="24" rx="3" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="400" y="85" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">f_b</text>
+  <rect x="278" y="208" width="44" height="24" rx="3" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="300" y="225" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">f_c</text>
+  <!-- 消息箭头 -->
+  <line x1="122" y1="75" x2="176" y2="75" stroke="#2563eb" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <text x="150" y="68" font-size="10" fill="#2563eb">m₁→ₐ</text>
+  <line x1="224" y1="75" x2="278" y2="75" stroke="#2563eb" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <text x="250" y="68" font-size="10" fill="#2563eb">mₐ→₂</text>
+  <line x1="322" y1="75" x2="376" y2="75" stroke="#2563eb" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <text x="350" y="68" font-size="10" fill="#2563eb">m₂→ᵦ</text>
+  <line x1="424" y1="75" x2="478" y2="75" stroke="#2563eb" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <text x="450" y="68" font-size="10" fill="#2563eb">mᵦ→₃</text>
+  <line x1="200" y1="92" x2="200" y2="198" stroke="#7c3aed" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <line x1="400" y1="92" x2="400" y2="198" stroke="#7c3aed" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <line x1="222" y1="220" x2="278" y2="220" stroke="#7c3aed" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <line x1="322" y1="220" x2="378" y2="220" stroke="#7c3aed" stroke-width="2" marker-end="url(#bp-arr)" class="flow-line"/>
+  <text x="300" y="165" text-anchor="middle" font-size="11" fill="#7c3aed">迭代直至收敛</text>
+</svg>
+</div>
+
+<h3>8.2 树结构推断</h3>
+<p>当因子图为<strong>树结构</strong>（无环连通图）时，BP 在两轮消息传递后精确收敛。第一轮从叶节点向根节点传递（<strong>收集</strong>阶段），第二轮从根节点向叶节点传递（<strong>分发</strong>阶段），每个变量节点的最终信念即为精确边缘概率。</p>
+
+<p>对于含有环的图，标准 BP 不保证收敛，但实践中<strong>环状信念传播</strong>（Loopy BP）仍常被用作近似推断方法——通过迭代传递消息直至收敛或达到最大迭代次数。Loopy BP 在 LDPC 解码、图像分割等任务中取得了优异的实证效果。</p>
+
+<h3>8.3 最大积信念传播</h3>
+<p><strong>最大积 BP</strong>（Max-Product BP）将和积 BP 中的求和 $\sum$ 替换为取最大 $\max$，用于求解<strong>最大后验概率（MAP）</strong>问题——寻找最可能的变量赋值 $\mathbf{x}^* = \arg\max_{\mathbf{x}} P(\mathbf{x} \mid \mathbf{e})$：</p>
+<div class="formula" data-eq="(16)">$$m_{a \to i}(x_i) = \max_{\mathbf{x}_a \setminus x_i} f_a(\mathbf{x}_a) \prod_{j \in \mathrm{Nb}(a) \setminus i} m_{j \to a}(x_j)$$</div>
+<p>最大积 BP 在树结构图上可在两轮消息传递中精确求解 MAP。对于一般图，可使用<strong>连接树（Junction Tree）</strong>算法：通过三角化、寻找极大团、构建连接树，将任意图转化为树结构的团图，从而实现精确推断，但代价是团的大小可能很大。</p>
+
+</section>
+
+<!-- ==================== 第九章 ==================== -->
+<section id="ch9">
+<h2><span class="num">9</span>近似推断-采样</h2>
+
+<h3>9.1 蒙特卡洛方法</h3>
+<p><strong>蒙特卡洛方法</strong>（Monte Carlo Methods）通过从目标分布中采样来近似计算期望、边缘概率等统计量。给定分布 $P(X)$，期望 $\mathbb{E}_{P}[f(X)]$ 可通过 $N$ 个样本 $\{x^{(s)}\}_{s=1}^{N} \sim P(X)$ 的经验平均来估计：</p>
+<div class="formula" data-eq="(17)">$$\mathbb{E}_{P}[f(X)] \approx \hat{\mu}_N = \frac{1}{N} \sum_{s=1}^{N} f(x^{(s)})$$</div>
+<p>由大数定律，$\hat{\mu}_N \xrightarrow{a.s.} \mathbb{E}_{P}[f(X)]$，收敛速度为 $O(1/\sqrt{N})$。蒙特卡洛方法的优势在于估计精度与变量维度无关——在高维空间中比数值积分远为高效。</p>
+
+<h3>9.2 吉布斯采样</h3>
+<p><strong>吉布斯采样</strong>（Gibbs Sampling）是 MCMC 的特例，适用于可以从完整条件分布采样的场景。在每一步中，固定所有其他变量，仅从单个变量的<strong>完整条件分布</strong>中采样：</p>
+<div class="formula" data-eq="(18)">$$x_i^{(t+1)} \sim P\left(X_i \mid X_{-i}^{(t)}\right) = P\left(X_i \mid \mathrm{MB}(X_i)\right)$$</div>
+<p>其中 $X_{-i}$ 表示除 $X_i$ 外的所有变量。关键优势：在 PGM 中，完整条件分布只依赖于<strong>马尔可夫毯</strong>，不需要计算配分函数 $Z$（在条件分布中 $Z$ 被消去）。吉布斯采样在贝叶斯网络中特别自然——每个节点的条件分布即为 CPD。</p>
+
+<h3>9.3 MCMC 与 Metropolis-Hastings</h3>
+<p><strong>马尔可夫链蒙特卡洛</strong>（MCMC）通过构造一个以目标分布为平稳分布的马尔可夫链来采样。<strong>Metropolis-Hastings（MH）算法</strong>是最通用的 MCMC 方法：</p>
+<ol>
+  <li>从当前状态 $x^{(t)}$ 出发，根据提议分布 $q(x' \mid x^{(t)})$ 生成候选 $x'$。</li>
+  <li>计算接受概率：
+    $\alpha = \min\left(1, \frac{P(x') q(x^{(t)} \mid x')}{P(x^{(t)}) q(x' \mid x^{(t)})}\right)$</li>
+  <li>以概率 $\alpha$ 接受 $x^{(t+1)} = x'$，否则拒绝 $x^{(t+1)} = x^{(t)}$。</li>
+</ol>
+
+<p>MH 的优势在于只需要目标分布的<strong>未归一化形式</strong>（不需要 $Z$），因为 $Z$ 在接受比的分子分母中消去。这使得 MH 可直接应用于 MRF 采样。吉布斯采样可视为提议分布为完整条件分布、接受概率恒为 1 的 MH 特例。</p>
+
+<div class="callout">
+<div class="callout-title">MCMC 的关键考量</div>
+<p><strong>收敛诊断</strong>（Burn-in、Gelman-Rubin $\hat{R}$）、<strong>自相关</strong>（Effective Sample Size）、<strong>混合速度</strong>是 MCMC 实践的核心问题。Burn-in 期丢弃初始样本以消除初始值影响；高自相关意味着有效样本量远小于实际样本量，需要更长链或并行链来获得可靠估计。</p>
+</div>
+
+</section>
+
+<!-- ==================== 第十章 ==================== -->
+<section id="ch10">
+<h2><span class="num">10</span>近似推断-变分推断</h2>
+
+<h3>10.1 变分推断框架</h3>
+<p><strong>变分推断</strong>（Variational Inference, VI）将推断问题转化为<strong>优化问题</strong>：用参数化的简单分布族 $q(Z; \phi)$ 逼近真实后验 $P(Z \mid X)$，通过最小化 KL 散度来优化变分参数 $\phi$：</p>
+<div class="formula" data-eq="(19)">$$q^*(Z) = \arg\min_{q \in \mathcal{Q}} \mathrm{KL}\left(q(Z) \,\|\, P(Z \mid X)\right)$$</div>
+<p>由于 $P(Z \mid X)$ 未知（含配分函数），直接优化 KL 散度不可行。等价地，最大化<strong>证据下界</strong>（Evidence Lower Bound, ELBO）：</p>
+<div class="formula" data-eq="(20)">$$\log P(X) \geq \mathcal{L}(\phi) = \mathbb{E}_{q(Z;\phi)}\left[\log P(X, Z)\right] - \mathbb{E}_{q(Z;\phi)}\left[\log q(Z; \phi)\right]$$</div>
+<p>ELBO 与 KL 散度的关系为 $\log P(X) = \mathcal{L}(\phi) + \mathrm{KL}(q \| P(Z \mid X))$。最大化 ELBO 等价于最小化 KL 散度，差值 $\log P(X) - \mathcal{L}(\phi)$ 即 KL 散度本身，恒非负。</p>
+
+<h3>10.2 平均场近似</h3>
+<p><strong>平均场变分族</strong>（Mean-Field）假设各隐藏变量独立，将后验近似为各变量分布的乘积：</p>
+<div class="formula" data-eq="(21)">$$q(Z) = \prod_{i=1}^{m} q_i(Z_i)$$</div>
+<p>这是最简单的变分族，完全忽略变量间后验依赖。在此假设下，最优各分量分布满足<strong>坐标上升更新</strong>：</p>
+<div class="formula" data-eq="(22)">$$\log q_i^*(Z_i) = \mathbb{E}_{q_{-i}}\left[\log P(X, Z)\right] + \text{const}$$</div>
+<p>其中 $q_{-i} = \prod_{j \neq i} q_j$。各 $q_i$ 的更新依赖于其他分量的期望，需要迭代直至收敛（坐标上升法，CAVI）。</p>
+
+<h3>10.3 坐标上升变分推断（CAVI）</h3>
+<p><strong>CAVI</strong>（Coordinate Ascent Variational Inference）是平均场 VI 的标准算法：</p>
+<ol>
+  <li>初始化各变分分量 $q_i$ 的参数。</li>
+  <li>循环直至收敛：对每个 $i$，按公式(22)更新 $q_i$（固定其他 $q_j$）。</li>
+  <li>每轮计算 ELBO，监测收敛。</li>
+</ol>
+<p>CAVI 类似 EM 的交替优化：每步提升 ELBO，保证收敛到局部最优。但平均场假设可能导致低估后验不确定性——真实后验中相关的变量被强制独立。</p>
+
+<h3>10.4 随机变分推断（SVI）</h3>
+<p><strong>随机变分推断</strong>（Stochastic Variational Inference, SVI）将自然梯度上升与随机采样结合，使用数据子集（mini-batch）估计 ELBO 梯度，适用于大规模数据集。SVI 是变分自编码器（VAE）等深度生成模型的基础——通过重参数化技巧（Reparameterization Trick）使 ELBO 梯度可通过反向传播计算。</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>推断方法</th><th>类型</th><th>原理</th><th>优缺点</th></tr>
+<tr><td>变量消除（VE）</td><td>精确</td><td>逐步消除隐藏变量</td><td>指数复杂度；依赖消除顺序</td></tr>
+<tr><td>信念传播（BP）</td><td>精确/近似</td><td>因子图消息传递</td><td>树结构精确；环状近似</td></tr>
+<tr><td>吉布斯采样</td><td>近似（MCMC）</td><td>从完整条件分布采样</td><td>渐近精确；收敛慢</td></tr>
+<tr><td>MH 采样</td><td>近似（MCMC）</td><td>提议-接受/拒绝</td><td>通用性强；需要调提议分布</td></tr>
+<tr><td>变分推断（VI）</td><td>近似（优化）</td><td>最小化 KL 散度</td><td>快速；可能低估不确定性</td></tr>
+<tr><td>SVI</td><td>近似（优化）</td><td>随机梯度 + mini-batch</td><td>可扩展大数据；需可微</td></tr>
+</table>
+</div>
+
+</section>
+
+<!-- ==================== 第十一章 ==================== -->
+<section id="ch11">
+<h2><span class="num">11</span>PGM参数学习</h2>
+
+<h3>11.1 最大似然估计（MLE）</h3>
+<p><strong>最大似然估计</strong>选择使观测数据似然最大的参数值。给定数据集 $\mathcal{D} = \{x^{(1)}, \dots, x^{(N)}\}$，MLE 最大化对数似然：</p>
+<div class="formula" data-eq="(23)">$$\hat{\theta}_{\text{MLE}} = \arg\max_{\theta} \sum_{n=1}^{N} \log P(x^{(n)}; \theta)$$</div>
+<p>对于贝叶斯网络，若结构已知且数据完整，各 CPD 参数可独立估计——MLE 对每个条件概率表条目退化为计数比例 $\hat\theta_{x_i \mid \mathrm{pa}} = \frac{N_{x_i, \mathrm{pa}}}{N_{\mathrm{pa}}}$，其中 $N$ 为对应取值的计数。对于 MRF，MLE 需要计算配分函数 $Z(\theta)$ 的梯度，涉及推断子例程，通常使用<strong>伪似然</strong>（Pseudo-Likelihood）替代。</p>
+
+<h3>11.2 MAP 估计与贝叶斯学习</h3>
+<p><strong>MAP 估计</strong>引入先验分布 $P(\theta)$，选择后验最大的参数：</p>
+<div class="formula" data-eq="(24)">$$\hat{\theta}_{\text{MAP}} = \arg\max_{\theta} \left[\sum_{n=1}^{N} \log P(x^{(n)} \mid \theta) + \log P(\theta)\right]$$</div>
+<p>MAP 是点估计，等价于带正则化的 MLE。<strong>贝叶斯学习</strong>则更进一步——不求点估计，而是对参数做完整贝叶斯推断，计算后验分布 $P(\theta \mid \mathcal{D}) \propto P(\mathcal{D} \mid \theta) P(\theta)$，再对参数积分做预测 $P(x_{\text{new}} \mid \mathcal{D}) = \int P(x_{\text{new}} \mid \theta) P(\theta \mid \mathcal{D}) d\theta$。贝叶斯学习可量化参数不确定性，但计算复杂度更高。</p>
+
+<h3>11.3 EM 算法</h3>
+<p><strong>EM 算法</strong>（Expectation-Maximization）用于含隐藏变量的参数学习，交替执行两步：</p>
+<ul>
+  <li><strong>E 步</strong>：给定当前参数 $\theta^{(t)}$，计算隐藏变量的后验分布 $P(Z \mid X, \theta^{(t)})$，并求期望完全数据对数似然 $Q(\theta, \theta^{(t)}) = \mathbb{E}_{Z \sim P(Z \mid X, \theta^{(t)})}[\log P(X, Z \mid \theta)]$。</li>
+  <li><strong>M 步</strong>：最大化 $Q$ 更新参数 $\theta^{(t+1)} = \arg\max_\theta Q(\theta, \theta^{(t)})$。</li>
+</ul>
+<p>EM 保证对数似然单调递增（$\log P(X \mid \theta^{(t+1)}) \geq \log P(X \mid \theta^{(t)})$），收敛到局部最优。EM 与 VI 的区别在于：EM 的 E 步做精确推断（或近似推断），M 步做点估计；VI 则同时对参数和隐变量做变分近似。</p>
+
+<h3>11.4 结构学习</h3>
+<p><strong>结构学习</strong>从数据中推断图结构本身，比参数学习复杂得多。主要方法包括：</p>
+<ul>
+  <li><strong>基于约束的方法</strong>（Constraint-Based）：通过条件独立性检验构建图结构。PC 算法逐步删除边，用统计检验判断独立性。</li>
+  <li><strong>基于评分的方法</strong>（Score-Based）：定义结构评分（如 BIC、BDeu），搜索最优结构。由于搜索空间为超指数，常用启发式搜索（贪心、爬山、 taboo 搜索）。</li>
+  <li><strong>混合方法</strong>：先用约束方法缩小候选集，再用评分方法精细化。</li>
+</ul>
+
+<div class="callout warn">
+<div class="callout-title">结构学习的挑战</div>
+<p>结构学习是 NP-hard 问题。DAG 的搜索空间为超指数级 $O(n! \cdot 2^{\binom{n}{2}})$。此外，马尔可夫等价类问题（不同 DAG 可编码相同独立性）使得因果方向在某些情况下不可辨识——只有汇合结构（$v$-结构）能确定方向。</p>
+</div>
+
+</section>
+
+<!-- ==================== 第十二章 ==================== -->
+<section id="ch12">
+<h2><span class="num">12</span>Python代码实践</h2>
+
+<h3>12.1 构建贝叶斯网络</h3>
+<div class="code-block"><div class="code-header">bayesian_network.py</div><pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+
+<span class="kw">class</span> <span class="cls">BayesianNetwork</span>:
+    <span class="str">""</span><span class="str">"离散贝叶斯网络：DAG + 条件概率表"</span><span class="str">""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>):
+        <span class="kw">self</span>.nodes = []
+        <span class="kw">self</span>.parents = <span class="fn">defaultdict</span>(list)
+        <span class="kw">self</span>.cpts = {}
+
+    <span class="kw">def</span> <span class="fn">add_node</span>(<span class="kw">self</span>, name, parents=<span class="kw"><span class="cls">None</span></span>, cpt=<span class="kw"><span class="cls">None</span></span>):
+        <span class="kw">self</span>.nodes.<span class="fn">append</span>(name)
+        <span class="kw">self</span>.parents[name] = parents <span class="kw">or</span> []
+        <span class="kw">self</span>.cpts[name] = cpt
+
+    <span class="kw">def</span> <span class="fn">joint_probability</span>(<span class="kw">self</span>, assignment):
+        <span class="str">""</span><span class="str">"计算给定赋值的联合概率"</span><span class="str">""</span>
+        prob = <span class="num">1.0</span>
+        <span class="kw">for</span> node <span class="kw">in</span> <span class="kw">self</span>.nodes:
+            parent_vals = <span class="fn">tuple</span>(assignment[p] <span class="kw">for</span> p <span class="kw">in</span> <span class="kw">self</span>.parents[node])
+            key = (assignment[node],) + parent_vals
+            prob *= <span class="kw">self</span>.cpts[node].<span class="fn">get</span>(key, <span class="num">0.0</span>)
+        <span class="kw">return</span> prob
+
+<span class="com"># 示例：D → T → S 简单链式网络</span>
+bn = <span class="cls">BayesianNetwork</span>()
+bn.<span class="fn">add_node</span>(<span class="str">"D"</span>, parents=[], cpt={(<span class="str">"Y"</span>,): <span class="num">0.01</span>, (<span class="str">"N"</span>,): <span class="num">0.99</span>})
+bn.<span class="fn">add_node</span>(<span class="str">"T"</span>, parents=[<span class="str">"D"</span>], cpt={
+    (<span class="str">"Y"</span>, <span class="str">"Y"</span>): <span class="num">0.9</span>, (<span class="str">"N"</span>, <span class="str">"Y"</span>): <span class="num">0.1</span>,
+    (<span class="str">"Y"</span>, <span class="str">"N"</span>): <span class="num">0.05</span>, (<span class="str">"N"</span>, <span class="str">"N"</span>): <span class="num">0.95</span>
+})
+bn.<span class="fn">add_node</span>(<span class="str">"S"</span>, parents=[<span class="str">"T"</span>], cpt={
+    (<span class="str">"Y"</span>, <span class="str">"Y"</span>): <span class="num">0.8</span>, (<span class="str">"N"</span>, <span class="str">"Y"</span>): <span class="num">0.2</span>,
+    (<span class="str">"Y"</span>, <span class="str">"N"</span>): <span class="num">0.1</span>, (<span class="str">"N"</span>, <span class="str">"N"</span>): <span class="num">0.9</span>
+})
+
+assignment = {<span class="str">"D"</span>: <span class="str">"Y"</span>, <span class="str">"T"</span>: <span class="str">"Y"</span>, <span class="str">"S"</span>: <span class="str">"Y"</span>}
+<span class="fn">print</span>(<span class="str">"Joint P(D=Y,T=Y,S=Y):"</span>, bn.<span class="fn">joint_probability</span>(assignment))
+</pre></div>
+
+<h3>12.2 变量消除法推断</h3>
+<div class="code-block"><div class="code-header">variable_elimination.py</div><pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> itertools <span class="kw">import</span> product
+
+<span class="kw">class</span> <span class="cls">Factor</span>:
+    <span class="str">""</span><span class="str">"因子：变量集 + 势函数表"</span><span class="str">""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, variables, table):
+        <span class="kw">self</span>.variables = <span class="fn">list</span>(variables)
+        <span class="kw">self</span>.table = np.<span class="fn">array</span>(table)
+
+    <span class="kw">def</span> <span class="fn">multiply</span>(<span class="kw">self</span>, other):
+        <span class="str">""</span><span class="str">"两个因子相乘"</span><span class="str">""</span>
+        vars_new = <span class="kw">self</span>.variables + [v <span class="kw">for</span> v <span class="kw">in</span> other.variables <span class="kw">if</span> v <span class="kw">not</span> <span class="kw">in</span> <span class="kw">self</span>.variables]
+        shape_new = [<span class="num">2</span>] * <span class="fn">len</span>(vars_new)
+        result = np.<span class="fn">zeros</span>(shape_new)
+        <span class="kw">for</span> idx <span class="kw">in</span> <span class="fn">product</span>(*[<span class="fn">range</span>(<span class="num">2</span>)] * <span class="fn">len</span>(vars_new)):
+            assign = <span class="fn">dict</span>(<span class="fn">zip</span>(vars_new, idx))
+            i1 = <span class="fn">tuple</span>(assign[v] <span class="kw">for</span> v <span class="kw">in</span> <span class="kw">self</span>.variables)
+            i2 = <span class="fn">tuple</span>(assign[v] <span class="kw">for</span> v <span class="kw">in</span> other.variables)
+            result[idx] = <span class="kw">self</span>.table[i1] * other.table[i2]
+        <span class="kw">return</span> <span class="cls">Factor</span>(vars_new, result)
+
+    <span class="kw">def</span> <span class="fn">sum_out</span>(<span class="kw">self</span>, var):
+        <span class="str">""</span><span class="str">"消除变量 var（求和边缘化）"</span><span class="str">""</span>
+        axis = <span class="kw">self</span>.variables.<span class="fn">index</span>(var)
+        new_vars = [v <span class="kw">for</span> v <span class="kw">in</span> <span class="kw">self</span>.variables <span class="kw">if</span> v != var]
+        <span class="kw">return</span> <span class="cls">Factor</span>(new_vars, np.<span class="fn">sum</span>(<span class="kw">self</span>.table, axis=axis))
+
+<span class="kw">def</span> <span class="fn">variable_elimination</span>(factors, query, evidence, elim_order):
+    <span class="str">""</span><span class="str">"变量消除法计算 P(query | evidence)"</span><span class="str">""</span>
+    <span class="com"># 证据化</span>
+    <span class="kw">for</span> i, f <span class="kw">in</span> <span class="fn">enumerate</span>(factors):
+        <span class="kw">for</span> var, val <span class="kw">in</span> evidence.<span class="fn">items</span>():
+            <span class="kw">if</span> var <span class="kw">in</span> f.variables:
+                axis = f.variables.<span class="fn">index</span>(var)
+                factors[i] = <span class="cls">Factor</span>(
+                    [v <span class="kw">for</span> v <span class="kw">in</span> f.variables <span class="kw">if</span> v != var],
+                    np.<span class="fn">take</span>(f.table, val, axis=axis)
+                )
+    <span class="com"># 逐步消除</span>
+    <span class="kw">for</span> var <span class="kw">in</span> elim_order:
+        relevant = [f <span class="kw">for</span> f <span class="kw">in</span> factors <span class="kw">if</span> var <span class="kw">in</span> f.variables]
+        factors = [f <span class="kw">for</span> f <span class="kw">in</span> factors <span class="kw">if</span> var <span class="kw">not</span> <span class="kw">in</span> f.variables]
+        <span class="kw">if</span> relevant:
+            product_f = relevant[<span class="num">0</span>]
+            <span class="kw">for</span> f <span class="kw">in</span> relevant[<span class="num">1</span>:]:
+                product_f = product_f.<span class="fn">multiply</span>(f)
+            factors.<span class="fn">append</span>(product_f.<span class="fn">sum_out</span>(var))
+    <span class="com"># 剩余因子相乘</span>
+    result = factors[<span class="num">0</span>]
+    <span class="kw">for</span> f <span class="kw">in</span> factors[<span class="num">1</span>:]:
+        result = result.<span class="fn">multiply</span>(f)
+    <span class="com"># 归一化</span>
+    result.table /= result.table.<span class="fn">sum</span>()
+    <span class="kw">return</span> result
+
+<span class="com"># 示例因子</span>
+f1 = <span class="cls">Factor</span>([<span class="str">"A"</span>], [<span class="num">0.3</span>, <span class="num">0.7</span>])
+f2 = <span class="cls">Factor</span>([<span class="str">"A"</span>, <span class="str">"B"</span>], [[<span class="num">0.1</span>, <span class="num">0.9</span>], [<span class="num">0.8</span>, <span class="num">0.2</span>]])
+result = <span class="fn">variable_elimination</span>([f1, f2], [<span class="str">"B"</span>], {}, [<span class="str">"A"</span>])
+<span class="fn">print</span>(<span class="str">"P(B):"</span>, result.table)
+</pre></div>
+
+<h3>12.3 吉布斯采样</h3>
+<div class="code-block"><div class="code-header">gibbs_sampling.py</div><pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+np.random.<span class="fn">seed</span>(<span class="num">42</span>)
+
+<span class="kw">def</span> <span class="fn">gibbs_sampling</span>(bn, num_samples=<span class="num">10000</span>, burn_in=<span class="num">1000</span>):
+    <span class="str">""</span><span class="str">"吉布斯采样：从贝叶斯网络后验中采样"</span><span class="str">""</span>
+    <span class="com"># 初始化：随机赋值</span>
+    assignment = {node: np.random.<span class="fn">randint</span>(<span class="num">0</span>, <span class="num">2</span>) <span class="kw">for</span> node <span class="kw">in</span> bn.nodes}
+    samples = []
+
+    <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(num_samples + burn_in):
+        <span class="kw">for</span> node <span class="kw">in</span> bn.nodes:
+            <span class="com"># 计算完整条件分布 P(X_i | MB(X_i))</span>
+            probs = []
+            <span class="kw">for</span> val <span class="kw">in</span> [<span class="num">0</span>, <span class="num">1</span>]:
+                assignment[node] = val
+                p = bn.<span class="fn">joint_probability_log</span>(assignment)
+                probs.<span class="fn">append</span>(p)
+            <span class="com"># softmax 归一化</span>
+            probs = np.<span class="fn">exp</span>(np.<span class="fn">array</span>(probs) - <span class="fn">max</span>(probs))
+            probs /= probs.<span class="fn">sum</span>()
+            assignment[node] = np.random.<span class="fn">choice</span>([<span class="num">0</span>, <span class="num">1</span>], p=probs)
+
+        <span class="kw">if</span> t >= burn_in:
+            samples.<span class="fn">append</span>(<span class="fn">dict</span>(assignment))
+
+    <span class="kw">return</span> samples
+
+<span class="kw">class</span> <span class="cls">SimpleBN</span>:
+    <span class="str">""</span><span class="str">"简单二值贝叶斯网络用于演示"</span><span class="str">""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>):
+        <span class="kw">self</span>.nodes = [<span class="str">"X"</span>, <span class="str">"Y"</span>]
+        <span class="com"># P(X), P(Y|X)</span>
+        <span class="kw">self</span>.px = [<span class="num">0.4</span>, <span class="num">0.6</span>]
+        <span class="kw">self</span>.py_given_x = [[<span class="num">0.3</span>, <span class="num">0.7</span>], [<span class="num">0.8</span>, <span class="num">0.2</span>]]
+
+    <span class="kw">def</span> <span class="fn">joint_probability_log</span>(<span class="kw">self</span>, a):
+        lp = np.<span class="fn">log</span>(<span class="kw">self</span>.px[a[<span class="str">"X"</span>]])
+        lp += np.<span class="fn">log</span>(<span class="kw">self</span>.py_given_x[a[<span class="str">"X"</span>]][a[<span class="str">"Y"</span>]])
+        <span class="kw">return</span> lp
+
+bn = <span class="cls">SimpleBN</span>()
+samples = <span class="fn">gibbs_sampling</span>(bn, num_samples=<span class="num">5000</span>, burn_in=<span class="num">500</span>)
+x1_count = <span class="fn">sum</span>(s[<span class="str">"X"</span>] <span class="kw">for</span> s <span class="kw">in</span> samples) / <span class="fn">len</span>(samples)
+<span class="fn">print</span>(f<span class="str">"P(X=1) ≈ {x1_count:.4f} (理论值 0.6)"</span>)
+</pre></div>
+
+<h3>12.4 变分推断（平均场）</h3>
+<div class="code-block"><div class="code-header">variational_inference.py</div><pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">def</span> <span class="fn">mean_field_vi</span>(joint_log_prob, num_vars, num_iter=<span class="num">100</span>):
+    <span class="str">""</span><span class="str">"平均场变分推断（CAVI）"</span><span class="str">""</span>
+    <span class="com"># 初始化变分参数 q_i(x_i)</span>
+    q_params = np.<span class="fn">ones</span>((num_vars, <span class="num">2</span>)) / <span class="num">2</span>  <span class="com"># 均匀分布</span>
+
+    elbo_history = []
+    <span class="kw">for</span> iteration <span class="kw">in</span> <span class="fn">range</span>(num_iter):
+        <span class="com"># 坐标上升：逐个更新 q_i</span>
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(num_vars):
+            log_q = np.<span class="fn">zeros</span>(<span class="num">2</span>)
+            <span class="kw">for</span> xi <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>):
+                <span class="com"># E_{q_{-i}}[log P(X)]</span>
+                total_logp = <span class="num">0.0</span>
+                num_samples = <span class="num">50</span>
+                <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(num_samples):
+                    sample = np.<span class="fn">zeros</span>(num_vars, dtype=int)
+                    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(num_vars):
+                        <span class="kw">if</span> j != i:
+                            sample[j] = np.random.<span class="fn">choice</span>(<span class="num">2</span>, p=q_params[j])
+                    sample[i] = xi
+                    total_logp += <span class="fn">joint_log_prob</span>(sample)
+                log_q[xi] = total_logp / num_samples
+
+            <span class="com"># softmax 归一化</span>
+            log_q = log_q - log_q.<span class="fn">max</span>()
+            q_params[i] = np.<span class="fn">exp</span>(log_q)
+            q_params[i] /= q_params[i].<span class="fn">sum</span>()
+
+        <span class="com"># 计算 ELBO（简化估计）</span>
+        elbo = <span class="fn">sum</span>(np.<span class="fn">sum</span>(q_params[i] * np.<span class="fn">log</span>(q_params[i] + 1e-<span class="num">10</span>))
+                   <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(num_vars))
+        elbo_history.<span class="fn">append</span>(elbo)
+
+    <span class="kw">return</span> q_params, elbo_history
+
+<span class="com"># 示例：2变量 Ising 模型</span>
+<span class="kw">def</span> <span class="fn">ising_log_prob</span>(x, <span class="cls">J</span>=<span class="num">1.0</span>, h=<span class="num">0.1</span>):
+    <span class="str">""</span><span class="str">"Ising 模型 log P(x) = J*x1*x2 + h*(x1+x2)"</span><span class="str">""</span>
+    <span class="kw">return</span> <span class="cls">J</span> * x[<span class="num">0</span>] * x[<span class="num">1</span>] + h * (x[<span class="num">0</span>] + x[<span class="num">1</span>])
+
+q_params, elbo_hist = <span class="fn">mean_field_vi</span>(ising_log_prob, num_vars=<span class="num">2</span>, num_iter=<span class="num">20</span>)
+<span class="fn">print</span>(<span class="str">"变分参数 q1:"</span>, q_params[<span class="num">0</span>])
+<span class="fn">print</span>(<span class="str">"变分参数 q2:"</span>, q_params[<span class="num">1</span>])
+<span class="fn">print</span>(<span class="str">"ELBO 收敛:"</span>, elbo_hist[-<span class="num">5</span>:])
+</pre></div>
+
+<h3>12.5 马尔可夫随机场采样</h3>
+<div class="code-block"><div class="code-header">mrf_gibbs.py</div><pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+np.random.<span class="fn">seed</span>(<span class="num">42</span>)
+
+<span class="kw">class</span> <span class="cls">IsingMRF</span>:
+    <span class="str">""</span><span class="str">"二维 Ising 模型：图像去噪的经典 MRF"</span><span class="str">""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, width, height, <span class="cls">J</span>=<span class="num">1.0</span>):
+        <span class="kw">self</span>.<span class="cls">W</span>, <span class="kw">self</span>.<span class="cls">H</span> = width, height
+        <span class="kw">self</span>.<span class="cls">J</span> = <span class="cls">J</span>
+        <span class="kw">self</span>.grid = np.random.<span class="fn">choice</span>([-<span class="num">1</span>, <span class="num">1</span>], size=(height, width))
+
+    <span class="kw">def</span> <span class="fn">neighbors</span>(<span class="kw">self</span>, i, j):
+        <span class="str">""</span><span class="str">"获取四邻域邻居"</span><span class="str">""</span>
+        nbrs = []
+        <span class="kw">for</span> di, dj <span class="kw">in</span> [(-<span class="num">1</span>,<span class="num">0</span>),(<span class="num">1</span>,<span class="num">0</span>),(<span class="num">0</span>,-<span class="num">1</span>),(<span class="num">0</span>,<span class="num">1</span>)]:
+            ni, nj = i+di, j+dj
+            <span class="kw">if</span> <span class="num">0</span> <= ni < <span class="kw">self</span>.<span class="cls">H</span> <span class="kw">and</span> <span class="num">0</span> <= nj < <span class="kw">self</span>.<span class="cls">W</span>:
+                nbrs.<span class="fn">append</span>((ni, nj))
+        <span class="kw">return</span> nbrs
+
+    <span class="kw">def</span> <span class="fn">local_energy</span>(<span class="kw">self</span>, i, j):
+        <span class="str">""</span><span class="str">"局部能量 E(x_i) = -J * sum(x_i * x_neighbor)"</span><span class="str">""</span>
+        e = <span class="num">0</span>
+        <span class="kw">for</span> ni, nj <span class="kw">in</span> <span class="kw">self</span>.<span class="fn">neighbors</span>(i, j):
+            e -= <span class="kw">self</span>.<span class="cls">J</span> * <span class="kw">self</span>.grid[i, j] * <span class="kw">self</span>.grid[ni, nj]
+        <span class="kw">return</span> e
+
+    <span class="kw">def</span> <span class="fn">gibbs_step</span>(<span class="kw">self</span>):
+        <span class="str">""</span><span class="str">"一次吉布斯扫描"</span><span class="str">""</span>
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.<span class="cls">H</span>):
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.<span class="cls">W</span>):
+                <span class="com"># 计算翻转前后的能量差</span>
+                e_current = <span class="kw">self</span>.<span class="fn">local_energy</span>(i, j)
+                <span class="kw">self</span>.grid[i, j] *= -<span class="num">1</span>
+                e_flipped = <span class="kw">self</span>.<span class="fn">local_energy</span>(i, j)
+                <span class="com"># Metropolis 接受准则</span>
+                delta_e = e_flipped - e_current
+                <span class="kw">if</span> delta_e > <span class="num">0</span>:
+                    <span class="kw">self</span>.grid[i, j] *= -<span class="num">1</span>  <span class="com"># 拒绝，恢复</span>
+                <span class="kw">else</span>:
+                    <span class="kw">if</span> np.random.<span class="fn">rand</span>() > np.<span class="fn">exp</span>(-delta_e):
+                        <span class="kw">self</span>.grid[i, j] *= -<span class="num">1</span>  <span class="com"># 拒绝</span>
+
+    <span class="kw">def</span> <span class="fn">sample</span>(<span class="kw">self</span>, num_steps=<span class="num">100</span>):
+        <span class="str">""</span><span class="str">"运行吉布斯采样"</span><span class="str">""</span>
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(num_steps):
+            <span class="kw">self</span>.<span class="fn">gibbs_step</span>()
+        <span class="kw">return</span> <span class="kw">self</span>.grid.<span class="fn">copy</span>()
+
+<span class="com"># 运行 8x8 Ising 模型</span>
+ising = <span class="cls">IsingMRF</span>(<span class="num">8</span>, <span class="num">8</span>, <span class="cls">J</span>=<span class="num">1.0</span>)
+<span class="fn">print</span>(<span class="str">"初始状态:\n"</span>, ising.grid)
+final = ising.<span class="fn">sample</span>(num_steps=<span class="num">50</span>)
+<span class="fn">print</span>(<span class="str">"采样后状态（磁化强度=%.2f）:"</span> % np.<span class="fn">mean</span>(final))
+<span class="fn">print</span>(final)
+</pre></div>
+
+<h3>12.6 结构学习评分搜索</h3>
+<div class="code-block"><div class="code-header">structure_learning.py</div><pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> itertools <span class="kw">import</span> combinations
+
+<span class="kw">def</span> <span class="fn">bic_score</span>(data, node, parents):
+    <span class="str">""</span><span class="str">"BIC 评分：对数似然 - 惩罚项"</span><span class="str">""</span>
+    n_samples = data.shape[<span class="num">0</span>]
+    n_states = <span class="fn">len</span>(np.<span class="fn">unique</span>(data[:, node]))
+
+    <span class="com"># 统计计数</span>
+    <span class="kw">if</span> <span class="kw">not</span> parents:
+        counts = np.<span class="fn">bincount</span>(data[:, node], minlength=n_states)
+        log_lik = np.<span class="fn">sum</span>(counts * np.<span class="fn">log</span>(counts / n_samples + 1e-<span class="num">10</span>))
+        n_params = n_states - <span class="num">1</span>
+    <span class="kw">else</span>:
+        parent_states = [<span class="fn">len</span>(np.<span class="fn">unique</span>(data[:, p])) <span class="kw">for</span> p <span class="kw">in</span> parents]
+        n_parent_configs = <span class="fn">int</span>(np.<span class="fn">prod</span>(parent_states))
+        log_lik = <span class="num">0</span>
+        <span class="kw">for</span> config <span class="kw">in</span> <span class="fn">combinations</span>(<span class="fn">range</span>(n_parent_configs), <span class="fn">len</span>(parents)):
+            mask = np.<span class="fn">ones</span>(n_samples, dtype=bool)
+            <span class="kw">for</span> idx, p <span class="kw">in</span> <span class="fn">enumerate</span>(parents):
+                mask &= (data[:, p] == config[idx])
+            <span class="kw">if</span> mask.<span class="fn">sum</span>() > <span class="num">0</span>:
+                child_counts = np.<span class="fn">bincount</span>(data[mask, node], minlength=n_states)
+                log_lik += np.<span class="fn">sum</span>(child_counts * np.<span class="fn">log</span>(child_counts / mask.<span class="fn">sum</span>() + 1e-<span class="num">10</span>))
+        n_params = n_parent_configs * (n_states - <span class="num">1</span>)
+
+    <span class="com"># BIC = log_lik - 0.5 * log(n) * n_params</span>
+    penalty = <span class="num">0.5</span> * np.<span class="fn">log</span>(n_samples) * n_params
+    <span class="kw">return</span> log_lik - penalty
+
+<span class="kw">def</span> <span class="fn">greedy_search</span>(data, num_nodes, max_parents=<span class="num">3</span>):
+    <span class="str">""</span><span class="str">"贪心搜索：逐步添加最优父节点"</span><span class="str">""</span>
+    structure = {i: [] <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(num_nodes)}
+
+    <span class="kw">for</span> node <span class="kw">in</span> <span class="fn">range</span>(num_nodes):
+        current_score = <span class="fn">bic_score</span>(data, node, [])
+        improved = <span class="kw"><span class="cls">True</span></span>
+        <span class="kw">while</span> improved <span class="kw">and</span> <span class="fn">len</span>(structure[node]) < max_parents:
+            improved = <span class="kw"><span class="cls">False</span></span>
+            best_parent = <span class="kw"><span class="cls">None</span></span>
+            best_score = current_score
+            <span class="kw">for</span> candidate <span class="kw">in</span> <span class="fn">range</span>(num_nodes):
+                <span class="kw">if</span> candidate == node <span class="kw">or</span> candidate <span class="kw">in</span> structure[node]:
+                    <span class="kw">continue</span>
+                <span class="com"># 检查无环约束（简化：跳过已在node后代的节点）</span>
+                new_parents = structure[node] + [candidate]
+                score = <span class="fn">bic_score</span>(data, node, new_parents)
+                <span class="kw">if</span> score > best_score:
+                    best_score = score
+                    best_parent = candidate
+            <span class="kw">if</span> best_parent <span class="kw">is</span> <span class="kw">not</span> <span class="kw"><span class="cls">None</span></span>:
+                structure[node].<span class="fn">append</span>(best_parent)
+                current_score = best_score
+                improved = <span class="kw"><span class="cls">True</span></span>
+
+    <span class="kw">return</span> structure
+
+<span class="com"># 示例数据</span>
+np.random.<span class="fn">seed</span>(<span class="num">42</span>)
+data = np.random.<span class="fn">randint</span>(<span class="num">0</span>, <span class="num">2</span>, size=(<span class="num">200</span>, <span class="num">4</span>))
+structure = <span class="fn">greedy_search</span>(data, num_nodes=<span class="num">4</span>)
+<span class="fn">print</span>(<span class="str">"学到的结构（节点 → 父节点）:"</span>)
+<span class="kw">for</span> node, parents <span class="kw">in</span> structure.<span class="fn">items</span>():
+    <span class="fn">print</span>(f<span class="str">"  X{node} ← {['X'+str(p) for p in parents] if parents else '无'}"</span>)
+</pre></div>
+
+</section>
+
+<!-- ==================== 第十三章 ==================== -->
+<section id="ch13">
+<h2><span class="num">13</span>知识体系总结</h2>
+
+<h3>13.1 发展时间线</h3>
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">1985</div>
+<div class="event">Pearl 提出贝叶斯网络</div>
+<div class="desc">Judea Pearl 在《Bayesian Networks》中系统化有向图模型，奠定因果推断基础</div>
+</div>
+<div class="timeline-item">
+<div class="year">1988</div>
+<div class="event">信念传播算法形式化</div>
+<div class="desc">Pearl 提出在树结构图上的和积消息传递算法，精确推断理论基础</div>
+</div>
+<div class="timeline-item">
+<div class="year">1990</div>
+<div class="event">Hammersley-Clifford 定理正式发表</div>
+<div class="desc">确立无向图模型因子分解与马尔可夫性的等价关系</div>
+</div>
+<div class="timeline-item">
+<div class="year">1995</div>
+<div class="event">Lauritzen & Spiegelhalter 连接树算法</div>
+<div class="desc">将任意图转化为团树实现精确推断，推动医学诊断应用</div>
+</div>
+<div class="timeline-item">
+<div class="year">2003</div>
+<div class="event">Kschischang 因子图与和积算法统一框架</div>
+<div class="desc">因子图统一了 BN、MRF 和编码理论中的消息传递</div>
+</div>
+<div class="timeline-item">
+<div class="year">2006</div>
+<div class="event">Bishop《PRML》出版</div>
+<div class="desc">系统化 PGM 理论，成为机器学习领域标准教材</div>
+</div>
+<div class="timeline-item">
+<div class="year">2011</div>
+<div class="event">Wainwright & Jordan 变分推断理论</div>
+<div class="desc">《Graphical Models, Exponential Families, and Variational Inference》奠定 VI 理论</div>
+</div>
+<div class="timeline-item">
+<div class="year">2013</div>
+<div class="event">Kingma & Welling 变分自编码器（VAE）</div>
+<div class="desc">将变分推断与神经网络结合，开启深度生成模型时代</div>
+</div>
+<div class="timeline-item">
+<div class="year">2016</div>
+<div class="event">深度学习与 PGM 融合</div>
+<div class="desc">深度信念网络、概率编程语言（Stan, Pyro）桥接深度学习与概率图模型</div>
+</div>
+<div class="timeline-item">
+<div class="year">2020+</div>
+<div class="event">神经辐射场与扩散模型的概率图视角</div>
+<div class="desc">扩散模型（DDPM）从马尔可夫链视角重新理解，PGM 理论指导生成式 AI</div>
+</div>
+</div>
+
+<h3>13.2 与深度学习的关系</h3>
+<div class="svg-box">
+<svg viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="kg-grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#ede9fe;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="kg-grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d1fae5;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#ffedd5;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <text x="350" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">PGM 知识体系图</text>
+  <!-- 中心 -->
+  <ellipse cx="350" cy="180" rx="90" ry="35" fill="url(#kg-grad1)" stroke="#2563eb" stroke-width="2" class="glow-ring"/>
+  <text x="350" y="178" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">概率图模型</text>
+  <text x="350" y="195" text-anchor="middle" font-size="11" fill="#64748b">PGM 统一框架</text>
+  <!-- 表示 -->
+  <rect x="40" y="60" width="140" height="60" rx="8" fill="url(#kg-grad2)" stroke="#059669" stroke-width="1.5" class="pulse-node"/>
+  <text x="110" y="85" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">表示</text>
+  <text x="110" y="102" text-anchor="middle" font-size="11" fill="#64748b">BN · MRF · 因子图</text>
+  <!-- 推断 -->
+  <rect x="40" y="240" width="140" height="60" rx="8" fill="url(#kg-grad2)" stroke="#059669" stroke-width="1.5" class="pulse-node"/>
+  <text x="110" y="265" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">推断</text>
+  <text x="110" y="282" text-anchor="middle" font-size="11" fill="#64748b">VE · BP · MCMC · VI</text>
+  <!-- 学习 -->
+  <rect x="520" y="60" width="140" height="60" rx="8" fill="url(#kg-grad2)" stroke="#059669" stroke-width="1.5" class="pulse-node"/>
+  <text x="590" y="85" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">学习</text>
+  <text x="590" y="102" text-anchor="middle" font-size="11" fill="#64748b">MLE · MAP · EM</text>
+  <!-- 应用 -->
+  <rect x="520" y="240" width="140" height="60" rx="8" fill="url(#kg-grad2)" stroke="#059669" stroke-width="1.5" class="pulse-node"/>
+  <text x="590" y="265" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">应用</text>
+  <text x="590" y="282" text-anchor="middle" font-size="11" fill="#64748b">医疗·金融·NLP</text>
+  <!-- 深度学习 -->
+  <rect x="270" y="310" width="160" height="45" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" class="pulse-node"/>
+  <text x="350" y="332" text-anchor="middle" font-size="13" fill="#7c3aed" font-weight="700">深度学习融合</text>
+  <text x="350" y="348" text-anchor="middle" font-size="11" fill="#64748b">VAE · DDPM · 概率编程</text>
+  <!-- 连线 -->
+  <line x1="180" y1="90" x2="265" y2="165" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="180" y1="270" x2="265" y2="195" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="520" y1="90" x2="435" y2="165" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="520" y1="270" x2="435" y2="195" stroke="#64748b" stroke-width="1.5" class="flow-line"/>
+  <line x1="350" y1="215" x2="350" y2="310" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,3" class="flow-line"/>
+</svg>
+</div>
+
+<p>PGM 与深度学习的关系是互补而非替代：</p>
+<ul>
+  <li><strong>可解释性</strong>：PGM 提供显式的图结构和概率语义，深度学习的端到端训练难以提供。</li>
+  <li><strong>不确定性量化</strong>：PGM 天然提供后验概率，深度学习需要额外方法（如 MC Dropout、贝叶斯神经网络）来估计不确定性。</li>
+  <li><strong>小样本学习</strong>：PGM 可融合先验知识，在小数据场景下优于纯数据驱动的深度学习。</li>
+  <li><strong>生成模型</strong>：VAE 使用变分推断框架，DDPM（扩散模型）本质是马尔可夫链上的概率推断，两者都是 PGM 思想在深度学习中的延伸。</li>
+</ul>
+
+<h3>13.3 应用领域</h3>
+<div class="table-wrap">
+<table>
+<tr><th>领域</th><th>典型应用</th><th>所用模型</th></tr>
+<tr><td>医疗诊断</td><td>疾病推断、症状推理</td><td>贝叶斯网络、诊断系统</td></tr>
+<tr><td>自然语言处理</td><td>命名实体识别、词性标注</td><td>CRF（条件随机场）、HMM</td></tr>
+<tr><td>计算机视觉</td><td>图像分割、去噪、超分辨</td><td>MRF（Ising 模型、MRF-MAP）</td></tr>
+<tr><td>金融风控</td><td>信用评分、欺诈检测</td><td>贝叶斯网络、变分推断</td></tr>
+<tr><td>生物信息学</td><td>基因调控网络推断</td><td>贝叶斯网络结构学习</td></tr>
+<tr><td>推荐系统</td><td>协同过滤、概率矩阵分解</td><td>概率矩阵分解、LDA</td></tr>
+<tr><td>机器人与 SLAM</td><td>同时定位与建图</td><td>因子图（因子图优化）</td></tr>
+</table>
+</div>
+
+<div class="callout success">
+<div class="callout-title">一句话总结</div>
+<p><strong>表示</strong>用图编码结构（BN 有向 / MRF 无向 / 因子图统一），<strong>推断</strong>在图上计算概率（VE / BP 精确，MCMC / VI 近似），<strong>学习</strong>从数据获取模型（MLE / EM 参数，评分搜索结构）。三者交汇，构成了不确定性建模的完整框架，并与深度学习深度融合于现代 AI。</p>
+</div>
+
+</section>
+
+<!-- ==================== 参考文献 ==================== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Koller, D., & Friedman, N. (2009). <em>Probabilistic Graphical Models: Principles and Techniques</em>. MIT Press.</li>
+<li>Bishop, C. M. (2006). <em>Pattern Recognition and Machine Learning</em>. Springer.</li>
+<li>Murphy, K. P. (2022). <em>Probabilistic Machine Learning: An Introduction</em>. MIT Press.</li>
+<li>Murphy, K. P. (2023). <em>Probabilistic Machine Learning: Advanced Topics</em>. MIT Press.</li>
+<li>Pearl, J. (1988). <em>Probabilistic Reasoning in Intelligent Systems: Networks of Plausible Inference</em>. Morgan Kaufmann.</li>
+<li>Lauritzen, S. L. (1996). <em>Graphical Models</em>. Oxford University Press.</li>
+<li>Wainwright, M. J., & Jordan, M. I. (2008). <em>Graphical Models, Exponential Families, and Variational Inference</em>. Now Publishers.</li>
+<li>MacKay, D. J. C. (2003). <em>Information Theory, Inference, and Learning Algorithms</em>. Cambridge University Press.</li>
+<li>Wasserman, L. (2004). <em>All of Statistics: A Concise Course in Statistical Inference</em>. Springer.</li>
+<li>Spirtes, P., Glymour, C., & Scheines, R. (2000). <em>Causation, Prediction, and Search</em> (2nd ed.). MIT Press.</li>
+<li>Kingma, D. P., & Welling, M. (2014). Auto-Encoding Variational Bayes. <em>ICLR 2014</em>. arXiv:1312.6114.</li>
+<li>Kschischang, F. R., Frey, B. J., & Loeliger, H.-A. (2001). Factor Graphs and the Sum-Product Algorithm. <em>IEEE Transactions on Information Theory</em>, 47(2), 498–519.</li>
+<li>Andrieu, C., de Freitas, N., Doucet, A., & Jordan, M. I. (2003). An Introduction to MCMC for Machine Learning. <em>Machine Learning</em>, 50(1–2), 5–43.</li>
+<li>Hoffman, M. D., Blei, D. M., Wang, C., & Paisley, J. (2013). Stochastic Variational Inference. <em>JMLR</em>, 14(1), 1303–1347.</li>
+<li>Sutton, C., & McCallum, A. (2012). An Introduction to Conditional Random Fields. <em>Foundations and Trends in Machine Learning</em>, 4(4), 267–373.</li>
+</ol>
+</section>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+</main>
+<script>
+(function() {
+  var sidebarLinks = document.querySelectorAll('#sidebar nav a');
+  var sections = [];
+  sidebarLinks.forEach(function(link) {
+    var target = document.querySelector(link.getAttribute('href'));
+    if (target) sections.push({ link: link, el: target });
+  });
+  function highlight() {
+    var scrollY = window.scrollY + 100;
+    var current = sections[0];
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].el.offsetTop <= scrollY) current = sections[i];
+    }
+    if (current) {
+      sidebarLinks.forEach(function(l) { l.classList.remove('active'); });
+      current.link.classList.add('active');
+    }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

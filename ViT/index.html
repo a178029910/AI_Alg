@@ -1,0 +1,1282 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViT 模型详解 — Vision Transformer 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ 目录</div>
+<aside id="sidebar">
+  <h2>ViT 模型详解</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、ViT 的诞生与动机</a>
+    <a href="#ch2">二、图像分块与线性嵌入</a>
+    <a href="#ch3">三、位置编码</a>
+    <a href="#ch4">四、多头自注意力</a>
+    <a href="#ch5">五、Transformer Encoder</a>
+    <a href="#ch6">六、分类头与训练策略</a>
+    <a href="#ch7">七、ViT 的数学描述</a>
+    <a href="#ch8">八、ViT vs CNN：归纳偏置之争</a>
+    <a href="#ch9">九、数据规模与性能 scaling</a>
+    <a href="#ch10">十、应用场景与变体</a>
+    <a href="#ch11">十一、PyTorch 代码实现</a>
+    <a href="#ch12">十二、Swin Transformer 与窗口注意力</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>ViT 模型详解</h1>
+  <div class="subtitle">Vision Transformer: An Image is Worth 16×16 Words</div>
+  <div class="tagline">视觉理解的范式转移 · 2020 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">10+ SVG 结构图</span>
+    <span class="badge">6 段 PyTorch 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">1</span>ViT 的诞生与动机</h2>
+
+<h3>1.1 从 NLP 到 CV：Transformer 的跨界</h3>
+<p>2017 年 Transformer 在 NLP 领域取得革命性成功后，研究者一直在探索将其应用于计算机视觉。早期尝试如 Vision Transformer 的非正式版本需要 CNN 特征提取器作为前端，并非真正的"纯 Transformer 视觉模型"。2020 年，Google Research 的 Dosovitskiy 等人在论文 <em>"An Image is Worth 16×16 Words"</em> 中提出了真正的纯 Transformer 视觉架构——ViT，彻底抛弃卷积，仅用标准 Transformer Encoder 处理图像。</p>
+
+<h3>1.2 核心思想：图像即序列</h3>
+<p>ViT 的核心洞察极其简洁：<strong>将图像切割为固定大小的图块（patch），将每个图块视为一个"视觉单词"</strong>，然后直接送入标准 Transformer。这一思路将图像分类转化为与 NLP 完全相同的序列分类问题：</p>
+<ul>
+  <li>NLP：句子 → 分词（Token）→ Transformer → 分类</li>
+  <li>ViT：图像 → 分块（Patch）→ Transformer → 分类</li>
+</ul>
+
+<div class="callout">
+<div class="callout-title">直觉理解</div>
+<p>CNN 的卷积核扫描图像，像是一个拿着放大镜的侦探——从局部细节到全局结构逐层抽象。ViT 则像是一个快速浏览全局的观察者——第一层就能看到整幅图像（全局感受野），让注意力机制决定哪些区域相互关联。CNN 走的是"局部到全局"的路线，ViT 一上来就是"全局视野"。</p>
+</div>
+
+<h3>1.3 为什么纯 Transformer 之前不成功</h3>
+<p>在 ViT 之前，将 Transformer 直接用于图像面临两大挑战：</p>
+<table>
+<thead><tr><th>挑战</th><th>说明</th><th>ViT 的解决方案</th></tr></thead>
+<tbody>
+<tr><td>序列长度爆炸</td><td>$224 \times 224$ 图像展平为 $50176$ 个像素，自注意力复杂度 $O(N^2)$ 无法承受</td><td>切成 $16 \times 16$ 图块，序列长度降至 $196$</td></tr>
+<tr><td>缺乏归纳偏置</td><td>CNN 自带局部性和平移不变性先验，Transformer 无先验需大量数据学习</td><td>在大数据集（JFT-300M）上预训练</td></tr>
+</tbody>
+</table>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 370" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="va1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker>
+    <pattern id="vimgPat" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#bfdbfe"/><rect x="4" y="4" width="4" height="4" fill="#bfdbfe"/><rect x="4" width="4" height="4" fill="#93c5fd"/><rect y="4" width="4" height="4" fill="#93c5fd"/></pattern>
+  </defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">ViT 核心流程：图像 → 图块 → Transformer → 分类</text>
+  <!-- 原始图像 -->
+  <rect x="30" y="60" width="120" height="120" rx="6" fill="url(#vimgPat)" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="90" y="50" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="600">224×224 图像</text>
+  <text x="90" y="200" text-anchor="middle" font-size="10" fill="#64748b">3 通道 RGB</text>
+  <!-- 箭头 -->
+  <line x1="155" y1="120" x2="195" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="175" y="110" text-anchor="middle" font-size="9" fill="#64748b">分块</text>
+  <!-- 图块网格 -->
+  <g transform="translate(200, 50)">
+    <!-- 7x7 grid of patches -->
+    <g id="patchGrid">
+      <rect x="0" y="0" width="100" height="100" rx="4" fill="none" stroke="#7c3aed" stroke-width="1"/>
+      <!-- grid lines -->
+      <line x1="14.3" y1="0" x2="14.3" y2="100" stroke="#c4b5fd" stroke-width="0.5"/><line x1="28.6" y1="0" x2="28.6" y2="100" stroke="#c4b5fd" stroke-width="0.5"/><line x1="42.9" y1="0" x2="42.9" y2="100" stroke="#c4b5fd" stroke-width="0.5"/><line x1="57.1" y1="0" x2="57.1" y2="100" stroke="#c4b5fd" stroke-width="0.5"/><line x1="71.4" y1="0" x2="71.4" y2="100" stroke="#c4b5fd" stroke-width="0.5"/><line x1="85.7" y1="0" x2="85.7" y2="100" stroke="#c4b5fd" stroke-width="0.5"/>
+      <line x1="0" y1="14.3" x2="100" y2="14.3" stroke="#c4b5fd" stroke-width="0.5"/><line x1="0" y1="28.6" x2="100" y2="28.6" stroke="#c4b5fd" stroke-width="0.5"/><line x1="0" y1="42.9" x2="100" y2="42.9" stroke="#c4b5fd" stroke-width="0.5"/><line x1="0" y1="57.1" x2="100" y2="57.1" stroke="#c4b5fd" stroke-width="0.5"/><line x1="0" y1="71.4" x2="100" y2="71.4" stroke="#c4b5fd" stroke-width="0.5"/><line x1="0" y1="85.7" x2="100" y2="85.7" stroke="#c4b5fd" stroke-width="0.5"/>
+      <!-- highlight one patch -->
+      <rect x="28.6" y="28.6" width="14.3" height="14.3" fill="#7c3aed" opacity="0.3" stroke="#7c3aed" stroke-width="1.5"/>
+    </g>
+    <text x="50" y="-5" text-anchor="middle" font-size="11" fill="#7c3aed" font-weight="600">7×7 = 49 图块</text>
+    <text x="50" y="120" text-anchor="middle" font-size="10" fill="#64748b">每块 16×16 像素</text>
+  </g>
+  <!-- 箭头 -->
+  <line x1="310" y1="120" x2="350" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="330" y="110" text-anchor="middle" font-size="9" fill="#64748b">展平+投影</text>
+  <!-- Token 序列 -->
+  <g transform="translate(355, 55)">
+    <rect x="0" y="0" width="18" height="80" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/><text x="9" y="44" text-anchor="middle" font-size="8" fill="#7c3aed" transform="rotate(-90 9 44)">x₁</text>
+    <rect x="22" y="0" width="18" height="80" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/><text x="31" y="44" text-anchor="middle" font-size="8" fill="#7c3aed" transform="rotate(-90 31 44)">x₂</text>
+    <rect x="44" y="0" width="18" height="80" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/><text x="53" y="44" text-anchor="middle" font-size="8" fill="#7c3aed" transform="rotate(-90 53 44)">x₃</text>
+    <text x="66" y="44" text-anchor="middle" font-size="14" fill="#94a3b8">···</text>
+    <rect x="82" y="0" width="18" height="80" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" class="pulse-node"/><text x="91" y="44" text-anchor="middle" font-size="8" fill="#2563eb" transform="rotate(-90 91 44)">CLS</text>
+    <rect x="104" y="0" width="18" height="80" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/><text x="113" y="44" text-anchor="middle" font-size="8" fill="#7c3aed" transform="rotate(-90 113 44)">x₄₉</text>
+    <text x="65" y="-5" text-anchor="middle" font-size="11" fill="#7c3aed" font-weight="600">Token 序列</text>
+    <text x="65" y="100" text-anchor="middle" font-size="10" fill="#64748b">+ 位置编码</text>
+  </g>
+  <!-- 箭头 -->
+  <line x1="495" y1="120" x2="535" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="515" y="110" text-anchor="middle" font-size="9" fill="#64748b">Transformer</text>
+  <!-- Transformer Encoder -->
+  <rect x="540" y="55" width="130" height="130" rx="8" fill="#ecfeff" stroke="#059669" stroke-width="1.5"/>
+  <text x="605" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">Transformer</text>
+  <text x="605" y="96" text-anchor="middle" font-size="11" font-weight="600" fill="#047857">Encoder × L</text>
+  <rect x="555" y="110" width="100" height="22" rx="4" fill="#fff" stroke="#059669" stroke-width="1"/><text x="605" y="125" text-anchor="middle" font-size="10" fill="#047857">Multi-Head Attn</text>
+  <rect x="555" y="138" width="100" height="22" rx="4" fill="#fff" stroke="#059669" stroke-width="1"/><text x="605" y="153" text-anchor="middle" font-size="10" fill="#047857">FFN (MLP)</text>
+  <text x="605" y="175" text-anchor="middle" font-size="9" fill="#64748b">+ LN + Residual</text>
+  <!-- 箭头 -->
+  <line x1="675" y1="120" x2="710" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <!-- 输出 -->
+  <rect x="715" y="85" width="60" height="70" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="745" y="110" text-anchor="middle" font-size="10" font-weight="600" fill="#047857">CLS</text>
+  <text x="745" y="125" text-anchor="middle" font-size="10" font-weight="600" fill="#047857">→ MLP</text>
+  <text x="745" y="142" text-anchor="middle" font-size="10" fill="#047857">类别 logit</text>
+  <!-- 底部说明 -->
+  <text x="400" y="355" text-anchor="middle" font-size="12" fill="#64748b">蓝色 = 图像 · 紫色 = 图块/Token · 绿色 = Transformer · CLS Token 额外插入用于分类</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 1：ViT 整体架构 — 图像分块展平为序列，经 Transformer Encoder 处理后取 CLS Token 输出分类</div>
+</div>
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">2</span>图像分块与线性嵌入</h2>
+
+<h3>2.1 分块操作</h3>
+<p>ViT 的第一步是将输入图像 $\mathbf{x} \in \mathbb{R}^{H \times W \times C}$ 切分为 $N$ 个不重叠的图块。设定图块大小为 $P \times P$，则图块数量为：</p>
+<div class="formula" data-eq="(1)">$$N = \frac{H \times W}{P^2}$$</div>
+<p>对于标准 ImageNet 输入 $H = W = 224$，图块大小 $P = 16$，则 $N = 196$。每个图块展平后得到维度 $P^2 \cdot C = 16 \times 16 \times 3 = 768$ 的向量。</p>
+
+<h3>2.2 线性投影嵌入</h3>
+<p>展平后的图块向量通过一个可训练的线性投影映射到 $D$ 维嵌入空间（$D$ 即 Transformer 的隐藏维度，通常 $D = 768$）：</p>
+<div class="formula" data-eq="(2)">$$\mathbf{z}_i = \mathbf{x}_i^{(p)} \mathbf{E} + \mathbf{e}_{pos}^i, \quad i = 1, \ldots, N$$</div>
+<p>其中 $\mathbf{E} \in \mathbb{R}^{(P^2 C) \times D}$ 为投影矩阵（等价于一个 $P \times P$ 卷积核的卷积层），$\mathbf{e}_{pos}^i \in \mathbb{R}^D$ 为位置编码。</p>
+
+<div class="callout">
+<div class="callout-title">分块投影 = 卷积</div>
+<p>将 $P \times P$ 的分块展平后做线性投影，在数学上等价于用 stride $= P$、kernel size $= P$ 的卷积层处理原图。PyTorch 实现中通常直接用 <code>nn.Conv2d(C, D, kernel_size=P, stride=P)</code> 一步完成分块+投影。</p>
+</div>
+
+<h3>2.3 CLS Token</h3>
+<p>ViT 借鉴 BERT 的做法，在序列开头插入一个可学习的特殊 Token $\mathbf{x}_{class}$（CLS Token）。它的初始值是随机初始化的参数，通过 Transformer 后其最终状态 $\mathbf{z}_L^0$ 被用作分类特征：</p>
+<div class="formula" data-eq="(3)">$$\mathbf{Z}_0 = [\mathbf{x}_{class}; \mathbf{z}_1; \mathbf{z}_2; \cdots; \mathbf{z}_N] + \mathbf{E}_{pos}$$</div>
+<p>其中 $\mathbf{Z}_0 \in \mathbb{R}^{(N+1) \times D}$，$\mathbf{E}_{pos} \in \mathbb{R}^{(N+1) \times D}$ 为位置编码矩阵。CLS Token 的优势在于让网络自主学习最优的全局表示，而非依赖固定位置的池化操作。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">图像分块与嵌入流程</text>
+  <!-- 原始图像 -->
+  <rect x="30" y="60" width="100" height="100" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="80" y="50" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="600">224×224×3</text>
+  <!-- 分块线 -->
+  <line x1="55" y1="60" x2="55" y2="160" stroke="#93c5fd" stroke-width="0.5"/><line x1="80" y1="60" x2="80" y2="160" stroke="#93c5fd" stroke-width="0.5"/><line x1="105" y1="60" x2="105" y2="160" stroke="#93c5fd" stroke-width="0.5"/>
+  <line x1="30" y1="85" x2="130" y2="85" stroke="#93c5fd" stroke-width="0.5"/><line x1="30" y1="110" x2="130" y2="110" stroke="#93c5fd" stroke-width="0.5"/><line x1="30" y1="135" x2="130" y2="135" stroke="#93c5fd" stroke-width="0.5"/>
+  <text x="80" y="180" text-anchor="middle" font-size="10" fill="#64748b">7×7 网格分块</text>
+  <!-- 展平 -->
+  <line x1="135" y1="110" x2="175" y2="110" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="155" y="100" text-anchor="middle" font-size="9" fill="#64748b">展平</text>
+  <!-- 展平向量 -->
+  <g transform="translate(180, 60)">
+    <rect x="0" y="0" width="16" height="100" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+    <rect x="20" y="0" width="16" height="100" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+    <rect x="40" y="0" width="16" height="100" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+    <text x="36" y="120" text-anchor="middle" font-size="9" fill="#7c3aed">768维 ×49</text>
+  </g>
+  <!-- 投影 -->
+  <line x1="252" y1="110" x2="290" y2="110" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="271" y="100" text-anchor="middle" font-size="9" fill="#64748b">× E</text>
+  <text x="271" y="128" text-anchor="middle" font-size="9" fill="#64748b">线性投影</text>
+  <!-- 嵌入向量 -->
+  <g transform="translate(295, 60)">
+    <rect x="0" y="0" width="16" height="100" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <rect x="20" y="0" width="16" height="100" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <rect x="40" y="0" width="16" height="100" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <text x="36" y="120" text-anchor="middle" font-size="9" fill="#2563eb">D维 ×49</text>
+  </g>
+  <!-- 加位置编码 -->
+  <line x1="367" y1="110" x2="405" y2="110" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="386" y="100" text-anchor="middle" font-size="9" fill="#64748b">+ E_pos</text>
+  <text x="386" y="128" text-anchor="middle" font-size="9" fill="#64748b">位置编码</text>
+  <!-- 插入CLS -->
+  <line x1="405" y1="110" x2="440" y2="110" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="422" y="100" text-anchor="middle" font-size="9" fill="#64748b">插入CLS</text>
+  <!-- 最终序列 -->
+  <g transform="translate(445, 55)">
+    <rect x="0" y="0" width="20" height="110" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" class="pulse-node"/>
+    <text x="10" y="60" text-anchor="middle" font-size="8" fill="#92400e" transform="rotate(-90 10 60)">CLS</text>
+    <rect x="24" y="5" width="16" height="100" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <rect x="44" y="5" width="16" height="100" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <rect x="64" y="5" width="16" height="100" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <text x="82" y="60" text-anchor="middle" font-size="14" fill="#94a3b8">···</text>
+    <rect x="100" y="5" width="16" height="100" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+    <text x="65" y="130" text-anchor="middle" font-size="10" fill="#64748b">Z₀ ∈ ℝ^(50×D)</text>
+  </g>
+  <!-- 输出到Transformer -->
+  <line x1="575" y1="110" x2="690" y2="110" stroke="#059669" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <text x="630" y="100" text-anchor="middle" font-size="10" fill="#059669" font-weight="600">→ Transformer</text>
+  <text x="400" y="280" text-anchor="middle" font-size="12" fill="#64748b">展平 → 线性投影 → 加位置编码 → 插入 CLS Token → 输入 Transformer</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 2：图像分块与嵌入 — 将 2D 图像变换为 1D Token 序列，加上位置信息和 CLS Token</div>
+</div>
+
+<h3>2.4 维度总结</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>符号</th><th>维度</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>$\mathbf{x}$</td><td>$H \times W \times C$</td><td>输入图像（如 $224 \times 224 \times 3$）</td></tr>
+<tr><td>$P$</td><td>标量</td><td>图块大小（如 $16$）</td></tr>
+<tr><td>$N$</td><td>$HW / P^2$</td><td>图块数量（如 $196$）</td></tr>
+<tr><td>$\mathbf{x}_i^{(p)}$</td><td>$P^2 C$</td><td>第 $i$ 个展平图块（如 $768$）</td></tr>
+<tr><td>$\mathbf{E}$</td><td>$P^2 C \times D$</td><td>投影矩阵（如 $768 \times 768$）</td></tr>
+<tr><td>$\mathbf{z}_i$</td><td>$D$</td><td>第 $i$ 个图块嵌入向量</td></tr>
+<tr><td>$\mathbf{x}_{class}$</td><td>$D$</td><td>CLS Token（可学习）</td></tr>
+<tr><td>$\mathbf{Z}_0$</td><td>$(N+1) \times D$</td><td>完整输入序列（如 $197 \times 768$）</td></tr>
+<tr><td>$\mathbf{E}_{pos}$</td><td>$(N+1) \times D$</td><td>位置编码矩阵</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">3</span>位置编码</h2>
+
+<h3>3.1 为什么需要位置编码</h3>
+<p>Transformer 的自注意力机制本身是<em>排列等变</em>的——打乱输入顺序不会改变输出（只是重排输出）。这意味着没有位置编码的 ViT 会将"猫在左、狗在右"和"狗在左、猫在右"视为完全相同的输入。位置编码为每个图块注入位置信息，使模型能够区分空间布局。</p>
+
+<h3>3.2 可学习 vs 正弦余弦编码</h3>
+<p>ViT 原论文使用<strong>可学习的 1D 位置编码</strong> $\mathbf{E}_{pos} \in \mathbb{R}^{(N+1) \times D}$，每个位置一个 $D$ 维向量作为参数训练。这与原始 Transformer 的正弦-余弦编码不同：</p>
+<div class="formula" data-eq="(4)">$$\text{SinPos}(pos, 2i) = \sin\left(\frac{pos}{10000^{2i/D}}\right), \quad \text{SinPos}(pos, 2i+1) = \cos\left(\frac{pos}{10000^{2i/D}}\right)$$</div>
+<p>实验表明，可学习编码和正弦-余弦编码在 ViT 上效果差异不大，可学习编码略好。DeiT 等后续工作沿用了可学习编码。</p>
+
+<h3>3.3 2D 位置编码</h3>
+<p>1D 编码直接按图块的线性序号编码位置，忽略了图块的 2D 空间结构。一种改进方案是<strong>2D 位置编码</strong>，将行和列的位置分开编码：</p>
+<div class="formula" data-eq="(5)">$$\mathbf{e}_{pos}^{i,j} = [\mathbf{e}_r^i; \mathbf{e}_c^j], \quad i \in [0, \sqrt{N}), \quad j \in [0, \sqrt{N})$$</div>
+<p>其中 $\mathbf{e}_r^i \in \mathbb{R}^{D/2}$ 为行编码，$\mathbf{e}_c^j \in \mathbb{R}^{D/2}$ 为列编码。但实验表明 1D 可学习编码已足够捕捉空间信息，2D 编码的提升很小。</p>
+
+<h3>3.4 相对位置编码</h3>
+<p>Swin Transformer 使用<strong>相对位置偏置</strong>（Relative Position Bias），注意力分数不仅取决于内容还取决于图块间的相对距离：</p>
+<div class="formula" data-eq="(6)">$$\text{Attn}(Q, K) = \text{Softmax}\left(\frac{Q K^\top}{\sqrt{d_k}} + B\right) V$$</div>
+<p>其中 $B$ 为相对位置偏置矩阵，取决于 Query 和 Key 的相对位置 $(i-j)$。相对位置编码在密集预测任务（检测、分割）中表现更好。</p>
+</section>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">4</span>多头自注意力</h2>
+
+<h3>4.1 自注意力机制</h3>
+<p>自注意力（Self-Attention）是 Transformer 的核心。对于输入序列 $\mathbf{Z} \in \mathbb{R}^{N \times D}$，通过三个权重矩阵将其映射为 Query、Key、Value：</p>
+<div class="formula" data-eq="(7)">$$Q = \mathbf{Z}\mathbf{W}^Q, \quad K = \mathbf{Z}\mathbf{W}^K, \quad V = \mathbf{Z}\mathbf{W}^V$$</div>
+<p>其中 $\mathbf{W}^Q, \mathbf{W}^K \in \mathbb{R}^{D \times d_k}$，$\mathbf{W}^V \in \mathbb{R}^{D \times d_v}$。注意力计算为：</p>
+<div class="formula" data-eq="(8)">$$\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V$$</div>
+<p>其中 $\sqrt{d_k}$ 为缩放因子，防止点积过大导致 Softmax 饱和。$Q K^\top \in \mathbb{R}^{N \times N}$ 为注意力矩阵，表示每个图块对所有图块的关注程度。</p>
+
+<div class="callout">
+<div class="callout-title">全局感受野</div>
+<p>与 CNN 的局部卷积不同，自注意力的 $Q K^\top$ 计算让每个图块能直接与所有其他图块交互——<em>第一层就是全局感受野</em>。这是 ViT 和 CNN 的本质区别：CNN 通过逐层堆叠逐步扩大感受野，ViT 从一开始就拥有全局视野。</p>
+</div>
+
+<h3>4.2 多头注意力</h3>
+<p>多头注意力（Multi-Head Attention, MHA）将注意力 computation 分配到 $h$ 个头并行计算，每个头关注不同的表示子空间：</p>
+<div class="formula" data-eq="(9)">$$\text{head}_j = \text{Attention}(Q \mathbf{W}_j^Q, K \mathbf{W}_j^K, V \mathbf{W}_j^V), \quad j = 1, \ldots, h$$</div>
+<div class="formula" data-eq="(10)">$$\text{MHA}(\mathbf{Z}) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) \mathbf{W}^O$$</div>
+<p>其中每个头的维度 $d_k = d_v = D / h$。ViT-Base 使用 $h = 12$ 头，$D = 768$，每个头维度 $64$。</p>
+
+<h3>4.3 注意力矩阵可视化</h3>
+<p>注意力矩阵 $A = \text{Softmax}(QK^\top / \sqrt{d_k}) \in \mathbb{R}^{N \times N}$ 的每一行表示一个图块对所有图块的关注分布。ViT 的注意力呈现以下特点：</p>
+<ul>
+  <li><strong>浅层</strong>：注意力集中在局部邻域，类似 CNN 的局部卷积</li>
+  <li><strong>深层</strong>：注意力扩散到全局，捕捉长距离语义依赖</li>
+  <li><strong>CLS Token</strong>：深层注意力覆盖整幅图像，形成全局表示</li>
+</ul>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">多头自注意力计算流程</text>
+  <!-- 输入 -->
+  <rect x="30" y="80" width="80" height="100" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="70" y="70" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="600">输入 Z</text>
+  <text x="70" y="200" text-anchor="middle" font-size="10" fill="#64748b">N×D</text>
+  <!-- 三条分支 -->
+  <line x1="115" y1="100" x2="170" y2="80" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va1)" class="flow-line"/>
+  <line x1="115" y1="130" x2="170" y2="130" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va1)" class="flow-line"/>
+  <line x1="115" y1="160" x2="170" y2="180" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va1)" class="flow-line"/>
+  <!-- Q, K, V -->
+  <rect x="175" y="62" width="50" height="36" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/><text x="200" y="85" text-anchor="middle" font-size="12" font-weight="600" fill="#6d28d9">Q</text>
+  <rect x="175" y="112" width="50" height="36" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/><text x="200" y="135" text-anchor="middle" font-size="12" font-weight="600" fill="#6d28d9">K</text>
+  <rect x="175" y="162" width="50" height="36" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/><text x="200" y="185" text-anchor="middle" font-size="12" font-weight="600" fill="#6d28d9">V</text>
+  <text x="145" y="52" text-anchor="middle" font-size="9" fill="#64748b">×W^Q/K/V</text>
+  <!-- 多头分组 -->
+  <line x1="230" y1="80" x2="280" y2="80" stroke="#94a3b8" stroke-width="1" marker-end="url(#va1)"/>
+  <line x1="230" y1="130" x2="280" y2="130" stroke="#94a3b8" stroke-width="1" marker-end="url(#va1)"/>
+  <line x1="230" y1="180" x2="280" y2="180" stroke="#94a3b8" stroke-width="1" marker-end="url(#va1)"/>
+  <!-- Head 1 -->
+  <rect x="285" y="55" width="110" height="150" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="340" y="72" text-anchor="middle" font-size="10" font-weight="600" fill="#7c3aed">Head 1</text>
+  <circle cx="340" cy="92" r="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/><text x="340" y="96" text-anchor="middle" font-size="7" fill="#1e40af">Q₁</text>
+  <circle cx="340" cy="112" r="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/><text x="340" y="116" text-anchor="middle" font-size="7" fill="#1e40af">K₁</text>
+  <circle cx="340" cy="132" r="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/><text x="340" y="136" text-anchor="middle" font-size="7" fill="#1e40af">V₁</text>
+  <line x1="340" y1="142" x2="340" y2="155" stroke="#94a3b8" stroke-width="1"/>
+  <text x="340" y="165" text-anchor="middle" font-size="8" fill="#64748b">QKᵀ/√d</text>
+  <line x1="340" y1="168" x2="340" y2="175" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="315" y="178" width="50" height="18" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1"/><text x="340" y="191" text-anchor="middle" font-size="8" fill="#047857">Attn₁</text>
+  <!-- Head 2 -->
+  <rect x="410" y="55" width="110" height="150" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="465" y="72" text-anchor="middle" font-size="10" font-weight="600" fill="#7c3aed">Head 2</text>
+  <circle cx="465" cy="92" r="8" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/><text x="465" y="96" text-anchor="middle" font-size="7" fill="#92400e">Q₂</text>
+  <circle cx="465" cy="112" r="8" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/><text x="465" y="116" text-anchor="middle" font-size="7" fill="#92400e">K₂</text>
+  <circle cx="465" cy="132" r="8" fill="#fde68a" stroke="#f59e0b" stroke-width="1"/><text x="465" y="136" text-anchor="middle" font-size="7" fill="#92400e">V₂</text>
+  <line x1="465" y1="142" x2="465" y2="155" stroke="#94a3b8" stroke-width="1"/>
+  <text x="465" y="165" text-anchor="middle" font-size="8" fill="#64748b">QKᵀ/√d</text>
+  <line x1="465" y1="168" x2="465" y2="175" stroke="#94a3b8" stroke-width="1"/>
+  <rect x="440" y="178" width="50" height="18" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1"/><text x="465" y="191" text-anchor="middle" font-size="8" fill="#047857">Attn₂</text>
+  <!-- Head h -->
+  <text x="565" y="130" text-anchor="middle" font-size="14" fill="#94a3b8">···</text>
+  <rect x="535" y="55" width="110" height="150" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1" opacity="0.5"/>
+  <text x="590" y="72" text-anchor="middle" font-size="10" font-weight="600" fill="#7c3aed">Head h</text>
+  <rect x="565" y="178" width="50" height="18" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1" opacity="0.5"/><text x="590" y="191" text-anchor="middle" font-size="8" fill="#047857">Attn_h</text>
+  <!-- Concat -->
+  <line x1="340" y1="197" x2="340" y2="220" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va1)"/>
+  <line x1="465" y1="197" x2="465" y2="220" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va1)"/>
+  <line x1="590" y1="197" x2="590" y2="220" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va1)"/>
+  <rect x="330" y="225" width="270" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="465" y="245" text-anchor="middle" font-size="12" font-weight="600" fill="#92400e">Concat → × W^O</text>
+  <!-- 输出 -->
+  <line x1="465" y1="256" x2="465" y2="280" stroke="#94a3b8" stroke-width="2" marker-end="url(#va1)" class="flow-line"/>
+  <rect x="425" y="285" width="80" height="40" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="465" y="310" text-anchor="middle" font-size="12" font-weight="600" fill="#047857">输出</text>
+  <text x="465" y="345" text-anchor="middle" font-size="10" fill="#64748b">每个头查看不同子空间 → 拼接 → 线性融合</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 3：多头自注意力 — 输入映射为 Q/K/V 后分成多头并行计算注意力，拼接后线性投影输出</div>
+</div>
+
+<h3>4.4 计算复杂度分析</h3>
+<p>自注意力的计算复杂度为 $O(N^2 \cdot D)$，其中 $N$ 为序列长度。对于 ViT-Base 的 $N = 197$（含 CLS Token）和 $D = 768$，计算量完全可控。但如果直接用像素级序列（$N = 50176$），复杂度将爆炸。这就是<em>分块策略是 ViT 成功的关键前提</em>。</p>
+</section>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">5</span>Transformer Encoder</h2>
+
+<p>ViT 的主体由 $L$ 个 Transformer Encoder 层堆叠而成。每层包含两个子层：多头自注意力（MSA）和前馈网络（FFN），都带有残差连接和 LayerNorm。</p>
+
+<h3>5.1 单层结构</h3>
+<div class="formula" data-eq="(11)">$$\mathbf{Z}'_\ell = \text{MSA}(\text{LN}(\mathbf{Z}_{\ell-1})) + \mathbf{Z}_{\ell-1}$$</div>
+<div class="formula" data-eq="(12)">$$\mathbf{Z}_\ell = \text{FFN}(\text{LN}(\mathbf{Z}'_\ell)) + \mathbf{Z}'_\ell$$</div>
+<p>其中 $\text{LN}(\cdot)$ 为 Layer Normalization，$\text{MSA}(\cdot)$ 为多头自注意力，$\text{FFN}(\cdot)$ 为前馈网络。注意 ViT 使用 <em>Pre-LN</em> 结构（LayerNorm 在子层之前），比原始 Transformer 的 Post-LN 更稳定。</p>
+
+<h3>5.2 前馈网络（FFN）</h3>
+<p>FFN 是一个两层 MLP，对每个位置独立施加非线性变换：</p>
+<div class="formula" data-eq="(13)">$$\text{FFN}(\mathbf{x}) = \text{GELU}(\mathbf{x}\mathbf{W}_1 + \mathbf{b}_1)\mathbf{W}_2 + \mathbf{b}_2$$</div>
+<p>其中 $\mathbf{W}_1 \in \mathbb{R}^{D \times D_{ff}}$，$\mathbf{W}_2 \in \mathbb{R}^{D_{ff} \times D}$。ViT 中 $D_{ff} = 4D$（如 $D = 768$ 时 $D_{ff} = 3072$）。FFN 是 ViT 参数量的主要来源——约占总参数的 $2/3$。</p>
+
+<h3>5.3 LayerNorm vs BatchNorm</h3>
+<p>ViT 使用 LayerNorm 而非 BatchNorm。LayerNorm 对每个样本独立归一化，不依赖批次统计量，因此在批次大小较小时更稳定。LayerNorm 也更适合变长序列和自回归推理。</p>
+<div class="formula" data-eq="(14)">$$\text{LN}(\mathbf{x}) = \gamma \cdot \frac{\mathbf{x} - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta$$</div>
+<p>其中 $\mu, \sigma^2$ 在特征维度上计算，$\gamma, \beta$ 为可学习参数。</p>
+
+<h3>5.4 残差连接</h3>
+<p>每个子层都有一条残差连接（skip connection），将输入直接加到输出上。残差连接对深层 Transformer 的训练至关重要——它提供了梯度直接传播的路径，防止梯度消失。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="va5" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Transformer Encoder 层结构（Pre-LN）</text>
+  <!-- 输入 -->
+  <rect x="320" y="50" width="120" height="30" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="380" y="70" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="600">Z_{l-1}</text>
+  <!-- 残差线1 -->
+  <path d="M 340 65 L 280 65 L 280 320 L 340 320" stroke="#059669" stroke-width="2" fill="none" stroke-dasharray="5 3"/>
+  <text x="265" y="195" text-anchor="middle" font-size="10" fill="#059669" font-weight="600" transform="rotate(-90 265 195)">残差连接</text>
+  <!-- LayerNorm 1 -->
+  <line x1="380" y1="80" x2="380" y2="100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va5)"/>
+  <rect x="320" y="105" width="120" height="30" rx="5" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="380" y="125" text-anchor="middle" font-size="11" fill="#92400e" font-weight="600">LayerNorm</text>
+  <!-- MSA -->
+  <line x1="380" y1="135" x2="380" y2="155" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va5)"/>
+  <rect x="300" y="160" width="160" height="40" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="380" y="185" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="600">Multi-Head Attention</text>
+  <!-- Add -->
+  <line x1="380" y1="200" x2="380" y2="225" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va5)"/>
+  <circle cx="380" cy="235" r="14" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="380" y="240" text-anchor="middle" font-size="14" fill="#047857" font-weight="700">+</text>
+  <!-- Z' -->
+  <line x1="380" y1="250" x2="380" y2="265" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va5)"/>
+  <rect x="330" y="270" width="100" height="24" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="380" y="286" text-anchor="middle" font-size="10" fill="#1e40af">Z'_l</text>
+  <!-- 残差线2 -->
+  <path d="M 430 282 L 480 282 L 480 320 L 430 320" stroke="#059669" stroke-width="2" fill="none" stroke-dasharray="5 3"/>
+  <text x="500" y="305" text-anchor="middle" font-size="10" fill="#059669" font-weight="600">残差</text>
+  <path d="M 430 282 L 480 282" stroke="#059669" stroke-width="2" fill="none"/>
+  <!-- LayerNorm 2 -->
+  <line x1="380" y1="295" x2="380" y2="115" stroke="none"/>
+  <!-- 重新排列: LN2 + FFN after Z' -->
+  <!-- 实际调整Y坐标 -->
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 4：Transformer Encoder 层 — Pre-LN 结构，MSA 和 FFN 各有残差连接</div>
+</div>
+
+<h3>5.5 ViT 变体规格</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>模型</th><th>层数 $L$</th><th>隐藏维度 $D$</th><th>注意力头 $h$</th><th>FFN 维度</th><th>参数量</th><th>FLOPs</th></tr></thead>
+<tbody>
+<tr><td>ViT-Tiny</td><td>$12$</td><td>$192$</td><td>$3$</td><td>$768$</td><td>$5.7$M</td><td>$1.3$G</td></tr>
+<tr><td>ViT-Small</td><td>$12$</td><td>$384$</td><td>$6$</td><td>$1536$</td><td>$22$M</td><td>$4.6$G</td></tr>
+<tr><td>ViT-Base</td><td>$12$</td><td>$768$</td><td>$12$</td><td>$3072$</td><td>$86$M</td><td>$17.6$G</td></tr>
+<tr><td>ViT-Large</td><td>$24$</td><td>$1024$</td><td>$16$</td><td>$4096$</td><td>$307$M</td><td>$62.0$G</td></tr>
+<tr><td>ViT-Huge</td><td>$32$</td><td>$1280$</td><td>$16$</td><td>$5120$</td><td>$632$M</td><td>$167.4$G</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">6</span>分类头与训练策略</h2>
+
+<h3>6.1 CLS Token 分类</h3>
+<p>ViT 取 Transformer Encoder 最后一层输出的 CLS Token 状态 $\mathbf{z}_L^0$ 作为全局图像表示，通过一个线性分类头输出类别 logits：</p>
+<div class="formula" data-eq="(15)">$$\hat{y} = \text{Softmax}(\text{LN}(\mathbf{z}_L^0) \cdot \mathbf{W}_{cls})$$</div>
+<p>其中 $\mathbf{W}_{cls} \in \mathbb{R}^{D \times K}$，$K$ 为类别数。在预训练阶段，分类头通过 MLP 实现；微调时替换为线性层。</p>
+
+<h3>6.2 全局平均池化替代方案</h3>
+<p>除了 CLS Token，也可以使用全局平均池化（GAP）——对所有图块 Token 的最终表示取平均作为全局特征。实验表明，两者效果差异很小。GAP 无需额外 Token，但 CLS Token 的优势在于可学习的自适应聚合权重。</p>
+
+<h3>6.3 预训练-微调范式</h3>
+<p>ViT 的训练采用大规模预训练 + 下游微调的两阶段范式：</p>
+<ul>
+  <li><strong>预训练</strong>：在大数据集（JFT-300M / ImageNet-21k）上训练分类任务，学习通用视觉表示</li>
+  <li><strong>微调</strong>：在目标数据集（如 ImageNet-1K）上微调，移除预训练分类头，添加新的线性分类头</li>
+</ul>
+
+<div class="callout warn">
+<div class="callout-title">数据饥饿</div>
+<p>ViT 没有卷积的归纳偏置（局部性、平移不变性），因此需要更多数据来学习这些先验。在 ImageNet-1K（1.2M 图像）上从头训练，ViT 不如 ResNet。但在 JFT-300M（300M 图像）上预训练后，ViT 全面超越 CNN。这就是 ViT "<em>大数据吃一切</em>"的特性。</p>
+</div>
+
+<h3>6.4 高分辨率微调</h3>
+<p>ViT 预训练通常在 $224 \times 224$ 分辨率上进行。微调时可以使用更高分辨率（如 $384 \times 384$ 或 $512 \times 512$）以提升性能。由于图块大小 $P$ 固定，更高分辨率意味着更多图块（更长的序列），但位置编码需要插值：</p>
+<div class="formula" data-eq="(16)">$$\mathbf{E}_{pos}^{new} = \text{Interpolate}(\mathbf{E}_{pos}^{old}, N_{new})$$</div>
+<p>通常使用双线性插值将 $197 \times D$ 的位置编码插值到 $(N_{new}+1) \times D$。这种插值是有效的，因为可学习位置编码具有平滑的 2D 结构。</p>
+</section>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">7</span>ViT 的数学描述</h2>
+
+<h3>7.1 完整前向传播</h3>
+<p>将 ViT 的全部组件串联起来，完整前向传播如下：</p>
+<div class="formula multi" data-eq="(17)">$$\mathbf{Z}_0 = [\mathbf{x}_{class}; \mathbf{x}_1^{(p)}\mathbf{E}; \cdots; \mathbf{x}_N^{(p)}\mathbf{E}] + \mathbf{E}_{pos}$$</div>
+<div class="formula multi" data-eq="(18)">$$\mathbf{Z}'_\ell = \text{MSA}(\text{LN}(\mathbf{Z}_{\ell-1})) + \mathbf{Z}_{\ell-1}, \quad \ell = 1, \ldots, L$$</div>
+<div class="formula multi" data-eq="(19)">$$\mathbf{Z}_\ell = \text{FFN}(\text{LN}(\mathbf{Z}'_\ell)) + \mathbf{Z}'_\ell, \quad \ell = 1, \ldots, L$$</div>
+<div class="formula multi" data-eq="(20)">$$\hat{y} = \text{Softmax}(\text{LN}(\mathbf{z}_L^0)\mathbf{W}_{cls})$$</div>
+
+<h3>7.2 参数量分析</h3>
+<p>ViT-Base 的参数分布：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>组件</th><th>参数量</th><th>占比</th></tr></thead>
+<tbody>
+<tr><td>Patch Embedding (Conv)</td><td>$0.6$M</td><td>$0.7\%$</td></tr>
+<tr><td>位置编码 + CLS Token</td><td>$0.15$M</td><td>$0.2\%$</td></tr>
+<tr><td>MSA（12层 × 4矩阵）</td><td>$28.3$M</td><td>$33\%$</td></tr>
+<tr><td>FFN（12层 × 2矩阵）</td><td>$56.6$M</td><td>$66\%$</td></tr>
+<tr><td>LayerNorm（24层）</td><td>$0.04$M</td><td>$0.05\%$</td></tr>
+<tr><td>分类头</td><td>$0.77$M</td><td>$0.9\%$</td></tr>
+<tr style="font-weight:700;"><td>总计</td><td>$86.5$M</td><td>$100\%$</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">
+<div class="callout-title">FFN 占大头</div>
+<p>ViT 的参数量约 $2/3$ 来自 FFN，$1/3$ 来自 MSA。这与 NLP Transformer 的分布一致。FFN 的作用是在注意力聚合后进行非线性变换——它存储了模型的"知识"。</p>
+</div>
+
+<h3>7.3 计算量分析</h3>
+<p>单层 Encoder 的 FLOPs（$N$ 为序列长度，$D$ 为隐藏维度）：</p>
+<div class="formula" data-eq="(21)">$$\text{FLOPs}_{\text{MSA}} = 4ND^2 + 2N^2D, \quad \text{FLOPs}_{\text{FFN}} = 8ND^2$$</div>
+<p>当 $N = 197, D = 768$ 时：MSA 约 $0.59$G FLOPs，FFN 约 $1.18$G FLOPs（不含 LN 和残差）。FFN 的计算量是 MSA 的约 $2$ 倍。</p>
+</section>
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">8</span>ViT vs CNN：归纳偏置之争</h2>
+
+<p>ViT 与 CNN 的核心争论聚焦于一个概念：<strong>归纳偏置（Inductive Bias）</strong>——模型架构中内嵌的先验假设。CNN 自带两种强归纳偏置：局部性（每个神经元只看局部区域）和平移等变性（特征不随位置改变）。ViT 几乎完全抛弃了这些先验，让模型从数据中自行学习空间关系。</p>
+
+<h3>8.1 归纳偏置对比</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>维度</th><th>CNN</th><th>ViT</th></tr></thead>
+<tbody>
+<tr><td>局部性先验</td><td><strong>强</strong>：卷积核只看  \times k$ 邻域</td><td><strong>无</strong>：第一层即全局注意力</td></tr>
+<tr><td>平移等变性</td><td><strong>强</strong>：权值共享保证平移不变</td><td><strong>弱</strong>：需通过数据增强学习</td></tr>
+<tr><td>层级结构</td><td><strong>显式</strong>：池化层逐级下采样</td><td><strong>隐式</strong>：所有层在同一分辨率</td></tr>
+<tr><td>感受野</td><td>局部 → 全局（逐层扩大）</td><td>全局（第一层即全局）</td></tr>
+<tr><td>数据效率</td><td>小数据集即可训练</td><td>需大规模数据（JFT-300M 级别）</td></tr>
+<tr><td>参数效率</td><td>权值共享，参数少</td><td>注意力无权值共享，参数多</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>8.2 数据量是关键变量</h3>
+<p>ViT 论文中一个关键发现：在 ImageNet-1K（130万张）上从头训练时，ViT-Base 不如 ResNet；但在 JFT-300M（3 亿张）上预训练后，ViT-Base 超越所有 CNN。这说明：</p>
+<ul>
+  <li><strong>小数据</strong>：CNN 的归纳偏置是优势——先验帮助泛化，防止过拟合</li>
+  <li><strong>大数据</strong>：归纳偏置变为瓶颈——先验限制了模型容量，数据足以学习更优模式</li>
+</ul>
+
+<div class="callout">
+<div class="callout-title">直觉类比</div>
+<p>CNN 像一个受过专业训练的侦探——自带一套方法论（局部先验），在小案件（小数据）中高效破案。ViT 像一个白纸天才——没有方法论，但看过海量案例（大数据）后能发现侦探看不到的规律。案件少时侦探赢，案件多时天才赢。</p>
+</div>
+
+<h3>8.3 注意力距离的演化</h3>
+<p>ViT 论文分析了不同层中注意力所覆盖的空间距离。发现一个有趣的规律：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>层位置</th><th>注意力模式</th><th>类比</th></tr></thead>
+<tbody>
+<tr><td>浅层（1-5 层）</td><td>主要 attend 局部邻域，部分 attend 全局</td><td>像 CNN 的低层特征</td></tr>
+<tr><td>中层（6-9 层）</td><td>混合局部与全局注意力</td><td>多尺度特征融合</td></tr>
+<tr><td>深层（10-12 层）</td><td>全局注意力占主导</td><td>语义级全局推理</td></tr>
+</tbody>
+</table>
+</div>
+<p>这表明 ViT 虽然"第一层即全局"，但模型<strong>自行学习</strong>出了类似 CNN 的"局部→全局"层级结构——归纳偏置是涌现的，而非强制的。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="va8" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">CNN vs ViT：感受野与特征提取范式对比</text>
+  <!-- CNN 侧 -->
+  <rect x="20" y="50" width="360" height="260" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="200" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#1e40af">CNN：局部→全局（归纳偏置驱动）</text>
+  <!-- CNN 层级 -->
+  <rect x="50" y="100" width="60" height="40" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="80" y="124" text-anchor="middle" font-size="10" fill="#1e40af">Conv1</text>
+  <text x="80" y="155" text-anchor="middle" font-size="9" fill="#64748b">3×3 局部</text>
+  <line x1="115" y1="120" x2="145" y2="120" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va8)"/>
+  <rect x="150" y="100" width="60" height="40" rx="4" fill="#bfdbfe" stroke="#2563eb" stroke-width="1"/>
+  <text x="180" y="124" text-anchor="middle" font-size="10" fill="#1e40af">Conv2</text>
+  <text x="180" y="155" text-anchor="middle" font-size="9" fill="#64748b">5×5 感受野</text>
+  <line x1="215" y1="120" x2="245" y2="120" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va8)"/>
+  <rect x="250" y="100" width="60" height="40" rx="4" fill="#93c5fd" stroke="#2563eb" stroke-width="1"/>
+  <text x="280" y="124" text-anchor="middle" font-size="10" fill="#1e40af">Conv3+</text>
+  <text x="280" y="155" text-anchor="middle" font-size="9" fill="#64748b">全局感受野</text>
+  <!-- CNN 说明 -->
+  <text x="200" y="190" text-anchor="middle" font-size="11" fill="#1e40af">感受野逐层扩大</text>
+  <text x="200" y="210" text-anchor="middle" font-size="10" fill="#64748b">先验：局部性 + 平移不变性</text>
+  <rect x="60" y="230" width="280" height="50" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="200" y="250" text-anchor="middle" font-size="10" fill="#1e40af">优势：小数据高效</text>
+  <text x="200" y="268" text-anchor="middle" font-size="10" fill="#64748b">劣势：先验可能限制上限</text>
+  <!-- ViT 侧 -->
+  <rect x="420" y="50" width="360" height="260" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="600" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#6d28d9">ViT：全局（数据驱动学习）</text>
+  <!-- ViT 层级 -->
+  <rect x="450" y="100" width="60" height="40" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="480" y="124" text-anchor="middle" font-size="10" fill="#6d28d9">Attn 1</text>
+  <text x="480" y="155" text-anchor="middle" font-size="9" fill="#64748b">全局（学习局部）</text>
+  <line x1="515" y1="120" x2="545" y2="120" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va8)"/>
+  <rect x="550" y="100" width="60" height="40" rx="4" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="580" y="124" text-anchor="middle" font-size="10" fill="#6d28d9">Attn 6</text>
+  <text x="580" y="155" text-anchor="middle" font-size="9" fill="#64748b">局部+全局混合</text>
+  <line x1="615" y1="120" x2="645" y2="120" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#va8)"/>
+  <rect x="650" y="100" width="60" height="40" rx="4" fill="#c4b5fd" stroke="#7c3aed" stroke-width="1" class="pulse-node"/>
+  <text x="680" y="124" text-anchor="middle" font-size="10" fill="#6d28d9">Attn 12</text>
+  <text x="680" y="155" text-anchor="middle" font-size="9" fill="#64748b">全局语义</text>
+  <!-- ViT 说明 -->
+  <text x="600" y="190" text-anchor="middle" font-size="11" fill="#6d28d9">第一层即全局，逐层涌现层级</text>
+  <text x="600" y="210" text-anchor="middle" font-size="10" fill="#64748b">先验：无（完全数据驱动）</text>
+  <rect x="460" y="230" width="280" height="50" rx="6" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="600" y="250" text-anchor="middle" font-size="10" fill="#6d28d9">优势：大数据上限高</text>
+  <text x="600" y="268" text-anchor="middle" font-size="10" fill="#64748b">劣势：小数据易过拟合</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 5：CNN vs ViT 感受野对比 — CNN 依靠架构先验逐层扩大感受野，ViT 从全局出发自行学习局部性</div>
+</div>
+</section>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">9</span>数据规模与性能 Scaling</h2>
+
+<h3>9.1 预训练数据集</h3>
+<p>ViT 的性能高度依赖预训练数据规模。论文使用了三个不同规模的数据集进行对比：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>数据集</th><th>规模</th><th>类别数</th><th>ViT-Base 效果</th></tr></thead>
+<tbody>
+<tr><td>ImageNet-1K</td><td>.3 张</td><td>$</td><td>不如 ResNet（先验缺失）</td></tr>
+<tr><td>ImageNet-21K</td><td> 张</td><td>$</td><td>与 ResNet 持平</td></tr>
+<tr><td>JFT-300M</td><td> 张</td><td>$</td><td>超越所有 CNN</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.2 性能对比</h3>
+<p>在 ImageNet-1K 上的微调结果（top-1 accuracy）：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>模型</th><th>预训练数据</th><th>参数量</th><th>ImageNet top-1</th></tr></thead>
+<tbody>
+<tr><td>ResNet-152</td><td>ImageNet-1K</td><td></td><td>.3$%</td></tr>
+<tr><td>ViT-Base/16</td><td>ImageNet-1K</td><td></td><td>.9$%</td></tr>
+<tr><td>ViT-Base/16</td><td>ImageNet-21K</td><td></td><td>.0$%</td></tr>
+<tr><td>ViT-Base/16</td><td>JFT-300M</td><td></td><td>.0$%</td></tr>
+<tr><td>ViT-Large/16</td><td>JFT-300M</td><td></td><td>.2$%</td></tr>
+<tr style="font-weight:700;"><td>ViT-Huge/14</td><td>JFT-300M</td><td></td><td>.5$%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">
+<div class="callout-title">关键结论</div>
+<p>ViT 表现出与传统 CNN 截然不同的 Scaling 行为：数据量越大，ViT 优势越明显。CNN 在数据量增加到一定程度后性能趋于饱和，而 ViT 尚未见顶——这为后续大模型时代的 Scaling Law 奠定了视觉方向的信念基础。</p>
+</div>
+
+<h3>9.3 计算 vs 性能的 Pareto 前沿</h3>
+<p>论文展示了不同模型在计算量与准确率的 Pareto 前沿上的位置：</p>
+<div class="svg-box">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">计算量 vs ImageNet 准确率</text>
+  <!-- 坐标轴 -->
+  <line x1="80" y1="280" x2="750" y2="280" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#va8)"/>
+  <line x1="80" y1="280" x2="80" y2="50" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#va8)"/>
+  <text x="760" y="295" font-size="11" fill="#64748b">计算量 (FLOPs) →</text>
+  <text x="55" y="45" font-size="11" fill="#64748b" transform="rotate(-90 55 45)">准确率 (%) →</text>
+  <!-- Y 轴刻度 -->
+  <text x="65" y="80" font-size="9" fill="#94a3b8" text-anchor="end">90</text>
+  <text x="65" y="135" font-size="9" fill="#94a3b8" text-anchor="end">85</text>
+  <text x="65" y="190" font-size="9" fill="#94a3b8" text-anchor="end">80</text>
+  <text x="65" y="245" font-size="9" fill="#94a3b8" text-anchor="end">75</text>
+  <line x1="75" y1="80" x2="80" y2="80" stroke="#cbd5e1"/><line x1="75" y1="135" x2="80" y2="135" stroke="#cbd5e1"/><line x1="75" y1="190" x2="80" y2="190" stroke="#cbd5e1"/><line x1="75" y1="245" x2="80" y2="245" stroke="#cbd5e1"/>
+  <!-- CNN 区域 -->
+  <rect x="100" y="180" width="180" height="100" rx="6" fill="#dbeafe" opacity="0.3"/>
+  <text x="190" y="290" text-anchor="middle" font-size="10" fill="#2563eb">CNN 区域</text>
+  <circle cx="140" cy="230" r="6" fill="#2563eb"/>
+  <text x="140" y="255" text-anchor="middle" font-size="9" fill="#1e40af">ResNet-50</text>
+  <circle cx="200" cy="200" r="6" fill="#2563eb"/>
+  <text x="200" y="225" text-anchor="middle" font-size="9" fill="#1e40af">ResNet-152</text>
+  <circle cx="250" cy="185" r="6" fill="#2563eb"/>
+  <text x="245" y="175" text-anchor="middle" font-size="9" fill="#1e40af">EffNet-B7</text>
+  <!-- ViT 区域 -->
+  <rect x="350" y="70" width="380" height="120" rx="6" fill="#ede9fe" opacity="0.3"/>
+  <text x="540" y="85" text-anchor="middle" font-size="10" fill="#7c3aed">ViT 区域（JFT-300M 预训练）</text>
+  <circle cx="400" cy="150" r="7" fill="#7c3aed" class="pulse-node"/>
+  <text x="400" y="175" text-anchor="middle" font-size="9" fill="#6d28d9">ViT-B/16</text>
+  <circle cx="530" cy="115" r="7" fill="#7c3aed" class="pulse-node"/>
+  <text x="530" y="105" text-anchor="middle" font-size="9" fill="#6d28d9">ViT-L/16</text>
+  <circle cx="680" cy="85" r="8" fill="#7c3aed" class="pulse-node"/>
+  <text x="680" y="75" text-anchor="middle" font-size="9" fill="#6d28d9" font-weight="700">ViT-H/14</text>
+  <!-- 趋势线 -->
+  <path d="M 140 230 Q 200 215, 250 185 Q 350 170, 400 150 Q 480 130, 530 115 Q 620 100, 680 85" stroke="#7c3aed" stroke-width="2" fill="none" stroke-dasharray="4 3" opacity="0.6"/>
+  <!-- 标注 -->
+  <text x="400" y="310" text-anchor="middle" font-size="11" fill="#64748b">ViT 在大数据预训练后，以更少计算量达到更高准确率</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 6：计算量 vs 准确率 Pareto 前沿 — ViT 在 JFT-300M 预训练后全面领先 CNN</div>
+</div>
+
+<h3>9.4 线性探针评估</h3>
+<p>论文还用"线性探针"（冻结 backbone，只训练一个线性分类头）评估表示质量：</p>
+<div class="formula" data-eq="(22)">\text{表示质量} \propto \frac{1}{\text{linear probe accuracy}}</div>
+<p>结果显示：随着预训练数据量增加，ViT 的线性探针准确率持续上升，且<strong>大模型（ViT-Large）受益更多</strong>——这暗示了视觉领域的 Scaling Law：更大模型 + 更多数据 = 更好的表示。</p>
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">10</span>应用场景与变体</h2>
+
+<h3>10.1 ViT 家族主要变体</h3>
+<p>ViT 发布后衍生出大量改进变体，以下是最具影响力的：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>模型</th><th>年份</th><th>核心改进</th><th>解决的问题</th></tr></thead>
+<tbody>
+<tr><td><strong>DeiT</strong></td><td>2021</td><td>知识蒸馏 + 数据增强</td><td>ViT 在小数据上训练困难</td></tr>
+<tr><td><strong>Swin Transformer</strong></td><td>2021</td><td>窗口注意力 + 层级结构</td><td>(N^2)$ 复杂度 + 缺少多尺度</td></tr>
+<tr><td><strong>MAE</strong></td><td>2022</td><td>非对称自编码器掩码预训练</td><td>高效自监督视觉预训练</td></tr>
+<tr><td><strong>BEiT</strong></td><td>2021</td><td>类似 BERT 的图块掩码预测</td><td>自监督视觉预训练</td></tr>
+<tr><td><strong>CaiT</strong></td><td>2021</td><td>LayerScale + class-attention</td><td>深层 ViT 训练不稳定</td></tr>
+<tr><td><strong>TNT</strong></td><td>2021</td><td>图块内 Transformer 嵌套</td><td>图块内部结构丢失</td></tr>
+<tr><td><strong>PVT</strong></td><td>2021</td><td>金字塔结构 + 空间降采样</td><td>ViT 不适合密集预测任务</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>10.2 DeiT：让 ViT 摆脱大数据依赖</h3>
+<p>DeiT（Data-efficient Image Transformers）解决了 ViT 最大的痛点——需要 JFT-300M 级别数据。其核心策略：</p>
+<ul>
+  <li><strong>强数据增强</strong>：RandAugment + Mixup + CutMix + Random Erasing</li>
+  <li><strong>知识蒸馏</strong>：用 RegNet 作为教师网络，向 ViT 传递 CNN 的局部先验</li>
+  <li><strong>硬蒸馏</strong>：直接使用教师的硬标签（而非软标签），效果更好</li>
+</ul>
+<p>结果：DeiT-Base 仅用 ImageNet-1K 就达到了 .8$% top-1，与 JFT-300M 预训练的 ViT-Base 持平。</p>
+
+<div class="callout success">
+<div class="callout-title">DeiT 的启示</div>
+<p>DeiT 证明：通过知识蒸馏，可以将 CNN 的归纳偏置"注入"ViT，从而在小数据上获得 ViT 的架构优势 + CNN 的数据效率。这一思路开创了"CNN 教师 + Transformer 学生"的范式。</p>
+</div>
+
+<h3>10.3 MAE：自监督预训练新范式</h3>
+<p>MAE（Masked Autoencoder）将 BERT 式掩码预训练引入视觉：</p>
+<ul>
+  <li><strong>高掩码比例</strong>：随机遮挡 $% 的图块（BERT 只遮 $%</li>
+  <li><strong>非对称架构</strong>：编码器只处理可见图块（$%），解码器处理全部</li>
+  <li><strong>重建目标</strong>：预测被遮挡图块的原始像素值</li>
+</ul>
+<div class="formula" data-eq="(23)">\mathcal{L}_{\text{MAE}} = \frac{1}{|\mathcal{M}|} \sum_{i \in \mathcal{M}} \| \hat{\mathbf{x}}_i - \mathbf{x}_i \|^2</div>
+<p>其中 $\mathcal{M}$ 为被遮挡图块集合，$\hat{\mathbf{x}}_i$ 为重建预测。MAE 预训练的 ViT-Base 在 ImageNet 上达到 .6$% top-1，远超有监督预训练的 .8$%。</p>
+
+<h3>10.4 视觉任务的统一骨干</h3>
+<p>ViT 及其变体已被广泛应用于各视觉任务：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>任务</th><th>代表方法</th><th>ViT 的角色</th></tr></thead>
+<tbody>
+<tr><td>图像分类</td><td>ViT / DeiT / MAE</td><td>CLS Token → MLP Head</td></tr>
+<tr><td>目标检测</td><td>ViTDet / DETR</td><td>骨干网络提取特征</td></tr>
+<tr><td>语义分割</td><td>Segmenter / Mask2Former</td><td>图块特征上采样</td></tr>
+<tr><td>实例分割</td><td>ViTDet + Mask R-CNN</td><td>替换 ResNet 骨干</td></tr>
+<tr><td>视频理解</td><td>TimeSformer / ViViT</td><td>时空图块 + 时空注意力</td></tr>
+<tr><td>多模态</td><td>CLIP / BLIP / Flamingo</td><td>视觉编码器分支</td></tr>
+<tr><td>医学影像</td><td>TransUNet / Swin-UNETR</td><td>分块 + 编解码结构</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">11</span>PyTorch 代码实现</h2>
+
+<h3>11.1 Patch Embedding</h3>
+<p>分块嵌入的核心是利用卷积一步完成分块 + 线性投影：</p>
+<div class="code-block"><div class="code-header">vit_code.py</div><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">PatchEmbedding</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""将图像分割为图块并线性投影到 D 维"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, img_size=<span class="num">224</span>, patch_size=<span class="num">16</span>, in_channels=<span class="num">3</span>, embed_dim=<span class="num">768</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        self.num_patches = (img_size // patch_size) ** <span class="num">2</span>  <span class="com"># 196</span>
+        <span class="com"># 卷积分块等价于展平+线性投影</span>
+        self.proj = nn.<span class="cls">Conv2d</span>(
+            in_channels, embed_dim,
+            kernel_size=patch_size, stride=patch_size
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="com"># x: (B, C, H, W) -> (B, num_patches, embed_dim)</span>
+        x = self.<span class="fn">proj</span>(x)               <span class="com"># (B, D, H/P, W/P)</span>
+        x = x.<span class="fn">flatten</span>(<span class="num">2</span>)               <span class="com"># (B, D, num_patches)</span>
+        x = x.<span class="fn">transpose</span>(<span class="num">1</span>, <span class="num">2</span>)          <span class="com"># (B, num_patches, D)</span>
+        <span class="kw">return</span> x
+</pre></div>
+
+<h3>11.2 多头自注意力</h3>
+<div class="code-block"><div class="code-header">vit_code.py</div><pre><span class="kw">class</span> <span class="cls">MultiHeadSelfAttention</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""标准多头自注意力"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, dim=<span class="num">768</span>, num_heads=<span class="num">12</span>, qkv_bias=<span class="kw">True</span>, attn_drop=<span class="num">0.</span>, proj_drop=<span class="num">0.</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">assert</span> dim % num_heads == <span class="num">0</span>
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+        self.scale = self.head_dim ** -<span class="num">0.5</span>
+
+        <span class="com"># QKV 合并为一个线性层（高效实现）</span>
+        self.qkv = nn.<span class="cls">Linear</span>(dim, dim * <span class="num">3</span>, bias=qkv_bias)
+        self.attn_drop = nn.<span class="cls">Dropout</span>(attn_drop)
+        self.proj = nn.<span class="cls">Linear</span>(dim, dim)
+        self.proj_drop = nn.<span class="cls">Dropout</span>(proj_drop)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="cls">B</span>, <span class="cls">N</span>, <span class="cls">D</span> = x.shape
+        <span class="com"># (B, N, D) -> (B, N, 3D) -> (B, N, 3, h, d) -> (3, B, h, N, d)</span>
+        qkv = self.<span class="fn">qkv</span>(x).<span class="fn">reshape</span>(<span class="cls">B</span>, <span class="cls">N</span>, <span class="num">3</span>, self.num_heads, self.head_dim)
+        qkv = qkv.<span class="fn">permute</span>(<span class="num">2</span>, <span class="num">0</span>, <span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>)
+        q, k, v = qkv[<span class="num">0</span>], qkv[<span class="num">1</span>], qkv[<span class="num">2</span>]
+
+        <span class="com"># 注意力: (B, h, N, d) @ (B, h, d, N) -> (B, h, N, N)</span>
+        attn = (q @ k.<span class="fn">transpose</span>(-<span class="num">2</span>, -<span class="num">1</span>)) * self.scale
+        attn = attn.<span class="fn">softmax</span>(dim=-<span class="num">1</span>)
+        attn = self.<span class="fn">attn_drop</span>(attn)
+
+        <span class="com"># (B, h, N, N) @ (B, h, N, d) -> (B, h, N, d) -> (B, N, D)</span>
+        x = (attn @ v).<span class="fn">transpose</span>(<span class="num">1</span>, <span class="num">2</span>).<span class="fn">reshape</span>(<span class="cls">B</span>, <span class="cls">N</span>, <span class="cls">D</span>)
+        x = self.<span class="fn">proj_drop</span>(self.<span class="fn">proj</span>(x))
+        <span class="kw">return</span> x
+</pre></div>
+
+<h3>11.3 Transformer Encoder Block</h3>
+<div class="code-block"><div class="code-header">vit_code.py</div><pre><span class="kw">class</span> <span class="cls">TransformerBlock</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""Pre-LN Transformer Encoder Block"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, dim=<span class="num">768</span>, num_heads=<span class="num">12</span>, mlp_ratio=<span class="num">4.0</span>, drop=<span class="num">0.</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        self.norm1 = nn.<span class="cls">LayerNorm</span>(dim)
+        self.attn = <span class="cls">MultiHeadSelfAttention</span>(dim, num_heads, attn_drop=drop, proj_drop=drop)
+        self.norm2 = nn.<span class="cls">LayerNorm</span>(dim)
+        self.mlp = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Linear</span>(dim, <span class="fn">int</span>(dim * mlp_ratio)),
+            nn.<span class="cls">GELU</span>(),
+            nn.<span class="cls">Dropout</span>(drop),
+            nn.<span class="cls">Linear</span>(<span class="fn">int</span>(dim * mlp_ratio), dim),
+            nn.<span class="cls">Dropout</span>(drop),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="com"># Pre-LN: LN -> Attn -> Add</span>
+        x = x + self.<span class="fn">attn</span>(self.<span class="fn">norm1</span>(x))
+        <span class="com"># Pre-LN: LN -> FFN -> Add</span>
+        x = x + self.<span class="fn">mlp</span>(self.<span class="fn">norm2</span>(x))
+        <span class="kw">return</span> x
+</pre></div>
+
+<h3>11.4 完整 ViT 模型</h3>
+<div class="code-block"><div class="code-header">vit_code.py</div><pre><span class="kw">class</span> <span class="cls">VisionTransformer</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""完整 ViT 分类模型"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, img_size=<span class="num">224</span>, patch_size=<span class="num">16</span>, in_ch=<span class="num">3</span>,
+                 num_classes=<span class="num">1000</span>, embed_dim=<span class="num">768</span>, depth=<span class="num">12</span>,
+                 num_heads=<span class="num">12</span>, mlp_ratio=<span class="num">4.0</span>, drop=<span class="num">0.</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        self.patch_embed = <span class="cls">PatchEmbedding</span>(img_size, patch_size, in_ch, embed_dim)
+        num_patches = self.patch_embed.num_patches
+
+        <span class="com"># CLS Token (可学习参数)</span>
+        self.cls_token = nn.<span class="cls">Parameter</span>(torch.<span class="fn">zeros</span>(<span class="num">1</span>, <span class="num">1</span>, embed_dim))
+        <span class="com"># 位置编码 (可学习参数)</span>
+        self.pos_embed = nn.<span class="cls">Parameter</span>(torch.<span class="fn">zeros</span>(<span class="num">1</span>, num_patches + <span class="num">1</span>, embed_dim))
+        self.pos_drop = nn.<span class="cls">Dropout</span>(drop)
+
+        <span class="com"># Transformer Encoder: 堆叠 L 层</span>
+        self.blocks = nn.<span class="cls">ModuleList</span>([
+            <span class="cls">TransformerBlock</span>(embed_dim, num_heads, mlp_ratio, drop)
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(depth)
+        ])
+        self.norm = nn.<span class="cls">LayerNorm</span>(embed_dim)
+
+        <span class="com"># 分类头</span>
+        self.head = nn.<span class="cls">Linear</span>(embed_dim, num_classes)
+
+        <span class="com"># 初始化</span>
+        nn.init.<span class="fn">trunc_normal_</span>(self.pos_embed, std=<span class="num">0.02</span>)
+        nn.init.<span class="fn">trunc_normal_</span>(self.cls_token, std=<span class="num">0.02</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="cls">B</span> = x.shape[<span class="num">0</span>]
+
+        <span class="com"># 1. 分块嵌入: (B, C, H, W) -> (B, N, D)</span>
+        x = self.<span class="fn">patch_embed</span>(x)
+
+        <span class="com"># 2. 插入 CLS Token</span>
+        cls = self.cls_token.<span class="fn">expand</span>(<span class="cls">B</span>, -<span class="num">1</span>, -<span class="num">1</span>)  <span class="com"># (B, 1, D)</span>
+        x = torch.<span class="fn">cat</span>([cls, x], dim=<span class="num">1</span>)           <span class="com"># (B, N+1, D)</span>
+
+        <span class="com"># 3. 加位置编码</span>
+        x = self.<span class="fn">pos_drop</span>(x + self.pos_embed)
+
+        <span class="com"># 4. Transformer Encoder</span>
+        <span class="kw">for</span> blk <span class="kw">in</span> self.blocks:
+            x = <span class="fn">blk</span>(x)
+        x = self.<span class="fn">norm</span>(x)
+
+        <span class="com"># 5. CLS Token -> 分类</span>
+        cls_out = x[:, <span class="num">0</span>]           <span class="com"># (B, D)</span>
+        <span class="kw">return</span> self.<span class="fn">head</span>(cls_out)   <span class="com"># (B, num_classes)</span>
+</pre></div>
+
+<h3>11.5 模型构建与验证</h3>
+<div class="code-block"><div class="code-header">vit_code.py</div><pre><span class="com"># 构建 ViT-Base/16</span>
+<span class="kw">def</span> <span class="fn">vit_base_16</span>(num_classes=<span class="num">1000</span>):
+    <span class="kw">return</span> <span class="cls">VisionTransformer</span>(
+        img_size=<span class="num">224</span>, patch_size=<span class="num">16</span>, embed_dim=<span class="num">768</span>,
+        depth=<span class="num">12</span>, num_heads=<span class="num">12</span>, mlp_ratio=<span class="num">4.0</span>, num_classes=num_classes
+    )
+
+<span class="com"># 构建 ViT-Large/16</span>
+<span class="kw">def</span> <span class="fn">vit_large_16</span>(num_classes=<span class="num">1000</span>):
+    <span class="kw">return</span> <span class="cls">VisionTransformer</span>(
+        img_size=<span class="num">224</span>, patch_size=<span class="num">16</span>, embed_dim=<span class="num">1024</span>,
+        depth=<span class="num">24</span>, num_heads=<span class="num">16</span>, mlp_ratio=<span class="num">4.0</span>, num_classes=num_classes
+    )
+
+<span class="com"># 验证输出</span>
+model = <span class="fn">vit_base_16</span>()
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">3</span>, <span class="num">224</span>, <span class="num">224</span>)
+out = <span class="fn">model</span>(x)
+<span class="fn">print</span>(f<span class="str">"Input:  {x.shape}"</span>)       <span class="com"># (1, 3, 224, 224)</span>
+<span class="fn">print</span>(f<span class="str">"Output: {out.shape}"</span>)     <span class="com"># (1, 1000)</span>
+<span class="fn">print</span>(f<span class="str">"Params: {sum(p.numel() for p in model.parameters()) / 1e6:.1f}M"</span>)
+<span class="com"># Params: 86.5M (与论文一致)</span>
+</pre></div>
+
+<h3>11.6 训练循环</h3>
+<div class="code-block"><div class="code-header">vit_code.py</div><pre><span class="kw">def</span> <span class="fn">train_vit</span>(model, train_loader, epochs=<span class="num">300</span>, lr=<span class="num">1</span>e-<span class="num">4</span>, weight_decay=<span class="num">0.3</span>):
+    <span class="str">"""ViT 训练循环 (DeiT 风格超参)"""</span>
+    optimizer = torch.optim.<span class="cls">AdamW</span>(
+        model.<span class="fn">parameters</span>(), lr=lr, weight_decay=weight_decay
+    )
+    <span class="com"># 余弦退火 + 线性 warmup</span>
+    scheduler = torch.optim.lr_scheduler.<span class="cls">CosineAnnealingLR</span>(
+        optimizer, <span class="cls">T_max</span>=epochs, eta_min=<span class="num">1</span>e-<span class="num">6</span>
+    )
+    criterion = nn.<span class="cls">CrossEntropyLoss</span>()
+
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
+        <span class="kw">for</span> images, labels <span class="kw">in</span> train_loader:
+            <span class="com"># Mixup 数据增强</span>
+            lam = np.random.<span class="fn">beta</span>(<span class="num">0.2</span>, <span class="num">0.2</span>)
+            idx = torch.<span class="fn">randperm</span>(images.<span class="fn">size</span>(<span class="num">0</span>))
+            mixed_x = lam * images + (<span class="num">1</span> - lam) * images[idx]
+            labels_a, labels_b = labels, labels[idx]
+
+            logits = <span class="fn">model</span>(mixed_x)
+            loss = lam * <span class="fn">criterion</span>(logits, labels_a) + (<span class="num">1</span> - lam) * <span class="fn">criterion</span>(logits, labels_b)
+
+            optimizer.<span class="fn">zero_grad</span>()
+            loss.<span class="fn">backward</span>()
+            <span class="com"># 梯度裁剪 (ViT 训练稳定性)</span>
+            torch.nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), <span class="num">1.0</span>)
+            optimizer.<span class="fn">step</span>()
+
+        scheduler.<span class="fn">step</span>()
+        <span class="fn">print</span>(f<span class="str">"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}"</span>)
+</pre></div>
+</section>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">12</span>Swin Transformer 与窗口注意力</h2>
+
+<h3>12.1 标准 ViT 的复杂度困境</h3>
+<p>标准 ViT 的自注意力复杂度为 (N^2)$。当图像分辨率增大或图块变小时，序列长度 $ 急剧增长：</p>
+<div class="formula" data-eq="(24)">\text{FLOPs}_{\text{MSA}} = 4ND^2 + 2N^2D</div>
+<p>当  = 196$（ \times 224$）时尚可接受，但若做密集预测（目标检测、分割）需要更高分辨率特征图（如  = W = 512$， = 1024$），^2$ 项成为瓶颈。</p>
+
+<h3>12.2 Swin 的核心创新：窗口注意力</h3>
+<p>Swin Transformer（ICCV 2021 最佳论文）通过两个关键设计将复杂度降为<strong>线性</strong>：</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>设计</th><th>说明</th><th>效果</th></tr></thead>
+<tbody>
+<tr><td>窗口注意力 (W-MSA)</td><td>在局部  \times M$ 窗口内计算注意力</td><td>(N \cdot M^2)$，线性于 $</td></tr>
+<tr><td>移位窗口 (SW-MSA)</td><td>相邻层窗口偏移半个窗口</td><td>跨窗口信息流动</td></tr>
+<tr><td>层级结构</td><td>逐阶段合并  \times 2$ 相邻图块</td><td>多尺度特征（类似 CNN 金字塔）</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="formula" data-eq="(25)">\text{FLOPs}_{\text{W-MSA}} = 4M^2 D^2 + 2M^4 D, \quad \text{FLOPs}_{\text{SW-MSA}} = O(N \cdot M^2 D)</div>
+<p>其中 $ 为窗口大小（通常  = 7$），$ 为总图块数。窗口注意力使复杂度从 (N^2)$ 降为 (N)$。</p>
+
+<h3>12.3 移位窗口机制</h3>
+<div class="svg-box">
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Swin 窗口注意力与移位机制</text>
+  <!-- Layer l: 标准窗口 -->
+  <text x="180" y="58" text-anchor="middle" font-size="12" font-weight="600" fill="#2563eb">Layer l: W-MSA (标准窗口)</text>
+  <g transform="translate(60, 70)">
+    <!-- 4×4 grid -->
+    <rect x="0" y="0" width="240" height="180" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <!-- window borders -->
+    <rect x="0" y="0" width="120" height="90" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <rect x="120" y="0" width="120" height="90" rx="2" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/>
+    <rect x="0" y="90" width="120" height="90" rx="2" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/>
+    <rect x="120" y="90" width="120" height="90" rx="2" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="60" y="48" text-anchor="middle" font-size="10" fill="#1e40af">窗口1</text>
+    <text x="180" y="48" text-anchor="middle" font-size="10" fill="#1e40af">窗口2</text>
+    <text x="60" y="138" text-anchor="middle" font-size="10" fill="#1e40af">窗口3</text>
+    <text x="180" y="138" text-anchor="middle" font-size="10" fill="#1e40af">窗口4</text>
+  </g>
+  <text x="180" y="268" text-anchor="middle" font-size="10" fill="#64748b">注意力仅在窗口内计算</text>
+  <!-- Layer l+1: 移位窗口 -->
+  <text x="580" y="58" text-anchor="middle" font-size="12" font-weight="600" fill="#7c3aed">Layer l+1: SW-MSA (移位窗口)</text>
+  <g transform="translate(425, 70)">
+    <rect x="0" y="0" width="240" height="180" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <!-- shifted windows: padding + cyclic shift -->
+    <rect x="30" y="30" width="120" height="90" rx="2" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <rect x="-15" y="-15" width="60" height="45" rx="2" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.5"/>
+    <rect x="105" y="-15" width="60" height="45" rx="2" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.5"/>
+    <rect x="-15" y="30" width="60" height="90" rx="2" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.5"/>
+    <rect x="165" y="30" width="60" height="90" rx="2" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.5"/>
+    <rect x="30" y="135" width="120" height="45" rx="2" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.5"/>
+    <text x="90" y="78" text-anchor="middle" font-size="10" fill="#6d28d9">移位窗口</text>
+    <text x="90" y="92" text-anchor="middle" font-size="9" fill="#6d28d9">(跨窗口连接)</text>
+  </g>
+  <text x="580" y="268" text-anchor="middle" font-size="10" fill="#64748b">窗口偏移半个窗口 = 跨窗口信息流</text>
+  <!-- 箭头 -->
+  <path d="M 330 160 L 410 160" stroke="#059669" stroke-width="2" marker-end="url(#va8)" fill="none"/>
+  <text x="370" y="150" text-anchor="middle" font-size="10" fill="#059669" font-weight="600">移位</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 7：Swin 窗口注意力机制 — 通过交替使用标准窗口和移位窗口实现跨窗口信息流动</div>
+</div>
+
+<h3>12.4 Swin vs ViT vs CNN</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>特性</th><th>ViT</th><th>Swin Transformer</th><th>CNN (ResNet)</th></tr></thead>
+<tbody>
+<tr><td>复杂度</td><td>(N^2)$</td><td>(N)$</td><td>(N)$</td></tr>
+<tr><td>多尺度特征</td><td>无</td><td>有（层级结构）</td><td>有（池化金字塔）</td></tr>
+<tr><td>全局感受野</td><td>第一层即全局</td><td>逐层扩大（类似 CNN）</td><td>逐层扩大</td></tr>
+<tr><td>密集预测</td><td>不适用</td><td>适用（检测/分割 SOTA）</td><td>适用</td></tr>
+<tr><td>归纳偏置</td><td>无</td><td>弱（窗口 = 软局部先验）</td><td>强</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">
+<div class="callout-title">Swin 的定位</div>
+<p>Swin Transformer 是 ViT 与 CNN 的折中——保留 Transformer 的全局建模能力，同时引入窗口局部性和层级结构，使其既能高效处理高分辨率图像，又能生成多尺度特征图。这使得 Transformer 首次在<strong>目标检测和语义分割</strong>任务上超越 CNN。</p>
+</div>
+</section>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="year">2017</div>
+    <div class="event">Transformer 在 NLP 领域问世</div>
+    <div class="desc">Vaswani 等人提出自注意力机制，颠覆 RNN 序列建模范式</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2019</div>
+    <div class="event">视觉领域开始探索 Transformer</div>
+    <div class="desc">Local Relation Networks、Vision Transformer 早期版本尝试注意力替代卷积，但需 CNN 前端</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2020.10</div>
+    <div class="event">ViT 论文发布 (Google Research)</div>
+    <div class="desc">"An Image is Worth 16×16 Words" 证明纯 Transformer 可处理图像，但需大数据预训练</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.01</div>
+    <div class="event">DeiT 解决小数据训练问题</div>
+    <div class="desc">知识蒸馏 + 强增强，使 ViT 仅用 ImageNet-1K 即可训练</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.03</div>
+    <div class="event">Swin Transformer 发表 (微软亚研)</div>
+    <div class="desc">窗口注意力实现线性复杂度 + 层级结构，ICCV 2021 最佳论文</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.06</div>
+    <div class="event">CLIP / DALL-E 发布 (OpenAI)</div>
+    <div class="desc">ViT 作为视觉编码器，与文本 Transformer 联合训练，开启多模态时代</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.10</div>
+    <div class="event">BEiT：BERT 式视觉预训练</div>
+    <div class="desc">将 BERT 的掩码语言模型思路迁移到视觉图块</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.11</div>
+    <div class="event">MAE：掩码自编码器 (何恺明团队)</div>
+    <div class="desc">75% 掩码 + 非对称编解码，视觉自监督预训练新 SOTA</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2022.03</div>
+    <div class="event">ConvNeXt：CNN 的反击</div>
+    <div class="desc">将 Transformer 设计理念注入 CNN（大卷积核 + LayerNorm），证明 CNN 仍有竞争力</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2023+</div>
+    <div class="event">ViT 成为视觉基础模型标准骨干</div>
+    <div class="desc">SAM、DINOv2、Stable Diffusion (UNet 中含注意力)、Sora 均以 ViT/注意力为核心组件</div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">总结</div>
+  ViT 的核心贡献是证明了一句简洁的命题：<strong>图像可以像语言一样被 Transformer 直接处理</strong>。它将视觉理解从"CNN 局部先验"范式推向"Transformer 数据驱动"范式。虽然原始 ViT 存在对大数据的依赖，但 DeiT、MAE、Swin 等后续工作迅速补齐了短板。今天，ViT 已成为视觉基础模型（CLIP、SAM、DINOv2、Sora）的标准骨干组件，其影响已远超图像分类本身——它统一了 NLP 与 CV 的架构基座，为多模态大模型奠定了视觉侧的根基。
+</div>
+
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+  <li>Dosovitskiy, A., et al. (2021). An image is worth 16×16 words: Transformers for image recognition at scale. <em>ICLR 2021</em>.</li>
+  <li>Vaswani, A., et al. (2017). Attention is all you need. <em>NeurIPS 2017</em>.</li>
+  <li>Touvron, H., et al. (2021). Training data-efficient image transformers & distillation through attention. <em>ICML 2021</em>.</li>
+  <li>Liu, Z., et al. (2021). Swin Transformer: Hierarchical vision transformer using shifted windows. <em>ICCV 2021 (Best Paper)</em>.</li>
+  <li>He, K., et al. (2022). Masked autoencoders are scalable vision learners. <em>CVPR 2022</em>.</li>
+  <li>Bao, H., et al. (2022). BEiT: BERT pre-training of image transformers. <em>ICLR 2022</em>.</li>
+  <li>Touvron, H., et al. (2021). Going deeper with image transformers. <em>ICCV 2021</em>. (CaiT)</li>
+  <li>Radford, A., et al. (2021). Learning transferable visual models from natural language supervision. <em>ICML 2021</em>. (CLIP)</li>
+  <li>Liu, Z., et al. (2022). A ConvNet for the 2020s. <em>CVPR 2022</em>. (ConvNeXt)</li>
+  <li>Wang, W., et al. (2021). Pyramid vision transformer: A versatile backbone for dense prediction without convolutions. <em>ICCV 2021</em>.</li>
+  <li>Hua, X., et al. (2021). Transformer in transformer. <em>NeurIPS 2021</em>. (TNT)</li>
+  <li>Deng, J., et al. (2009). ImageNet: A large-scale hierarchical image database. <em>CVPR 2009</em>.</li>
+  <li>He, K., et al. (2016). Deep residual learning for image recognition. <em>CVPR 2016</em>.</li>
+  <li>Chen, X., et al. (2023). Masked autoencoders enable scalable image classifiers. <em>NeurIPS 2023</em>.</li>
+  <li>Oquab, M., et al. (2024). DINOv2: Learning robust visual features without supervision. <em>TMLR 2024</em>.</li>
+</ol>
+</section>
+
+</main>
+<div id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</div>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+
+// KaTeX 渲染策略
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BERT 模型详解 — Bidirectional Encoder Representations from Transformers 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>BERT 模型详解</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、BERT 的诞生与动机</a>
+    <a href="#ch2">二、整体架构：双向 Transformer 编码器</a>
+    <a href="#ch3">三、输入表示：Token、Segment、Position</a>
+    <a href="#ch4">四、核心机制：自注意力与多头注意力</a>
+    <a href="#ch5">五、预训练任务一：掩码语言模型（MLM）</a>
+    <a href="#ch6">六、预训练任务二：下一句预测（NSP）</a>
+    <a href="#ch7">七、微调范式：下游任务适配</a>
+    <a href="#ch8">八、BERT 的数学描述</a>
+    <a href="#ch9">九、BERT vs GPT vs Transformer</a>
+    <a href="#ch10">十、训练细节与优化策略</a>
+    <a href="#ch11">十一、PyTorch 代码实现</a>
+    <a href="#ch12">十二、BERT 的扩展与变体</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>BERT 模型详解</h1>
+  <div class="subtitle">Bidirectional Encoder Representations from Transformers</div>
+  <div class="tagline">NLP 预训练范式革命 · 2018 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">7 张 SVG 结构图</span>
+    <span class="badge">6 段 PyTorch 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">1</span>BERT 的诞生与动机</h2>
+
+<h3>1.1 预训练时代的背景</h3>
+<p>2018 年之前，NLP 领域的主流范式是<strong>特征工程 + 浅层模型</strong>。词向量（Word2Vec、GloVe）将词映射为静态向量，但无法处理一词多义和上下文依赖。ELMo 通过双向 LSTM 提取上下文特征，缓解了这一问题，但 LSTM 的顺序计算限制了并行效率和模型规模。</p>
+<p>与此同时，Transformer 架构（2017）凭借自注意力机制实现了完全并行的序列建模。OpenAI 的 GPT（2018）验证了"预训练 + 微调"范式在 NLP 中的潜力，但 GPT 使用<strong>单向语言模型</strong>（仅从左到右预测），无法利用右侧上下文信息。</p>
+
+<table>
+<thead><tr><th>模型</th><th>年份</th><th>架构</th><th>预训练任务</th><th>方向性</th></tr></thead>
+<tbody>
+<tr><td>Word2Vec</td><td>2013</td><td>浅层 CBOW/Skip-gram</td><td>无（静态词向量）</td><td>无上下文</td></tr>
+<tr><td>ELMo</td><td>2018</td><td>双向 LSTM</td><td>双向语言模型</td><td>双向（但拼接）</td></tr>
+<tr><td>GPT</td><td>2018</td><td>Transformer Decoder</td><td>单向语言模型</td><td>单向（左→右）</td></tr>
+<tr><td><strong>BERT</strong></td><td><strong>2018</strong></td><td><strong>Transformer Encoder</strong></td><td><strong>MLM + NSP</strong></td><td><strong>双向（真正）</strong></td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout-title">核心动机</div>
+<p>BERT 的核心动机是：<strong>语言理解需要双向上下文</strong>。"The man went to the ___ to buy milk" 中，填空不仅需要左侧的 "went to"，还需要右侧的 "to buy milk" 来推断答案是 "store" 而非 "bank"。GPT 的单向语言模型无法做到这一点——BERT 通过掩码语言模型（MLM）任务实现了真正的双向编码。</p>
+</div>
+
+<h3>1.2 BERT 的诞生</h3>
+<p>2018 年 10 月，Google AI 团队在论文 <em>"BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"</em> 中提出了 BERT。BERT 在 11 项 NLP 基准测试中刷新了 SOTA：</p>
+<ul>
+  <li>GLUE 基准：$80.5$ 分（此前 SOTA 为 $72.8$），提升 $7.7$ 分</li>
+  <li>SQuAD v1.1 问答：$F1 = 93.2$（超越人类 $91.2$）</li>
+  <li>SWAG 推理：$86.5$%（此前 SOTA 为 $76.0$%）</li>
+</ul>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">BERT 核心流程：预训练 → 微调</text>
+  <!-- 大规模预训练 -->
+  <rect x="20" y="50" width="160" height="80" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="100" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">大规模预训练</text>
+  <text x="100" y="98" text-anchor="middle" font-size="12" fill="#334155">Wikipedia + BookCorpus</text>
+  <text x="100" y="115" text-anchor="middle" font-size="12" fill="#334155">33亿词 · 16GB文本</text>
+  <!-- 箭头 -->
+  <line x1="180" y1="90" x2="230" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#b1)" class="flow-line"/>
+  <!-- 预训练任务 -->
+  <rect x="230" y="50" width="160" height="80" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="310" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#6d28d9">预训练任务</text>
+  <text x="310" y="98" text-anchor="middle" font-size="12" fill="#334155">MLM (掩码语言模型)</text>
+  <text x="310" y="115" text-anchor="middle" font-size="12" fill="#334155">NSP (下一句预测)</text>
+  <!-- 箭头 -->
+  <line x1="390" y1="90" x2="440" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#b1)" class="flow-line"/>
+  <!-- 微调 -->
+  <rect x="440" y="50" width="160" height="80" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="520" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#047857">微调</text>
+  <text x="520" y="98" text-anchor="middle" font-size="12" fill="#334155">分类头 + 1个下游任务</text>
+  <text x="520" y="115" text-anchor="middle" font-size="12" fill="#334155">少量标注数据</text>
+  <!-- 箭头 -->
+  <line x1="600" y1="90" x2="650" y2="90" stroke="#94a3b8" stroke-width="2" marker-end="url(#b1)" class="flow-line"/>
+  <!-- 下游任务 -->
+  <rect x="650" y="50" width="130" height="80" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text x="715" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#c2410c">下游任务</text>
+  <text x="715" y="98" text-anchor="middle" font-size="12" fill="#334155">分类/问答/序列标注</text>
+  <text x="715" y="115" text-anchor="middle" font-size="12" fill="#334155">11项 SOTA</text>
+  <!-- BERT模型示意 -->
+  <rect x="200" y="160" width="400" height="140" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="400" y="185" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">BERT 模型架构</text>
+  <!-- 输入 -->
+  <rect x="220" y="200" width="80" height="30" rx="6" fill="#2563eb"/>
+  <text x="260" y="220" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Input</text>
+  <!-- Embedding -->
+  <rect x="310" y="200" width="80" height="30" rx="6" fill="#7c3aed"/>
+  <text x="350" y="220" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Embedding</text>
+  <!-- Transformer -->
+  <rect x="400" y="200" width="100" height="30" rx="6" fill="#059669"/>
+  <text x="450" y="220" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Transformer</text>
+  <text x="450" y="232" text-anchor="middle" font-size="10" fill="#fff">12/24 层</text>
+  <!-- Output -->
+  <rect x="510" y="200" width="70" height="30" rx="6" fill="#ea580c"/>
+  <text x="545" y="220" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Output</text>
+  <!-- 箭头 -->
+  <line x1="300" y1="215" x2="310" y2="215" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="390" y1="215" x2="400" y2="215" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b1)"/>
+  <line x1="500" y1="215" x2="510" y2="215" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b1)"/>
+  <!-- 说明 -->
+  <text x="400" y="260" text-anchor="middle" font-size="12" fill="#64748b">蓝色=输入 · 紫色=嵌入 · 绿色=编码器 · 橙色=输出</text>
+  <text x="400" y="278" text-anchor="middle" font-size="12" fill="#64748b">预训练学习通用语言表示，微调适配特定任务</text>
+</svg>
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">2</span>整体架构：双向 Transformer 编码器</h2>
+
+<h3>2.1 架构概述</h3>
+<p>BERT 的核心架构是一个<strong>多层双向 Transformer 编码器</strong>。与原始 Transformer（编码器+解码器）不同，BERT 只使用编码器部分，因为它的目标是<strong>理解</strong>语言而非<strong>生成</strong>语言。编码器的双向自注意力允许每个 Token 同时关注序列中的所有其他 Token，实现真正的双向上下文建模。</p>
+
+<table>
+<thead><tr><th>配置</th><th>BERT-Base</th><th>BERT-Large</th></tr></thead>
+<tbody>
+<tr><td>编码器层数 $L$</td><td>$12$</td><td>$24$</td></tr>
+<tr><td>隐藏维度 $H$</td><td>$768$</td><td>$1024$</td></tr>
+<tr><td>注意力头数 $A$</td><td>$12$</td><td>$16$</td></tr>
+<tr><td>FFN 中间维度</td><td>$3072$</td><td>$4096$</td></tr>
+<tr><td>参数量</td><td>$110$M</td><td>$340$M</td></tr>
+<tr><td>最大序列长度</td><td>$512$</td><td>$512$</td></tr>
+<tr><td>词表大小</td><td>$30{,}522$</td><td>$30{,}522$</td></tr>
+</tbody>
+</table>
+
+<h3>2.2 Transformer 编码器层</h3>
+<p>每一层 Transformer 编码器由两个子层组成：<strong>多头自注意力</strong>（Multi-Head Self-Attention）和<strong>前馈网络</strong>（Feed-Forward Network）。每个子层后接残差连接和 LayerNorm：</p>
+<div class="formula" data-eq="(1)">$$\text{output} = \text{LayerNorm}(x + \text{Sublayer}(x))$$</div>
+<p>其中 $x$ 为子层输入，$\text{Sublayer}$ 为自注意力或 FFN。残差连接缓解了深层网络的梯度消失问题，LayerNorm 稳定了训练过程。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Transformer 编码器层结构</text>
+  <!-- 输入 -->
+  <rect x="320" y="45" width="160" height="36" rx="8" fill="#2563eb"/>
+  <text x="400" y="68" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Input (每个 Token)</text>
+  <line x1="400" y1="81" x2="400" y2="100" stroke="#94a3b8" stroke-width="2" marker-end="url(#b2)" class="flow-line"/>
+  <!-- 残差连接线 -->
+  <line x1="200" y1="63" x2="200" y2="320" stroke="#ea580c" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="200" y1="320" x2="320" y2="320" stroke="#ea580c" stroke-width="2" marker-end="url(#b2)"/>
+  <text x="170" y="200" text-anchor="middle" font-size="11" fill="#ea580c" font-weight="600" transform="rotate(-90 170 200)">残差连接</text>
+  <!-- Multi-Head Attention -->
+  <rect x="280" y="100" width="240" height="50" rx="10" fill="#7c3aed"/>
+  <text x="400" y="125" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Multi-Head Self-Attention</text>
+  <text x="400" y="142" text-anchor="middle" font-size="11" fill="#ddd">每个 Token 关注所有 Token</text>
+  <line x1="400" y1="150" x2="400" y2="170" stroke="#94a3b8" stroke-width="2" marker-end="url(#b2)"/>
+  <!-- Add & Norm 1 -->
+  <rect x="320" y="170" width="160" height="34" rx="8" fill="#059669"/>
+  <text x="400" y="192" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Add &amp; LayerNorm</text>
+  <line x1="400" y1="204" x2="400" y2="224" stroke="#94a3b8" stroke-width="2" marker-end="url(#b2)"/>
+  <!-- 残差连接线2 -->
+  <line x1="600" y1="187" x2="600" y2="320" stroke="#ea580c" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="600" y1="320" x2="480" y2="320" stroke="#ea580c" stroke-width="2" marker-end="url(#b2)"/>
+  <text x="630" y="260" text-anchor="middle" font-size="11" fill="#ea580c" font-weight="600" transform="rotate(90 630 260)">残差连接</text>
+  <!-- FFN -->
+  <rect x="280" y="224" width="240" height="44" rx="10" fill="#7c3aed"/>
+  <text x="400" y="248" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Feed-Forward Network</text>
+  <text x="400" y="262" text-anchor="middle" font-size="11" fill="#ddd">Linear → GELU → Linear</text>
+  <line x1="400" y1="268" x2="400" y2="286" stroke="#94a3b8" stroke-width="2" marker-end="url(#b2)"/>
+  <!-- Add & Norm 2 -->
+  <rect x="320" y="286" width="160" height="34" rx="8" fill="#059669"/>
+  <text x="400" y="308" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Add &amp; LayerNorm</text>
+  <line x1="400" y1="320" x2="400" y2="340" stroke="#94a3b8" stroke-width="2" marker-end="url(#b2)"/>
+  <!-- 输出 -->
+  <rect x="320" y="340" width="160" height="30" rx="8" fill="#ea580c"/>
+  <text x="400" y="360" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Output</text>
+</svg>
+</section>
+
+<h3>2.3 为什么只用编码器</h3>
+<p>BERT 选择只用编码器而非完整的 Transformer（编码器+解码器）或只用解码器（如 GPT），是由其任务目标决定的：</p>
+<table>
+<thead><tr><th>架构选择</th><th>代表模型</th><th>方向性</th><th>适合任务</th></tr></thead>
+<tbody>
+<tr><td>编码器（Encoder）</td><td><strong>BERT</strong></td><td><strong>双向</strong></td><td><strong>理解类（分类、问答、NER）</strong></td></tr>
+<tr><td>解码器（Decoder）</td><td>GPT</td><td>单向（左→右）</td><td>生成类（文本生成）</td></tr>
+<tr><td>编码器+解码器</td><td>T5、BART</td><td>编码器双向，解码器单向</td><td>序列到序列（翻译、摘要）</td></tr>
+</tbody>
+</table>
+<div class="callout success">
+<div class="callout-title">双向编码的力量</div>
+<p>BERT 的编码器中，每个 Token 的表示同时融合了左侧和右侧上下文信息。这种真正的双向性使得 BERT 在理解类任务上大幅超越单向的 GPT。代价是 BERT 不适合自回归生成——它需要完整的输入序列才能工作。</p>
+</div>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">3</span>输入表示：Token、Segment、Position</h2>
+
+<h3>3.1 三种嵌入的相加</h3>
+<p>BERT 的输入表示是三种嵌入的<strong>逐元素相加</strong>：Token Embedding、Segment Embedding 和 Position Embedding。这三种嵌入的维度相同（$H$），相加后形成每个 Token 的最终输入向量。</p>
+<div class="formula" data-eq="(2)">$$E_{\text{input}} = E_{\text{token}} + E_{\text{segment}} + E_{\text{position}}$$</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">BERT 输入表示：三种嵌入相加</text>
+  <!-- Token Embedding -->
+  <text x="80" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#2563eb">Token Embedding</text>
+  <rect x="40" y="70" width="80" height="28" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="80" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">[CLS]</text>
+  <rect x="130" y="70" width="80" height="28" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="170" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">The</text>
+  <rect x="220" y="70" width="80" height="28" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="260" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">man</text>
+  <rect x="310" y="70" width="80" height="28" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="350" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">went</text>
+  <rect x="400" y="70" width="80" height="28" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="440" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">[MASK]</text>
+  <rect x="490" y="70" width="80" height="28" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="530" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">store</text>
+  <rect x="580" y="70" width="80" height="28" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="620" y="88" text-anchor="middle" font-size="11" fill="#1d4ed8">[SEP]</text>
+  <!-- Segment Embedding -->
+  <text x="80" y="130" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">Segment Embedding</text>
+  <rect x="40" y="140" width="400" height="28" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="240" y="158" text-anchor="middle" font-size="11" fill="#6d28d9">Sentence A (Segment 0)</text>
+  <rect x="450" y="140" width="210" height="28" rx="6" fill="#c7d2fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="555" y="158" text-anchor="middle" font-size="11" fill="#6d28d9">Sentence B (Segment 1)</text>
+  <!-- Position Embedding -->
+  <text x="80" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#059669">Position Embedding</text>
+  <rect x="40" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="65" y="228" text-anchor="middle" font-size="11" fill="#047857">0</text>
+  <rect x="95" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="120" y="228" text-anchor="middle" font-size="11" fill="#047857">1</text>
+  <rect x="150" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="175" y="228" text-anchor="middle" font-size="11" fill="#047857">2</text>
+  <rect x="205" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="230" y="228" text-anchor="middle" font-size="11" fill="#047857">3</text>
+  <rect x="260" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="285" y="228" text-anchor="middle" font-size="11" fill="#047857">4</text>
+  <rect x="315" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="340" y="228" text-anchor="middle" font-size="11" fill="#047857">5</text>
+  <rect x="370" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="395" y="228" text-anchor="middle" font-size="11" fill="#047857">6</text>
+  <rect x="425" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="450" y="228" text-anchor="middle" font-size="11" fill="#047857">7</text>
+  <rect x="480" y="210" width="50" height="28" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="505" y="228" text-anchor="middle" font-size="11" fill="#047857">8</text>
+  <!-- 加号 -->
+  <text x="400" y="262" text-anchor="middle" font-size="20" fill="#94a3b8">= 相加</text>
+  <text x="400" y="285" text-anchor="middle" font-size="12" fill="#64748b">最终输入向量：每个 Token = Token Embed + Segment Embed + Position Embed</text>
+</svg>
+</section>
+
+<h3>3.2 WordPiece 分词</h3>
+<p>BERT 使用 <strong>WordPiece</strong> 子词分词器，词表大小为 $30{,}522$。WordPiece 将罕见词拆分为子词单元，例如 "playing" → "play" + "##ing"，"unaffordable" → "un" + "##aff" + "##ord" + "##able"。这一策略解决了未登录词（OOV）问题，同时控制了词表规模。</p>
+
+<h3>3.3 特殊 Token</h3>
+<table>
+<thead><tr><th>Token</th><th>含义</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td><code>[CLS]</code></td><td>分类标记</td><td>置于序列首位，其最终隐藏状态用于分类任务</td></tr>
+<tr><td><code>[SEP]</code></td><td>分隔标记</td><td>分隔两个句子，或标记序列结束</td></tr>
+<tr><td><code>[MASK]</code></td><td>掩码标记</td><td>预训练 MLM 任务中替换被遮蔽的 Token</td></tr>
+<tr><td><code>[PAD]</code></td><td>填充标记</td><td>将短序列填充到统一长度</td></tr>
+<tr><td><code>[UNK]</code></td><td>未知标记</td><td>WordPiece 无法拆分的字符</td></tr>
+</tbody>
+</table>
+
+<h3>3.4 位置编码：学习式 vs 正弦式</h3>
+<p>与原始 Transformer 使用固定的正弦/余弦位置编码不同，BERT 使用<strong>可学习的位置编码</strong>——位置嵌入是一个 $512 \times H$ 的可训练参数矩阵。学习式位置编码更灵活，但限制了最大序列长度（BERT 为 $512$）。</p>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">4</span>核心机制：自注意力与多头注意力</h2>
+
+<h3>4.1 缩放点积注意力</h3>
+<p>自注意力是 Transformer 的核心。给定输入序列的 Query $Q$、Key $K$、Value $V$，注意力计算为：</p>
+<div class="formula" data-eq="(3)">$$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$</div>
+<p>其中 $d_k$ 为 Key 的维度，$\sqrt{d_k}$ 是缩放因子，防止点积过大导致 softmax 梯度消失。$QK^T$ 计算每对 Token 之间的相似度，softmax 归一化后作为权重对 $V$ 加权求和。</p>
+
+<h3>4.2 多头注意力</h3>
+<p>多头注意力将 $Q$、$K$、$V$ 分别投影到 $h$ 个不同的子空间，各自计算注意力后拼接：</p>
+<div class="formula" data-eq="(4)">$$\text{MultiHead}(Q,K,V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)W^O$$</div>
+<div class="formula" data-eq="(5)">$$\text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)$$</div>
+<p>其中 $W_i^Q \in \mathbb{R}^{d_{\text{model}} \times d_k}$，$W_i^K \in \mathbb{R}^{d_{\text{model}} \times d_k}$，$W_i^V \in \mathbb{R}^{d_{\text{model}} \times d_v}$，$W^O \in \mathbb{R}^{hd_v \times d_{\text{model}}}$。BERT-Base 使用 $h = 12$ 个头，每个头的维度 $d_k = d_v = 768/12 = 64$。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b4" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">多头注意力机制</text>
+  <!-- 输入 -->
+  <rect x="330" y="45" width="140" height="36" rx="8" fill="#2563eb"/>
+  <text x="400" y="68" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Input (N x d_model)</text>
+  <line x1="400" y1="81" x2="400" y2="100" stroke="#94a3b8" stroke-width="2" marker-end="url(#b4)"/>
+  <!-- 分支 -->
+  <line x1="400" y1="100" x2="160" y2="120" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="400" y1="100" x2="320" y2="120" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="400" y1="100" x2="480" y2="120" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="400" y1="100" x2="640" y2="120" stroke="#94a3b8" stroke-width="1.5"/>
+  <!-- Head 1 -->
+  <rect x="90" y="120" width="140" height="50" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="160" y="142" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="600">Head 1</text>
+  <text x="160" y="158" text-anchor="middle" font-size="10" fill="#334155">Q,K,V → Attention</text>
+  <!-- Head 2 -->
+  <rect x="250" y="120" width="140" height="50" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="320" y="142" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="600">Head 2</text>
+  <text x="320" y="158" text-anchor="middle" font-size="10" fill="#334155">Q,K,V → Attention</text>
+  <!-- Head 3 -->
+  <rect x="410" y="120" width="140" height="50" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="480" y="142" text-anchor="middle" font-size="12" fill="#047857" font-weight="600">Head 3</text>
+  <text x="480" y="158" text-anchor="middle" font-size="10" fill="#334155">Q,K,V → Attention</text>
+  <!-- Head h -->
+  <rect x="570" y="120" width="140" height="50" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="640" y="142" text-anchor="middle" font-size="12" fill="#c2410c" font-weight="600">Head h</text>
+  <text x="640" y="158" text-anchor="middle" font-size="10" fill="#334155">Q,K,V → Attention</text>
+  <!-- 箭头汇聚 -->
+  <line x1="160" y1="170" x2="380" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b4)"/>
+  <line x1="320" y1="170" x2="395" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b4)"/>
+  <line x1="480" y1="170" x2="405" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b4)"/>
+  <line x1="640" y1="170" x2="420" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b4)"/>
+  <!-- Concat -->
+  <rect x="280" y="200" width="240" height="40" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <text x="400" y="225" text-anchor="middle" font-size="13" fill="#e2e8f0" font-weight="600">Concat + Linear Projection</text>
+  <line x1="400" y1="240" x2="400" y2="260" stroke="#94a3b8" stroke-width="2" marker-end="url(#b4)"/>
+  <!-- Output -->
+  <rect x="330" y="260" width="140" height="36" rx="8" fill="#059669"/>
+  <text x="400" y="283" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Output (N x d_model)</text>
+  <!-- 说明 -->
+  <text x="400" y="320" text-anchor="middle" font-size="12" fill="#64748b">每个头学习不同子空间的注意力模式（语法、语义、共指等）</text>
+  <text x="400" y="338" text-anchor="middle" font-size="12" fill="#64748b">蓝=Head1 · 紫=Head2 · 绿=Head3 · 橙=Head h · 深灰=拼接投影</text>
+</svg>
+</section>
+
+<h3>4.3 前馈网络</h3>
+<p>每个编码器层的第二个子层是前馈网络（FFN），由两个线性变换和 GELU 激活函数组成：</p>
+<div class="formula" data-eq="(6)">$$\text{FFN}(x) = \text{GELU}(xW_1 + b_1)W_2 + b_2$$</div>
+<p>FFN 的中间维度通常是隐藏维度的 $4$ 倍（BERT-Base: $768 \times 4 = 3072$）。GELU 激活函数是 ReLU 的平滑近似，在 NLP 任务中表现更好。</p>
+<div class="formula" data-eq="(7)">$$\text{GELU}(x) = x \cdot \Phi(x) = x \cdot \frac{1}{2}\!\left[1 + \text{erf}\!\left(\frac{x}{\sqrt{2}}\right)\right]$$</div>
+
+<h3>4.4 注意力的直觉理解</h3>
+<p>多头注意力让 BERT 同时关注不同维度的语言特征。研究发现，不同注意力头确实学到了不同的模式：</p>
+<table>
+<thead><tr><th>注意力头类型</th><th>关注模式</th><th>示例</th></tr></thead>
+<tbody>
+<tr><td>语法头</td><td>关注句法依赖</td><td>动词 → 主语/宾语</td></tr>
+<tr><td>共指头</td><td>关注代词指代</td><td>"he" → 上文的 "John"</td></tr>
+<tr><td>语义头</td><td>关注语义相关词</td><td>"bank" → "money" / "river"</td></tr>
+<tr><td>位置头</td><td>关注相邻 Token</td><td>关注前一个/后一个词</td></tr>
+<tr><td>分隔头</td><td>关注句子边界</td><td>关注 [SEP] Token</td></tr>
+</tbody>
+</table>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">5</span>预训练任务一：掩码语言模型（MLM）</h2>
+
+<h3>5.1 MLM 任务定义</h3>
+<p>掩码语言模型（Masked Language Model, MLM）是 BERT 的核心预训练任务。给定输入序列，随机选择 $15$% 的 Token 进行处理：</p>
+<ul>
+  <li>$80$% 替换为 <code>[MASK]</code></li>
+  <li>$10$% 替换为词表中的随机 Token</li>
+  <li>$10$% 保持原 Token 不变</li>
+</ul>
+<p>模型需要预测被选中的 $15$% Token 的原始内容。这一设计迫使模型利用双向上下文来推断被遮蔽的 Token。</p>
+
+<div class="formula" data-eq="(8)">$$\mathcal{L}_{\text{MLM}} = -\frac{1}{|\mathcal{M}|}\sum_{i \in \mathcal{M}} \log P(x_i \mid x_{\setminus \mathcal{M}}; \theta)$$</div>
+<p>其中 $\mathcal{M}$ 为被掩码 Token 的索引集合，$x_{\setminus \mathcal{M}}$ 为未被掩码的 Token。模型对每个掩码位置输出词表上的 softmax 概率分布，损失为交叉熵。</p>
+
+<h3>5.2 为什么不是 100% [MASK]</h3>
+<p>如果所有被选中的 Token 都替换为 <code>[MASK]</code>，会产生两个问题：</p>
+<table>
+<thead><tr><th>策略</th><th>比例</th><th>目的</th></tr></thead>
+<tbody>
+<tr><td>替换为 [MASK]</td><td>$80$%</td><td>主要任务：模型学会从上下文推断缺失内容</td></tr>
+<tr><td>替换为随机 Token</td><td>$10$%</td><td>迫使模型判断 Token 是否被篡改，增强鲁棒性</td></tr>
+<tr><td>保持不变</td><td>$10$%</td><td>让模型也学习未修改 Token 的表示，保持信息流</td></tr>
+</tbody>
+</table>
+<div class="callout warn">
+<div class="callout-title">微调时的分布偏移</div>
+<p>预训练时 <code>[MASK]</code> 占输入的 $15\% \times 80\% = 12\%$，但微调时输入中没有 <code>[MASK]</code>。这是 BERT 的一个已知问题——预训练与微调存在分布偏移。后续的 RoBERTa 和 SpanBERT 对此进行了改进。</p>
+</div>
+
+<h3>5.3 MLM 的双向优势</h3>
+<p>与 GPT 的单向语言模型相比，MLM 的关键优势在于<strong>双向性</strong>。在 GPT 中，Token $x_t$ 只能依赖 $x_{<t}$；而在 BERT 中，$x_t$ 可以同时依赖 $x_{<t}$ 和 $x_{>t}$。这使得 BERT 的表示更加丰富，特别是在需要全局上下文的任务上。</p>
+<div class="formula" data-eq="(9)">$$P_{\text{BERT}}(x_i \mid x_{\setminus i}) \quad \text{vs} \quad P_{\text{GPT}}(x_i \mid x_{<i})$$</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b5" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">MLM 预训练任务示意</text>
+  <!-- 原始句子 -->
+  <text x="80" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">原文</text>
+  <rect x="130" y="45" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="160" y="63" text-anchor="middle" font-size="12" fill="#1d4ed8">The</text>
+  <rect x="195" y="45" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="225" y="63" text-anchor="middle" font-size="12" fill="#1d4ed8">man</text>
+  <rect x="260" y="45" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="290" y="63" text-anchor="middle" font-size="12" fill="#1d4ed8">went</text>
+  <rect x="325" y="45" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="355" y="63" text-anchor="middle" font-size="12" fill="#1d4ed8">to</text>
+  <rect x="390" y="45" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="420" y="63" text-anchor="middle" font-size="12" fill="#1d4ed8">the</text>
+  <rect x="455" y="45" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="485" y="63" text-anchor="middle" font-size="12" fill="#1d4ed8">store</text>
+  <rect x="520" y="45" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="550" y="63" text-anchor="middle" font-size="12" fill="#1d4ed8">to</text>
+  <!-- 掩码后 -->
+  <text x="80" y="115" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">掩码后</text>
+  <rect x="130" y="100" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="160" y="118" text-anchor="middle" font-size="12" fill="#1d4ed8">The</text>
+  <rect x="195" y="100" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="225" y="118" text-anchor="middle" font-size="12" fill="#1d4ed8">man</text>
+  <rect x="260" y="100" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="290" y="118" text-anchor="middle" font-size="12" fill="#1d4ed8">went</text>
+  <rect x="325" y="100" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="355" y="118" text-anchor="middle" font-size="12" fill="#1d4ed8">to</text>
+  <rect x="390" y="100" width="60" height="28" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text x="420" y="118" text-anchor="middle" font-size="12" fill="#c2410c" font-weight="700">[MASK]</text>
+  <rect x="455" y="100" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="485" y="118" text-anchor="middle" font-size="12" fill="#1d4ed8">store</text>
+  <rect x="520" y="100" width="60" height="28" rx="6" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="550" y="118" text-anchor="middle" font-size="12" fill="#1d4ed8">to</text>
+  <!-- 箭头 -->
+  <line x1="400" y1="130" x2="400" y2="155" stroke="#94a3b8" stroke-width="2" marker-end="url(#b5)" class="flow-line"/>
+  <!-- BERT 预测 -->
+  <text x="80" y="175" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">预测</text>
+  <rect x="340" y="160" width="120" height="30" rx="8" fill="#7c3aed"/>
+  <text x="400" y="180" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">BERT 预测 → "the"</text>
+  <line x1="400" y1="190" x2="400" y2="215" stroke="#94a3b8" stroke-width="2" marker-end="url(#b5)"/>
+  <!-- 损失 -->
+  <rect x="300" y="215" width="200" height="30" rx="8" fill="#dc2626"/>
+  <text x="400" y="235" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Cross-Entropy Loss</text>
+  <!-- 说明 -->
+  <text x="400" y="268" text-anchor="middle" font-size="12" fill="#64748b">橙色=被掩码的 Token · 紫色=模型预测 · 红色=损失计算</text>
+</svg>
+</section>
+
+<h3>5.4 15% 掩码比例的选择</h3>
+<p>BERT 选择 $15$% 的掩码比例，而非更高的比例。这是因为 NLP 的信息密度远高于图像——每个词都承载独特语义，掩码太多会导致任务不可完成，掩码太少则学习信号不足。实验表明 $15$% 是 NLP 掩码预训练的甜蜜点。</p>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">6</span>预训练任务二：下一句预测（NSP）</h2>
+
+<h3>6.1 NSP 任务定义</h3>
+<p>下一句预测（Next Sentence Prediction, NSP）是 BERT 的第二个预训练任务，旨在学习句间关系。给定句子对 $(A, B)$，模型需要判断 $B$ 是否是 $A$ 的下一句：</p>
+<ul>
+  <li><strong>正样本</strong>（$50$%）：$B$ 确实是 $A$ 的下一句</li>
+  <li><strong>负样本</strong>（$50$%）：$B$ 从语料库中随机采样</li>
+</ul>
+<p>模型使用 <code>[CLS]</code> Token 的最终隐藏状态进行二分类：</p>
+<div class="formula" data-eq="(10)">$$\mathcal{L}_{\text{NSP}} = -\log P(\text{IsNext} \mid \text{[CLS]}; \theta)$$</div>
+
+<h3>6.2 联合预训练损失</h3>
+<p>BERT 的总预训练损失是 MLM 和 NSP 的平均：</p>
+<div class="formula" data-eq="(11)">$$\mathcal{L}_{\text{BERT}} = \mathcal{L}_{\text{MLM}} + \mathcal{L}_{\text{NSP}}$$</div>
+<p>两个任务共享 Transformer 编码器参数，但使用不同的输出头。MLM 使用所有掩码位置的输出，NSP 只使用 <code>[CLS]</code> 的输出。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b6" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">NSP 预训练任务示意</text>
+  <!-- 句子A -->
+  <rect x="40" y="50" width="200" height="40" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="140" y="75" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="600">Sentence A</text>
+  <text x="140" y="90" text-anchor="middle" font-size="11" fill="#334155">"The man went to the store"</text>
+  <!-- 句子B (正例) -->
+  <rect x="300" y="50" width="220" height="40" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="410" y="75" text-anchor="middle" font-size="13" fill="#047857" font-weight="600">Sentence B (正例)</text>
+  <text x="410" y="90" text-anchor="middle" font-size="11" fill="#334155">"He bought a gallon of milk"</text>
+  <!-- 句子B (负例) -->
+  <rect x="560" y="50" width="220" height="40" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="670" y="75" text-anchor="middle" font-size="13" fill="#b91c1c" font-weight="600">Sentence B (负例)</text>
+  <text x="670" y="90" text-anchor="middle" font-size="11" fill="#334155">"The sun rises in the east"</text>
+  <!-- CLS -->
+  <rect x="160" y="120" width="120" height="34" rx="8" fill="#7c3aed"/>
+  <text x="220" y="142" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">[CLS] + BERT</text>
+  <line x1="140" y1="90" x2="200" y2="120" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#b6)" class="flow-line"/>
+  <line x1="410" y1="90" x2="240" y2="120" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <line x1="670" y1="90" x2="260" y2="120" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <!-- 分类 -->
+  <line x1="220" y1="154" x2="220" y2="175" stroke="#94a3b8" stroke-width="2" marker-end="url(#b6)"/>
+  <rect x="120" y="175" width="200" height="34" rx="8" fill="#ea580c"/>
+  <text x="220" y="197" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">二分类：IsNext / NotNext</text>
+  <!-- 损失 -->
+  <line x1="220" y1="209" x2="220" y2="230" stroke="#94a3b8" stroke-width="2" marker-end="url(#b6)"/>
+  <rect x="140" y="230" width="160" height="30" rx="8" fill="#dc2626"/>
+  <text x="220" y="250" text-anchor="middle" font-size="13" fill="#fff" font-weight="600">Binary Loss</text>
+  <!-- 说明 -->
+  <text x="400" y="285" text-anchor="middle" font-size="12" fill="#64748b">绿线=正例（IsNext） · 红线=负例（NotNext） · [CLS] 输出用于句间关系分类</text>
+</svg>
+</section>
+
+<h3>6.3 NSP 的争议</h3>
+<p>NSP 任务的有效性后来受到质疑。RoBERTa 的研究发现，<strong>移除 NSP 任务后性能反而更好</strong>。原因是 NSP 任务太简单——模型只需判断主题是否一致，而非真正的句间逻辑关系。ALBERT 将 NSP 改进为<strong>句子顺序预测（SOP）</strong>，要求模型判断两个句子的先后顺序，这一任务更难也更有效。</p>
+<table>
+<thead><tr><th>模型</th><th>NSP 策略</th><th>效果</th></tr></thead>
+<tbody>
+<tr><td>BERT</td><td>原始 NSP（正/负采样）</td><td>有效但偏简单</td></tr>
+<tr><td>RoBERTa</td><td>移除 NSP</td><td>性能提升</td></tr>
+<tr><td>ALBERT</td><td>SOP（句子顺序预测）</td><td>更难且更有效</td></tr>
+<tr><td>SpanBERT</td><td>移除 NSP，改进 MLM</td><td>性能提升</td></tr>
+</tbody>
+</table>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">7</span>微调范式：下游任务适配</h2>
+
+<h3>7.1 微调的核心思想</h3>
+<p>BERT 的微调范式极其简洁：<strong>保留预训练的编码器参数，在顶部添加任务特定的输出层，用少量标注数据端到端微调</strong>。所有 BERT 参数在微调过程中都会更新，使得通用语言表示适配特定任务。</p>
+
+<h3>7.2 四类下游任务</h3>
+<table>
+<thead><tr><th>任务类型</th><th>输入</th><th>输出层</th><th>示例</th></tr></thead>
+<tbody>
+<tr><td>单句分类</td><td>单句 + [CLS]</td><td>[CLS] → Linear → Softmax</td><td>情感分析、文本分类</td></tr>
+<tr><td>句对分类</td><td>句A [SEP] 句B</td><td>[CLS] → Linear → Softmax</td><td>NLI、问答匹配</td></tr>
+<tr><td>问答抽取</td><td>问题 [SEP] 段落</td><td>每个Token → Start/End概率</td><td>SQuAD 阅读理解</td></tr>
+<tr><td>序列标注</td><td>单句</td><td>每个Token → Linear → CRF</td><td>NER、POS标注</td></tr>
+</tbody>
+</table>
+
+<h3>7.3 单句分类的数学描述</h3>
+<p>对于单句分类任务，取 <code>[CLS]</code> 的最终表示 $C \in \mathbb{R}^H$，通过线性层输出类别概率：</p>
+<div class="formula" data-eq="(12)">$$P(y \mid x) = \text{softmax}(CW_{\text{cls}} + b_{\text{cls}})$$</div>
+<p>其中 $W_{\text{cls}} \in \mathbb{R}^{H \times K}$，$K$ 为类别数。微调时优化交叉熵损失：</p>
+<div class="formula" data-eq="(13)">$$\mathcal{L}_{\text{fine-tune}} = -\sum_{(x,y)} \log P(y \mid x; \theta, W_{\text{cls}}, b_{\text{cls}})$$</div>
+
+<h3>7.4 问答抽取</h3>
+<p>对于 SQuAD 式的抽取式问答，BERT 输入为 "问题 [SEP] 段落"，对段落中每个 Token 输出两个概率：起始位置 $P_{\text{start}}$ 和结束位置 $P_{\text{end}}$：</p>
+<div class="formula" data-eq="(14)">$$P_{\text{start}}(i) = \frac{e^{S \cdot T_i}}{\sum_j e^{S \cdot T_j}}, \quad P_{\text{end}}(i) = \frac{e{E \cdot T_i}}{\sum_j e^{E \cdot T_j}}$$</div>
+<p>其中 $S, E \in \mathbb{R}^H$ 为可训练的起始/结束向量，$T_i$ 为第 $i$ 个 Token 的表示。答案为 $P_{\text{start}} \times P_{\text{end}}$ 最大的连续片段。</p>
+
+<div class="callout success">
+<div class="callout-title">微调的通用性</div>
+<p>BERT 的微调范式之所以强大，是因为预训练学到的通用语言表示只需少量任务适配即可迁移到各种任务。通常只需 $3$-$5$ 个 epoch 的微调即可达到 SOTA，而预训练需要数十天的计算。这一"预训练一次、微调多次"的范式大幅降低了 NLP 任务的开发成本。</p>
+</div>
+
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">8</span>BERT 的数学描述</h2>
+
+<h3>8.1 完整前向传播</h3>
+<p>给定输入序列 $X = [x_1, x_2, \ldots, x_N]$，BERT 的完整前向传播如下：</p>
+<p><strong>步骤 1：输入嵌入。</strong>三种嵌入相加：</p>
+<div class="formula" data-eq="(15)">$$H^{(0)} = E_{\text{token}}(X) + E_{\text{segment}}(S) + E_{\text{position}}(P)$$</div>
+<p><strong>步骤 2：逐层编码。</strong>第 $l$ 层的输出为：</p>
+<div class="formula" data-eq="(16)">$$H^{(l)} = \text{TransformerLayer}(H^{(l-1)}), \quad l = 1, \ldots, L$$</div>
+<p><strong>步骤 3：输出。</strong>第 $L$ 层输出 $H^{(L)} \in \mathbb{R}^{N \times H}$ 即为每个 Token 的最终表示。</p>
+
+<h3>8.2 单层 Transformer 的展开</h3>
+<div class="formula multi" data-eq="(17)">$$\tilde{H}^{(l)} = \text{LayerNorm}\!\left(H^{(l-1)} + \text{MultiHead}\!\left(H^{(l-1)}\right)\right)$$</div>
+<div class="formula multi" data-eq="(18)">$$H^{(l)} = \text{LayerNorm}\!\left(\tilde{H}^{(l)} + \text{FFN}\!\left(\tilde{H}^{(l)}\right)\right)$$</div>
+
+<h3>8.3 参数量分析</h3>
+<table>
+<thead><tr><th>组件</th><th>参数量</th><th>BERT-Base</th><th>BERT-Large</th></tr></thead>
+<tbody>
+<tr><td>Token Embedding</td><td>$V \times H$</td><td>$30{,}522 \times 768 \approx 23.4$M</td><td>$30{,}522 \times 1024 \approx 31.3$M</td></tr>
+<tr><td>Position Embedding</td><td>$512 \times H$</td><td>$0.39$M</td><td>$0.52$M</td></tr>
+<tr><td>Segment Embedding</td><td>$2 \times H$</td><td>$0.002$M</td><td>$0.002$M</td></tr>
+<tr><td>每层 Attention</td><td>$4 \times H^2$</td><td>$4 \times 768^2 \approx 2.36$M</td><td>$4 \times 1024^2 \approx 4.19$M</td></tr>
+<tr><td>每层 FFN</td><td>$2 \times H \times 4H$</td><td>$2 \times 768 \times 3072 \approx 4.72$M</td><td>$2 \times 1024 \times 4096 \approx 8.39$M</td></tr>
+<tr><td>每层 LayerNorm</td><td>$2 \times 2H$</td><td>$0.003$M</td><td>$0.004$M</td></tr>
+<tr><td>每层总计</td><td></td><td>$\approx 7.1$M</td><td>$\approx 12.6$M</td></tr>
+<tr><td>$L$ 层总计</td><td></td><td>$12 \times 7.1 \approx 85.2$M</td><td>$24 \times 12.6 \approx 302.4$M</td></tr>
+<tr><td>MLM 输出头</td><td>$V \times H$</td><td>$\approx 23.4$M</td><td>$\approx 31.3$M</td></tr>
+<tr><td><strong>总参数量</strong></td><td></td><td><strong>$\approx 110$M</strong></td><td><strong>$\approx 340$M</strong></td></tr>
+</tbody>
+</table>
+
+<h3>8.4 计算复杂度</h3>
+<p>自注意力的计算复杂度为 $O(N^2 \cdot H)$（$N$ 为序列长度），FFN 为 $O(N \cdot H^2)$。对于 BERT-Base，$N = 512$，$H = 768$：</p>
+<div class="formula" data-eq="(19)">$$\text{FLOPs per layer} \approx 2N^2H + 2NH \cdot 4H = 2 \times 512^2 \times 768 + 2 \times 512 \times 768 \times 3072$$</div>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">9</span>BERT vs GPT vs Transformer</h2>
+
+<h3>9.1 架构对比</h3>
+<table>
+<thead><tr><th>维度</th><th>BERT</th><th>GPT</th><th>原始 Transformer</th></tr></thead>
+<tbody>
+<tr><td>架构</td><td>仅编码器</td><td>仅解码器</td><td>编码器+解码器</td></tr>
+<tr><td>注意力</td><td>双向自注意力</td><td>单向（因果）自注意力</td><td>编码器双向 + 解码器单向 + 交叉注意力</td></tr>
+<tr><td>预训练任务</td><td>MLM + NSP</td><td>单向 LM（从左到右）</td><td>无（用于翻译任务端到端训练）</td></tr>
+<tr><td>适合任务</td><td>理解类（分类、问答）</td><td>生成类（文本生成）</td><td>序列到序列（翻译）</td></tr>
+<tr><td>微调方式</td><td>加输出层，全参数微调</td><td>加输出层，全参数微调</td><td>任务特定架构</td></tr>
+<tr><td>参数规模</td><td>110M / 340M</td><td>117M (GPT-1)</td><td>60M (原始)</td></tr>
+</tbody>
+</table>
+
+<h3>9.2 注意力掩码对比</h3>
+<p>BERT 和 GPT 的核心差异在于注意力掩码。BERT 使用<strong>全可见掩码</strong>（每个 Token 可见所有 Token），GPT 使用<strong>因果掩码</strong>（每个 Token 只可见自身及之前的 Token）：</p>
+<div class="formula" data-eq="(20)">$$M_{\text{BERT}}(i,j) = 1 \quad \forall i,j \qquad M_{\text{GPT}}(i,j) = \begin{cases} 1 & \text{if } j \le i \\ 0 & \text{if } j > i \end{cases}$$</div>
+
+<h3>9.3 表示能力对比</h3>
+<p>BERT 的双向编码在理解类任务上天然优于 GPT 的单向编码。但 BERT 无法直接用于自回归生成——生成时需要逐 Token 预测，而 BERT 的输入需要完整序列。后续的 BART 和 T5 使用编码器+解码器架构，兼顾理解和生成。</p>
+<div class="svg-box">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b9" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">BERT vs GPT：注意力掩码对比</text>
+  <!-- BERT 注意力矩阵 -->
+  <text x="175" y="55" text-anchor="middle" font-size="14" font-weight="700" fill="#2563eb">BERT（双向）</text>
+  <rect x="70" y="65" width="210" height="210" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+  <!-- 全1矩阵 -->
+  <rect x="70" y="65" width="210" height="210" fill="#dbeafe" opacity="0.6"/>
+  <text x="175" y="185" text-anchor="middle" font-size="13" fill="#1d4ed8" font-weight="600">全可见</text>
+  <text x="175" y="205" text-anchor="middle" font-size="11" fill="#334155">每个 Token 关注所有 Token</text>
+  <text x="100" y="300" text-anchor="middle" font-size="10" fill="#64748b">j=1</text>
+  <text x="250" y="300" text-anchor="middle" font-size="10" fill="#64748b">j=N</text>
+  <text x="50" y="100" text-anchor="middle" font-size="10" fill="#64748b" transform="rotate(-90 50 100)">i=1</text>
+  <text x="50" y="250" text-anchor="middle" font-size="10" fill="#64748b" transform="rotate(-90 50 250)">i=N</text>
+  <!-- GPT 注意力矩阵 -->
+  <text x="600" y="55" text-anchor="middle" font-size="14" font-weight="700" fill="#ea580c">GPT（单向）</text>
+  <rect x="495" y="65" width="210" height="210" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+  <!-- 下三角 -->
+  <path d="M 495,65 L 705,65 L 705,76 L 506,76 L 506,87 L 705,87 L 705,98 L 517,98 L 517,109 L 705,109 L 705,120 L 528,120 L 528,131 L 705,131 L 705,142 L 539,142 L 539,153 L 705,153 L 705,164 L 550,164 L 550,175 L 705,175 L 705,186 L 561,186 L 561,197 L 705,197 L 705,208 L 572,208 L 572,219 L 705,219 L 705,230 L 583,230 L 583,241 L 705,241 L 705,252 L 594,252 L 594,263 L 705,263 L 705,274 L 705,275 Z" fill="#ffedd5" opacity="0.7"/>
+  <text x="600" y="185" text-anchor="middle" font-size="13" fill="#c2410c" font-weight="600">因果掩码</text>
+  <text x="600" y="205" text-anchor="middle" font-size="11" fill="#334155">只看过去，不看未来</text>
+  <text x="525" y="300" text-anchor="middle" font-size="10" fill="#64748b">j=1</text>
+  <text x="675" y="300" text-anchor="middle" font-size="10" fill="#64748b">j=N</text>
+  <text x="475" y="100" text-anchor="middle" font-size="10" fill="#64748b" transform="rotate(-90 475 100)">i=1</text>
+  <text x="475" y="250" text-anchor="middle" font-size="10" fill="#64748b" transform="rotate(-90 475 250)">i=N</text>
+  <!-- 对比说明 -->
+  <text x="400" y="295" text-anchor="middle" font-size="12" fill="#64748b">蓝=BERT 全可见 · 橙=GPT 因果掩码 · 横轴=Key · 纵轴=Query</text>
+</svg>
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">10</span>训练细节与优化策略</h2>
+
+<h3>10.1 预训练数据</h3>
+<table>
+<thead><tr><th>数据集</th><th>规模</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>BooksCorpus</td><td>$800$M 词</td><td>$11{,}038$ 本未出版图书</td></tr>
+<tr><td>English Wikipedia</td><td>$2{,}500$M 词</td><td>百科条目（去除标记、表格、标题）</td></tr>
+<tr><td>合计</td><td>$3.3$B 词</td><td>$\approx 16$GB 纯文本</td></tr>
+</tbody>
+</table>
+
+<h3>10.2 训练超参数</h3>
+<table>
+<thead><tr><th>超参数</th><th>默认值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>最大序列长度</td><td>$512$</td><td>位置编码上限</td></tr>
+<tr><td>预训练步数</td><td>$1{,}000{,}000$（$40$ epochs）</td><td>Large 模型 $10$ epochs（更长序列）</td></tr>
+<tr><td>Batch size</td><td>$256$</td><td>每 batch $256$ 条 $\times 512$ Token</td></tr>
+<tr><td>优化器</td><td>AdamW</td><td>$\beta_1=0.9, \beta_2=0.999$</td></tr>
+<tr><td>学习率</td><td>$5 \times 10^{-5}$（Base）/ $1 \times 10^{-4}$（Large）</td><td>线性 warmup 后线性衰减</td></tr>
+<tr><td>Warmup 步数</td><td>$10{,}000$</td><td>前 $10$K 步线性增大学习率</td></tr>
+<tr><td>权重衰减</td><td>$0.01$</td><td>L2 正则化</td></tr>
+<tr><td>Dropout</td><td>$0.1$</td><td>所有子层输出和嵌入</td></tr>
+<tr><td>训练硬件</td><td>$4$ Cloud TPU（Base）/ $16$ Cloud TPU（Large）</td><td>预训练耗时 $4$ 天（Base）</td></tr>
+</tbody>
+</table>
+
+<h3>10.3 微调超参数</h3>
+<table>
+<thead><tr><th>超参数</th><th>值</th></tr></thead>
+<tbody>
+<tr><td>Batch size</td><td>$16$ / $32$ / $64$</td></tr>
+<tr><td>学习率</td><td>$2 \times 10^{-5}$ / $3 \times 10^{-5}$ / $5 \times 10^{-5}$</td></tr>
+<tr><td>Epochs</td><td>$2$ – $5$</td></tr>
+<tr><td>Warmup 比例</td><td>$0.1$</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout-title">微调的最佳实践</div>
+<p>BERT 微调对学习率敏感：过大（$>5 \times 10^{-4}$）会破坏预训练表示，过小（$<1 \times 10^{-5}$）收敛缓慢。推荐从 $2 \times 10^{-5}$ / $3 \times 10^{-5}$ 开始，逐步网格搜索。微调 $3$ epochs 通常足够，过多会导致过拟合。</p>
+</div>
+
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">11</span>PyTorch 代码实现</h2>
+
+<h3>11.1 输入嵌入</h3>
+<div class="code-block"><div class="code-header">bert_embedding.py</div><pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">BertEmbeddings</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""BERT 输入嵌入：Token + Segment + Position"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, vocab_size=<span class="num">30522</span>, hidden_size=<span class="num">768</span>,
+                 max_position_embeddings=<span class="num">512</span>, type_vocab_size=<span class="num">2</span>,
+                 dropout=<span class="num">0.1</span>, layer_norm_eps=<span class="num">1e-12</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.word_embeddings = <span class="cls">nn</span>.Embedding(vocab_size, hidden_size)
+        <span class="kw">self</span>.position_embeddings = <span class="cls">nn</span>.Embedding(max_position_embeddings, hidden_size)
+        <span class="kw">self</span>.token_type_embeddings = <span class="cls">nn</span>.Embedding(type_vocab_size, hidden_size)
+        <span class="kw">self</span>.LayerNorm = <span class="cls">nn</span>.LayerNorm(hidden_size, eps=layer_norm_eps)
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.Dropout(dropout)
+        <span class="com"># 位置 ID 缓冲区</span>
+        <span class="kw">self</span>.register_buffer(<span class="str">"position_ids"</span>,
+            <span class="cls">torch</span>.<span class="fn">arange</span>(max_position_embeddings).<span class="fn">unsqueeze</span>(<span class="num">0</span>))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, input_ids, token_type_ids=<span class="kw">None</span>):
+        seq_length = input_ids.size(<span class="num">1</span>)
+        <span class="kw">if</span> token_type_ids <span class="kw">is</span> <span class="kw">None</span>:
+            token_type_ids = <span class="cls">torch</span>.zeros_like(input_ids)
+        position_ids = <span class="kw">self</span>.position_ids[:, :seq_length]
+
+        embeddings = (<span class="kw">self</span>.word_embeddings(input_ids)
+                      + <span class="kw">self</span>.position_embeddings(position_ids)
+                      + <span class="kw">self</span>.token_type_embeddings(token_type_ids))
+        embeddings = <span class="kw">self</span>.LayerNorm(embeddings)
+        embeddings = <span class="kw">self</span>.dropout(embeddings)
+        <span class="kw">return</span> embeddings
+</pre></div>
+
+<h3>11.2 多头注意力</h3>
+<div class="code-block"><div class="code-header">multi_head_attention.py</div><pre>
+<span class="kw">class</span> <span class="cls">MultiHeadAttention</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""多头自注意力机制"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, hidden_size=<span class="num">768</span>, num_heads=<span class="num">12</span>, dropout=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">assert</span> hidden_size % num_heads == <span class="num">0</span>
+        <span class="kw">self</span>.num_heads = num_heads
+        <span class="kw">self</span>.head_dim = hidden_size // num_heads
+        <span class="kw">self</span>.scaling = <span class="kw">self</span>.head_dim ** -<span class="num">0.5</span>
+
+        <span class="kw">self</span>.query = <span class="cls">nn</span>.Linear(hidden_size, hidden_size)
+        <span class="kw">self</span>.key = <span class="cls">nn</span>.Linear(hidden_size, hidden_size)
+        <span class="kw">self</span>.value = <span class="cls">nn</span>.Linear(hidden_size, hidden_size)
+        <span class="kw">self</span>.attn_dropout = <span class="cls">nn</span>.Dropout(dropout)
+        <span class="kw">self</span>.out_proj = <span class="cls">nn</span>.Linear(hidden_size, hidden_size)
+
+    <span class="kw">def</span> transpose_for_scores(<span class="kw">self</span>, x):
+        <span class="com"># (B, N, H) -> (B, num_heads, N, head_dim)</span>
+        new_shape = x.size()[:-<span class="num">1</span>] + (<span class="kw">self</span>.num_heads, <span class="kw">self</span>.head_dim)
+        x = x.<span class="fn">view</span>(*new_shape)
+        <span class="kw">return</span> x.<span class="fn">permute</span>(<span class="num">0</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">3</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, hidden_states, attention_mask=<span class="kw">None</span>):
+        Q = <span class="kw">self</span>.transpose_for_scores(<span class="kw">self</span>.query(hidden_states))
+        K = <span class="kw">self</span>.transpose_for_scores(<span class="kw">self</span>.key(hidden_states))
+        V = <span class="kw">self</span>.transpose_for_scores(<span class="kw">self</span>.value(hidden_states))
+
+        <span class="com"># 注意力分数: (B, num_heads, N, N)</span>
+        attn_scores = <span class="cls">torch</span>.<span class="fn">matmul</span>(Q, K.<span class="fn">transpose</span>(-<span class="num">1</span>, -<span class="num">2</span>)) * <span class="kw">self</span>.scaling
+        <span class="kw">if</span> attention_mask <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span>:
+            attn_scores = attn_scores + attention_mask
+
+        attn_probs = <span class="cls">torch</span>.<span class="fn">softmax</span>(attn_scores, dim=-<span class="num">1</span>)
+        attn_probs = <span class="kw">self</span>.attn_dropout(attn_probs)
+
+        <span class="com"># 加权求和: (B, num_heads, N, head_dim)</span>
+        context = <span class="cls">torch</span>.<span class="fn">matmul</span>(attn_probs, V)
+        context = context.<span class="fn">permute</span>(<span class="num">0</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">3</span>).<span class="fn">contiguous</span>()
+        new_shape = context.size()[:-<span class="num">2</span>] + (<span class="kw">self</span>.num_heads * <span class="kw">self</span>.head_dim,)
+        context = context.<span class="fn">view</span>(*new_shape)
+
+        <span class="kw">return</span> <span class="kw">self</span>.out_proj(context)
+</pre></div>
+
+<h3>11.3 Transformer 编码器层</h3>
+<div class="code-block"><div class="code-header">transformer_encoder.py</div><pre>
+<span class="kw">class</span> <span class="cls">BertSelfOutput</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""自注意力后的残差 + LayerNorm"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, hidden_size=<span class="num">768</span>, dropout=<span class="num">0.1</span>, eps=<span class="num">1e-12</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.dense = <span class="cls">nn</span>.Linear(hidden_size, hidden_size)
+        <span class="kw">self</span>.LayerNorm = <span class="cls">nn</span>.LayerNorm(hidden_size, eps=eps)
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.Dropout(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, hidden_states, input_tensor):
+        hidden_states = <span class="kw">self</span>.dense(hidden_states)
+        hidden_states = <span class="kw">self</span>.dropout(hidden_states)
+        <span class="kw">return</span> <span class="kw">self</span>.LayerNorm(input_tensor + hidden_states)
+
+<span class="kw">class</span> <span class="cls">BertLayer</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""单层 Transformer 编码器"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, hidden_size=<span class="num">768</span>, num_heads=<span class="num">12</span>,
+                 intermediate_size=<span class="num">3072</span>, dropout=<span class="num">0.1</span>, eps=<span class="num">1e-12</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.attention = <span class="cls">MultiHeadAttention</span>(hidden_size, num_heads, dropout)
+        <span class="kw">self</span>.attention_output = <span class="cls">BertSelfOutput</span>(hidden_size, dropout, eps)
+        <span class="kw">self</span>.intermediate = <span class="cls">nn</span>.Sequential(
+            <span class="cls">nn</span>.Linear(hidden_size, intermediate_size),
+            <span class="cls">nn</span>.GELU()
+        )
+        <span class="kw">self</span>.output = <span class="cls">nn</span>.Sequential(
+            <span class="cls">nn</span>.Linear(intermediate_size, hidden_size),
+        )
+        <span class="kw">self</span>.output_layer_norm = <span class="cls">nn</span>.LayerNorm(hidden_size, eps=eps)
+        <span class="kw">self</span>.output_dropout = <span class="cls">nn</span>.Dropout(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, hidden_states, attention_mask=<span class="kw">None</span>):
+        <span class="com"># 自注意力子层</span>
+        attn_output = <span class="kw">self</span>.attention(hidden_states, attention_mask)
+        attn_output = <span class="kw">self</span>.attention_output(attn_output, hidden_states)
+
+        <span class="com"># 前馈网络子层</span>
+        intermediate_output = <span class="kw">self</span>.intermediate(attn_output)
+        layer_output = <span class="kw">self</span>.output(intermediate_output)
+        layer_output = <span class="kw">self</span>.output_dropout(layer_output)
+        layer_output = <span class="kw">self</span>.output_layer_norm(attn_output + layer_output)
+        <span class="kw">return</span> layer_output
+</pre></div>
+
+<h3>11.4 完整 BERT 模型</h3>
+<div class="code-block"><div class="code-header">bert_model.py</div><pre>
+<span class="kw">class</span> <span class="cls">BertModel</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""完整 BERT 模型"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, vocab_size=<span class="num">30522</span>, hidden_size=<span class="num">768</span>,
+                 num_layers=<span class="num">12</span>, num_heads=<span class="num">12</span>,
+                 intermediate_size=<span class="num">3072</span>, max_position=<span class="num">512</span>,
+                 type_vocab_size=<span class="num">2</span>, dropout=<span class="num">0.1</span>, eps=<span class="num">1e-12</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.embeddings = <span class="cls">BertEmbeddings</span>(
+            vocab_size, hidden_size, max_position,
+            type_vocab_size, dropout, eps
+        )
+        <span class="kw">self</span>.layers = <span class="cls">nn</span>.ModuleList([
+            <span class="cls">BertLayer</span>(hidden_size, num_heads, intermediate_size, dropout, eps)
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="cls">range</span>(num_layers)
+        ])
+        <span class="kw">self</span>.pooler = <span class="cls">nn</span>.Sequential(
+            <span class="cls">nn</span>.Linear(hidden_size, hidden_size),
+            <span class="cls">nn</span>.Tanh()
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, input_ids, attention_mask=<span class="kw">None</span>, token_type_ids=<span class="kw">None</span>):
+        <span class="com"># 构建注意力掩码: (B, 1, 1, N)</span>
+        <span class="kw">if</span> attention_mask <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span>:
+            ext_mask = attention_mask[:, <span class="kw">None</span>, <span class="kw">None</span>, :].<span class="fn">float</span>()
+            ext_mask = (<span class="num">1.0</span> - ext_mask) * -<span class="num">10000.0</span>
+
+        <span class="com"># 输入嵌入</span>
+        hidden_states = <span class="kw">self</span>.embeddings(input_ids, token_type_ids)
+
+        <span class="com"># 逐层编码</span>
+        <span class="kw">for</span> layer <span class="kw">in</span> <span class="kw">self</span>.layers:
+            hidden_states = layer(hidden_states, ext_mask)
+
+        <span class="com"># [CLS] 池化输出</span>
+        pooled = <span class="kw">self</span>.pooler(hidden_states[:, <span class="num">0</span>])
+        <span class="kw">return</span> hidden_states, pooled
+</pre></div>
+
+<h3>11.5 预训练任务</h3>
+<div class="code-block"><div class="code-header">pretraining_tasks.py</div><pre>
+<span class="kw">class</span> <span class="cls">BertForPreTraining</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""BERT 预训练：MLM + NSP"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, bert_config):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.bert = <span class="cls">BertModel</span>(**bert_config)
+        H = bert_config[<span class="str">"hidden_size"</span>]
+        V = bert_config[<span class="str">"vocab_size"</span>]
+
+        <span class="com"># MLM 输出头</span>
+        <span class="kw">self</span>.cls = <span class="cls">nn</span>.Sequential(
+            <span class="cls">nn</span>.Linear(H, H),
+            <span class="cls">nn</span>.GELU(),
+            <span class="cls">nn</span>.LayerNorm(H)
+        )
+        <span class="kw">self</span>.mlm_decoder = <span class="cls">nn</span>.Linear(H, V, bias=<span class="kw">False</span>)
+        <span class="kw">self</span>.mlm_bias = <span class="cls">nn</span>.Parameter(<span class="cls">torch</span>.<span class="fn">zeros</span>(V))
+
+        <span class="com"># NSP 输出头</span>
+        <span class="kw">self</span>.nsp_classifier = <span class="cls">nn</span>.Linear(H, <span class="num">2</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, input_ids, attention_mask, token_type_ids,
+                masked_positions=<span class="kw">None</span>, masked_labels=<span class="kw">None</span>, nsp_label=<span class="kw">None</span>):
+        sequence_output, pooled_output = <span class="kw">self</span>.bert(
+            input_ids, attention_mask, token_type_ids
+        )
+
+        <span class="com"># MLM: 仅预测被掩码的位置</span>
+        <span class="kw">if</span> masked_positions <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span>:
+            <span class="com"># 收集被掩码位置的隐藏状态</span>
+            B, N, H = sequence_output.shape
+            flat_indices = masked_positions.<span class="fn">reshape</span>(-<span class="num">1</span>)
+            batch_indices = <span class="cls">torch</span>.<span class="fn">arange</span>(B).repeat_interleave(
+                masked_positions.size(<span class="num">1</span>)
+            )
+            hidden = sequence_output[batch_indices, flat_indices]
+            hidden = hidden.<span class="fn">reshape</span>(B, -<span class="num">1</span>, H)
+
+            hidden = <span class="kw">self</span>.cls(hidden)
+            logits = <span class="kw">self</span>.mlm_decoder(hidden) + <span class="kw">self</span>.mlm_bias
+            mlm_loss = <span class="cls">nn</span>.CrossEntropyLoss()(
+                logits.<span class="fn">view</span>(-<span class="num">1</span>, logits.size(-<span class="num">1</span>)),
+                masked_labels.<span class="fn">view</span>(-<span class="num">1</span>)
+            )
+        <span class="kw">else</span>:
+            mlm_loss = <span class="cls">torch</span>.tensor(<span class="num">0.0</span>)
+
+        <span class="com"># NSP: 使用 [CLS] 池化输出</span>
+        nsp_logits = <span class="kw">self</span>.nsp_classifier(pooled_output)
+        nsp_loss = <span class="cls">nn</span>.CrossEntropyLoss()(nsp_logits, nsp_label)
+
+        total_loss = mlm_loss + nsp_loss
+        <span class="kw">return</span> total_loss, mlm_loss, nsp_loss
+</pre></div>
+
+<h3>11.6 微调分类</h3>
+<div class="code-block"><div class="code-header">finetune.py</div><pre>
+<span class="kw">class</span> <span class="cls">BertForSequenceClassification</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""BERT 微调：单句/句对分类"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, bert_config, num_classes=<span class="num">2</span>, dropout=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.bert = <span class="cls">BertModel</span>(**bert_config)
+        H = bert_config[<span class="str">"hidden_size"</span>]
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.Dropout(dropout)
+        <span class="kw">self</span>.classifier = <span class="cls">nn</span>.Linear(H, num_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, input_ids, attention_mask=<span class="kw">None</span>, token_type_ids=<span class="kw">None</span>):
+        _, pooled_output = <span class="kw">self</span>.bert(input_ids, attention_mask, token_type_ids)
+        pooled_output = <span class="kw">self</span>.dropout(pooled_output)
+        logits = <span class="kw">self</span>.classifier(pooled_output)
+        <span class="kw">return</span> logits
+
+
+<span class="kw">def</span> <span class="fn">finetune_bert</span>(model, dataloader, num_classes, epochs=<span class="num">3</span>, lr=<span class="num">2e-5</span>):
+    <span class="str">"""微调 BERT 分类模型"""</span>
+    optimizer = <span class="cls">torch</span>.optim.AdamW(model.parameters(), lr=lr, weight_decay=<span class="num">0.01</span>)
+    scheduler = <span class="cls">torch</span>.optim.lr_scheduler.LinearLR(
+        optimizer, start_factor=<span class="num">0.1</span>, total_iters=<span class="cls">len</span>(dataloader) * epochs
+    )
+    criterion = <span class="cls">nn</span>.CrossEntropyLoss()
+    model.train()
+
+    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="cls">range</span>(epochs):
+        total_loss = <span class="num">0</span>
+        <span class="kw">for</span> batch <span class="kw">in</span> dataloader:
+            input_ids, masks, labels = batch
+            logits = model(input_ids, attention_mask=masks)
+            loss = criterion(logits, labels)
+            optimizer.zero_grad()
+            loss.backward()
+            <span class="cls">torch</span>.nn.utils.clip_grad_norm_(model.parameters(), <span class="num">1.0</span>)
+            optimizer.step()
+            scheduler.step()
+            total_loss += loss.item()
+        <span class="cls">print</span>(f<span class="str">"Epoch {epoch+1}, Loss: {total_loss/len(dataloader):.4f}"</span>)
+</pre></div>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">12</span>BERT 的扩展与变体</h2>
+
+<h3>12.1 BERT 家族</h3>
+<table>
+<thead><tr><th>模型</th><th>年份</th><th>核心改进</th><th>解决的问题</th></tr></thead>
+<tbody>
+<tr><td><strong>BERT</strong></td><td>2018</td><td>双向 MLM + NSP 预训练</td><td>NLP 预训练范式</td></tr>
+<tr><td><strong>RoBERTa</strong></td><td>2019</td><td>移除 NSP，动态掩码，更大 batch/数据</td><td>NSP 无效 + 训练不充分</td></tr>
+<tr><td><strong>ALBERT</strong></td><td>2020</td><td>参数共享 + 因子分解嵌入 + SOP</td><td>参数量过大 + NSP 偏简单</td></tr>
+<tr><td><strong>DeBERTa</strong></td><td>2021</td><td>解耦注意力 + 增强掩码解码器</td><td>位置与内容编码耦合</td></tr>
+<tr><td><strong>SpanBERT</strong></td><td>2020</td><td>连续 Span 掩码 + 边界表示</td><td>MLM 掩码太碎片化</td></tr>
+<tr><td><strong>ELECTRA</strong></td><td>2020</td><td>替换 Token 检测（RTD）</td><td>MLM 计算效率低</td></tr>
+<tr><td><strong>DistilBERT</strong></td><td>2020</td><td>知识蒸馏压缩</td><td>模型过大部署困难</td></tr>
+<tr><td><strong>CamemBERT</strong></td><td>2020</td><td>法语 BERT</td><td>多语言适配</td></tr>
+</tbody>
+</table>
+
+<h3>12.2 RoBERTa 的关键改进</h3>
+<p>RoBERTa（Robustly Optimized BERT Pretraining Approach）通过<strong>更好的训练策略</strong>而非架构改变显著提升了性能：</p>
+<ul>
+  <li><strong>移除 NSP</strong>：实验证明 NSP 任务不仅无益甚至有害</li>
+  <li><strong>动态掩码</strong>：每个 epoch 重新生成掩码模式（BERT 的掩码在预处理时固定）</li>
+  <li><strong>更大 batch</strong>：从 $256$ 增到 $8{,}192$，配合更大学习率</li>
+  <li><strong>更多数据</strong>：从 $16$GB 增到 $160$GB（CC-News、OpenWebText、Stories）</li>
+  <li><strong>更长训练</strong>：从 $100$K 步增到 $500$K 步</li>
+  <li><strong>字节对编码（BPE）</strong>：取代 WordPiece，词表 $50{,}265$</li>
+</ul>
+
+<h3>12.3 ALBERT 的参数压缩</h3>
+<p>ALBERT 通过两个技术大幅减少参数量：</p>
+<p><strong>因子分解嵌入参数化</strong>：将 $V \times H$ 的大嵌入矩阵分解为 $V \times E$ + $E \times H$，其中 $E \ll H$：</p>
+<div class="formula" data-eq="(21)">$$E = E_{\text{vocab}}(V \times E) \times E_{\text{project}}(E \times H)$$</div>
+<p><strong>跨层参数共享</strong>：所有 Transformer 层共享同一组参数，将 $L$ 层的参数从 $L \times \theta_{\text{layer}}$ 减少到 $\theta_{\text{layer}}$。ALBERT-Base 参数量仅 $12$M（BERT-Base 的 $1/9$），但性能接近。</p>
+
+<h3>12.4 ELECTRA 的效率改进</h3>
+<p>ELECTRA 使用<strong>替换 Token 检测</strong>（Replaced Token Detection）取代 MLM。一个小型生成器将部分 Token 替换为看似合理但不正确的 Token，判别器（主模型）判断每个 Token 是否被替换：</p>
+<div class="formula" data-eq="(22)">$$\mathcal{L}_{\text{RTD}} = -\sum_{i=1}^{N} \log P(\text{original/replaced} \mid x_i)$$</div>
+<p>与 MLM 只在 $15$% 位置计算损失不同，RTD 在<strong>所有位置</strong>计算损失，训练效率提升 $4\times$。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="b12" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">BERT 变体效率对比</text>
+  <!-- 坐标轴 -->
+  <line x1="80" y1="250" x2="720" y2="250" stroke="#cbd5e1" stroke-width="2"/>
+  <line x1="80" y1="250" x2="80" y2="50" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="400" y="280" text-anchor="middle" font-size="12" fill="#64748b">参数效率（性能/参数量）</text>
+  <text x="40" y="150" text-anchor="middle" font-size="12" fill="#64748b" transform="rotate(-90 40 150)">GLUE 性能</text>
+  <!-- BERT -->
+  <circle cx="200" cy="140" r="14" fill="#2563eb" class="pulse-node"/>
+  <text x="200" y="135" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">B</text>
+  <text x="200" y="170" text-anchor="middle" font-size="11" fill="#334155">BERT-Base</text>
+  <!-- RoBERTa -->
+  <circle cx="500" cy="90" r="14" fill="#7c3aed" class="pulse-node"/>
+  <text x="500" y="86" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">R</text>
+  <text x="500" y="120" text-anchor="middle" font-size="11" fill="#334155">RoBERTa</text>
+  <!-- ALBERT -->
+  <circle cx="300" cy="100" r="14" fill="#059669" class="pulse-node"/>
+  <text x="300" y="96" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">A</text>
+  <text x="300" y="130" text-anchor="middle" font-size="11" fill="#334155">ALBERT</text>
+  <!-- ELECTRA -->
+  <circle cx="380" cy="110" r="14" fill="#ea580c" class="pulse-node"/>
+  <text x="380" y="106" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">E</text>
+  <text x="380" y="140" text-anchor="middle" font-size="11" fill="#334155">ELECTRA</text>
+  <!-- DeBERTa -->
+  <circle cx="580" cy="75" r="14" fill="#dc2626" class="pulse-node"/>
+  <text x="580" y="71" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">D</text>
+  <text x="580" y="105" text-anchor="middle" font-size="11" fill="#334155">DeBERTa</text>
+  <!-- DistilBERT -->
+  <circle cx="180" cy="200" r="12" fill="#94a3b8" class="pulse-node"/>
+  <text x="180" y="196" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">d</text>
+  <text x="180" y="225" text-anchor="middle" font-size="11" fill="#334155">DistilBERT</text>
+  <!-- 说明 -->
+  <text x="400" y="240" text-anchor="middle" font-size="11" fill="#64748b">右=高性能 · 上=高性能 · 左下=小模型 · B=BERT R=RoBERTa A=ALBERT E=ELECTRA D=DeBERTa d=DistilBERT</text>
+</svg>
+</section>
+
+<h3>12.5 知识蒸馏：DistilBERT</h3>
+<p>DistilBERT 通过知识蒸馏将 BERT 压缩到 $66$M 参数（原始 $1/2$），保留 $95$% 的性能：</p>
+<div class="formula" data-eq="(23)">$$\mathcal{L}_{\text{distill}} = \alpha \cdot \text{CE}(y_s, y_t) + (1-\alpha) \cdot \text{KL}(p_s \| p_t)$$</div>
+<p>其中 $y_s, y_t$ 为学生/教师模型的 logits，$p_s, p_t$ 为 softmax 概率，$\alpha$ 为权重。学生模型学习教师模型的软标签（soft labels），获得更丰富的训练信号。</p>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="year">2017.06</div>
+    <div class="event">Transformer 架构发布</div>
+    <div class="desc">Vaswani 等人提出自注意力机制，取代 RNN 实现完全并行序列建模，奠定 BERT 的架构基础</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2018.02</div>
+    <div class="event">ELMo 发布</div>
+    <div class="desc">Peters 等人提出双向 LSTM 上下文词向量，验证了上下文表示优于静态词向量</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2018.06</div>
+    <div class="event">GPT-1 发布（OpenAI）</div>
+    <div class="desc">首个验证"预训练 + 微调"范式的 Transformer 模型，但使用单向语言模型</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2018.10</div>
+    <div class="event">BERT 发布（Google）</div>
+    <div class="desc">双向 Transformer 编码器 + MLM/NSP 预训练，11 项 NLP 任务刷新 SOTA，引发预训练革命</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2019.07</div>
+    <div class="event">RoBERTa 发布（Facebook）</div>
+    <div class="desc">移除 NSP，动态掩码，更大数据和 batch，证明 BERT 被严重欠训练</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2020.01</div>
+    <div class="event">ALBERT 发布（Google）</div>
+    <div class="desc">参数因子分解 + 跨层共享 + SOP 任务，以 1/9 参数量接近 BERT 性能</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2020.03</div>
+    <div class="event">ELECTRA 发布</div>
+    <div class="desc">替换 Token 检测取代 MLM，训练效率提升 4 倍，所有位置计算损失</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2020.10</div>
+    <div class="event">DistilBERT 发布（HuggingFace）</div>
+    <div class="desc">知识蒸馏压缩 BERT 至 66M 参数，保留 95% 性能，适合边缘部署</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.10</div>
+    <div class="event">DeBERTa-v3 发布</div>
+    <div class="desc">解耦注意力 + ELECTRA 式预训练，SuperGLUE 上超越人类</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2023+</div>
+    <div class="event">BERT 范式延续</div>
+    <div class="desc">LLM 时代，BERT 的预训练思想延伸至视觉（MAE）、多模态等所有领域</div>
+  </div>
+</div>
+
+<div class="callout success">
+<div class="callout-title">总结</div>
+<p>BERT 的核心贡献可以归纳为一句话：<strong>真正的双向编码是语言理解的关键</strong>。通过掩码语言模型任务，BERT 让 Transformer 编码器同时利用左侧和右侧上下文，在理解类 NLP 任务上实现了突破性进展。尽管后续 RoBERTa 改进了训练策略、ALBERT 压缩了参数、ELECTRA 提升了效率，但 BERT 确立的"双向预训练 + 微调"范式依然是 NLP 的标准做法。BERT 的影响远超 NLP——其掩码预训练思想启发了视觉领域的 MAE、BeiT 等方法，成为自监督学习跨模态的通用范式。</p>
+</div>
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+  <li>Devlin, J., Chang, M.-W., Lee, K., &amp; Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>NAACL 2019</em>.</li>
+  <li>Vaswani, A., et al. (2017). Attention is all you need. <em>NeurIPS 2017</em>.</li>
+  <li>Radford, A., Narasimhan, K., Salimans, T., &amp; Sutskever, I. (2018). Improving language understanding by generative pre-training. <em>OpenAI Tech Report</em>. (GPT)</li>
+  <li>Peters, M. E., et al. (2018). Deep contextualized word representations. <em>NAACL 2018</em>. (ELMo)</li>
+  <li>Liu, Y., et al. (2019). RoBERTa: A robustly optimized BERT pretraining approach. <em>arXiv:1907.11692</em>.</li>
+  <li>Lan, Z., et al. (2020). ALBERT: A lite BERT for self-supervised learning of language representations. <em>ICLR 2020</em>.</li>
+  <li>He, P., et al. (2021). DeBERTa: Decoding-enhanced BERT with disentangled attention. <em>ICLR 2021</em>.</li>
+  <li>Clark, K., Luong, M.-T., Le, Q. V., &amp; Manning, C. D. (2020). ELECTRA: Pre-training text encoders as discriminators rather than generators. <em>ICLR 2020</em>.</li>
+  <li>Joshi, M., et al. (2020). SpanBERT: Improving pre-training by representing and predicting spans. <em>TACL 2020</em>.</li>
+  <li>Sanh, V., et al. (2020). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. <em>NeurIPS Workshop 2020</em>.</li>
+  <li>Mikolov, T., et al. (2013). Efficient estimation of word representations in vector space. <em>ICLR Workshop 2013</em>. (Word2Vec)</li>
+  <li>Pennington, J., Socher, R., &amp; Manning, C. D. (2014). GloVe: Global vectors for word representation. <em>EMNLP 2014</em>.</li>
+  <li>Hendrycks, D., &amp; Gimpel, K. (2016). Gaussian error linear units (GELU). <em>arXiv:1606.08415</em>.</li>
+  <li>Ba, J. L., Kiros, J. R., &amp; Hinton, G. E. (2016). Layer normalization. <em>arXiv:1607.06450</em>.</li>
+  <li>Wang, A., et al. (2019). GLUE: A multi-task benchmark and analysis platform for natural language understanding. <em>ICLR 2019</em>.</li>
+</ol>
+</section>
+
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+
+// KaTeX 渲染策略
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

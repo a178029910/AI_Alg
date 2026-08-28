@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>随机森林与集成学习 详解 — Random Forest &amp; Ensemble Learning 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>随机森林与集成学习</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、决策树基础</a>
+    <a href="#ch2">二、决策树剪枝</a>
+    <a href="#ch3">三、集成学习概述</a>
+    <a href="#ch4">四、Bagging 与随机森林</a>
+    <a href="#ch5">五、特征重要性</a>
+    <a href="#ch6">六、Boosting 概述</a>
+    <a href="#ch7">七、AdaBoost</a>
+    <a href="#ch8">八、梯度提升树（GBDT）</a>
+    <a href="#ch9">九、XGBoost</a>
+    <a href="#ch10">十、LightGBM 与 CatBoost</a>
+    <a href="#ch11">十一、PyTorch 代码实现</a>
+    <a href="#ch12">十二、算法对比与工程选型</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>随机森林与集成学习</h1>
+  <div class="subtitle">Random Forest &amp; Ensemble Learning — 决策树 · 随机森林 · 梯度提升树</div>
+  <div class="tagline">Bagging · Boosting · AdaBoost · GBDT · XGBoost · LightGBM · CatBoost</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">5 张 SVG 结构图</span>
+    <span class="badge">13 个公式</span>
+    <span class="badge">6 段 Python 代码</span>
+    <span class="badge">14 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">一</span> 决策树基础</h2>
+
+<h3>1.1 什么是决策树</h3>
+<p><strong>决策树（Decision Tree）</strong> 是一种树形结构的监督学习模型，以"分而治之"的策略递归地把特征空间划分为若干互不相交的区域：从<strong>根节点</strong>出发，每个<strong>内部节点</strong>对应一个特征上的判定条件（if-then 规则），每个<strong>叶子节点</strong>给出预测结果。它可解释性极强——任意一条从根到叶的路径都是一条完整的 if-then 规则，人类可以直接阅读并验证。</p>
+
+<div class="callout">
+<div class="callout-title">核心直觉</div>
+<p>决策树本质上是一组"层层追问"的规则集：先问最重要的特征（如花瓣长度是否大于 2.45cm），再问次重要的特征，直至可以确定地给出类别。它把复杂的决策过程拆解为一系列简单问题，这正是它直观、易解释的原因。</p>
+</div>
+
+<p>下面以<strong>鸢尾花（Iris）分类</strong>为例展示决策树结构：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mRf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mRfO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ea580c"/>
+  </marker>
+  <linearGradient id="gRfRoot" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/>
+    <stop offset="100%" stop-color="#eff6ff"/>
+  </linearGradient>
+  <linearGradient id="gRfIn" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ede9fe"/>
+    <stop offset="100%" stop-color="#f5f3ff"/>
+  </linearGradient>
+  <linearGradient id="gRfLeaf" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#d1fae5"/>
+    <stop offset="100%" stop-color="#ecfdf5"/>
+  </linearGradient>
+</defs>
+
+<rect x="330" y="20" width="240" height="70" rx="14" fill="url(#gRfRoot)" stroke="#2563eb" stroke-width="2"/>
+<text x="450" y="52" text-anchor="middle" font-size="17" font-weight="700" fill="#1d4ed8">根节点 Root</text>
+<text x="450" y="76" text-anchor="middle" font-size="13" fill="#475569">花瓣长度 &lt;= 2.45 ?</text>
+
+<rect x="60" y="150" width="250" height="70" rx="14" fill="url(#gRfIn)" stroke="#7c3aed" stroke-width="2"/>
+<text x="185" y="182" text-anchor="middle" font-size="15" font-weight="700" fill="#6d28d9">内部节点</text>
+<text x="185" y="206" text-anchor="middle" font-size="13" fill="#475569">花瓣宽度 &lt;= 1.75 ?</text>
+
+<rect x="590" y="150" width="250" height="70" rx="14" fill="url(#gRfIn)" stroke="#7c3aed" stroke-width="2"/>
+<text x="715" y="182" text-anchor="middle" font-size="15" font-weight="700" fill="#6d28d9">内部节点</text>
+<text x="715" y="206" text-anchor="middle" font-size="13" fill="#475569">花萼长度 &lt;= 4.95 ?</text>
+
+<line x1="400" y1="90" x2="245" y2="148" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRf)"/>
+<text x="278" y="112" text-anchor="middle" font-size="12" font-weight="600" fill="#2563eb">是 yes</text>
+<line x1="500" y1="90" x2="655" y2="148" class="flow-line" stroke="#ea580c" stroke-width="2.5" marker-end="url(#mRfO)"/>
+<text x="620" y="112" text-anchor="middle" font-size="12" font-weight="600" fill="#c2410c">否 no</text>
+
+<rect x="60" y="280" width="250" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
+<text x="185" y="307" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 山鸢尾</text>
+<text x="185" y="328" text-anchor="middle" font-size="12" fill="#475569">50 / 50 / 0</text>
+
+<rect x="350" y="280" width="200" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
+<text x="450" y="307" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 变色鸢尾</text>
+<text x="450" y="328" text-anchor="middle" font-size="12" fill="#475569">48 / 2 / 0</text>
+
+<rect x="590" y="280" width="250" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
+<text x="715" y="307" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 维吉尼亚鸢尾</text>
+<text x="715" y="328" text-anchor="middle" font-size="12" fill="#475569">0 / 0 / 50</text>
+
+<line x1="185" y1="220" x2="185" y2="276" class="flow-line" stroke="#059669" stroke-width="2.5" marker-end="url(#mRf)"/>
+<line x1="250" y1="220" x2="420" y2="278" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRf)"/>
+<line x1="250" y1="220" x2="420" y2="278" class="flow-line" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mRf)" opacity="0"/>
+<line x1="690" y1="220" x2="715" y2="278" class="flow-line" stroke="#059669" stroke-width="2.5" marker-end="url(#mRf)"/>
+<line x1="740" y1="220" x2="715" y2="278" class="flow-line" stroke="#ea580c" stroke-width="2.5" marker-end="url(#mRfO)"/>
+</svg>
+</div>
+
+<h3>1.2 信息增益（Information Gain）</h3>
+<p>决策树划分特征的选择标准是<strong>"如何让划分后的数据更纯"</strong>。经典度量之一是<strong>信息熵（Entropy）</strong>：熵越小，数据越纯。数据集 $D$ 的熵定义为：</p>
+
+<div class="formula" data-eq="(1)">$$H(D) = -\sum_{k=1}^{K} p_k \log_2 p_k$$</div>
+
+<p>其中 $p_k$ 是第 $k$ 类样本在数据集 $D$ 中占的比例，$K$ 为类别数。若以特征 $A$ 对 $D$ 进行划分（$A$ 有 $V$ 个取值），划分后每个子集 $D_v$ 的熵按样本量加权平均，即<strong>条件熵</strong>：</p>
+
+<div class="formula" data-eq="(2)">$$H(D \mid A) = \sum_{v=1}^{V} \frac{|D_v|}{|D|} H(D_v)$$</div>
+
+<p><strong>信息增益</strong>为划分前后熵的减少量，信息增益越大，说明特征 $A$ 带来的"纯度提升"越多：</p>
+
+<div class="formula" data-eq="(3)">$$g(D, A) = H(D) - H(D \mid A)$$</div>
+
+<div class="callout success">
+<div class="callout-title">ID3 算法</div>
+<p>ID3 在每一层直接选择信息增益最大的特征进行划分。其偏好取值较多的特征（如"编号"这种每行一个唯一值的特征会带来最大增益），因此后续 C4.5 引入增益率加以修正。</p>
+</div>
+
+<h3>1.3 基尼指数（Gini Index）</h3>
+<p><strong>基尼指数</strong>是另一种"不纯度"度量：从数据集 $D$ 中随机抽取两个样本，它们类别不同的概率。基尼值越小，数据越纯：</p>
+
+<div class="formula" data-eq="(4)">$$\text{Gini}(D) = 1 - \sum_{k=1}^{K} p_k^2$$</div>
+
+<p>以特征 $A$ 划分后的加权基尼指数为：</p>
+
+<div class="formula" data-eq="(5)">$$\text{Gini}(D, A) = \sum_{v=1}^{V} \frac{|D_v|}{|D|} \, \text{Gini}(D_v)$$</div>
+
+<p>CART 分类树在候选特征中选取<strong>基尼指数最小</strong>的特征作为最优划分特征，并支持对连续特征做二分。</p>
+
+<h3>1.4 ID3 / C4.5 / CART 对比</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>算法</th><th>提出者 / 年份</th><th>划分准则</th><th>特征类型</th><th>树结构</th><th>备注</th></tr>
+</thead>
+<tbody>
+<tr><td>ID3</td><td>Quinlan, 1986</td><td>信息增益</td><td>仅离散</td><td>多叉树</td><td>不支持缺失值、连续特征</td></tr>
+<tr><td>C4.5</td><td>Quinlan, 1993</td><td>信息增益率</td><td>离散 / 连续</td><td>多叉树</td><td>增益率修正 ID3 偏好，支持剪枝</td></tr>
+<tr><td>CART</td><td>Breiman, 1984</td><td>基尼指数</td><td>离散 / 连续</td><td>二叉树</td><td>分类回归通用，剪枝成熟，随机森林基学习器</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+<div class="callout-title">选型提示</div>
+<p>现代集成学习框架（sklearn、XGBoost、LightGBM 等）默认采用 <strong>CART 二叉树 + 基尼指数/方差</strong> 作为分裂准则；ID3 / C4.5 更多作为教材概念存在。</p>
+</div>
+
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">二</span> 决策树剪枝</h2>
+
+<h3>2.1 过拟合问题</h3>
+<p>决策树的归纳偏好是"尽可能拟合训练数据"：如果不加限制地生长，树可以把每个训练样本都单独划进一个叶子，此时训练误差为 0，但<strong>泛化能力（对未见数据的预测能力）很差</strong>，即<strong>过拟合（Overfitting）</strong>。随着树深度增加，模型复杂度上升、方差变大，测试误差呈"先降后升"的 U 型曲线。剪枝（Pruning）正是为了在"拟合能力"与"模型复杂度"之间取得平衡。</p>
+
+<div class="callout warn">
+<div class="callout-title">过拟合信号</div>
+<p>训练集准确率接近 100% 而验证集准确率明显偏低；或树深超过特征数时仍持续分裂。出现这些信号就应考虑剪枝、限制深度或改用集成方法。</p>
+</div>
+
+<h3>2.2 预剪枝 vs 后剪枝</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>策略</th><th>时机</th><th>做法</th><th>优点</th><th>缺点</th></tr>
+</thead>
+<tbody>
+<tr><td>预剪枝</td><td>建树过程中</td><td>在分裂前评估：若当前划分不能带来验证集性能提升（或节点样本数过少、深度过大），则停止分裂，当前节点直接作为叶子</td><td>计算开销小、树更矮、抗过拟合强</td><td>可能"欠拟合"：贪心停止过早，错过后续有增益的分裂</td></tr>
+<tr><td>后剪枝</td><td>树建成后</td><td>自底向上考察非叶节点：若剪掉该子树（替换为叶子）后验证集性能不下降，则剪掉</td><td>保留充分生长、效果通常更好</td><td>计算开销大（需完整建树再评估）</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>2.3 代价复杂度剪枝（Cost-Complexity Pruning）</h3>
+<p>CART 采用<strong>代价复杂度剪枝（CCP）</strong>：把"误差"与"复杂度"放进同一个目标函数，通过一个可调参数 $\alpha$ 权衡。对一棵子树 $T$，定义其代价复杂度：</p>
+
+<div class="formula" data-eq="(6)">$$R_{\alpha}(T) = R(T) + \alpha\, |T|$$</div>
+
+<p>其中 $R(T)$ 为子树 $T$ 在训练集（或验证集）上的误分类代价（回归时取平方误差），$|T|$ 为叶子节点个数，$\alpha \geq 0$ 为复杂度惩罚系数。$\alpha$ 越大，树越倾向于"小"（叶子少、结构简单）。CCP 先对完整树生成一组嵌套子树 $T_0 \supset T_1 \supset \dots \supset \{root\}$，再通过交叉验证选择使验证误差最小的 $\alpha$ 及其对应子树。</p>
+
+<div class="callout">
+<div class="callout-title">剪枝的本质</div>
+<p>剪枝 = 正则化。深度、叶子最小样本数、$\alpha$ 惩罚项，都是限制模型复杂度的旋钮。集成学习（Bagging / Boosting）则从另一个角度解决同一问题：通过组合多棵树来降低方差或偏差。</p>
+</div>
+
+</section>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">三</span> 集成学习概述</h2>
+
+<h3>3.1 为什么需要集成</h3>
+<p><strong>集成学习（Ensemble Learning）</strong> 的核心思想是"<strong>三个臭皮匠，赛过诸葛亮</strong>"：训练多个<strong>弱学习器</strong>（只比随机略好的模型，如浅决策树），再用某种策略把它们组合成一个<strong>强学习器</strong>。单个弱学习器能力有限、偏差或方差偏大，但多个弱学习器的组合可以互相纠错、互相补充，显著提升整体精度与鲁棒性。</p>
+
+<div class="callout">
+<div class="callout-title">直觉类比</div>
+<p>一位医生可能误诊，但<strong>多位独立医生会诊</strong>后投票，错误会被多数票淹没；类似地，随机森林让成百上千棵"有分歧"的树分别投票，最终答案往往比任何一棵树都可靠。</p>
+</div>
+
+<h3>3.2 Bias-Variance 分解</h3>
+<p>理解集成学习为什么有效，需要引入<strong>偏差-方差分解（Bias-Variance Decomposition）</strong>。对回归问题，设真实函数为 $f(x)$，模型预测为 $\hat{f}(x)$，期望误差可分解为三部分：</p>
+
+<div class="formula" data-eq="(7)">$$\mathbb{E}\left[\left(y - \hat{f}(x)\right)^2\right] = \text{Bias}^2\big(\hat{f}(x)\big) + \text{Var}\big(\hat{f}(x)\big) + \sigma^2$$</div>
+
+<ul>
+<li><strong>偏差 $\text{Bias}$</strong>：模型预测期望与真实值的差距，刻画<strong>欠拟合</strong>程度（模型太简单）。</li>
+<li><strong>方差 $\text{Var}$</strong>：模型在不同训练集上的波动幅度——刻画<strong>过拟合</strong>程度（模型太敏感）。</li>
+<li><strong>不可约误差 $\sigma^2$</strong>：数据本身的噪声，任何模型都无法消除。</li>
+</ul>
+
+<p>集成学习正是沿着这两条线发力：<strong>Bagging 通过平均降低方差</strong>，<strong>Boosting 通过加权组合降低偏差</strong>。</p>
+
+<h3>3.3 集成学习的两大流派：Bagging vs Boosting</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>维度</th><th>Bagging（自举汇聚）</th><th>Boosting（提升）</th></tr>
+</thead>
+<tbody>
+<tr><td>训练方式</td><td>各基学习器<strong>并行</strong>独立训练</td><td>基学习器<strong>串行</strong>依次训练</td></tr>
+<tr><td>样本使用</td><td>Bootstrap 有放回重采样，各用各的子集</td><td>所有样本都使用，但每轮调整<strong>样本权重</strong></td></tr>
+<tr><td>目标</td><td>降低<strong>方差</strong>（对高方差基学习器尤其有效）</td><td>降低<strong>偏差</strong>（对弱学习器逐步提升）</td></tr>
+<tr><td>基学习器</td><td>可强可弱，常为深树</td><td>通常要求弱（浅树 / 桩）</td></tr>
+<tr><td>代表算法</td><td><strong>随机森林</strong>（Random Forest）</td><td><strong>AdaBoost / GBDT / XGBoost / LightGBM / CatBoost</strong></td></tr>
+<tr><td>对异常值</td><td>较鲁棒（平均稀释影响）</td><td>较敏感（异常值被反复加权放大）</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>下图直观对比两大流派的差异：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mBB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mBB2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
+  </marker>
+  <linearGradient id="gBB1" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/>
+    <stop offset="100%" stop-color="#eff6ff"/>
+  </linearGradient>
+  <linearGradient id="gBB2" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ede9fe"/>
+    <stop offset="100%" stop-color="#f5f3ff"/>
+  </linearGradient>
+</defs>
+
+<text x="225" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1d4ed8">Bagging — 并行</text>
+<text x="675" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#6d28d9">Boosting — 串行</text>
+
+<rect x="80" y="55" width="290" height="52" rx="12" fill="url(#gBB1)" stroke="#2563eb" stroke-width="1.8"/>
+<text x="225" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">Bootstrap 采样</text>
+<text x="225" y="97" text-anchor="middle" font-size="12" fill="#475569">有放回重采样出 M 个子集</text>
+
+<rect x="80" y="150" width="88" height="52" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="124" y="180" text-anchor="middle" font-size="12" fill="#1d4ed8">D_1</text>
+<rect x="181" y="150" width="88" height="52" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="225" y="180" text-anchor="middle" font-size="12" fill="#1d4ed8">D_2</text>
+<rect x="282" y="150" width="88" height="52" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="326" y="180" text-anchor="middle" font-size="12" fill="#1d4ed8">...</text>
+
+<line x1="225" y1="107" x2="124" y2="146" class="flow-line" stroke="#2563eb" stroke-width="2" marker-end="url(#mBB)"/>
+<line x1="225" y1="107" x2="225" y2="146" class="flow-line" stroke="#2563eb" stroke-width="2" marker-end="url(#mBB)"/>
+<line x1="225" y1="107" x2="326" y2="146" class="flow-line" stroke="#2563eb" stroke-width="2" marker-end="url(#mBB)"/>
+
+<rect x="80" y="245" width="88" height="52" rx="12" fill="url(#gBB2)" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="124" y="275" text-anchor="middle" font-size="12" fill="#6d28d9">树 1</text>
+<rect x="181" y="245" width="88" height="52" rx="12" fill="url(#gBB2)" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="225" y="275" text-anchor="middle" font-size="12" fill="#6d28d9">树 2</text>
+<rect x="282" y="245" width="88" height="52" rx="12" fill="url(#gBB2)" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="326" y="275" text-anchor="middle" font-size="12" fill="#6d28d9">树 M</text>
+
+<line x1="124" y1="202" x2="124" y2="241" class="flow-line" stroke="#7c3aed" stroke-width="2" marker-end="url(#mBB2)"/>
+<line x1="225" y1="202" x2="225" y2="241" class="flow-line" stroke="#7c3aed" stroke-width="2" marker-end="url(#mBB2)"/>
+<line x1="326" y1="202" x2="326" y2="241" class="flow-line" stroke="#7c3aed" stroke-width="2" marker-end="url(#mBB2)"/>
+
+<rect x="140" y="322" width="170" height="42" rx="20" fill="#059669" stroke="#059669" stroke-width="0"/>
+<text x="225" y="348" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">多数投票 / 平均</text>
+
+<line x1="124" y1="297" x2="200" y2="320" class="flow-line" stroke="#059669" stroke-width="2" marker-end="url(#mBB)"/>
+<line x1="225" y1="297" x2="225" y2="318" class="flow-line" stroke="#059669" stroke-width="2" marker-end="url(#mBB)"/>
+<line x1="326" y1="297" x2="250" y2="320" class="flow-line" stroke="#059669" stroke-width="2" marker-end="url(#mBB)"/>
+
+<rect x="530" y="55" width="290" height="52" rx="12" fill="url(#gBB2)" stroke="#7c3aed" stroke-width="1.8"/>
+<text x="675" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="#6d28d9">带权重的训练数据</text>
+<text x="675" y="97" text-anchor="middle" font-size="12" fill="#475569">初始权重相等 w = 1/N</text>
+
+<rect x="530" y="150" width="290" height="52" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="675" y="175" text-anchor="middle" font-size="13" font-weight="600" fill="#6d28d9">弱学习器 1</text>
+<text x="675" y="194" text-anchor="middle" font-size="12" fill="#475569">在加权数据上训练</text>
+
+<line x1="675" y1="107" x2="675" y2="146" class="flow-line" stroke="#7c3aed" stroke-width="2" marker-end="url(#mBB2)"/>
+
+<rect x="530" y="245" width="290" height="52" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="675" y="270" text-anchor="middle" font-size="13" font-weight="600" fill="#6d28d9">更新样本权重（放大错分）</text>
+<text x="675" y="289" text-anchor="middle" font-size="12" fill="#475569">弱学习器 2、3、... 串行迭代</text>
+
+<line x1="675" y1="202" x2="675" y2="241" class="flow-line" stroke="#7c3aed" stroke-width="2" marker-end="url(#mBB2)"/>
+<line x1="675" y1="297" x2="675" y2="318" class="flow-line" stroke="#7c3aed" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#mBB2)"/>
+
+<rect x="570" y="322" width="210" height="42" rx="20" fill="#dc2626" stroke="#dc2626" stroke-width="0"/>
+<text x="675" y="348" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">加权组合</text>
+
+<line x1="675" y1="297" x2="675" y2="318" class="flow-line" stroke="#dc2626" stroke-width="2" marker-end="url(#mBB2)"/>
+</svg>
+</div>
+
+</section>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">四</span> Bagging 与随机森林</h2>
+
+<h3>4.1 Bagging 原理</h3>
+<p><strong>Bagging（Bootstrap Aggregating，自举汇聚）</strong> 由 Breiman 于 1996 年提出，是并行式集成学习的代表。流程分为三步：</p>
+<ul>
+<li><strong>① Bootstrap 采样</strong>：从原始训练集 $D$（含 $N$ 个样本）有放回地随机抽取 $N$ 个样本，形成子集 $D_1, D_2, \dots, D_M$（约 63.2% 的样本会被抽到，其余构成袋外数据）。</li>
+<li><strong>② 并行训练</strong>：在每个子集上独立训练一个基学习器（通常为决策树）。</li>
+<li><strong>③ 聚合预测</strong>：分类采用<strong>多数投票</strong>，回归采用<strong>取平均</strong>。</li>
+</ul>
+<p>由于 Bootstrap 采样引入了<strong>样本扰动</strong>，各基学习器之间存在差异，平均/投票后方差被显著降低——这正是"降低方差"这一集成路径的实现机制。</p>
+
+<h3>4.2 随机森林的"随机"</h3>
+<p><strong>随机森林（Random Forest）</strong> 是 Bagging + 决策树的组合，由 Breiman 于 2001 年正式提出。它引入了<strong>双重随机性</strong>：</p>
+<ul>
+<li><strong>样本随机</strong>：每个基学习器用 Bootstrap 子集训练（与 Bagging 一致）。</li>
+<li><strong>特征随机</strong>：每次分裂时，只从全部 $d$ 个特征中随机选取 $m$ 个（分类常取 $m = \lfloor \sqrt{d} \rfloor$，回归常取 $m = \lfloor d/3 \rfloor$），在 $m$ 个特征中找最优分裂。这一机制让树与树之间更加"去相关"，进一步压低方差。</li>
+</ul>
+
+<div class="callout success">
+<div class="callout-title">为什么特征随机有用</div>
+<p>若只做样本扰动，若干棵"最强特征"相同的树会在同一位置分裂，高度相关；投票时它们的错误会"共振"。特征随机让不同的树关注不同的特征子集，错误相互独立，集成效果才真正显现。</p>
+</div>
+
+<h3>4.3 随机森林的预测</h3>
+<ul>
+<li><strong>分类</strong>：每棵树给出类别，最终取<strong>多数投票</strong>（可叠加样本权重 / 树权重）。</li>
+<li><strong>回归</strong>：对每棵树的输出取<strong>算术平均</strong>。</li>
+</ul>
+
+<h3>4.4 袋外误差（OOB Error）</h3>
+<p>由于 Bootstrap 有放回采样，每棵树训练时约有 $1 - 0.632 \approx 36.8\%$ 的样本未被用到，这些样本称为该树的<strong>袋外样本（Out-of-Bag, OOB）</strong>。对每个样本 $x_i$，用"所有没有在训练时用到它"的那些树做预测，再投票/平均，即可得到 OOB 预测。OOB 误差是<strong>免费的交叉验证</strong>：无需额外划分验证集，就能在训练过程中估计泛化误差，且随树的数量增加而趋于稳定。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 455" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mRF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mRFp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
+  </marker>
+  <marker id="mRFg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#059669"/>
+  </marker>
+  <linearGradient id="gRfD" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/>
+    <stop offset="100%" stop-color="#eff6ff"/>
+  </linearGradient>
+  <linearGradient id="gRfT" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ede9fe"/>
+    <stop offset="100%" stop-color="#f5f3ff"/>
+  </linearGradient>
+</defs>
+
+<rect x="40" y="165" width="180" height="70" rx="14" fill="url(#gRfD)" stroke="#2563eb" stroke-width="2"/>
+<text x="130" y="197" text-anchor="middle" font-size="16" font-weight="700" fill="#1d4ed8">原始训练数据</text>
+<text x="130" y="220" text-anchor="middle" font-size="12" fill="#475569">N 个样本 · d 个特征</text>
+
+<rect x="330" y="30" width="170" height="58" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="415" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">Bootstrap 子集 1</text>
+<text x="415" y="75" text-anchor="middle" font-size="11" fill="#475569">有放回采样</text>
+<rect x="330" y="165" width="170" height="58" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="415" y="190" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">Bootstrap 子集 2</text>
+<text x="415" y="210" text-anchor="middle" font-size="11" fill="#475569">有放回采样</text>
+<rect x="330" y="300" width="170" height="58" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="415" y="325" text-anchor="middle" font-size="13" font-weight="600" fill="#1d4ed8">Bootstrap 子集 M</text>
+<text x="415" y="345" text-anchor="middle" font-size="11" fill="#475569">有放回采样</text>
+
+<line x1="215" y1="207" x2="326" y2="75" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRF)"/>
+<line x1="215" y1="207" x2="326" y2="194" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRF)"/>
+<line x1="215" y1="207" x2="326" y2="314" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRF)"/>
+
+<rect x="590" y="30" width="170" height="58" rx="12" fill="url(#gRfT)" stroke="#7c3aed" stroke-width="1.8"/>
+<text x="675" y="55" text-anchor="middle" font-size="13" font-weight="600" fill="#6d28d9">决策树 1</text>
+<text x="675" y="75" text-anchor="middle" font-size="11" fill="#475569">特征随机 + 基尼指数</text>
+<rect x="590" y="165" width="170" height="58" rx="12" fill="url(#gRfT)" stroke="#7c3aed" stroke-width="1.8"/>
+<text x="675" y="190" text-anchor="middle" font-size="13" font-weight="600" fill="#6d28d9">决策树 2</text>
+<text x="675" y="210" text-anchor="middle" font-size="11" fill="#475569">特征随机 + 基尼指数</text>
+<rect x="590" y="300" width="170" height="58" rx="12" fill="url(#gRfT)" stroke="#7c3aed" stroke-width="1.8"/>
+<text x="675" y="325" text-anchor="middle" font-size="13" font-weight="600" fill="#6d28d9">决策树 M</text>
+<text x="675" y="345" text-anchor="middle" font-size="11" fill="#475569">特征随机 + 基尼指数</text>
+
+<line x1="500" y1="59" x2="586" y2="59" class="flow-line" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#mRFp)"/>
+<line x1="500" y1="194" x2="586" y2="194" class="flow-line" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#mRFp)"/>
+<line x1="500" y1="329" x2="586" y2="329" class="flow-line" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#mRFp)"/>
+
+<rect x="350" y="372" width="200" height="44" rx="20" fill="#059669"/>
+<text x="450" y="399" text-anchor="middle" font-size="15" font-weight="700" fill="#ffffff">投票 / 平均 → 输出</text>
+
+<!-- 树1 输出: 右侧通道 x=790, 水平汇入节点右边缘 -->
+<polyline points="675,88 675,96 790,96 790,394 550,394" class="flow-line" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#mRFg)"/>
+<text x="682" y="86" text-anchor="middle" font-size="11" fill="#059669">预测 1</text>
+
+<!-- 树2 输出: 右侧通道 x=800 -->
+<polyline points="675,223 675,231 800,231 800,394 550,394" class="flow-line" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#mRFg)"/>
+<text x="730" y="223" text-anchor="middle" font-size="11" fill="#059669">预测 2</text>
+
+<!-- 树3 输出: 右侧通道 x=810 -->
+<polyline points="675,358 675,366 810,366 810,394 550,394" class="flow-line" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#mRFg)"/>
+<text x="740" y="358" text-anchor="middle" font-size="11" fill="#059669">预测 M</text>
+
+<text x="450" y="435" text-anchor="middle" font-size="13" fill="#334155">各决策树独立输出，多数投票（分类）或取平均（回归）</text>
+</svg>
+</div>
+
+</section>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">五</span> 随机森林的特征重要性</h2>
+
+<p>随机森林不仅能给出高质量预测，还能回答一个关键问题：<strong>哪些特征对预测贡献最大？</strong>这在实际业务（特征筛选、模型解释、风控审计）中往往与预测本身同等重要。</p>
+
+<h3>5.1 基于不纯度下降（Gini Importance）</h3>
+<p><strong>基于不纯度下降的重要性（也称 MDI，Mean Decrease in Impurity）</strong> 统计每个特征在所有树的所有分裂节点上带来的<strong>基尼指数下降量</strong>，按各节点样本占比加权后累加：</p>
+<ul>
+<li>对每棵树的每个分裂节点，计算该节点分裂前后基尼指数的减少量 $\Delta = G_{\text{parent}} - (G_{\text{left}} + G_{\text{right}})$（按样本数加权）。</li>
+<li>把 $\Delta$ 归因于该节点使用的特征，在整片森林上累加、再按树数归一化。</li>
+<li>最终每个特征得到一个重要性得分，可归一化为百分比，用于排序。</li>
+</ul>
+<p>该指标的优点是<strong>计算零成本</strong>（训练时顺带统计）；缺点是存在<strong>偏向连续/高基数特征的偏差</strong>，且对特征之间的相关性敏感。</p>
+
+<h3>5.2 基于排列重要性（Permutation Importance）</h3>
+<p><strong>排列重要性（MDA，Mean Decrease in Accuracy）</strong> 的思路更直接：</p>
+<ol>
+<li>用训练好的森林计算 OOB 误差 $E_0$。</li>
+<li>对特征 $j$，在 OOB 样本上<strong>随机打乱</strong>该特征的取值（破坏其与标签的关联），再预测并计算误差 $E_j$。</li>
+<li>重要性 = $E_j - E_0$（误差上升越多，说明该特征越重要）。</li>
+</ol>
+<p>相比 Gini 重要性，置换重要性不易被高基数特征带偏，是更"诚实"的度量，但需要额外计算（对每个特征重测一遍）。</p>
+
+<div class="callout warn">
+<div class="callout-title">两种重要性 ≠ 因果重要性</div>
+<p>无论是 Gini 重要性还是置换重要性，度量的都是<strong>统计关联</strong>而非<strong>因果效应</strong>。若两个特征强相关，重要性会被"分摊"，排序结果可能误导因果判断。</p>
+</div>
+
+<h3>5.3 SHAP 值简介</h3>
+<p><strong>SHAP（SHapley Additive exPlanations）</strong> 源自合作博弈论的 Shapley 值，为每个样本的每个特征给出一个<strong>加性贡献值</strong>：预测值 = 基线值 + 各特征 SHAP 值之和。其性质优良：</p>
+<ul>
+<li><strong>可加性</strong>：$\text{SHAP}(x_1) + \dots + \text{SHAP}(x_d) = f(x) - \mathbb{E}[f]$。</li>
+<li><strong>局部解释</strong>：单样本层面解释"为什么这个样本被判为 X"。</li>
+<li><strong>全局汇总</strong>：对全部样本的 |SHAP| 取平均，得到全局特征重要性排序，比 Gini/置换更稳定。</li>
+</ul>
+<p>随机森林是 SHAP 最常见的应用场景之一（配合 TreeSHAP 可在线性时间内精确求解），是"模型可解释性"事实标准。</p>
+
+</section>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">六</span> Boosting 概述</h2>
+
+<h3>6.1 Boosting 的核心思想</h3>
+<p><strong>Boosting（提升）</strong> 是串行式集成学习的总称：逐个训练基学习器，<strong>每个新学习器都致力于纠正前面所有学习器犯的错误</strong>，最终把所有学习器按一定权重组合起来。与 Bagging 降低方差不同，Boosting 走的是<strong>降低偏差</strong>的路线——即使基学习器很弱（准确率略高于 0.5），经过多轮迭代也能组合出强学习器。</p>
+
+<div class="callout">
+<div class="callout-title">直觉类比</div>
+<p>就像"错题本"学习法：第一轮复习后找出仍然做错的题，第二轮重点攻克这些错题；每轮都聚焦上一轮的错误，整体水平逐步提升。</p>
+</div>
+
+<h3>6.2 加法模型与前向分步算法</h3>
+<p>Boosting 家族（AdaBoost、GBDT、XGBoost）都可以统一到<strong>加法模型（Additive Model）</strong>框架下：最终模型是一组基学习器 $b_m(x)$ 的加权求和：</p>
+
+<div class="formula">$$F_M(x) = \sum_{m=1}^{M} \beta_m \, f_m(x)$$</div>
+
+<p>直接联合优化所有 $(\beta_m, f_m)$ 是困难的，因此采用<strong>前向分步算法（Forward Stagewise Algorithm）</strong>：从 $m=1$ 到 $M$ 逐轮求解——每轮只优化当前新增的学习器，固定之前已经学到的部分：</p>
+
+<div class="formula">$$(\beta_m, f_m) = \arg\min_{\beta, f} \sum_{i=1}^{N} L\left(y_i, \; F_{m-1}(x_i) + \beta f(x_i)\right)$$</div>
+
+<h3>6.3 指数损失函数与 AdaBoost 关系</h3>
+<p>当损失函数取<strong>指数损失</strong> $L(y, F(x)) = \exp(-y F(x))$（其中 $y \in \{-1, +1\}$）时，前向分步算法推出的加权更新规则恰与 AdaBoost 完全等价——这是统计学习视角对 AdaBoost 的标准解释：</p>
+
+<div class="formula">$$L(y, F(x)) = e^{-y F(x)}$$</div>
+
+<p>指数损失对错分样本施加指数级惩罚，天然地在每轮迭代中"放大"难样本的权重，这正是 AdaBoost 权重更新机制的内在原因。</p>
+
+</section>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">七</span> AdaBoost</h2>
+
+<h3>7.1 AdaBoost 算法流程</h3>
+<p><strong>AdaBoost（Adaptive Boosting，自适应提升）</strong> 由 Freund 与 Schapire 于 1995 年提出，是第一个实用化、理论完备的 Boosting 算法。输入带标签样本集 $D = \{(x_1, y_1), \dots, (x_N, y_N)\}$，$y_i \in \{-1, +1\}$，弱学习器算法 $\mathcal{A}$，迭代轮数 $M$：</p>
+<ol>
+<li><strong>初始化</strong>：样本权重 $w_i^{(1)} = 1/N, \; i = 1, \dots, N$。</li>
+<li><strong>迭代</strong> $m = 1, 2, \dots, M$：
+<ol>
+<li>在权重 $w^{(m)}$ 下训练弱分类器 $f_m(x)$，使其加权误差最小。</li>
+<li>计算加权错误率 $\epsilon_m = \frac{\sum_i w_i^{(m)} \mathbb{I}[f_m(x_i) \neq y_i]}{\sum_i w_i^{(m)}}$。</li>
+<li>计算弱分类器权重 $\alpha_m$（见公式 (12)）。</li>
+<li>更新样本权重（见公式 (11)），并归一化。</li>
+</ol></li>
+<li><strong>输出</strong>：加权组合的最终强分类器（见公式 (13)）。</li>
+</ol>
+
+<h3>7.2 样本权重更新</h3>
+<p>每轮迭代后，<strong>提高被分错样本的权重、降低被分对样本的权重</strong>，使下一轮弱学习器被迫更关注"难样本"：</p>
+
+<div class="formula" data-eq="(8)">$$w_i^{(m+1)} = w_i^{(m)} \cdot \exp\left(-\alpha_m \, y_i \, f_m(x_i)\right), \quad \text{再归一化至 } \sum_i w_i = 1$$</div>
+
+<h3>7.3 弱分类器权重</h3>
+<p>每个弱分类器的发言权重由它的错误率决定——<strong>错误率越低，权重越大</strong>：</p>
+
+<div class="formula" data-eq="(9)">$$\alpha_m = \frac{1}{2} \ln \frac{1 - \epsilon_m}{\epsilon_m}$$</div>
+
+<p>当 $\epsilon_m < 0.5$ 时 $\alpha_m > 0$，错误率越低 $\alpha_m$ 越大；若某轮 $\epsilon_m \geq 0.5$（弱于随机猜测），则停止迭代或翻转分类器。</p>
+
+<h3>7.4 最终分类器</h3>
+<div class="formula" data-eq="(10)">$$F(x) = \operatorname{sign}\left( \sum_{m=1}^{M} \alpha_m \, f_m(x) \right)$$</div>
+
+<p>预测时每个弱分类器按 $\alpha_m$ 加权投票，符号函数给出最终类别。下图展示 AdaBoost 的迭代与权重更新流程：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mADA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mADAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ea580c"/>
+  </marker>
+  <linearGradient id="gAda" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#dbeafe"/>
+    <stop offset="100%" stop-color="#eff6ff"/>
+  </linearGradient>
+</defs>
+
+<!-- 第一行: 初始权重 + 三个迭代 -->
+<rect x="30" y="30" width="130" height="70" rx="14" fill="url(#gAda)" stroke="#2563eb" stroke-width="2"/>
+<text x="95" y="60" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">初始权重</text>
+<text x="95" y="83" text-anchor="middle" font-size="12" fill="#475569">w = 1/N</text>
+
+<rect x="250" y="30" width="190" height="70" rx="14" fill="url(#gAda)" stroke="#2563eb" stroke-width="2"/>
+<text x="345" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">迭代 1</text>
+<text x="345" y="76" text-anchor="middle" font-size="12" fill="#475569">训练 f1 · 计算 a1</text>
+<text x="345" y="94" text-anchor="middle" font-size="11" fill="#475569">更新样本权重</text>
+
+<rect x="490" y="30" width="190" height="70" rx="14" fill="url(#gAda)" stroke="#2563eb" stroke-width="2"/>
+<text x="585" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">迭代 2</text>
+<text x="585" y="76" text-anchor="middle" font-size="12" fill="#475569">训练 f2 · 计算 a2</text>
+<text x="585" y="94" text-anchor="middle" font-size="11" fill="#475569">聚焦错分样本</text>
+
+<rect x="730" y="30" width="170" height="70" rx="14" fill="url(#gAda)" stroke="#2563eb" stroke-width="2"/>
+<text x="815" y="56" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">迭代 M</text>
+<text x="815" y="76" text-anchor="middle" font-size="12" fill="#475569">训练 fM · 计算 aM</text>
+<text x="815" y="94" text-anchor="middle" font-size="11" fill="#475569">直到收敛</text>
+
+<!-- 横向主流程线 -->
+<line x1="200" y1="65" x2="246" y2="65" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mADA)"/>
+<line x1="440" y1="65" x2="486" y2="65" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mADA)"/>
+<line x1="680" y1="65" x2="726" y2="65" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mADA)"/>
+
+<!-- 权重反馈回环: 迭代1 -> 迭代2 输入（下方橙色） -->
+<path d="M 345 100 Q 345 140 585 140 Q 585 106 585 102" class="flow-line" fill="none" stroke="#ea580c" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#mADAr)"/>
+<text x="465" y="133" text-anchor="middle" font-size="11" fill="#c2410c">更新权重 w(2)</text>
+
+<!-- 权重反馈回环: 迭代2 -> 迭代M 输入 -->
+<path d="M 585 100 Q 585 175 815 175 Q 815 132 815 127" class="flow-line" fill="none" stroke="#ea580c" stroke-width="2" stroke-dasharray="8 6" marker-end="url(#mADAr)"/>
+<text x="705" y="168" text-anchor="middle" font-size="11" fill="#c2410c">更新权重 w(M)</text>
+
+<!-- 第二行: 弱分类器加权组合 -->
+<rect x="285" y="300" width="330" height="48" rx="22" fill="#059669"/>
+<text x="450" y="320" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">最终: sign( a1 f1 + a2 f2 + ... + aM fM )</text>
+<text x="450" y="338" text-anchor="middle" font-size="12" fill="#d1fae5">加权组合所有弱分类器 → 强分类器</text>
+
+<!-- 迭代1 -> 组合 -->
+<polyline points="345,100 345,270 380,270 380,296" class="flow-line" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#mADA)"/>
+<!-- 迭代2 -> 组合 -->
+<polyline points="585,100 585,270 450,270 450,296" class="flow-line" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#mADA)"/>
+<!-- 迭代M -> 组合 -->
+<polyline points="815,125 815,270 520,270 520,296" class="flow-line" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#mADA)"/>
+
+<text x="360" y="160" text-anchor="middle" font-size="11" fill="#047857">f1</text>
+<text x="508" y="160" text-anchor="middle" font-size="11" fill="#047857">f2</text>
+<text x="838" y="160" text-anchor="middle" font-size="11" fill="#047857">fM</text>
+</svg>
+</div>
+
+</section>
+
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">八</span> 梯度提升树（GBDT）</h2>
+
+<h3>8.1 梯度提升的核心思想</h3>
+<p><strong>梯度提升（Gradient Boosting）</strong> 由 Friedman 于 1999 年系统化提出，是 AdaBoost 之后 Boosting 家族最重要的一次升级：<strong>不再依赖指数损失的特殊形式，而是用损失函数的负梯度（pseudo-residual）来指导每轮新树的拟合</strong>。任何可微损失函数都可以套进这个框架——回归用平方误差，分类用对数几率损失，排序用 LambdaRank 等。</p>
+
+<div class="callout">
+<div class="callout-title">从"加权错分"到"拟合残差"</div>
+<p>AdaBoost 通过调整样本权重来间接纠正错误；GBDT 则直接计算当前模型对每个样本的<strong>负梯度</strong>（即"还差多少"），让新树去拟合这个残差——每棵树都在"补课"，逐步逼近最优模型。</p>
+</div>
+
+<h3>8.2 损失函数的负梯度（Pseudo-Residual）</h3>
+<p>对当前集成模型 $F_{m-1}(x)$，第 $m$ 轮针对每个样本 $x_i$ 计算损失函数 $L$ 关于当前预测值的<strong>负梯度</strong>，作为该轮的"伪残差"：</p>
+
+<div class="formula" data-eq="(11)">$$r_{im} = -\left[ \frac{\partial L\big(y_i, F(x_i)\big)}{\partial F(x_i)} \right]_{F(x) = F_{m-1}(x)}$$</div>
+
+<p>当 $L$ 取平方误差 $L = \frac{1}{2}(y - F)^2$ 时，负梯度恰好是 $y_i - F_{m-1}(x_i)$——即<strong>普通残差</strong>；取指数损失时退化为 AdaBoost。这一观点把"梯度下降"从参数空间推广到了<strong>函数空间</strong>。</p>
+
+<h3>8.3 GBDT 回归算法流程</h3>
+<ol>
+<li>初始化：$F_0(x) = \arg\min_c \sum_i L(y_i, c)$（平方损失下即样本均值）。</li>
+<li>对 $m = 1, \dots, M$：
+<ol>
+<li>计算伪残差 $r_{im}$（公式 (11)）。</li>
+<li>用回归树拟合 $\{(x_i, r_{im})\}$，得到叶子区域 $R_{jm}$。</li>
+<li>对每个叶子求最优输出 $c_{jm} = \arg\min_c \sum_{x_i \in R_{jm}} L\big(y_i, F_{m-1}(x_i) + c\big)$。</li>
+<li>更新模型 $F_m(x) = F_{m-1}(x) + \nu \sum_j c_{jm} \mathbb{I}[x \in R_{jm}]$，其中 $\nu$ 为学习率（shrinkage）。</li>
+</ol></li>
+<li>输出 $F_M(x)$。</li>
+</ol>
+
+<h3>8.4 GBDT 分类（对数几率损失）</h3>
+<p>二分类场景采用<strong>对数几率损失（Logistic Loss）</strong> $L(y, F) = \log\big(1 + e^{-2yF}\big)$（$y \in \{-1, +1\}$），其负梯度为：</p>
+
+<div class="formula">$$\tilde{r}_{im} = \frac{2 y_i}{1 + e^{2 y_i F_{m-1}(x_i)}}$$</div>
+
+<p>最终的输出经 sigmoid 变换 $p = 1 / (1 + e^{-2F(x)})$ 得到类别概率。多分类则采用 One-vs-Rest 叠加 softmax 变换。</p>
+
+<h3>8.5 与 AdaBoost 的对比</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>维度</th><th>AdaBoost</th><th>GBDT</th></tr>
+</thead>
+<tbody>
+<tr><td>损失函数</td><td>指数损失（固定）</td><td>任意可微损失（灵活）</td></tr>
+<tr><td>每轮拟合对象</td><td>调整样本权重后直接训练</td><td>损失函数的负梯度（伪残差）</td></tr>
+<tr><td>对异常值</td><td>指数损失放大异常影响</td><td>可选 Huber 等鲁棒损失缓解</td></tr>
+<tr><td>可扩展性</td><td>仅二分类友好</td><td>回归 / 分类 / 排序 / 生存分析通用</td></tr>
+</tbody>
+</table>
+</div>
+
+</section>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">九</span> XGBoost</h2>
+
+<h3>9.1 XGBoost 的目标函数</h3>
+<p><strong>XGBoost（eXtreme Gradient Boosting）</strong> 由陈天奇等于 2014 年提出，是 GBDT 的极致工程化版本。与经典 GBDT 相比，它在目标函数中显式加入<strong>正则化项</strong>（叶子数 + 叶子权重的 L2 惩罚），从源头控制模型复杂度、抑制过拟合：</p>
+
+<div class="formula" data-eq="(12)">$$\mathcal{L}^{(t)} = \sum_{i=1}^{N} L\left(y_i, \; \hat{y}_i^{(t-1)} + f_t(x_i)\right) + \Omega(f_t), \qquad \Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2$$</div>
+
+<p>其中 $T$ 为叶子数，$w_j$ 为叶子得分，$\gamma$、$\lambda$ 为正则系数。</p>
+
+<h3>9.2 二阶泰勒展开近似</h3>
+<p>经典 GBDT 只利用一阶导数（负梯度），XGBoost 则对损失函数做<strong>二阶泰勒展开</strong>，同时利用一阶导 $g_i$ 与二阶导 $h_i$，逼近精度更高、收敛更快：</p>
+
+<div class="formula" data-eq="(13)">$$\mathcal{L}^{(t)} \approx \sum_{i=1}^{n} \left[ L(y_i, \hat{y}_i^{(t-1)}) + g_i f_t(x_i) + \frac{1}{2} h_i f_t^2(x_i) \right] + \Omega(f_t)$$</div>
+
+<p>其中 $g_i = \partial_{\hat{y}^{(t-1)}} L(y_i, \hat{y}^{(t-1)})$，$h_i = \partial^2_{\hat{y}^{(t-1)}} L(y_i, \hat{y}^{(t-1)})$。由于常数项不影响优化，目标简化为对每个叶子求解最优权重 $w_j^* = -G_j / (H_j + \lambda)$，并按"增益公式" $\text{Gain} = \frac{1}{2}\left[\frac{G_L^2}{H_L+\lambda} + \frac{G_R^2}{H_R+\lambda} - \frac{(G_L+G_R)^2}{H_L+H_R+\lambda}\right] - \gamma$ 决定是否分裂。</p>
+
+<h3>9.3 XGBoost 的工程优化</h3>
+<ul>
+<li><strong>列采样</strong>（Column Subsampling）：类似随机森林的特征随机，进一步降低方差、加速训练。</li>
+<li><strong>缺失值处理</strong>：自动学习缺失值的最优默认方向（把缺失样本分到增益更大的一侧）。</li>
+<li><strong>直方图/近似分位点</strong>：对连续特征按分位数候选分裂点，降低寻找最优分裂的计算量。</li>
+<li><strong>并行化与缓存感知</strong>：按特征块预排序、支持多线程并行计算梯度统计；用缓存感知访问（Cache-Aware Access）优化 IO。</li>
+<li><strong>early stopping 与原生交叉验证</strong>：训练时内置早停与 CV 支持。</li>
+</ul>
+
+<h3>9.4 XGBoost vs GBDT</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>维度</th><th>GBDT（经典实现）</th><th>XGBoost</th></tr>
+</thead>
+<tbody>
+<tr><td>导数阶数</td><td>一阶（负梯度）</td><td>二阶泰勒展开</td></tr>
+<tr><td>正则化</td><td>仅靠学习率/剪枝</td><td>gamma + lambda 显式正则</td></tr>
+<tr><td>缺失值</td><td>需预处理填充</td><td>原生学习最优默认方向</td></tr>
+<tr><td>分裂搜索</td><td>逐特征排序扫描</td><td>预排序 + 分位数近似 + 并行</td></tr>
+<tr><td>扩展性</td><td>串行为主</td><td>多线程 / GPU / 分布式原生支持</td></tr>
+</tbody>
+</table>
+</div>
+
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">十</span> LightGBM 与 CatBoost</h2>
+
+<h3>10.1 LightGBM：Leaf-wise 生长策略、直方图算法、GOSS、EFB</h3>
+<p><strong>LightGBM</strong> 由微软于 2017 年提出，主打"<strong>更快、更省内存</strong>"，四项核心技术：</p>
+<ul>
+<li><strong>直方图算法（Histogram-based）</strong>：把连续特征离散为固定数量的分箱，以直方图统计代替逐点排序，训练速度与内存占用大幅下降。</li>
+<li><strong>Leaf-wise 生长策略</strong>：每次选择<strong>增益最大的叶子</strong>进行分裂（而非按层生长），在相同叶子数下精度更高；配合 max_depth 限制防止过拟合。</li>
+<li><strong>GOSS（Gradient-based One-Side Sampling）</strong>：保留梯度大的样本，对梯度小的样本随机采样——只靠"难样本"估算分裂增益，进一步提速。</li>
+<li><strong>EFB（Exclusive Feature Bundling）</strong>：把互斥（几乎不同时为非零）的稀疏特征捆绑成单一特征，减少特征维数。</li>
+</ul>
+
+<h3>10.2 CatBoost：类别特征处理、Ordered Boosting</h3>
+<p><strong>CatBoost</strong> 由 Yandex 于 2017 年发布，最擅长处理<strong>高基数类别特征</strong>：</p>
+<ul>
+<li><strong>类别特征原生支持</strong>：用"目标编码 + 有序统计"（基于目标均值与先验）把类别特征转为数值，避免独热编码爆炸。</li>
+<li><strong>Ordered Boosting</strong>：在每轮迭代中，当前样本的预测只由"在该样本之前"的样本训练出的模型给出，避免经典 GBDT 中因目标泄漏导致的<strong>预测偏移（Prediction Shift）</strong>，对噪声标签也更鲁棒。</li>
+<li><strong>对称树（Oblivious Tree）</strong>：同一深度所有节点用相同分裂特征，天然支持 GPU 并行且不易过拟合。</li>
+</ul>
+
+<h3>10.3 三大梯度提升框架对比</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>维度</th><th>XGBoost</th><th>LightGBM</th><th>CatBoost</th></tr>
+</thead>
+<tbody>
+<tr><td>发布 / 团队</td><td>2014 / 陈天奇</td><td>2017 / Microsoft</td><td>2017 / Yandex</td></tr>
+<tr><td>生长策略</td><td>Level-wise + 剪枝</td><td>Leaf-wise（增益优先）</td><td>对称树（Oblivious）</td></tr>
+<tr><td>分裂加速</td><td>预排序 + 分位数近似</td><td>直方图分箱</td><td>有序目标编码 + 直方图</td></tr>
+<tr><td>类别特征</td><td>需手动编码</td><td>原生支持（低基数）</td><td>原生支持（高基数最佳）</td></tr>
+<tr><td>缺失值</td><td>学习默认方向</td><td>学习默认方向</td><td>学习默认方向</td></tr>
+<tr><td>代表性优势</td><td>生态成熟、分布式齐全</td><td>训练最快、内存最省</td><td>类别特征与预测偏移处理最佳</td></tr>
+<tr><td>典型场景</td><td>Kaggle 通用基线</td><td>海量样本 / 高维稀疏</td><td>大量类别特征 / 中小数据</td></tr>
+</tbody>
+</table>
+</div>
+
+</section>
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">十一</span> PyTorch 代码实现</h2>
+
+<p>下面用 6 段可独立运行的 Python 代码演示核心算法。每段自带合成数据、可直接运行验证。代码以 <code>numpy</code> 实现为主（决策树/集成是传统机器学习算法，numpy 向量化表达最清晰；训练过程的 tensor 操作同样适用于 torch，两者接口等价），print 输出仅使用 ASCII 字符以保证 GBK 兼容。</p>
+
+<h3>11.1 决策树（CART，基尼指数，递归建树）</h3>
+<p>以鸢尾花式合成数据演示 CART 分类树：按基尼指数最小准则递归二分，直到深度或纯度条件满足：</p>
+<div class="code-block">
+<div class="code-header">decision_tree.py</div>
+<pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="com"># 简易 CART 决策树（分类，基尼指数，numpy 实现，递归建树）</span>
+<span class="kw">def</span> gini(labels):
+    n = <span class="fn">len</span>(labels)
+    <span class="kw">if</span> n == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">0.0</span>
+    _, counts = <span class="cls">np</span>.<span class="fn">unique</span>(labels, return_counts=<span class="kw">True</span>)
+    p = counts / n
+    <span class="kw">return</span> <span class="num">1.0</span> - <span class="fn">float</span>((p ** <span class="num">2</span>).<span class="fn">sum</span>())
+
+<span class="kw">class</span> <span class="cls">Node</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, feat=<span class="kw">None</span>, thr=<span class="kw">None</span>, left=<span class="kw">None</span>, right=<span class="kw">None</span>, cls=<span class="kw">None</span>):
+        <span class="kw">self</span>.feat = feat
+        <span class="kw">self</span>.thr = thr
+        <span class="kw">self</span>.left = left
+        <span class="kw">self</span>.right = right
+        <span class="kw">self</span>.cls = cls  <span class="com"># 叶子节点的类别</span>
+
+<span class="kw">class</span> <span class="cls">DecisionTree</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, max_depth=<span class="num">3</span>, min_leaf=<span class="num">1</span>):
+        <span class="kw">self</span>.max_depth = max_depth
+        <span class="kw">self</span>.min_leaf = min_leaf
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
+        <span class="kw">self</span>.n_classes = <span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">max</span>(y)) + <span class="num">1</span>
+        <span class="kw">self</span>.root = <span class="kw">self</span>._build(X, y, <span class="num">0</span>)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> _build(<span class="kw">self</span>, X, y, depth):
+        <span class="kw">if</span> depth &gt;= <span class="kw">self</span>.max_depth <span class="kw">or</span> <span class="fn">len</span>(<span class="cls">np</span>.<span class="fn">unique</span>(y)) == <span class="num">1</span> <span class="kw">or</span> <span class="fn">len</span>(y) &lt;= <span class="kw">self</span>.min_leaf:
+            <span class="kw">return</span> <span class="cls">Node</span>(cls=<span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">bincount</span>(y, minlength=<span class="kw">self</span>.n_classes).<span class="fn">argmax</span>()))
+        best = <span class="kw">None</span>
+        n_feat = X.<span class="fn">shape</span>[<span class="num">1</span>]
+        <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(n_feat):
+            vals = <span class="cls">np</span>.<span class="fn">unique</span>(X[:, f])
+            <span class="kw">for</span> t <span class="kw">in</span> (vals[:-<span class="num">1</span>] + vals[<span class="num">1</span>:]) / <span class="num">2.0</span>:  <span class="com"># 候选切分点</span>
+                mask = X[:, f] &lt;= t
+                <span class="kw">if</span> mask.<span class="fn">sum</span>() &lt; <span class="kw">self</span>.min_leaf <span class="kw">or</span> (~mask).<span class="fn">sum</span>() &lt; <span class="kw">self</span>.min_leaf:
+                    <span class="kw">continue</span>
+                gain = G_gain(y, y[mask], y[~mask])
+                <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> gain &gt; best[<span class="num">0</span>]:
+                    best = (gain, f, t)
+        <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> best[<span class="num">0</span>] &lt;= <span class="num">0</span>:
+            <span class="kw">return</span> <span class="cls">Node</span>(cls=<span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">bincount</span>(y, minlength=<span class="kw">self</span>.n_classes).<span class="fn">argmax</span>()))
+        _, f, t = best
+        mask = X[:, f] &lt;= t
+        <span class="kw">return</span> <span class="cls">Node</span>(feat=f, thr=t,
+                    left=<span class="kw">self</span>._build(X[mask], y[mask], depth + <span class="num">1</span>),
+                    right=<span class="kw">self</span>._build(X[~mask], y[~mask], depth + <span class="num">1</span>))
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">array</span>([<span class="kw">self</span>._predict_one(x, <span class="kw">self</span>.root) <span class="kw">for</span> x <span class="kw">in</span> X])
+
+    <span class="kw">def</span> _predict_one(<span class="kw">self</span>, x, node):
+        <span class="kw">while</span> node.cls <span class="kw">is</span> <span class="kw">None</span>:
+            node = node.left <span class="kw">if</span> x[node.feat] &lt;= node.thr <span class="kw">else</span> node.right
+        <span class="kw">return</span> node.cls
+
+<span class="kw">def</span> G(y):
+    n = <span class="fn">len</span>(y)
+    _, c = <span class="cls">np</span>.<span class="fn">unique</span>(y, return_counts=<span class="kw">True</span>)
+    p = c / n
+    <span class="kw">return</span> <span class="num">1.0</span> - <span class="fn">float</span>((p ** <span class="num">2</span>).<span class="fn">sum</span>())
+
+<span class="kw">def</span> G_gain(y, yl, yr):
+    <span class="kw">return</span> G(y) - (<span class="fn">len</span>(yl) * G(yl) + <span class="fn">len</span>(yr) * G(yr)) / <span class="fn">len</span>(y)
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    <span class="com"># 合成数据: 两个类别的二维高斯团</span>
+    rng = <span class="cls">np</span>.random.default_rng(<span class="num">0</span>)
+    X = <span class="cls">np</span>.vstack([rng.normal([<span class="num">2</span>, <span class="num">2</span>], <span class="num">1.0</span>, (<span class="num">40</span>, <span class="num">2</span>)),
+                   rng.normal([<span class="num">6</span>, <span class="num">6</span>], <span class="num">1.0</span>, (<span class="num">40</span>, <span class="num">2</span>))])
+    y = <span class="cls">np</span>.<span class="fn">array</span>([<span class="num">0</span>] * <span class="num">40</span> + [<span class="num">1</span>] * <span class="num">40</span>)
+    dt = <span class="cls">DecisionTree</span>(max_depth=<span class="num">3</span>).fit(X, y)
+    pred = dt.predict(X)
+    <span class="fn">print</span>(<span class="str">&quot;decision_tree acc:&quot;</span>, <span class="fn">round</span>(<span class="fn">float</span>((pred == y).<span class="fn">mean</span>()), <span class="num">4</span>))
+</pre>
+</div>
+
+<h3>11.2 随机森林（Bootstrap 采样 + 特征随机 + 投票）</h3>
+<p>在决策树之上叠加 Bootstrap 样本随机与特征随机，训练 30 棵树并对预测投票：</p>
+<div class="code-block">
+<div class="code-header">random_forest.py</div>
+<pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="com"># 随机森林: Bootstrap 采样 + 特征随机 + 多数投票</span>
+<span class="kw">class</span> <span class="cls">Node</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, feat=<span class="kw">None</span>, thr=<span class="kw">None</span>, left=<span class="kw">None</span>, right=<span class="kw">None</span>, cls=<span class="kw">None</span>):
+        <span class="kw">self</span>.feat, <span class="kw">self</span>.thr = feat, thr
+        <span class="kw">self</span>.left, <span class="kw">self</span>.right = left, right
+        <span class="kw">self</span>.cls = cls
+
+<span class="kw">def</span> gini(y):
+    _, c = <span class="cls">np</span>.<span class="fn">unique</span>(y, return_counts=<span class="kw">True</span>)
+    p = c / <span class="fn">len</span>(y)
+    <span class="kw">return</span> <span class="num">1.0</span> - <span class="fn">float</span>((p ** <span class="num">2</span>).<span class="fn">sum</span>())
+
+<span class="kw">class</span> Tree:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, max_depth=<span class="num">4</span>, min_leaf=<span class="num">2</span>, m_feat=<span class="kw">None</span>):
+        <span class="kw">self</span>.max_depth, <span class="kw">self</span>.min_leaf, <span class="kw">self</span>.m_feat = max_depth, min_leaf, m_feat
+        <span class="kw">self</span>.n_cls = <span class="kw">None</span>
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
+        <span class="kw">self</span>.n_cls = <span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">max</span>(y)) + <span class="num">1</span>
+        <span class="kw">self</span>.root = <span class="kw">self</span>._build(X, y, <span class="num">0</span>)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> _build(<span class="kw">self</span>, X, y, d):
+        <span class="kw">if</span> d &gt;= <span class="kw">self</span>.max_depth <span class="kw">or</span> <span class="fn">len</span>(<span class="cls">np</span>.<span class="fn">unique</span>(y)) == <span class="num">1</span>:
+            <span class="kw">return</span> <span class="cls">Node</span>(cls=<span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">bincount</span>(y, minlength=<span class="kw">self</span>.n_cls).<span class="fn">argmax</span>()))
+        n_feat = X.<span class="fn">shape</span>[<span class="num">1</span>]
+        m = <span class="kw">self</span>.m_feat <span class="kw">if</span> <span class="kw">self</span>.m_feat <span class="kw">else</span> <span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">sqrt</span>(n_feat))
+        feats = <span class="cls">np</span>.random.<span class="fn">choice</span>(n_feat, m, replace=<span class="kw">False</span>)
+        best = <span class="kw">None</span>
+        <span class="kw">for</span> f <span class="kw">in</span> feats:
+            v = <span class="cls">np</span>.<span class="fn">unique</span>(X[:, f])
+            <span class="kw">for</span> t <span class="kw">in</span> (v[:-<span class="num">1</span>] + v[<span class="num">1</span>:]) / <span class="num">2.0</span>:
+                msk = X[:, f] &lt;= t
+                <span class="kw">if</span> msk.<span class="fn">sum</span>() &lt; <span class="kw">self</span>.min_leaf <span class="kw">or</span> (~msk).<span class="fn">sum</span>() &lt; <span class="kw">self</span>.min_leaf:
+                    <span class="kw">continue</span>
+                g = gini(y) - (<span class="fn">len</span>(y[msk]) * gini(y[msk]) + <span class="fn">len</span>(y[~msk]) * gini(y[~msk])) / <span class="fn">len</span>(y)
+                <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> g &gt; best[<span class="num">0</span>]:
+                    best = (g, f, t)
+        <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> best[<span class="num">0</span>] &lt;= <span class="num">1e-6</span>:
+            <span class="kw">return</span> <span class="cls">Node</span>(cls=<span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">bincount</span>(y, minlength=<span class="kw">self</span>.n_cls).<span class="fn">argmax</span>()))
+        _, f, t = best
+        msk = X[:, f] &lt;= t
+        <span class="kw">return</span> <span class="cls">Node</span>(feat=f, thr=t,
+                    left=<span class="kw">self</span>._build(X[msk], y[msk], d + <span class="num">1</span>),
+                    right=<span class="kw">self</span>._build(X[~msk], y[~msk], d + <span class="num">1</span>))
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">array</span>([<span class="kw">self</span>._go(x, <span class="kw">self</span>.root) <span class="kw">for</span> x <span class="kw">in</span> X])
+
+    <span class="kw">def</span> _go(<span class="kw">self</span>, x, node):
+        <span class="kw">while</span> node.cls <span class="kw">is</span> <span class="kw">None</span>:
+            node = node.left <span class="kw">if</span> x[node.feat] &lt;= node.thr <span class="kw">else</span> node.right
+        <span class="kw">return</span> node.cls
+
+
+<span class="kw">class</span> <span class="cls">RandomForest</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, n_trees=<span class="num">20</span>, max_depth=<span class="num">4</span>, m_feat=<span class="kw">None</span>):
+        <span class="kw">self</span>.n_trees, <span class="kw">self</span>.max_depth, <span class="kw">self</span>.m_feat = n_trees, max_depth, m_feat
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
+        n = <span class="fn">len</span>(X)
+        <span class="kw">self</span>.trees = []
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.n_trees):
+            idx = <span class="cls">np</span>.random.<span class="fn">choice</span>(n, n, replace=<span class="kw">True</span>)  <span class="com"># Bootstrap</span>
+            t = Tree(<span class="kw">self</span>.max_depth, <span class="num">1</span>, <span class="kw">self</span>.m_feat).fit(X[idx], y[idx])
+            <span class="kw">self</span>.trees.<span class="fn">append</span>(t)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        votes = <span class="cls">np</span>.<span class="fn">array</span>([t.predict(X) <span class="kw">for</span> t <span class="kw">in</span> <span class="kw">self</span>.trees])  <span class="com"># (T, N)</span>
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">array</span>([<span class="cls">np</span>.<span class="fn">bincount</span>(votes[:, i]).<span class="fn">argmax</span>() <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(X))])
+
+    <span class="kw">def</span> oob_error(<span class="kw">self</span>, X, y):
+        n = <span class="fn">len</span>(X)
+        wrong = <span class="num">0.0</span>
+        total = <span class="num">0.0</span>
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+            votes = []
+            <span class="kw">for</span> t <span class="kw">in</span> <span class="kw">self</span>.trees:
+                <span class="com"># 近似: 用所有树对自身训练样本外评估</span>
+                votes.<span class="fn">append</span>(t.predict([X[i]])[<span class="num">0</span>])
+            <span class="kw">if</span> votes:
+                total += <span class="num">1.0</span>
+                pred = <span class="fn">max</span>(set(votes), key=votes.count)
+                <span class="kw">if</span> pred != y[i]:
+                    wrong += <span class="num">1.0</span>
+        <span class="kw">return</span> wrong / <span class="fn">max</span>(total, <span class="num">1.0</span>)
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    rng = <span class="cls">np</span>.random.default_rng(<span class="num">1</span>)
+    X = <span class="cls">np</span>.vstack([rng.normal([<span class="num">2</span>, <span class="num">2</span>], <span class="num">0.8</span>, (<span class="num">50</span>, <span class="num">2</span>)),
+                   rng.normal([<span class="num">6</span>, <span class="num">6</span>], <span class="num">0.8</span>, (<span class="num">50</span>, <span class="num">2</span>))])
+    y = <span class="cls">np</span>.<span class="fn">array</span>([<span class="num">0</span>] * <span class="num">50</span> + [<span class="num">1</span>] * <span class="num">50</span>)
+    rf = <span class="cls">RandomForest</span>(n_trees=<span class="num">30</span>, max_depth=<span class="num">3</span>).fit(X, y)
+    pred = rf.predict(X)
+    <span class="fn">print</span>(<span class="str">&quot;random_forest acc =&quot;</span>, <span class="fn">round</span>(<span class="fn">float</span>((pred == y).<span class="fn">mean</span>()), <span class="num">4</span>))
+</pre>
+</div>
+
+<h3>11.3 AdaBoost（样本权重更新 + 弱分类器加权组合）</h3>
+<p>以决策桩（stump）为弱分类器，每轮更新样本权重、计算分类器权重 $\alpha_m$，最终加权投票：</p>
+<div class="code-block">
+<div class="code-header">adaboost.py</div>
+<pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="com"># AdaBoost: 样本权重更新 + 弱分类器（决策桩）加权组合</span>
+<span class="kw">class</span> <span class="cls">Stump</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>):
+        <span class="kw">self</span>.f, <span class="kw">self</span>.t, <span class="kw">self</span>.polarity, <span class="kw">self</span>.alpha = <span class="kw">None</span>, <span class="kw">None</span>, <span class="num">1</span>, <span class="kw">None</span>
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y, w):
+        n, d = X.<span class="fn">shape</span>
+        best = <span class="kw">None</span>
+        <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(d):
+            v = <span class="cls">np</span>.<span class="fn">unique</span>(X[:, f])
+            <span class="kw">for</span> t <span class="kw">in</span> (v[:-<span class="num">1</span>] + v[<span class="num">1</span>:]) / <span class="num">2.0</span>:
+                <span class="kw">for</span> pol <span class="kw">in</span> (<span class="num">1</span>, -<span class="num">1</span>):
+                    pred = <span class="cls">np</span>.where(X[:, f] &lt;= t, pol, -pol)
+                    err = w[(pred != y)].<span class="fn">sum</span>()
+                    <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> err &lt; best[<span class="num">0</span>]:
+                        best = (err, f, t, pol)
+        <span class="kw">self</span>.feat, <span class="kw">self</span>.t, <span class="kw">self</span>.polarity = best[<span class="num">1</span>], best[<span class="num">2</span>], best[<span class="num">3</span>]
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        <span class="kw">return</span> <span class="cls">np</span>.where(X[:, <span class="kw">self</span>.feat] &lt;= <span class="kw">self</span>.t, <span class="kw">self</span>.polarity, -<span class="kw">self</span>.polarity)
+
+
+<span class="kw">class</span> <span class="cls">AdaBoost</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, n_estimators=<span class="num">20</span>):
+        <span class="kw">self</span>.n_estimators = n_estimators
+        <span class="kw">self</span>.stumps = []
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
+        n = <span class="fn">len</span>(X)
+        w = <span class="cls">np</span>.<span class="fn">full</span>(n, <span class="num">1.0</span> / n)
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.n_estimators):
+            stump = <span class="cls">Stump</span>().fit(X, y, w)
+            pred = stump.predict(X)
+            err = w[(pred != y)].<span class="fn">sum</span>() + <span class="num">1e-10</span>
+            <span class="kw">if</span> err &gt;= <span class="num">0.5</span>:
+                <span class="kw">break</span>
+            alpha = <span class="num">0.5</span> * <span class="cls">np</span>.<span class="fn">log</span>((<span class="num">1.0</span> - err) / err)
+            stump.alpha = alpha
+            w = w * <span class="cls">np</span>.<span class="fn">exp</span>(-alpha * y * pred)
+            w = w / w.<span class="fn">sum</span>()
+            <span class="kw">self</span>.stumps.<span class="fn">append</span>(stump)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        score = <span class="cls">np</span>.<span class="fn">zeros</span>(<span class="fn">len</span>(X))
+        <span class="kw">for</span> s <span class="kw">in</span> <span class="kw">self</span>.stumps:
+            score += s.alpha * s.predict(X)
+        <span class="kw">return</span> <span class="cls">np</span>.where(score &gt; <span class="num">0</span>, <span class="num">1</span>, -<span class="num">1</span>)
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    rng = <span class="cls">np</span>.random.default_rng(<span class="num">11</span>)
+    X = <span class="cls">np</span>.vstack([rng.normal([<span class="num">1</span>, <span class="num">1</span>], <span class="num">0.7</span>, (<span class="num">60</span>, <span class="num">2</span>)),
+                   rng.normal([<span class="num">4</span>, <span class="num">4</span>], <span class="num">0.7</span>, (<span class="num">60</span>, <span class="num">2</span>))])
+    y = <span class="cls">np</span>.<span class="fn">array</span>([<span class="num">1</span>] * <span class="num">60</span> + [-<span class="num">1</span>] * <span class="num">60</span>)
+    ada = <span class="cls">AdaBoost</span>(n_estimators=<span class="num">15</span>).fit(X, y)
+    pred = ada.predict(X)
+    <span class="fn">print</span>(<span class="str">&quot;adaboost acc =&quot;</span>, <span class="fn">round</span>(<span class="fn">float</span>((pred == y).<span class="fn">mean</span>()), <span class="num">4</span>))
+</pre>
+</div>
+
+<h3>11.4 GBDT 回归（负梯度拟合 + 学习率缩减）</h3>
+<p>用平方损失下的残差作为负梯度，逐轮用回归树拟合残差，并以学习率（shrinkage）缩减每棵树贡献：</p>
+<div class="code-block">
+<div class="code-header">gbdt.py</div>
+<pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="com"># GBDT 回归：负梯度（残差）拟合 + 学习率缩减，numpy 实现</span>
+<span class="kw">class</span> <span class="cls">GBDT</span>:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, n_estimators=<span class="num">50</span>, lr=<span class="num">0.1</span>, max_depth=<span class="num">2</span>):
+        <span class="kw">self</span>.n_estimators = n_estimators
+        <span class="kw">self</span>.lr = lr
+        <span class="kw">self</span>.max_depth = max_depth
+        <span class="kw">self</span>.trees = []
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
+        <span class="kw">self</span>.base = <span class="fn">float</span>(y.<span class="fn">mean</span>())
+        F = <span class="cls">np</span>.<span class="fn">full</span>(<span class="fn">len</span>(y), <span class="kw">self</span>.base)
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.n_estimators):
+            r = y - F  <span class="com"># 平方损失 =&gt; 负梯度就是残差</span>
+            tree = <span class="kw">self</span>._fit_reg_tree(X, r, <span class="num">0</span>)
+            pred = <span class="kw">self</span>._pred_tree(X, tree)
+            F = F + <span class="kw">self</span>.lr * pred
+            <span class="kw">self</span>.trees.<span class="fn">append</span>(tree)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> _pred_tree(<span class="kw">self</span>, X, node):
+        <span class="kw">if</span> <span class="str">&#x27;val&#x27;</span> <span class="kw">in</span> node:
+            <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">full</span>(<span class="fn">len</span>(X), node[<span class="str">&#x27;val&#x27;</span>])
+        m = X[:, node[<span class="str">&#x27;f&#x27;</span>]] &lt;= node[<span class="str">&#x27;t&#x27;</span>]
+        out = <span class="cls">np</span>.empty(<span class="fn">len</span>(X))
+        out[m] = <span class="kw">self</span>._pred_tree(X[m], node[<span class="str">&#x27;l&#x27;</span>])
+        out[~m] = <span class="kw">self</span>._pred_tree(X[~m], node[<span class="str">&#x27;r&#x27;</span>])
+        <span class="kw">return</span> out
+
+    <span class="kw">def</span> _fit_reg_tree(<span class="kw">self</span>, X, y, d):
+        <span class="com"># 递归回归树（numpy）</span>
+        node = {}
+        <span class="kw">if</span> d &gt;= <span class="kw">self</span>.max_depth <span class="kw">or</span> <span class="fn">len</span>(<span class="cls">np</span>.<span class="fn">unique</span>(y)) &lt; <span class="num">2</span>:
+            node[<span class="str">&#x27;val&#x27;</span>] = <span class="fn">float</span>(y.<span class="fn">mean</span>())
+            <span class="kw">return</span> node
+        best = <span class="kw">None</span>
+        <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(X.<span class="fn">shape</span>[<span class="num">1</span>]):
+            v = <span class="cls">np</span>.<span class="fn">unique</span>(X[:, f])
+            <span class="kw">for</span> t <span class="kw">in</span> (v[:-<span class="num">1</span>] + v[<span class="num">1</span>:]) / <span class="num">2.0</span>:
+                m = X[:, f] &lt;= t
+                <span class="kw">if</span> m.<span class="fn">sum</span>() &lt; <span class="num">1</span> <span class="kw">or</span> (~m).<span class="fn">sum</span>() &lt; <span class="num">1</span>:
+                    <span class="kw">continue</span>
+                sse = ((y - y.<span class="fn">mean</span>()) ** <span class="num">2</span>).<span class="fn">sum</span>()
+                sse_l = ((y[m] - y[m].<span class="fn">mean</span>()) ** <span class="num">2</span>).<span class="fn">sum</span>()
+                sse_r = ((y[~m] - y[~m].<span class="fn">mean</span>()) ** <span class="num">2</span>).<span class="fn">sum</span>()
+                gain = sse - sse_l - sse_r
+                <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> gain &gt; best[<span class="num">0</span>]:
+                    best = (gain, f, t)
+        <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> best[<span class="num">0</span>] &lt;= <span class="num">1e-6</span>:
+            node[<span class="str">&#x27;val&#x27;</span>] = <span class="fn">float</span>(y.<span class="fn">mean</span>())
+            <span class="kw">return</span> node
+        _, f, t = best
+        m = X[:, f] &lt;= t
+        node[<span class="str">&#x27;f&#x27;</span>], node[<span class="str">&#x27;t&#x27;</span>] = f, t
+        node[<span class="str">&#x27;l&#x27;</span>] = <span class="kw">self</span>._fit_reg_tree(X[m], y[m], d + <span class="num">1</span>)
+        node[<span class="str">&#x27;r&#x27;</span>] = <span class="kw">self</span>._fit_reg_tree(X[~m], y[~m], d + <span class="num">1</span>)
+        <span class="kw">return</span> node
+
+    <span class="kw">def</span> _pred_one(<span class="kw">self</span>, x, node):
+        <span class="kw">if</span> <span class="str">&#x27;val&#x27;</span> <span class="kw">in</span> node:
+            <span class="kw">return</span> node[<span class="str">&#x27;val&#x27;</span>]
+        <span class="kw">return</span> <span class="kw">self</span>._pred_one(x, node[<span class="str">&#x27;l&#x27;</span>] <span class="kw">if</span> x[node[<span class="str">&#x27;f&#x27;</span>]] &lt;= node[<span class="str">&#x27;t&#x27;</span>] <span class="kw">else</span> node[<span class="str">&#x27;r&#x27;</span>])
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        out = <span class="cls">np</span>.<span class="fn">full</span>(<span class="fn">len</span>(X), <span class="kw">self</span>.base)
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(X)):
+            <span class="kw">for</span> tree <span class="kw">in</span> <span class="kw">self</span>.trees:
+                out[i] += <span class="kw">self</span>.lr * <span class="kw">self</span>._pred_one(X[i], tree)
+        <span class="kw">return</span> out
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    rng = <span class="cls">np</span>.random.default_rng(<span class="num">5</span>)
+    X = rng.uniform(<span class="num">0</span>, <span class="num">6</span>, (<span class="num">100</span>, <span class="num">1</span>))
+    y = <span class="cls">np</span>.sin(X[:, <span class="num">0</span>]) + rng.normal(<span class="num">0</span>, <span class="num">0.1</span>, <span class="num">100</span>)
+    g = <span class="cls">GBDT</span>(n_estimators=<span class="num">40</span>, lr=<span class="num">0.1</span>, max_depth=<span class="num">3</span>).fit(X, y)
+    p = g.predict(X)
+    mse = <span class="fn">float</span>(<span class="cls">np</span>.<span class="fn">mean</span>((p - y) ** <span class="num">2</span>))
+    <span class="fn">print</span>(<span class="str">&quot;gbdt mse =&quot;</span>, <span class="fn">round</span>(mse, <span class="num">4</span>))
+</pre>
+</div>
+
+<h3>11.5 XGBoost 简化版（二阶导数 + 正则化）</h3>
+<p>演示 XGBoost 的核心机制：利用一阶导 $g_i$ 与二阶导 $h_i$，配合 $\gamma/\lambda$ 正则计算分裂增益与叶子权重闭式解：</p>
+<div class="code-block">
+<div class="code-header">xgboost_approx.py</div>
+<pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="com"># XGBoost 简化版：二阶泰勒展开 + 正则化（gamma/lambda），numpy 实现</span>
+<span class="kw">class</span> <span class="cls">XGBTree</span>:
+    <span class="str">&quot;&quot;</span><span class="str">&quot;叶子权重可求闭式解的单棵回归树&quot;</span><span class="str">&quot;&quot;</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, max_depth=<span class="num">2</span>, gamma=<span class="num">0.0</span>, lam=<span class="num">1.0</span>):
+        <span class="kw">self</span>.max_depth = max_depth
+        <span class="kw">self</span>.gamma = gamma
+        <span class="kw">self</span>.lam = lam
+
+    <span class="kw">def</span> _gain(<span class="kw">self</span>, G, H, GL, HL, GR, HR):
+        left = GL * GL / (HL + <span class="kw">self</span>.lam)
+        right = GR * GR / (HR + <span class="kw">self</span>.lam)
+        whole = (GL + GR) ** <span class="num">2</span> / (HL + HR + <span class="kw">self</span>.lam)
+        <span class="kw">return</span> <span class="num">0.5</span> * (left + right - whole) - <span class="kw">self</span>.gamma
+
+    <span class="kw">def</span> _build(<span class="kw">self</span>, X, g, h, d):
+        node = {<span class="str">&#x27;w&#x27;</span>: -(g.<span class="fn">sum</span>()) / (h.<span class="fn">sum</span>() + <span class="kw">self</span>.lam), <span class="str">&#x27;l&#x27;</span>: <span class="kw">None</span>, <span class="str">&#x27;r&#x27;</span>: <span class="kw">None</span>}
+        <span class="kw">if</span> d &gt;= <span class="kw">self</span>.max_depth <span class="kw">or</span> <span class="fn">len</span>(X) &lt; <span class="num">2</span>:
+            node[<span class="str">&#x27;leaf&#x27;</span>] = node[<span class="str">&#x27;w&#x27;</span>]
+            <span class="kw">return</span> node
+        best = <span class="kw">None</span>
+        <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(X.<span class="fn">shape</span>[<span class="num">1</span>]):
+            v = <span class="cls">np</span>.<span class="fn">unique</span>(X[:, f])
+            <span class="kw">for</span> t <span class="kw">in</span> (v[:-<span class="num">1</span>] + v[<span class="num">1</span>:]) / <span class="num">2.0</span>:
+                m = X[:, f] &lt;= t
+                <span class="kw">if</span> m.<span class="fn">sum</span>() &lt; <span class="num">1</span> <span class="kw">or</span> (~m).<span class="fn">sum</span>() &lt; <span class="num">1</span>:
+                    <span class="kw">continue</span>
+                gain = <span class="kw">self</span>._gain(g.<span class="fn">sum</span>(), h.<span class="fn">sum</span>(), g[m].<span class="fn">sum</span>(), h[m].<span class="fn">sum</span>(), g[~m].<span class="fn">sum</span>(), h[~m].<span class="fn">sum</span>())
+                <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> gain &gt; best[<span class="num">0</span>]:
+                    best = (gain, f, t)
+        <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> best[<span class="num">0</span>] &lt;= <span class="num">0</span>:
+            node[<span class="str">&#x27;leaf&#x27;</span>] = node[<span class="str">&#x27;w&#x27;</span>]
+            <span class="kw">return</span> node
+        _, f, t = best
+        m = X[:, f] &lt;= t
+        node[<span class="str">&#x27;f&#x27;</span>], node[<span class="str">&#x27;t&#x27;</span>] = f, t
+        node[<span class="str">&#x27;l&#x27;</span>] = <span class="kw">self</span>._build(X[m], g[m], h[m], d + <span class="num">1</span>)
+        node[<span class="str">&#x27;r&#x27;</span>] = <span class="kw">self</span>._build(X[~m], g[~m], h[~m], d + <span class="num">1</span>)
+        <span class="kw">return</span> node
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, g, h):
+        <span class="kw">self</span>.root = <span class="kw">self</span>._build(X, g, h, <span class="num">0</span>)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> _score(<span class="kw">self</span>, x, n):
+        <span class="kw">while</span> n[<span class="str">&#x27;l&#x27;</span>] <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span>:
+            n = n[<span class="str">&#x27;l&#x27;</span>] <span class="kw">if</span> x[n[<span class="str">&#x27;f&#x27;</span>]] &lt;= n[<span class="str">&#x27;t&#x27;</span>] <span class="kw">else</span> n[<span class="str">&#x27;r&#x27;</span>]
+        <span class="kw">return</span> n[<span class="str">&#x27;leaf&#x27;</span>]
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">array</span>([<span class="kw">self</span>._score(x, <span class="kw">self</span>.root) <span class="kw">for</span> x <span class="kw">in</span> X])
+
+
+<span class="kw">class</span> SimpleXGB:
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, n_estimators=<span class="num">30</span>, lr=<span class="num">0.3</span>, max_depth=<span class="num">2</span>, gamma=<span class="num">0.0</span>, lam=<span class="num">1.0</span>):
+        <span class="kw">self</span>.n_estimators = n_estimators
+        <span class="kw">self</span>.lr = lr
+        <span class="kw">self</span>.max_depth = max_depth
+        <span class="kw">self</span>.gamma = gamma
+        <span class="kw">self</span>.lam = lam
+        <span class="kw">self</span>.trees = []
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
+        <span class="kw">self</span>.base = <span class="fn">float</span>(y.<span class="fn">mean</span>())
+        F = <span class="cls">np</span>.<span class="fn">full</span>(<span class="fn">len</span>(y), <span class="kw">self</span>.base)
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.n_estimators):
+            g = F - y                       <span class="com"># 一阶导 dL/dF（平方损失）</span>
+            h = <span class="cls">np</span>.<span class="fn">ones</span>(<span class="fn">len</span>(y))             <span class="com"># 二阶导 = 1</span>
+            tree = <span class="cls">XGBTree</span>(<span class="kw">self</span>.max_depth, <span class="kw">self</span>.gamma, <span class="kw">self</span>.lam).fit(X, g, h)
+            F = F + <span class="kw">self</span>.lr * tree.predict(X)
+            <span class="kw">self</span>.trees.<span class="fn">append</span>(tree)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> predict(<span class="kw">self</span>, X):
+        out = <span class="cls">np</span>.<span class="fn">full</span>(<span class="fn">len</span>(X), <span class="kw">self</span>.base)
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="kw">self</span>.trees:
+            out = out + <span class="kw">self</span>.lr * t.predict(X)
+        <span class="kw">return</span> out
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    rng = <span class="cls">np</span>.random.default_rng(<span class="num">9</span>)
+    X = rng.uniform(<span class="num">0</span>, <span class="num">6</span>, (<span class="num">120</span>, <span class="num">2</span>))
+    y = <span class="cls">np</span>.sin(X[:, <span class="num">0</span>]) + <span class="num">0.5</span> * X[:, <span class="num">1</span>] + rng.normal(<span class="num">0</span>, <span class="num">0.15</span>, <span class="num">120</span>)
+    m = SimpleXGB(n_estimators=<span class="num">30</span>, lr=<span class="num">0.3</span>, max_depth=<span class="num">2</span>).fit(X, y)
+    p = m.predict(X)
+    mse = <span class="cls">np</span>.<span class="fn">mean</span>((p - y) ** <span class="num">2</span>)
+    <span class="fn">print</span>(<span class="str">&quot;xgboost_approx mse =&quot;</span>, <span class="fn">round</span>(<span class="fn">float</span>(mse), <span class="num">4</span>))
+</pre>
+</div>
+
+<h3>11.6 随机森林特征重要性评估（不纯度下降）</h3>
+<p>统计各特征在所有分裂节点带来的基尼下降量并归一化，区分"区分性特征"与"噪声特征"：</p>
+<div class="code-block">
+<div class="code-header">feature_importance.py</div>
+<pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="com"># 特征重要性评估：不纯度下降（Gini importance）</span>
+<span class="com"># 复用上文随机森林实现中的 Tree，这里单独演示 Gini importance 统计</span>
+
+<span class="kw">def</span> gini_imp(labels):
+    n = <span class="fn">len</span>(labels)
+    <span class="kw">if</span> n == <span class="num">0</span>:
+        <span class="kw">return</span> <span class="num">0.0</span>
+    _, c = <span class="cls">np</span>.<span class="fn">unique</span>(labels, return_counts=<span class="kw">True</span>)
+    p = c / n
+    <span class="kw">return</span> <span class="num">1.0</span> - <span class="fn">float</span>((p ** <span class="num">2</span>).<span class="fn">sum</span>())
+
+
+<span class="kw">class</span> ImpTree:
+    <span class="str">&quot;&quot;</span><span class="str">&quot;记录每次分裂带来的不纯度下降，归属到对应特征&quot;</span><span class="str">&quot;&quot;</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, max_depth=<span class="num">3</span>):
+        <span class="kw">self</span>.max_depth = max_depth
+        <span class="kw">self</span>.imp = {}          <span class="com"># feat -&gt; 累积下降量</span>
+        <span class="kw">self</span>.n_cls = <span class="kw">None</span>
+
+    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
+        <span class="kw">self</span>.n_cls = <span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">max</span>(y)) + <span class="num">1</span>
+        <span class="kw">self</span>._build(X, y, <span class="num">0</span>)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> _build(<span class="kw">self</span>, X, y, d):
+        <span class="kw">if</span> d &gt;= <span class="kw">self</span>.max_depth <span class="kw">or</span> <span class="fn">len</span>(<span class="cls">np</span>.<span class="fn">unique</span>(y)) == <span class="num">1</span>:
+            <span class="kw">return</span>
+        best = <span class="kw">None</span>
+        g0 = gini_imp(y)
+        <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(X.<span class="fn">shape</span>[<span class="num">1</span>]):
+            v = <span class="cls">np</span>.<span class="fn">unique</span>(X[:, f])
+            <span class="kw">for</span> t <span class="kw">in</span> (v[:-<span class="num">1</span>] + v[<span class="num">1</span>:]) / <span class="num">2.0</span>:
+                m = X[:, f] &lt;= t
+                <span class="kw">if</span> m.<span class="fn">sum</span>() &lt; <span class="num">1</span> <span class="kw">or</span> (~m).<span class="fn">sum</span>() &lt; <span class="num">1</span>:
+                    <span class="kw">continue</span>
+                gain = g0 - (<span class="fn">len</span>(y[m]) * gini_imp(y[m]) + <span class="fn">len</span>(y[~m]) * gini_imp(y[~m])) / <span class="fn">len</span>(y)
+                <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> gain &gt; best[<span class="num">0</span>]:
+                    best = (gain, f, t)
+        <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> best[<span class="num">0</span>] &lt;= <span class="num">0</span>:
+            <span class="kw">return</span>
+        _, f, t = best
+        <span class="kw">self</span>.imp[f] = <span class="kw">self</span>.imp.<span class="fn">get</span>(f, <span class="num">0.0</span>) + best[<span class="num">0</span>]
+        m = X[:, f] &lt;= t
+        <span class="kw">self</span>._build(X[m], y[m], d + <span class="num">1</span>)
+        <span class="kw">self</span>._build(X[~m], y[~m], d + <span class="num">1</span>)
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    rng = <span class="cls">np</span>.random.default_rng(<span class="num">2</span>)
+    <span class="com"># 3 特征，其中只有特征 0 真正区分两类</span>
+    n = <span class="num">300</span>
+    x0 = rng.normal([<span class="num">1.5</span>] * n, <span class="num">0.8</span>)          <span class="com"># 区分特征</span>
+    x1 = rng.normal(<span class="num">3.0</span>, <span class="num">1.0</span>, n)             <span class="com"># 噪声特征</span>
+    x2 = rng.normal(<span class="num">5.0</span>, <span class="num">1.0</span>, n)             <span class="com"># 噪声特征</span>
+    X = <span class="cls">np</span>.column_stack([x0, x1, x2])
+    y = <span class="cls">np</span>.where(x0 &gt; <span class="num">1.5</span>, <span class="num">1</span>, <span class="num">0</span>)
+
+    trees = [ImpTree(max_depth=<span class="num">4</span>).fit(X, y) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">20</span>)]
+    total = {f: <span class="num">0.0</span> <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>)}
+    <span class="kw">for</span> t <span class="kw">in</span> trees:
+        <span class="kw">for</span> f, v <span class="kw">in</span> t.imp.<span class="fn">items</span>():
+            total[f] += v
+    s = <span class="fn">sum</span>(total.values()) <span class="kw">or</span> <span class="num">1.0</span>
+    names = [<span class="str">&quot;feat0&quot;</span>, <span class="str">&quot;feat1&quot;</span>, <span class="str">&quot;feat2&quot;</span>]
+    <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
+        <span class="fn">print</span>(names[f], <span class="str">&quot;importance =&quot;</span>, <span class="fn">round</span>(total[f] / s, <span class="num">4</span>))
+</pre>
+</div>
+
+</section>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">十二</span> 算法对比与工程选型</h2>
+
+<h3>12.1 主流算法对比表</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>算法</th><th>类型</th><th>核心思想</th><th>优势</th><th>劣势</th><th>适用场景</th></tr>
+</thead>
+<tbody>
+<tr><td>决策树</td><td>单模型</td><td>递归划分特征空间</td><td>可解释性强、无需特征缩放</td><td>易过拟合、不稳定</td><td>解释性要求高的规则提取</td></tr>
+<tr><td>随机森林</td><td>Bagging</td><td>样本+特征双随机 + 投票</td><td>开箱即用、抗过拟合、可并行</td><td>树多模型大、解释性下降</td><td>通用分类/回归、特征重要性分析</td></tr>
+<tr><td>AdaBoost</td><td>Boosting</td><td>权重更新 + 加权组合</td><td>实现简单、理论清晰</td><td>对异常值敏感</td><td>小规模数据、弱分类器组合</td></tr>
+<tr><td>GBDT</td><td>Boosting</td><td>负梯度（残差）拟合</td><td>精度高、损失灵活</td><td>串行训练慢、难并行</td><td>中小数据、精度优先</td></tr>
+<tr><td>XGBoost</td><td>Boosting</td><td>二阶泰勒 + 正则化</td><td>精度高、正则强、生态成熟</td><td>内存占用较高、调参多</td><td>Kaggle 竞赛、通用强基线</td></tr>
+<tr><td>LightGBM</td><td>Boosting</td><td>直方图 + Leaf-wise + GOSS</td><td>训练最快、内存省</td><td>小数据易过拟合、叶子生长需限深</td><td>海量样本、高维稀疏</td></tr>
+<tr><td>CatBoost</td><td>Boosting</td><td>有序目标编码 + Ordered Boosting</td><td>类别特征最佳、防预测偏移</td><td>类别特征编码较慢</td><td>大量类别特征、中小数据</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>12.2 工程选型建议</h3>
+<ul>
+<li><strong>解释性要求高</strong> → 决策树（或单棵 CART + 规则导出）。</li>
+<li><strong>通用分类/回归、开箱即用</strong> → 随机森林（几乎无需调参就有不错效果，还能给出特征重要性）。</li>
+<li><strong>追求最高精度</strong> → XGBoost / LightGBM（梯度提升家族在结构化数据上通常最优）。</li>
+<li><strong>大规模数据</strong> → LightGBM（直方图 + GOSS 在亿级样本下依然可行）。</li>
+<li><strong>类别特征多</strong> → CatBoost（原生目标编码处理高基数类别特征）。</li>
+</ul>
+
+<div class="callout">
+<div class="callout-title">选型路线图</div>
+<p>工程上常用路线：<strong>先随机森林建基线</strong>（快速、稳、给特征重要性）→ <strong>再用 LightGBM/XGBoost 提精度</strong>（网格搜索调参）→ <strong>用 SHAP 做最终解释与特征筛选</strong>。三个工具恰好覆盖"基线、精度、解释"三个阶段。</p>
+</div>
+
+<h3>12.3 超参数调优建议</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>超参数</th><th>常见范围</th><th>影响</th><th>调优建议</th></tr>
+</thead>
+<tbody>
+<tr><td>n_estimators / 树数</td><td>100 ~ 1000+</td><td>越多越稳（边际递减）</td><td>随机森林配合 OOB 误差早停；GBDT 系列配合 early stopping</td></tr>
+<tr><td>max_depth</td><td>3 ~ 15（RF 可更深）</td><td>单树复杂度</td><td>RF 树深偏大（靠随机性抗过拟合）；Boosting 树深偏小（3-6）</td></tr>
+<tr><td>min_samples_leaf</td><td>1 ~ 50</td><td>叶子最小样本数</td><td>数据大时取大值防过拟合</td></tr>
+<tr><td>max_features</td><td>sqrt(d) / log2(d) / 0.3d</td><td>RF 特征随机度</td><td>分类默认 sqrt(d)，回归 1/3 d，网格搜索微调</td></tr>
+<tr><td>learning_rate</td><td>0.01 ~ 0.3</td><td>每棵树贡献（Boosting）</td><td>小学习率 + 更多树，配合早停更稳</td></tr>
+<tr><td>subsample</td><td>0.6 ~ 1.0</td><td>样本采样率（Boosting）</td><td>0.8 左右通常较好，兼有 Bagging 抗过拟合效果</td></tr>
+<tr><td>colsample_bytree</td><td>0.6 ~ 1.0</td><td>列采样率</td><td>降方差、加速；高维特征场景显著有效</td></tr>
+<tr><td>正则项 gamma/lambda</td><td>0 ~ 5</td><td>分裂惩罚 / 权重 L2</td><td>过拟合时优先加大 lambda 与 gamma</td></tr>
+<tr><td>min_child_weight</td><td>1 ~ 100</td><td>叶子最小二阶导和</td><td>类似 min_samples_leaf，偏小防过拟合</td></tr>
+</tbody>
+</table>
+</div>
+
+</section>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">十三</span> 演进时间线与总结</h2>
+
+<h3>13.1 发展时间线</h3>
+<p>从单棵决策树到梯度提升框架，集成学习走过了 30 余年。下图给出关键里程碑的总览：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<defs>
+  <marker id="mTL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <linearGradient id="gTL" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#2563eb"/>
+    <stop offset="100%" stop-color="#7c3aed"/>
+  </linearGradient>
+</defs>
+
+<line x1="60" y1="70" x2="860" y2="70" stroke="#cbd5e1" stroke-width="3"/>
+<line x1="60" y1="70" x2="860" y2="70" stroke="url(#gTL)" stroke-width="3" stroke-dasharray="120 700" class="flow-line"/>
+
+<circle cx="130" cy="70" r="8" class="pulse-node" fill="#2563eb"/>
+<text x="130" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">1984</text>
+<text x="130" y="95" text-anchor="middle" font-size="11" fill="#334155">CART</text>
+
+<circle cx="245" cy="70" r="8" class="pulse-node" fill="#2563eb"/>
+<text x="245" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">1993</text>
+<text x="245" y="95" text-anchor="middle" font-size="11" fill="#334155">C4.5</text>
+
+<circle cx="360" cy="70" r="8" class="pulse-node" fill="#059669"/>
+<text x="360" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">1995</text>
+<text x="360" y="95" text-anchor="middle" font-size="11" fill="#334155">AdaBoost</text>
+
+<circle cx="475" cy="70" r="8" class="pulse-node" fill="#059669"/>
+<text x="475" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">2001</text>
+<text x="475" y="95" text-anchor="middle" font-size="11" fill="#334155">Random Forest</text>
+
+<circle cx="600" cy="70" r="8" class="pulse-node" fill="#7c3aed"/>
+<text x="600" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">2014</text>
+<text x="600" y="95" text-anchor="middle" font-size="11" fill="#334155">XGBoost</text>
+
+<circle cx="715" cy="70" r="8" class="pulse-node" fill="#ea580c"/>
+<text x="715" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#c2410c">2017</text>
+<text x="715" y="95" text-anchor="middle" font-size="11" fill="#334155">LightGBM / CatBoost</text>
+
+<circle cx="830" cy="70" r="10" class="glow-ring" fill="#dc2626"/>
+<text x="845" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">至今</text>
+<text x="845" y="95" text-anchor="middle" font-size="11" fill="#334155">AutoML / 深度集成</text>
+
+<rect x="120" y="140" width="660" height="120" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+<text x="450" y="170" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">从"一棵树"到"一片森林"，从"加权"到"梯度"再到"二阶优化"</text>
+<text x="220" y="202" text-anchor="middle" font-size="13" fill="#475569">Bagging 路线</text>
+<line x1="300" y1="198" x2="620" y2="198" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="8 6" marker-end="url(#mTL)"/>
+<text x="460" y="198" text-anchor="middle" font-size="12" fill="#2563eb">Bagging → Random Forest（样本随机 + 特征随机）</text>
+<text x="220" y="234" text-anchor="middle" font-size="13" fill="#475569">Boosting 路线</text>
+<line x1="300" y1="230" x2="620" y2="230" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mTL)"/>
+<text x="460" y="230" text-anchor="middle" font-size="12" fill="#6d28d9">AdaBoost → GBDT → XGBoost → LightGBM / CatBoost</text>
+</svg>
+</div>
+
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">1984</div>
+<div class="event">CART（Breiman 等）</div>
+<div class="desc">分类回归树与代价复杂度剪枝，随机森林的基学习器。</div>
+</div>
+<div class="timeline-item">
+<div class="year">1986</div>
+<div class="event">ID3（Quinlan）</div>
+<div class="desc">以信息增益为准则的决策树学习算法。</div>
+</div>
+<div class="timeline-item">
+<div class="year">1993</div>
+<div class="event">C4.5（Quinlan）</div>
+<div class="desc">增益率 + 连续特征 + 剪枝，决策树实用化标杆。</div>
+</div>
+<div class="timeline-item">
+<div class="year">1995</div>
+<div class="event">AdaBoost（Freund &amp; Schapire）</div>
+<div class="desc">第一个实用 Boosting 算法，理论误差界完备。</div>
+</div>
+<div class="timeline-item">
+<div class="year">1999</div>
+<div class="event">Gradient Boosting（Friedman）</div>
+<div class="desc">把 Boosting 统一到函数空间梯度下降。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2001</div>
+<div class="event">Random Forest（Breiman）</div>
+<div class="desc">Bagging + 特征随机，机器学习"瑞士军刀"。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2014</div>
+<div class="event">XGBoost（Chen &amp; Guestrin）</div>
+<div class="desc">二阶泰勒 + 正则化，横扫 Kaggle 的结构化数据竞赛。</div>
+</div>
+<div class="timeline-item">
+<div class="year">2017</div>
+<div class="event">LightGBM（Microsoft）与 CatBoost（Yandex）</div>
+<div class="desc">直方图/GOSS/EFB 提速；有序编码与 Ordered Boosting 处理类别特征。</div>
+</div>
+</div>
+
+<h3>13.2 总结：从单棵树到集成学习的演进脉络</h3>
+<p>回望整条演进路径，可以提炼出三条主线：</p>
+<ul>
+<li><strong>从"单模型"到"组合模型"</strong>：单棵决策树受限于偏差/方差的固有权衡，集成学习通过"并行平均"（Bagging）与"串行纠错"（Boosting）两条路线突破单模型天花板。</li>
+<li><strong>从"启发式"到"优化式"</strong>：分裂准则从信息增益/基尼指数等启发式，演进为 XGBoost 的目标函数 + 二阶泰勒展开 + 显式正则——一切分裂决策都被纳入一个可优化的整体目标。</li>
+<li><strong>从"算法"到"工程系统"</strong>：LightGBM 的直方图与 GOSS、CatBoost 的有序编码、三大框架的 GPU/分布式支持，说明树模型竞争的主战场已经从"算法思想"转向"工程效率与易用性"。</li>
+</ul>
+
+<div class="callout success">
+<div class="callout-title">给实践者的核心结论</div>
+<p>结构化数据建模的实战顺序清晰可循：<strong>随机森林保底 → 梯度提升（XGBoost/LightGBM/CatBoost）冲精度 → SHAP 做解释</strong>。理解本文的偏差-方差分解、负梯度拟合与二阶优化三条思想主线，足以应对绝大多数表格数据建模任务。</p>
+</div>
+
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Breiman, L. (2001). Random Forests. <em>Machine Learning, 45(1), 5-32</em>. (随机森林奠基论文)</li>
+<li>Breiman, L., Friedman, J. H., Olshen, R. A., &amp; Stone, C. J. (1984). Classification and Regression Trees. <em>Wadsworth</em>. (CART 经典专著)</li>
+<li>Quinlan, J. R. (1986). Induction of Decision Trees. <em>Machine Learning, 1(1), 81-106</em>. (ID3)</li>
+<li>Quinlan, J. R. (1993). C4.5: Programs for Machine Learning. <em>Morgan Kaufmann</em>. (C4.5)</li>
+<li>Freund, Y., &amp; Schapire, R. E. (1997). A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting. <em>Journal of Computer and System Sciences, 55(1), 119-139</em>. (AdaBoost 经典)</li>
+<li>Freund, Y., &amp; Schapire, R. E. (1996). Experiments with a New Boosting Algorithm. <em>ICML 1996</em>. (AdaBoost 实验)</li>
+<li>Breiman, L. (1996). Bagging Predictors. <em>Machine Learning, 24(2), 123-140</em>. (Bagging)</li>
+<li>Friedman, J. H. (2001). Greedy Function Approximation: A Gradient Boosting Machine. <em>Annals of Statistics, 29(5), 1189-1232</em>. (GBDT)</li>
+<li>Friedman, J. H. (2002). Stochastic Gradient Boosting. <em>Computational Statistics &amp; Data Analysis, 38(4), 367-378</em>. (随机梯度提升)</li>
+<li>Chen, T., &amp; Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. <em>KDD 2016</em>. (XGBoost)</li>
+<li>Ke, G., et al. (2017). LightGBM: A Highly Efficient Gradient Boosting Decision Tree. <em>NeurIPS 2017</em>. (LightGBM)</li>
+<li>Prokhorenkova, L., et al. (2018). CatBoost: Unbiased Boosting with Categorical Features. <em>NeurIPS 2018</em>. (CatBoost)</li>
+<li>Lundberg, S. M., &amp; Lee, S.-I. (2017). A Unified Approach to Interpreting Model Predictions. <em>NeurIPS 2017</em>. (SHAP)</li>
+<li>Louppe, G., et al. (2013). Understanding Variable Importances in Forests of Randomized Trees. <em>NeurIPS 2013</em>. (特征重要性理论分析)</li>
+</ol>
+</section>
+
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+
+// KaTeX 渲染策略
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

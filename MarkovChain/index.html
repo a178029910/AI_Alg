@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>马尔科夫链详解 — Markov Chain 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>马尔科夫链</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、随机过程与马尔科夫性质</a>
+    <a href="#ch2">二、离散马尔科夫链与转移矩阵</a>
+    <a href="#ch3">三、Chapman-Kolmogorov 方程</a>
+    <a href="#ch4">四、状态分类：常返与周期</a>
+    <a href="#ch5">五、平稳分布与极限分布</a>
+    <a href="#ch6">六、遍历性与极限定理</a>
+    <a href="#ch7">七、连续时间马尔科夫链</a>
+    <a href="#ch8">八、隐马尔科夫模型（HMM）</a>
+    <a href="#ch9">九、HMM 三大问题</a>
+    <a href="#ch10">十、MCMC：马尔科夫链蒙特卡洛</a>
+    <a href="#ch11">十一、应用：PageRank 与排队论</a>
+    <a href="#ch12">十二、Python 代码实现</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+<section id="hero" class="hero">
+  <h1>马尔科夫链详解</h1>
+  <div class="subtitle">Markov Chain — 无记忆性的随机过程</div>
+  <div class="tagline">从赌场到 PageRank · 1906 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">3 张 SVG 结构图</span>
+    <span class="badge">20 个公式</span>
+    <span class="badge">6 段 Python 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1">
+<h2><span class="num">1</span>随机过程与马尔科夫性质</h2>
+
+<h3>1.1 从随机变量到随机过程</h3>
+<p><strong>随机变量</strong>描述某一时刻的不确定性，而<strong>随机过程</strong>描述随时间演化的不确定性序列。马尔科夫链是最重要的离散随机过程之一——它的核心假设是：<strong>未来只取决于现在，与过去无关</strong>。</p>
+
+<h3>1.2 马尔科夫性质</h3>
+<p>一个随机序列 $\{X_t\}_{t=0,1,2,\ldots}$ 满足<strong>马尔科夫性质</strong>（Markov Property），如果：</p>
+<div class="formula" data-eq="(1)">$$P(X_{t+1} = j \mid X_t = i, X_{t-1} = i_{t-1}, \ldots, X_0 = i_0) = P(X_{t+1} = j \mid X_t = i)$$</div>
+<p>这意味着：在知道当前状态 $X_t = i$ 的条件下，未来状态 $X_{t+1}$ 的分布<strong>不依赖于任何历史信息</strong>。这一"无记忆性"假设极大简化了概率计算——不需要记住完整历史，只需知道当前状态。</p>
+
+<div class="callout">
+<div class="callout-title">直觉理解</div>
+<p>想象一个棋盘游戏：下一步的局面只取决于当前棋盘状态，而不取决于你是怎么走到当前局面的。或者天气模型："明天天气"只取决于"今天天气"，不需要知道一周前的天气。这种"无记忆性"就是马尔科夫性质。</p>
+</div>
+
+<h3>1.3 状态空间</h3>
+<p>马尔科夫链的<strong>状态空间</strong> $S$ 是所有可能状态的集合。状态空间可以是：</p>
+<ul>
+<li><strong>离散有限</strong>：$S = \{1, 2, \ldots, N\}$，如天气 $\{$晴, 阴, 雨$\}$</li>
+<li><strong>离散无限</strong>：$S = \{0, 1, 2, \ldots\}$，如排队人数</li>
+<li><strong>连续</strong>：$S = \mathbb{R}$，如粒子位置（连续时间马尔科夫过程）</li>
+</ul>
+<p>本章聚焦于<strong>离散时间、离散状态</strong>的马尔科夫链（DTMC），这是最基础的也是应用最广的形式。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="mk1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker></defs>
+<circle cx="100" cy="130" r="35" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5" class="pulse-node"/>
+<text x="88" y="125" fill="#1e293b" font-size="13">X₀</text>
+<text x="82" y="142" fill="#64748b" font-size="10">过去</text>
+<line x1="135" y1="130" x2="235" y2="130" stroke="#334155" stroke-width="2" marker-end="url(#mk1)" class="flow-line"/>
+<circle cx="280" cy="130" r="35" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5" class="glow-ring"/>
+<text x="268" y="125" fill="#1e293b" font-size="13">Xₜ</text>
+<text x="262" y="142" fill="#64748b" font-size="10">现在</text>
+<line x1="315" y1="130" x2="415" y2="130" stroke="#059669" stroke-width="2.5" marker-end="url(#mk1)" class="flow-line"/>
+<circle cx="460" cy="130" r="35" fill="#d1fae5" stroke="#059669" stroke-width="2.5"/>
+<text x="445" y="125" fill="#1e293b" font-size="13">Xₜ₊₁</text>
+<text x="435" y="142" fill="#64748b" font-size="10">未来</text>
+<line x1="495" y1="130" x2="595" y2="130" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#mk1)"/>
+<circle cx="640" cy="130" r="30" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="625" y="135" fill="#64748b" font-size="12">···</text>
+<text x="100" y="200" fill="#dc2626" font-size="12" font-weight="600">✗ 不直接影响</text>
+<line x1="100" y1="175" x2="100" y2="155" stroke="#dc2626" stroke-width="1.5"/>
+<text x="430" y="200" fill="#059669" font-size="12" font-weight="600">✓ 仅依赖当前状态</text>
+<line x1="460" y1="175" x2="460" y2="155" stroke="#059669" stroke-width="1.5"/>
+<text x="250" y="240" fill="#334155" font-size="13" font-weight="600">马尔科夫性质：P(Xₜ₊₁ | Xₜ, Xₜ₋₁, ..., X₀) = P(Xₜ₊₁ | Xₜ)</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch2">
+<h2><span class="num">2</span>离散马尔科夫链与转移矩阵</h2>
+
+<h3>2.1 转移概率</h3>
+<p>对于时间齐次（time-homogeneous）的马尔科夫链，转移概率不随时间变化：</p>
+<div class="formula" data-eq="(2)">$$p_{ij} = P(X_{t+1} = j \mid X_t = i), \quad \forall t$$</div>
+<p>转移概率满足两条基本性质：</p>
+<ul>
+<li><strong>非负性</strong>：$p_{ij} \geq 0$，对所有 $i, j$</li>
+<li><strong>行和为 1</strong>：$\sum_{j} p_{ij} = 1$，对所有 $i$（从状态 $i$ 必然转移到某个状态）</li>
+</ul>
+
+<h3>2.2 转移矩阵</h3>
+<p>有限状态马尔科夫链的转移概率组成<strong>转移矩阵</strong>（Transition Matrix）$\mathbf{P}$：</p>
+<div class="formula" data-eq="(3)">$$\mathbf{P} = \begin{pmatrix} p_{11} & p_{12} & \cdots & p_{1N} \\ p_{21} & p_{22} & \cdots & p_{2N} \\ \vdots & \vdots & \ddots & \vdots \\ p_{N1} & p_{N2} & \cdots & p_{NN} \end{pmatrix}$$</div>
+<p>其中第 $i$ 行表示从状态 $i$ 出发的转移概率分布，每一行之和为 1。</p>
+
+<h3>2.3 天气示例</h3>
+<div class="callout">
+<div class="callout-title">三状态天气模型</div>
+<p>状态空间 $S = \{$晴(S), 阴(C), 雨(R)$\}$。转移矩阵：</p>
+</div>
+
+<div class="formula multi" data-eq="(4)">$$\mathbf{P} = \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix} \begin{matrix} \text{晴} \\ \text{阴} \\ \text{雨} \end{matrix}$$</div>
+<p>例如 $p_{SR} = 0.1$ 表示"今天晴天→明天雨天"的概率为 $10\%$。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="mk2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker></defs>
+<circle cx="200" cy="80" r="40" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+<text x="180" y="75" fill="#1e293b" font-size="14" font-weight="700">晴 S</text>
+<text x="170" y="95" fill="#64748b" font-size="11">0.7自环</text>
+<circle cx="600" cy="80" r="40" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+<text x="582" y="75" fill="#1e293b" font-size="14" font-weight="700">阴 C</text>
+<text x="570" y="95" fill="#64748b" font-size="11">0.4自环</text>
+<circle cx="400" cy="260" r="40" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5"/>
+<text x="382" y="255" fill="#1e293b" font-size="14" font-weight="700">雨 R</text>
+<text x="372" y="275" fill="#64748b" font-size="11">0.5自环</text>
+<line x1="240" y1="68" x2="558" y2="68" stroke="#334155" stroke-width="2" marker-end="url(#mk2)"/>
+<text x="365" y="58" fill="#334155" font-size="12">0.2</text>
+<line x1="560" y1="92" x2="242" y2="92" stroke="#334155" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
+<text x="365" y="108" fill="#334155" font-size="12">0.3</text>
+<line x1="210" y1="120" x2="375" y2="225" stroke="#334155" stroke-width="2" marker-end="url(#mk2)"/>
+<text x="270" y="180" fill="#334155" font-size="12">0.1</text>
+<line x1="425" y1="225" x2="185" y2="120" stroke="#334155" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
+<text x="300" y="200" fill="#334155" font-size="12">0.2</text>
+<line x1="590" y1="120" x2="425" y2="225" stroke="#334155" stroke-width="2" marker-end="url(#mk2)"/>
+<text x="520" y="180" fill="#334155" font-size="12">0.3</text>
+<line x1="420" y1="225" x2="575" y2="118" stroke="#334155" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
+<text x="490" y="200" fill="#334155" font-size="12">0.3</text>
+</svg>
+</div>
+
+<h3>2.4 初始分布</h3>
+<p>马尔科夫链的起始由<strong>初始分布</strong> $\boldsymbol{\pi}^{(0)} = (\pi_1^{(0)}, \pi_2^{(0)}, \ldots, \pi_N^{(0)})$ 描述，其中 $\pi_i^{(0)} = P(X_0 = i)$，$\sum_i \pi_i^{(0)} = 1$。</p>
+
+</section>
+
+<section id="ch3">
+<h2><span class="num">3</span>Chapman-Kolmogorov 方程</h2>
+
+<h3>3.1 n 步转移概率</h3>
+<p><strong>$n$ 步转移概率</strong> $p_{ij}^{(n)}$ 表示从状态 $i$ 出发，经过 $n$ 步到达状态 $j$ 的概率：</p>
+<p>$$p_{ij}^{(n)} = P(X_{t+n} = j \mid X_t = i)$$</p>
+
+<h3>3.2 C-K 方程</h3>
+<p><strong>Chapman-Kolmogorov 方程</strong>是马尔科夫链的核心递推关系：</p>
+<div class="formula" data-eq="(5)">$$p_{ij}^{(m+n)} = \sum_{k \in S} p_{ik}^{(m)} \cdot p_{kj}^{(n)}$$</div>
+<p>这意味着：从 $i$ 经 $m+n$ 步到 $j$，可以分解为先经 $m$ 步到某个中间状态 $k$，再经 $n$ 步从 $k$ 到 $j$，对所有中间状态 $k$ 求和。用矩阵表示就是：</p>
+<div class="formula" data-eq="(6)">$$\mathbf{P}^{(n)} = \mathbf{P}^n$$</div>
+<p>即 $n$ 步转移矩阵等于一步转移矩阵的 $n$ 次幂。</p>
+
+<h3>3.3 状态分布的演化</h3>
+<p>时刻 $t$ 的状态分布 $\boldsymbol{\pi}^{(t)}$ 通过转移矩阵递推：</p>
+<div class="formula" data-eq="(7)">$$\boldsymbol{\pi}^{(t)} = \boldsymbol{\pi}^{(0)} \cdot \mathbf{P}^t$$</div>
+<p>即初始分布右乘转移矩阵的 $t$ 次幂。</p>
+
+<div class="callout">
+<div class="callout-title">天气示例续</div>
+<p>若 $\boldsymbol{\pi}^{(0)} = (1, 0, 0)$（今天确定晴天），则明天的分布为 $(0.7, 0.2, 0.1)$，后天为 $(0.7, 0.2, 0.1) \cdot \mathbf{P} = (0.57, 0.25, 0.18)$。随着 $t \to \infty$，分布会趋于一个稳定值——这就是<strong>平稳分布</strong>。</p>
+</div>
+
+</section>
+
+<section id="ch4">
+<h2><span class="num">4</span>状态分类：常返与周期</h2>
+
+<h3>4.1 可达与互通</h3>
+<ul>
+<li><strong>可达</strong>（Accessible）：若存在 $n \geq 1$ 使 $p_{ij}^{(n)} > 0$，则称 $i$ 可达 $j$，记 $i \to j$</li>
+<li><strong>互通</strong>（Communicate）：若 $i \to j$ 且 $j \to i$，则称 $i, j$ 互通，记 $i \leftrightarrow j$</li>
+<li><strong>不可约</strong>（Irreducible）：若所有状态两两互通，则链不可约</li>
+</ul>
+
+<h3>4.2 常返与非常返</h3>
+<p>从状态 $i$ 出发，<strong>迟早回到 $i$ 的概率</strong>为：</p>
+<div class="formula" data-eq="(8)">$$f_{ii} = P(\text{ EVER return to } i \mid X_0 = i) = \sum_{n=1}^{\infty} f_{ii}^{(n)}$$</div>
+<p>若 $f_{ii} = 1$，状态 $i$ 是<strong>常返</strong>的（Recurrent）；若 $f_{ii} < 1$，状态 $i$ 是<strong>非常返</strong>的（Transient）。</p>
+
+<table>
+<tr><th>类型</th><th>含义</th><th>访问次数期望</th></tr>
+<tr><td><strong>常返</strong></td><td>一定会回来，且无限次</td><td>$E[N_i] = \infty$</td></tr>
+<tr><td><strong>非常返</strong></td><td>可能不回来，只有限次</td><td>$E[N_i] < \infty$</td></tr>
+</table>
+
+<h3>4.3 正常返与零常返</h3>
+<p>常返状态进一步分为：</p>
+<ul>
+<li><strong>正常返</strong>（Positive Recurrent）：平均返回时间 $\mu_i = E[T_i] < \infty$</li>
+<li><strong>零常返</strong>（Null Recurrent）：平均返回时间 $\mu_i = \infty$</li>
+</ul>
+<p>只有有限状态的马尔科夫链中不存在零常返状态。</p>
+
+<h3>4.4 周期性</h3>
+<p>状态 $i$ 的<strong>周期</strong> $d(i)$ 定义为 $\gcd\{n : p_{ii}^{(n)} > 0\}$。若 $d(i) = 1$ 则状态 $i$ <strong>非周期</strong>（Aperiodic）。</p>
+<div class="callout warn">
+<div class="callout-title">自环妙用</div>
+<p>如果状态 $i$ 有自环（$p_{ii} > 0$），则 $p_{ii}^{(1)} > 0$，所以 $d(i) = \gcd(1, \ldots) = 1$，即<strong>有自环的状态必然非周期</strong>。在工程实践中，常通过加入小概率自环来消除周期性。</p>
+</div>
+
+<h3>4.5 遍历态</h3>
+<p>若状态 $i$ 同时满足<strong>正常返</strong>且<strong>非周期</strong>，则称其为<strong>遍历态</strong>（Ergodic）。不可约且所有状态都遍历的链称为<strong>遍历链</strong>。<strong>遍历定理</strong>保证遍历链有唯一的极限分布。</p>
+
+<table>
+<tr><th>性质</th><th>条件</th><th>结论</th></tr>
+<tr><td>不可约</td><td>所有状态互通</td><td>链无法分解为子链</td></tr>
+<tr><td>非周期</td><td>$d = 1$</td><td>无周期振荡</td></tr>
+<tr><td>正常返</td><td>$\mu_i < \infty$</td><td>平均回访时间有限</td></tr>
+<tr><td>遍历</td><td>以上三条同时满足</td><td>有唯一极限分布</td></tr>
+</table>
+
+</section>
+
+<section id="ch5">
+<h2><span class="num">5</span>平稳分布与极限分布</h2>
+
+<h3>5.1 平稳分布</h3>
+<p>分布 $\boldsymbol{\pi}$ 是<strong>平稳分布</strong>（Stationary Distribution），如果它满足：</p>
+<div class="formula" data-eq="(9)">$$\boldsymbol{\pi} = \boldsymbol{\pi} \cdot \mathbf{P}$$</div>
+<p>即从 $\boldsymbol{\pi}$ 出发一步转移后仍为 $\boldsymbol{\pi}$，分布不再变化。这是一个<strong>左特征向量</strong>问题，对应特征值 1。</p>
+
+<h3>5.2 极限分布</h3>
+<p>对于遍历链，无论初始分布如何，状态分布收敛到唯一的平稳分布：</p>
+<div class="formula" data-eq="(10)">$$\lim_{n \to \infty} \boldsymbol{\pi}^{(0)} \mathbf{P}^n = \boldsymbol{\pi}^*$$</div>
+<p>且 $\boldsymbol{\pi}^*$ 就是平稳分布。逐元素写为：</p>
+<div class="formula" data-eq="(11)">$$\lim_{n \to \infty} p_{ij}^{(n)} = \pi_j^*, \quad \forall i$$</div>
+<p>即长期来看，到达各状态的概率与起点无关。</p>
+
+<h3>3.3 平稳分布的计算</h3>
+<p>解方程组 $\boldsymbol{\pi} \mathbf{P} = \boldsymbol{\pi}$ 加归一化 $\sum \pi_i = 1$：</p>
+<div class="formula" data-eq="(12)">$$\begin{cases} \pi_j = \sum_{i} \pi_i \, p_{ij}, & \forall j \\ \sum_{j} \pi_j = 1 \end{cases}$$</div>
+
+<div class="callout">
+<div class="callout-title">天气模型的平稳分布</div>
+<p>解 $\boldsymbol{\pi} \mathbf{P} = \boldsymbol{\pi}$ 加 $\pi_S + \pi_C + \pi_R = 1$，得 $\boldsymbol{\pi}^* \approx (0.5, 0.25, 0.25)$。即长期来看，约 $50\%$ 的日子是晴天，$25\%$ 阴天，$25\%$ 雨天。<strong>这个分布不取决于初始天气</strong>。</p>
+</div>
+
+<h3>5.4 细致平衡</h3>
+<p>如果存在分布 $\boldsymbol{\pi}$ 使得：</p>
+<div class="formula" data-eq="(13)">$$\pi_i \, p_{ij} = \pi_j \, p_{ji}, \quad \forall i, j$$</div>
+<p>则称链满足<strong>细致平衡</strong>（Detailed Balance）。满足细致平衡的链是可逆的，且 $\boldsymbol{\pi}$ 一定是平稳分布。细致平衡条件是 MCMC 算法的理论基础。</p>
+
+</section>
+
+<section id="ch6">
+<h2><span class="num">6</span>遍历性与极限定理</h2>
+
+<h3>6.1 遍历定理</h3>
+<p>对于遍历马尔科夫链，时间平均等于空间平均（依概率 1）：</p>
+<div class="formula" data-eq="(14)">$$\frac{1}{n} \sum_{t=1}^{n} f(X_t) \xrightarrow{a.s.} E_{\pi}[f(X)] = \sum_{i} f(i) \pi_i$$</div>
+<p>这意味着：沿一条马尔科夫链轨迹的时间平均收敛到平稳分布下的期望。<strong>这是 MCMC 的理论基础</strong>——我们可以用马尔科夫链的样本均值来估计期望。</p>
+
+<h3>6.2 收敛速度</h3>
+<p>马尔科夫链收敛到平稳分布的速度取决于转移矩阵的<strong>谱隙</strong>（Spectral Gap）：</p>
+<div class="formula" data-eq="(15)">$$\text{Spectral Gap} = 1 - |\lambda_2|$$</div>
+<p>其中 $\lambda_2$ 是转移矩阵的次大特征值（模长）。谱隙越大，收敛越快；谱隙接近 0 时收敛极慢。</p>
+
+<table>
+<tr><th>谱隙</th><th>收敛速度</th><th>混合时间</th><th>工程含义</th></tr>
+<tr><td>大（$\to 1$）</td><td>快</td><td>$O(\log n)$</td><td>少量步数即达平稳</td></tr>
+<tr><td>小（$\to 0$）</td><td>慢</td><td>$O(n)$ 或更差</td><td>需要大量步数才收敛</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-title">混合时间</div>
+<p><strong>混合时间</strong>（Mixing Time）$t_{\text{mix}}$ 定义为分布与平稳分布的距离小于 $\epsilon$ 所需的最小步数：$t_{\text{mix}}(\epsilon) = \min\{t : \|\boldsymbol{\pi}^{(t)} - \boldsymbol{\pi}\|_{\text{TV}} \leq \epsilon\}$。混合时间是衡量 MCMC 效率的关键指标。</p>
+</div>
+
+<h3>6.3 大数定律与中心极限定理</h3>
+<p>遍历定理是<strong>马尔科夫链的大数定律</strong>。对于马尔科夫链的中心极限定理，有：</p>
+<div class="formula" data-eq="(16)">$$\sqrt{n}\left(\frac{1}{n}\sum_{t=1}^{n} f(X_t) - E_\pi[f]\right) \xrightarrow{d} \mathcal{N}(0, \sigma_f^2)$$</div>
+<p>其中 $\sigma_f^2$ 与转移矩阵的谱性质有关。这为 MCMC 估计的误差分析提供了理论工具。</p>
+
+</section>
+
+<section id="ch7">
+<h2><span class="num">7</span>连续时间马尔科夫链</h2>
+
+<h3>7.1 从离散到连续</h3>
+<p>在<strong>连续时间马尔科夫链</strong>（CTMC）中，状态转移可以在任意时刻发生。两个关键量是：</p>
+<ul>
+<li><strong>转移速率</strong> $q_{ij}$：从状态 $i$ 到 $j$ 的瞬时转移速率</li>
+<li><strong>驻留时间</strong>：在状态 $i$ 的停留时间服从指数分布 $\text{Exp}(q_i)$，其中 $q_i = \sum_{j \neq i} q_{ij}$</li>
+</ul>
+
+<h3>7.2 转移速率矩阵</h3>
+<p>CTMC 由<strong>无穷小生成元矩阵</strong>（Generator Matrix）$\mathbf{Q}$ 描述：</p>
+<div class="formula" data-eq="(17)">$$\mathbf{Q} = \begin{pmatrix} -q_1 & q_{12} & \cdots & q_{1N} \\ q_{21} & -q_2 & \cdots & q_{2N} \\ \vdots & & \ddots & \vdots \\ q_{N1} & q_{N2} & \cdots & -q_N \end{pmatrix}$$</div>
+<p>其中 $q_i = \sum_{j \neq i} q_{ij}$，每行之和为 0。</p>
+
+<h3>7.3 转移概率矩阵</h3>
+<p>CTMC 的时刻 $t$ 转移概率矩阵通过矩阵指数给出：</p>
+<div class="formula" data-eq="(18)">$$\mathbf{P}(t) = e^{\mathbf{Q}t} = \sum_{k=0}^{\infty} \frac{(\mathbf{Q}t)^k}{k!}$$</div>
+<p>平稳分布满足 $\boldsymbol{\pi} \mathbf{Q} = \mathbf{0}$。</p>
+
+<h3>7.4 离散与连续对比</h3>
+<table>
+<tr><th>维度</th><th>离散时间 (DTMC)</th><th>连续时间 (CTMC)</th></tr>
+<tr><td>时间</td><td>$t = 0, 1, 2, \ldots$</td><td>$t \in \mathbb{R}_{\geq 0}$</td></tr>
+<tr><td>核心矩阵</td><td>转移矩阵 $\mathbf{P}$</td><td>生成元矩阵 $\mathbf{Q}$</td></tr>
+<tr><td>n 步转移</td><td>$\mathbf{P}^n$</td><td>$e^{\mathbf{Q}t}$</td></tr>
+<tr><td>驻留时间</td><td>确定（1 步）</td><td>指数分布</td></tr>
+<tr><td>平稳条件</td><td>$\boldsymbol{\pi} = \boldsymbol{\pi}\mathbf{P}$</td><td>$\boldsymbol{\pi}\mathbf{Q} = \mathbf{0}$</td></tr>
+<tr><td>典型应用</td><td>PageRank、文本</td><td>排队论、化学反应</td></tr>
+</table>
+
+</section>
+
+<section id="ch8">
+<h2><span class="num">8</span>隐马尔科夫模型（HMM）</h2>
+
+<h3>8.1 从可见到隐藏</h3>
+<p>在标准马尔科夫链中，状态是可观测的。但在许多场景中，真实状态<strong>隐藏不可见</strong>，只能观测到与状态相关的输出。这就是<strong>隐马尔科夫模型</strong>（Hidden Markov Model, HMM）。</p>
+
+<div class="callout">
+<div class="callout-title">HMM 的经典场景</div>
+<p><strong>语音识别</strong>：隐藏状态 = 音素，观测 = 声学特征。<strong>词性标注</strong>：隐藏状态 = 词性标签，观测 = 词语。<strong>基因序列</strong>：隐藏状态 = 编码区/非编码区，观测 = DNA 碱基。</p>
+</div>
+
+<h3>8.2 HMM 的五元组</h3>
+<table>
+<tr><th>要素</th><th>符号</th><th>含义</th></tr>
+<tr><td>状态集合</td><td>$S = \{s_1, \ldots, s_N\}$</td><td>隐藏的 $N$ 个状态</td></tr>
+<tr><td>观测集合</td><td>$V = \{v_1, \ldots, v_M\}$</td><td>$M$ 种可能的观测值</td></tr>
+<tr><td>转移概率</td><td>$\mathbf{A} = [a_{ij}]$</td><td>$a_{ij} = P(X_{t+1}=s_j \mid X_t=s_i)$</td></tr>
+<tr><td>发射概率</td><td>$\mathbf{B} = [b_j(k)]$</td><td>$b_j(k) = P(O_t=v_k \mid X_t=s_j)$</td></tr>
+<tr><td>初始分布</td><td>$\boldsymbol{\pi}$</td><td>$\pi_i = P(X_0 = s_i)$</td></tr>
+</table>
+
+<h3>8.3 HMM 的两大假设</h3>
+<ol>
+<li><strong>马尔科夫假设</strong>：隐藏状态序列满足一阶马尔科夫性质</li>
+<li><strong>观测独立假设</strong>：$t$ 时刻的观测 $O_t$ 仅依赖于当前隐藏状态 $X_t$，与其他无关</li>
+</ol>
+
+<div class="formula" data-eq="(19)">$$P(O_1, \ldots, O_T \mid X_1, \ldots, X_T) = \prod_{t=1}^{T} P(O_t \mid X_t)$$</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="mk3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker></defs>
+<circle cx="120" cy="80" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5" class="glow-ring"/>
+<text x="105" y="85" fill="#1e293b" font-size="12">X₁</text>
+<line x1="150" y1="80" x2="220" y2="80" stroke="#334155" stroke-width="2" marker-end="url(#mk3)" class="flow-line"/>
+<circle cx="260" cy="80" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+<text x="245" y="85" fill="#1e293b" font-size="12">X₂</text>
+<line x1="290" y1="80" x2="360" y2="80" stroke="#334155" stroke-width="2" marker-end="url(#mk3)" class="flow-line"/>
+<circle cx="400" cy="80" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+<text x="385" y="85" fill="#1e293b" font-size="12">X₃</text>
+<line x1="430" y1="80" x2="500" y2="80" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>
+<text x="445" y="72" fill="#94a3b8" font-size="14">···</text>
+<circle cx="560" cy="80" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+<text x="545" y="85" fill="#1e293b" font-size="12">X_T</text>
+<line x1="120" y1="110" x2="120" y2="160" stroke="#7c3aed" stroke-width="2" marker-end="url(#mk3)"/>
+<line x1="260" y1="110" x2="260" y2="160" stroke="#7c3aed" stroke-width="2" marker-end="url(#mk3)"/>
+<line x1="400" y1="110" x2="400" y2="160" stroke="#7c3aed" stroke-width="2" marker-end="url(#mk3)"/>
+<line x1="560" y1="110" x2="560" y2="160" stroke="#7c3aed" stroke-width="2" marker-end="url(#mk3)"/>
+<rect x="90" y="170" width="60" height="35" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="105" y="192" fill="#1e293b" font-size="12">O₁</text>
+<rect x="230" y="170" width="60" height="35" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="245" y="192" fill="#1e293b" font-size="12">O₂</text>
+<rect x="370" y="170" width="60" height="35" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="385" y="192" fill="#1e293b" font-size="12">O₃</text>
+<rect x="530" y="170" width="60" height="35" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="545" y="192" fill="#1e293b" font-size="12">O_T</text>
+<text x="640" y="80" fill="#2563eb" font-size="11">隐藏状态</text>
+<text x="640" y="190" fill="#7c3aed" font-size="11">观测序列</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch9">
+<h2><span class="num">9</span>HMM 三大问题</h2>
+
+<table>
+<tr><th>问题</th><th>描述</th><th>算法</th><th>复杂度</th></tr>
+<tr><td><strong>评估</strong></td><td>给定模型 $\lambda=(A,B,\pi)$ 和观测 $O$，求 $P(O \mid \lambda)$</td><td>前向算法</td><td>$O(N^2 T)$</td></tr>
+<tr><td><strong>解码</strong></td><td>给定模型和观测，求最可能的状态序列</td><td>Viterbi 算法</td><td>$O(N^2 T)$</td></tr>
+<tr><td><strong>学习</strong></td><td>给定观测，估计模型参数 $A, B, \pi$</td><td>Baum-Welch (EM)</td><td>$O(N^2 T)$ per iter</td></tr>
+</table>
+
+<h3>9.1 前向算法</h3>
+<p>定义<strong>前向概率</strong> $\alpha_t(i) = P(O_1, \ldots, O_t, X_t = s_i \mid \lambda)$：</p>
+<div class="formula" data-eq="(20)">$$\alpha_{t+1}(j) = \left[\sum_{i=1}^{N} \alpha_t(i) \, a_{ij}\right] b_j(O_{t+1})$$</div>
+<p>最终 $P(O \mid \lambda) = \sum_{i=1}^{N} \alpha_T(i)$。前向算法通过递推避免了枚举所有状态序列的 $O(N^T)$ 指数复杂度。</p>
+
+<h3>9.2 Viterbi 算法</h3>
+<p>定义<strong>最优路径概率</strong> $\delta_t(i) = \max_{X_1,\ldots,X_{t-1}} P(X_1, \ldots, X_{t-1}, X_t=s_i, O_1, \ldots, O_t \mid \lambda)$：</p>
+<p>$$\delta_{t+1}(j) = \max_{i} [\delta_t(i) \, a_{ij}] \cdot b_j(O_{t+1})$$</p>
+<p>同时记录回溯指针 $\psi_{t+1}(j) = \arg\max_i [\delta_t(i) \, a_{ij}]$。最终通过回溯得到最优状态序列。</p>
+
+<h3>9.3 Baum-Welch 算法</h3>
+<p>Baum-Welch 是 EM 算法在 HMM 上的特化：<strong>E 步</strong>用前向-后向算法计算期望 sufficient statistics，<strong>M 步</strong>更新参数。迭代直到对数似然收敛。</p>
+
+</section>
+
+<section id="ch10">
+<h2><span class="num">10</span>MCMC：马尔科夫链蒙特卡洛</h2>
+
+<h3>10.1 为什么需要 MCMC？</h3>
+<p>在贝叶斯推断中，我们需要计算后验分布的期望 $E_\pi[f(X)]$，但分布 $\pi(x)$ 往往<strong>无法解析求解</strong>。MCMC 的思想是：构造一个以 $\pi$ 为平稳分布的马尔科夫链，运行足够长时间后，链上的样本近似服从 $\pi$，然后用样本均值估计期望。</p>
+
+<h3>10.2 Metropolis-Hastings 算法</h3>
+<p>MH 算法的核心是<strong>接受-拒绝</strong>机制：</p>
+<ol>
+<li>从提议分布 $q(x' \mid x)$ 中采样新状态 $x'$</li>
+<li>计算接受概率：</li>
+</ol>
+<p>$$\alpha(x, x') = \min\left(1, \frac{\pi(x') \, q(x \mid x')}{\pi(x) \, q(x' \mid x)}\right)$$</li>
+<li>以概率 $\alpha$ 接受 $x'$（令 $x_{t+1} = x'$），否则拒绝（令 $x_{t+1} = x_t$）</li>
+
+<div class="callout success">
+<div class="callout-title">MH 的巧妙之处</div>
+<p>MH 只需要 $\pi(x)$ 的<strong>未归一化形式</strong>（因为分子分母同时出现），这意味着我们不需要计算归一化常数 $Z$——这正是贝叶斯推断中最困难的部分。</p>
+</div>
+
+<h3>10.3 Gibbs 采样</h3>
+<p>Gibbs 采样是 MH 的特例：对高维分布 $\pi(\mathbf{x}) = \pi(x_1, \ldots, x_d)$，每次只更新一个维度，从<strong>条件分布</strong>中采样：</p>
+<p>$$x_i^{(t+1)} \sim \pi(x_i \mid x_{-i}^{(t)})$$</p>
+<p>Gibbs 采样的接受率始终为 1（无需拒绝），但要求条件分布可采样。</p>
+
+<table>
+<tr><th>算法</th><th>提议方式</th><th>接受率</th><th>适用场景</th></tr>
+<tr><td>MH</td><td>任意提议分布</td><td>$\leq 1$</td><td>通用</td></tr>
+<tr><td>Gibbs</td><td>条件分布</td><td>1（总接受）</td><td>条件分布可采样</td></tr>
+<tr><td>HMC</td><td>哈密顿动力学</td><td>高</td><td>连续高维分布</td></tr>
+<tr><td>Slice</td><td>辅助变量</td><td>1</td><td>一维采样</td></tr>
+</table>
+
+</section>
+
+<section id="ch11">
+<h2><span class="num">11</span>应用：PageRank 与排队论</h2>
+
+<h3>11.1 PageRank</h3>
+<p>Google 的 PageRank 将网页排名建模为马尔科夫链的<strong>平稳分布</strong>：网页是状态，超链接是转移概率。用户在网页间随机跳转，长期来看访问各网页的概率就是 PageRank 值。</p>
+<p>转移矩阵加入<strong>阻尼因子</strong> $d$ 处理悬挂节点和确保不可约性：</p>
+<p>$$\mathbf{P}_{\text{PR}} = d \cdot \mathbf{P} + (1-d) \cdot \frac{1}{N}\mathbf{1}\mathbf{1}^T$$</p>
+<p>其中 $d \approx 0.85$。PageRank 向量就是 $\boldsymbol{\pi} \mathbf{P}_{\text{PR}} = \boldsymbol{\pi}$ 的解。</p>
+
+<h3>11.2 排队论</h3>
+<p>M/M/1 排队模型是一个 CTMC，状态为系统中的顾客数：</p>
+<ul>
+<li>到达速率 $\lambda$：泊松过程</li>
+<li>服务速率 $\mu$：指数分布</li>
+<li>转移速率 $q_{n,n+1} = \lambda$，$q_{n,n-1} = \mu$</li>
+<li>当 $\rho = \lambda/\mu < 1$ 时系统稳定，平稳分布为几何分布 $\pi_n = (1-\rho)\rho^n$</li>
+</ul>
+
+<h3>11.3 其他应用</h3>
+<table>
+<tr><th>领域</th><th>应用</th><th>状态</th><th>转移</th></tr>
+<tr><td>生物信息学</td><td>基因序列分析</td><td>编码区/非编码区</td><td>序列变化</td></tr>
+<tr><td>金融</td><td>市场状态建模</td><td>牛市/熊市/震荡</td><td>市场转换</td></tr>
+<tr><td>NLP</td><td>词性标注</td><td>词性标签</td><td>语法转移</td></tr>
+<tr><td>排队系统</td><td>呼叫中心</td><td>等待人数</td><td>到达/离开</td></tr>
+<tr><td>可靠性</td><td>系统故障</td><td>正常/降级/故障</td><td>故障/修复</td></tr>
+</table>
+
+</section>
+
+<section id="ch12">
+<h2><span class="num">12</span>Python 代码实现</h2>
+
+<h3>12.1 离散马尔科夫链模拟</h3>
+<div class="code-block">
+<div class="code-header">markov_chain.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">MarkovChain</span>:
+    <span class="str">"""离散时间马尔科夫链"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, P, states=<span class="kw">None</span>):
+        <span class="kw">self</span>.P = <span class="cls">np</span>.<span class="fn">array</span>(P, dtype=<span class="fn">float</span>)
+        <span class="kw">self</span>.n_states = <span class="fn">len</span>(P)
+        <span class="kw">self</span>.states = states <span class="kw">or</span> <span class="fn">list</span>(<span class="fn">range</span>(<span class="kw">self</span>.n_states))
+
+    <span class="kw">def</span> <span class="fn">simulate</span>(<span class="kw">self</span>, n_steps, start_state=<span class="kw">None</span>, seed=<span class="kw">None</span>):
+        <span class="str">"""模拟马尔科夫链轨迹"""</span>
+        rng = <span class="cls">np</span>.<span class="fn">random</span>.RandomState(seed)
+        path = []
+        current = start_state <span class="kw">if</span> start_state <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span> <span class="kw">else</span> rng.<span class="fn">choice</span>(<span class="kw">self</span>.n_states)
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_steps):
+            path.<span class="fn">append</span>(current)
+            current = rng.<span class="fn">choice</span>(<span class="kw">self</span>.n_states, p=<span class="kw">self</span>.P[current])
+        <span class="kw">return</span> [<span class="kw">self</span>.states[i] <span class="kw">for</span> i <span class="kw">in</span> path]
+
+    <span class="kw">def</span> <span class="fn">stationary_distribution</span>(<span class="kw">self</span>):
+        <span class="str">"""求解平稳分布 pi = pi @ P"""</span>
+        <span class="com"># 解 (P^T - I) pi = 0, sum(pi) = 1</span>
+        A = (<span class="kw">self</span>.P.<span class="fn">T</span> - <span class="cls">np</span>.<span class="fn">eye</span>(<span class="kw">self</span>.n_states))
+        A[-<span class="num">1</span>] = <span class="cls">np</span>.<span class="fn">ones</span>(<span class="kw">self</span>.n_states)
+        b = <span class="cls">np</span>.<span class="fn">zeros</span>(<span class="kw">self</span>.n_states)
+        b[-<span class="num">1</span>] = <span class="num">1</span>
+        <span class="kw">return</span> <span class="cls">np</span>.linalg.<span class="fn">solve</span>(A, b)
+
+    <span class="kw">def</span> <span class="fn">n_step_transition</span>(<span class="kw">self</span>, n):
+        <span class="str">"""n 步转移矩阵 P^n"""</span>
+        <span class="kw">return</span> <span class="cls">np</span>.linalg.<span class="fn">matrix_power</span>(<span class="kw">self</span>.P, n)
+
+<span class="com"># 天气模型</span>
+P = [[<span class="num">0.7</span>, <span class="num">0.2</span>, <span class="num">0.1</span>], [<span class="num">0.3</span>, <span class="num">0.4</span>, <span class="num">0.3</span>], [<span class="num">0.2</span>, <span class="num">0.3</span>, <span class="num">0.5</span>]]
+mc = <span class="cls">MarkovChain</span>(P, states=[<span class="str">"晴"</span>, <span class="str">"阴"</span>, <span class="str">"雨"</span>])
+<span class="fn">print</span>(<span class="str">"平稳分布:"</span>, mc.<span class="fn">stationary_distribution</span>())
+<span class="fn">print</span>(<span class="str">"3步转移:"</span>, mc.<span class="fn">n_step_transition</span>(<span class="num">3</span>))
+<span class="fn">print</span>(<span class="str">"模拟7天:"</span>, mc.<span class="fn">simulate</span>(<span class="num">7</span>, start_state=<span class="num">0</span>, seed=<span class="num">42</span>))
+</pre>
+</div>
+
+<h3>12.2 HMM 前向算法 + Viterbi</h3>
+<div class="code-block">
+<div class="code-header">hmm.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">HMM</span>:
+    <span class="str">"""隐马尔科夫模型"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, A, B, pi):
+        <span class="kw">self</span>.A = <span class="cls">np</span>.<span class="fn">array</span>(A)  <span class="com"># 转移矩阵 N×N</span>
+        <span class="kw">self</span>.B = <span class="cls">np</span>.<span class="fn">array</span>(B)  <span class="com"># 发射矩阵 N×M</span>
+        <span class="kw">self</span>.pi = <span class="cls">np</span>.<span class="fn">array</span>(pi) <span class="com"># 初始分布 N</span>
+        <span class="kw">self</span>.N = <span class="fn">len</span>(A)
+        <span class="kw">self</span>.M = <span class="fn">len</span>(B[<span class="num">0</span>])
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, obs):
+        <span class="str">"""前向算法：P(O|lambda)"""</span>
+        <span class="fn">T</span> = <span class="fn">len</span>(obs)
+        alpha = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">T</span>, <span class="kw">self</span>.N))
+        alpha[<span class="num">0</span>] = <span class="kw">self</span>.pi * <span class="kw">self</span>.B[:, obs[<span class="num">0</span>]]
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="fn">T</span>):
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.N):
+                alpha[t, j] = <span class="cls">np</span>.<span class="fn">sum</span>(alpha[t-<span class="num">1</span>] * <span class="kw">self</span>.A[:, j]) * <span class="kw">self</span>.B[j, obs[t]]
+        <span class="kw">return</span> alpha, alpha[-<span class="num">1</span>].<span class="fn">sum</span>()
+
+    <span class="kw">def</span> <span class="fn">viterbi</span>(<span class="kw">self</span>, obs):
+        <span class="str">"""Viterbi 算法：最优状态序列"""</span>
+        <span class="fn">T</span> = <span class="fn">len</span>(obs)
+        delta = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">T</span>, <span class="kw">self</span>.N))
+        psi = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">T</span>, <span class="kw">self</span>.N), dtype=<span class="fn">int</span>)
+        delta[<span class="num">0</span>] = <span class="kw">self</span>.pi * <span class="kw">self</span>.B[:, obs[<span class="num">0</span>]]
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="fn">T</span>):
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.N):
+                probs = delta[t-<span class="num">1</span>] * <span class="kw">self</span>.A[:, j]
+                psi[t, j] = <span class="cls">np</span>.<span class="fn">argmax</span>(probs)
+                delta[t, j] = probs[psi[t, j]] * <span class="kw">self</span>.B[j, obs[t]]
+        <span class="com"># 回溯</span>
+        path = [<span class="cls">np</span>.<span class="fn">argmax</span>(delta[-<span class="num">1</span>])]
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">T</span>-<span class="num">2</span>, -<span class="num">1</span>, -<span class="num">1</span>):
+            path.<span class="fn">append</span>(psi[t+<span class="num">1</span>, path[-<span class="num">1</span>]])
+        path.reverse()
+        <span class="kw">return</span> path
+
+    <span class="kw">def</span> <span class="fn">backward</span>(<span class="kw">self</span>, obs):
+        <span class="str">"""后向算法"""</span>
+        <span class="fn">T</span> = <span class="fn">len</span>(obs)
+        beta = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">T</span>, <span class="kw">self</span>.N))
+        beta[-<span class="num">1</span>] = <span class="num">1.0</span>
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">T</span>-<span class="num">2</span>, -<span class="num">1</span>, -<span class="num">1</span>):
+            <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="kw">self</span>.N):
+                beta[t, i] = <span class="cls">np</span>.<span class="fn">sum</span>(<span class="kw">self</span>.A[i] * <span class="kw">self</span>.B[:, obs[t+<span class="num">1</span>]] * beta[t+<span class="num">1</span>])
+        <span class="kw">return</span> beta
+</pre>
+</div>
+
+<h3>12.3 Baum-Welch 参数学习</h3>
+<div class="code-block">
+<div class="code-header">baum_welch.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">def</span> <span class="fn">baum_welch</span>(obs, N, M, max_iter=<span class="num">100</span>, tol=<span class="num">1e-4</span>):
+    <span class="str">"""Baum-Welch 算法：EM 估计 HMM 参数"""</span>
+    <span class="fn">T</span> = <span class="fn">len</span>(obs)
+    <span class="com"># 随机初始化</span>
+    A = <span class="cls">np</span>.<span class="fn">random</span>.<span class="fn">dirichlet</span>(<span class="cls">np</span>.<span class="fn">ones</span>(N), size=N)
+    B = <span class="cls">np</span>.<span class="fn">random</span>.<span class="fn">dirichlet</span>(<span class="cls">np</span>.<span class="fn">ones</span>(M), size=N)
+    pi = <span class="cls">np</span>.<span class="fn">random</span>.<span class="fn">dirichlet</span>(<span class="cls">np</span>.<span class="fn">ones</span>(N))
+
+    <span class="kw">for</span> iteration <span class="kw">in</span> <span class="fn">range</span>(max_iter):
+        <span class="com"># E 步：前向-后向</span>
+        alpha = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">T</span>, N))
+        beta = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">T</span>, N))
+        alpha[<span class="num">0</span>] = pi * B[:, obs[<span class="num">0</span>]]
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="fn">T</span>):
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(N):
+                alpha[t, j] = <span class="cls">np</span>.<span class="fn">sum</span>(alpha[t-<span class="num">1</span>] * A[:, j]) * B[j, obs[t]]
+        beta[-<span class="num">1</span>] = <span class="num">1.0</span>
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">T</span>-<span class="num">2</span>, -<span class="num">1</span>, -<span class="num">1</span>):
+            <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(N):
+                beta[t, i] = <span class="cls">np</span>.<span class="fn">sum</span>(A[i] * B[:, obs[t+<span class="num">1</span>]] * beta[t+<span class="num">1</span>])
+
+        <span class="com"># gamma 和 xi</span>
+        gamma = alpha * beta / (alpha * beta).<span class="fn">sum</span>(axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>)
+        xi = <span class="cls">np</span>.<span class="fn">zeros</span>((<span class="fn">T</span>-<span class="num">1</span>, N, N))
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">T</span>-<span class="num">1</span>):
+            denom = <span class="cls">np</span>.<span class="fn">sum</span>(alpha[t][:, <span class="kw">None</span>] * A * B[:, obs[t+<span class="num">1</span>]] * beta[t+<span class="num">1</span>])
+            xi[t] = alpha[t][:, <span class="kw">None</span>] * A * B[:, obs[t+<span class="num">1</span>]] * beta[t+<span class="num">1</span>] / denom
+
+        <span class="com"># M 步：更新参数</span>
+        pi_new = gamma[<span class="num">0</span>]
+        A_new = xi.<span class="fn">sum</span>(<span class="num">0</span>) / gamma[:-<span class="num">1</span>].<span class="fn">sum</span>(<span class="num">0</span>)[:, <span class="kw">None</span>]
+        B_new = <span class="cls">np</span>.zeros_like(B)
+        <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(M):
+            mask = <span class="cls">np</span>.<span class="fn">array</span>(obs[:-<span class="num">1</span>]) == k
+            B_new[:, k] = gamma[:-<span class="num">1</span>][mask].<span class="fn">sum</span>(<span class="num">0</span>) / gamma[:-<span class="num">1</span>].<span class="fn">sum</span>(<span class="num">0</span>)
+
+        <span class="com"># 检查收敛</span>
+        <span class="kw">if</span> <span class="cls">np</span>.<span class="fn">abs</span>(A_new - A).<span class="fn">max</span>() < tol:
+            <span class="kw">break</span>
+        A, B, pi = A_new, B_new, pi_new
+
+    <span class="kw">return</span> A, B, pi
+</pre>
+</div>
+
+<h3>12.4 Metropolis-Hastings 采样</h3>
+<div class="code-block">
+<div class="code-header">metropolis.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">def</span> <span class="fn">metropolis_hastings</span>(target_log_pdf, x0, n_samples=<span class="num">10000</span>,
+                         proposal_std=<span class="num">1.0</span>, burn_in=<span class="num">1000</span>):
+    <span class="str">"""Metropolis-Hastings 采样器
+    target_log_pdf: 目标分布的对数密度（无需归一化）
+    """</span>
+    samples = []
+    x = x0
+    log_p = target_log_pdf(x0)
+    n_accept = <span class="num">0</span>
+    rng = <span class="cls">np</span>.<span class="fn">random</span>.RandomState(<span class="num">42</span>)
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n_samples + burn_in):
+        <span class="com"># 对称高斯提议</span>
+        x_proposal = x + rng.<span class="fn">normal</span>(<span class="num">0</span>, proposal_std)
+        log_p_proposal = target_log_pdf(x_proposal)
+        <span class="com"># 接受概率</span>
+        log_alpha = log_p_proposal - log_p
+        <span class="kw">if</span> <span class="cls">np</span>.<span class="fn">log</span>(rng.<span class="fn">uniform</span>()) < log_alpha:
+            x = x_proposal
+            log_p = log_p_proposal
+            n_accept += <span class="num">1</span>
+        <span class="kw">if</span> i >= burn_in:
+            samples.<span class="fn">append</span>(x)
+
+    accept_rate = n_accept / (n_samples + burn_in)
+    <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">array</span>(samples), accept_rate
+
+<span class="com"># 示例：从双峰分布采样</span>
+<span class="kw">def</span> <span class="fn">bimodal_log_pdf</span>(x):
+    <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">log</span>(<span class="cls">np</span>.<span class="fn">exp</span>(-<span class="num">0.5</span>*(x-<span class="num">3</span>)**<span class="num">2</span>) + <span class="cls">np</span>.<span class="fn">exp</span>(-<span class="num">0.5</span>*(x+<span class="num">3</span>)**<span class="num">2</span>))
+
+samples, rate = <span class="fn">metropolis_hastings</span>(<span class="fn">bimodal_log_pdf</span>, x0=<span class="num">0</span>, n_samples=<span class="num">5000</span>)
+<span class="fn">print</span>(f<span class="str">"接受率: {rate:.3f}"</span>)
+<span class="fn">print</span>(f<span class="str">"样本均值: {samples.mean():.3f}, 标准差: {samples.std():.3f}"</span>)
+</pre>
+</div>
+
+<h3>12.5 Gibbs 采样器</h3>
+<div class="code-block">
+<div class="code-header">gibbs.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">def</span> <span class="fn">gibbs_sampler</span>(bivariate_normal, x0, n_samples=<span class="num">5000</span>, burn_in=<span class="num">1000</span>):
+    <span class="str">"""二维正态分布的 Gibbs 采样器
+    bivariate_normal: (mu, Sigma) 参数
+    """</span>
+    mu, Sigma = bivariate_normal
+    total = n_samples + burn_in
+    samples = <span class="cls">np</span>.<span class="fn">zeros</span>((total, <span class="num">2</span>))
+    x = <span class="cls">np</span>.<span class="fn">array</span>(x0, dtype=<span class="fn">float</span>)
+    sigma1, sigma2 = <span class="cls">np</span>.<span class="fn">sqrt</span>(Sigma[<span class="num">0</span>,<span class="num">0</span>]), <span class="cls">np</span>.<span class="fn">sqrt</span>(Sigma[<span class="num">1</span>,<span class="num">1</span>])
+    rho = Sigma[<span class="num">0</span>,<span class="num">1</span>] / (sigma1 * sigma2)
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(total):
+        <span class="com"># 采样 x1 | x2</span>
+        cond_mean1 = mu[<span class="num">0</span>] + rho * sigma1 / sigma2 * (x[<span class="num">1</span>] - mu[<span class="num">1</span>])
+        cond_std1 = sigma1 * <span class="cls">np</span>.<span class="fn">sqrt</span>(<span class="num">1</span> - rho**<span class="num">2</span>)
+        x[<span class="num">0</span>] = <span class="cls">np</span>.<span class="fn">random</span>.<span class="fn">normal</span>(cond_mean1, cond_std1)
+        <span class="com"># 采样 x2 | x1</span>
+        cond_mean2 = mu[<span class="num">1</span>] + rho * sigma2 / sigma1 * (x[<span class="num">0</span>] - mu[<span class="num">0</span>])
+        cond_std2 = sigma2 * <span class="cls">np</span>.<span class="fn">sqrt</span>(<span class="num">1</span> - rho**<span class="num">2</span>)
+        x[<span class="num">1</span>] = <span class="cls">np</span>.<span class="fn">random</span>.<span class="fn">normal</span>(cond_mean2, cond_std2)
+        samples[i] = x
+
+    <span class="kw">return</span> samples[burn_in:]
+
+<span class="com"># 示例</span>
+mu = [<span class="num">0</span>, <span class="num">0</span>]
+Sigma = [[<span class="num">1</span>, <span class="num">0.8</span>], [<span class="num">0.8</span>, <span class="num">1</span>]]
+samples = <span class="fn">gibbs_sampler</span>((mu, Sigma), x0=[<span class="num">0</span>, <span class="num">0</span>])
+<span class="fn">print</span>(f<span class="str">"样本均值: {samples.mean(axis=0)}"</span>)
+<span class="fn">print</span>(f<span class="str">"样本协方差:\n{np.cov(samples.T)}"</span>)
+</pre>
+</div>
+
+<h3>12.6 PageRank 计算</h3>
+<div class="code-block">
+<div class="code-header">pagerank.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">def</span> <span class="fn">pagerank</span>(adj_matrix, d=<span class="num">0.85</span>, max_iter=<span class="num">100</span>, tol=<span class="num">1e-6</span>):
+    <span class="str">"""PageRank 算法
+    adj_matrix: 邻接矩阵 A[i][j]=1 表示 i→j 有链接
+    d: 阻尼因子（继续浏览概率）
+    """</span>
+    N = <span class="fn">len</span>(adj_matrix)
+    <span class="com"># 归一化为转移矩阵</span>
+    row_sums = adj_matrix.<span class="fn">sum</span>(axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>)
+    row_sums[row_sums == <span class="num">0</span>] = <span class="num">1</span>  <span class="com"># 处理悬挂节点</span>
+    P = adj_matrix / row_sums
+    <span class="com"># 加入阻尼因子</span>
+    P_pr = d * P + (<span class="num">1</span> - d) / N * <span class="cls">np</span>.<span class="fn">ones</span>((N, N))
+
+    <span class="com"># 幂迭代求平稳分布</span>
+    pi = <span class="cls">np</span>.<span class="fn">ones</span>(N) / N
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(max_iter):
+        pi_new = pi @ P_pr
+        <span class="kw">if</span> <span class="cls">np</span>.linalg.<span class="fn">norm</span>(pi_new - pi, <span class="num">1</span>) < tol:
+            <span class="fn">print</span>(f<span class="str">"收敛于第 {i+1} 次迭代"</span>)
+            <span class="kw">break</span>
+        pi = pi_new
+    <span class="kw">return</span> pi / pi.<span class="fn">sum</span>()
+
+<span class="com"># 4 个网页的链接结构</span>
+A = <span class="cls">np</span>.<span class="fn">array</span>([
+    [<span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>],  <span class="com"># 页面 0 → 1, 2</span>
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>],  <span class="com"># 页面 1 → 2, 3</span>
+    [<span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>],  <span class="com"># 页面 2 → 0</span>
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>],  <span class="com"># 页面 3 → 2</span>
+])
+pr = <span class="fn">pagerank</span>(A)
+<span class="fn">print</span>(f<span class="str">"PageRank: {pr}"</span>)
+<span class="fn">print</span>(f<span class="str">"排名: {np.argsort(-pr)}"</span>)
+</pre>
+</div>
+
+</section>
+
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">1906</div>
+<div class="event">Markov 提出马尔科夫链</div>
+<div class="desc">Andrey Markov 研究普希金诗歌中的元音分布，提出马尔科夫性质</div>
+</div>
+<div class="timeline-item">
+<div class="year">1931</div>
+<div class="event">Kolmogorov 建立严格理论</div>
+<div class="desc">Kolmogorov 发表概率论基础，为马尔科夫链建立公理化体系</div>
+</div>
+<div class="timeline-item">
+<div class="year">1936</div>
+<div class="event">Chapman-Kolmogorov 方程</div>
+<div class="desc">确立转移概率的递推关系</div>
+</div>
+<div class="timeline-item">
+<div class="year">1953</div>
+<div class="event">Metropolis 算法诞生</div>
+<div class="desc">Metropolis 等在曼哈顿计划中提出首个 MCMC 算法</div>
+</div>
+<div class="timeline-item">
+<div class="year">1960s</div>
+<div class="event">Baum 和 Petrie 发展 HMM 理论</div>
+<div class="desc">前向-后向算法、Viterbi 解码、Baum-Welch 学习相继提出</div>
+</div>
+<div class="timeline-item">
+<div class="year">1970</div>
+<div class="event">Hastings 推广 Metropolis 算法</div>
+<div class="desc">提出 Metropolis-Hastings 算法，允许非对称提议分布</div>
+</div>
+<div class="timeline-item">
+<div class="year">1984</div>
+<div class="event">Geman 提出 Gibbs 采样</div>
+<div class="desc">Gibbs 采样在图像恢复任务中提出，后成为贝叶斯推断核心工具</div>
+</div>
+<div class="timeline-item">
+<div class="year">1998</div>
+<div class="event">Brin 和 Page 发明 PageRank</div>
+<div class="desc">Google 搜索引擎的核心算法基于马尔科夫链平稳分布</div>
+</div>
+<div class="timeline-item">
+<div class="year">2001</div>
+<div class="event">Lafferty 等提出 CRF</div>
+<div class="desc">条件随机场作为 HMM 的判别式对应物被提出</div>
+</div>
+<div class="timeline-item">
+<div class="year">2010s+</div>
+<div class="event">MCMC 在深度学习中应用</div>
+<div class="desc">SGMCMC、变分推断等方法将马尔科夫链思想与深度学习结合</div>
+</div>
+</div>
+
+<div class="callout success">
+<div class="callout-title">总结</div>
+<p>马尔科夫链是概率论中最具工程价值的概念之一。它以"无记忆性"这一简单假设为起点，发展出了涵盖状态分类、平稳分布、遍历定理的完整理论体系。从 PageRank 的网页排名到 HMM 的语音识别，从 MCMC 的贝叶斯计算到排队论的系统设计，马尔科夫链的影响无处不在。它是连接概率论、信息论和算法设计的桥梁，也是理解概率图模型和条件随机场的基础。</p>
+</div>
+
+</section>
+
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Markov, A. A. (1906). Extension of the limit theorems of probability theory. <em>Izvestiya Fiz-Mat Obshchestva Kazan Univ</em>.</li>
+<li>Kolmogorov, A. N. (1931). Uber die analytischen Methoden in der Wahrscheinlichkeitsrechnung. <em>Math. Ann., 104, 415-458</em>.</li>
+<li>Doob, J. L. (1953). Stochastic Processes. <em>Wiley</em>. (经典教材)</li>
+<li>Baum, L. E., &amp; Petrie, T. (1966). Statistical inference for probabilistic functions of finite state Markov chains. <em>Ann. Math. Stat., 37, 1554-1563</em>. (HMM 基础)</li>
+<li>Viterbi, A. J. (1967). Error bounds for convolutional codes. <em>IEEE Trans. IT, 13, 260-269</em>. (Viterbi 算法)</li>
+<li>Baum, L. E. (1972). An inequality and associated maximization technique. <em>Proc. Symposium on Math. Stat. and Probability</em>. (Baum-Welch)</li>
+<li>Metropolis, N., et al. (1953). Equation of state calculations by fast computing machines. <em>J. Chem. Phys., 21, 1087-1092</em>. (MCMC 起源)</li>
+<li>Hastings, W. K. (1970). Monte Carlo sampling methods using Markov chains. <em>Biometrika, 57, 97-109</em>. (MH 算法)</li>
+<li>Geman, S., &amp; Geman, D. (1984). Stochastic relaxation, Gibbs distributions. <em>IEEE TPAMI, 6, 721-741</em>. (Gibbs 采样)</li>
+<li>Brin, S., &amp; Page, L. (1998). The anatomy of a large-scale hypertextual web search engine. <em>Computer Networks, 30, 107-117</em>. (PageRank)</li>
+<li>Rabiner, L. R. (1989). A tutorial on hidden Markov models. <em>Proc. IEEE, 77(2), 257-286</em>. (HMM 教程经典)</li>
+<li>Norris, J. R. (1997). Markov Chains. <em>Cambridge University Press</em>. (理论教材)</li>
+<li>Levin, D. A., Peres, Y., &amp; Wilmer, E. L. (2009). Markov Chains and Mixing Times. <em>AMS</em>. (混合时间专著)</li>
+<li>Andrieu, C., et al. (2003). An introduction to MCMC for machine learning. <em>Machine Learning, 50, 5-43</em>.</li>
+<li>Bishop, C. M. (2006). Pattern Recognition and Machine Learning, Chapter 13. <em>Springer</em>. (HMM/CRF 章节)</li>
+</ol>
+</section>
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+<script>
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

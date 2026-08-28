@@ -1,0 +1,2080 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RNN 模型详解 — 循环神经网络完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+/* ========== 全局重置与基础 ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* 色板 — 浅色主题，柔和优雅 */
+  --c-bg: #f7f9fc;
+  --c-bg-soft: #ffffff;
+  --c-bg-card: #ffffff;
+  --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0;
+  --c-border-strong: #cbd5e1;
+  --c-text: #334155;
+  --c-text-soft: #64748b;
+  --c-text-faint: #94a3b8;
+  --c-primary: #2563eb;
+  --c-primary-dark: #1d4ed8;
+  --c-primary-light: #dbeafe;
+  --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed;
+  --c-accent-light: #ede9fe;
+  --c-accent2: #059669;
+  --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c;
+  --c-warn-light: #ffedd5;
+  --c-danger: #dc2626;
+  --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b;
+  --c-heading: #0f172a;
+
+  /* 尺寸 */
+  --sidebar-w: 260px;
+  --content-max: none;
+  --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* 字体 */
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+
+  /* 阴影 — 层次递进，柔和不突兀 */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.75;
+  font-size: clamp(15px, 0.6vw + 0.6rem, 17px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== 阅读进度条 ========== */
+#progress-bar {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--c-primary), var(--c-accent));
+  z-index: 999; transition: width 0.1s ease;
+  box-shadow: 0 0 8px rgba(37,99,235,0.4);
+}
+
+/* ========== 侧边栏 ========== */
+#sidebar {
+  position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh;
+  background: var(--c-bg-soft); border-right: 1px solid var(--c-border);
+  overflow-y: auto; z-index: 100; padding: 24px 0;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: var(--shadow-sm);
+}
+#sidebar h2 {
+  font-size: 18px; color: var(--c-primary); padding: 0 24px 16px;
+  border-bottom: 1px solid var(--c-border); margin-bottom: 12px;
+  font-weight: 700; letter-spacing: 0.5px;
+}
+#sidebar nav a {
+  display: block; padding: 9px 24px; color: var(--c-text-soft);
+  text-decoration: none; font-size: 14px; transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+#sidebar nav a:hover {
+  color: var(--c-primary); background: var(--c-primary-ghost);
+}
+#sidebar nav a.active {
+  color: var(--c-primary); border-left-color: var(--c-primary);
+  background: var(--c-primary-light);
+  font-weight: 600;
+}
+
+/* ========== 主内容 ========== */
+#main {
+  margin-left: var(--sidebar-w);
+  margin-right: 0;
+  padding: clamp(28px, 4vw, 56px) var(--content-padding);
+  padding-top: clamp(32px, 5vw, 56px);
+}
+
+/* ========== 封面 Hero ========== */
+.hero {
+  text-align: center;
+  padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px);
+  background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%);
+  border-radius: var(--radius-xl);
+  margin-bottom: clamp(32px, 5vw, 56px);
+  position: relative; overflow: hidden;
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-md);
+}
+.hero::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%),
+              radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%);
+}
+.hero h1 {
+  font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading);
+  position: relative; letter-spacing: 1px; margin-bottom: 16px;
+  line-height: 1.2;
+}
+.hero .subtitle {
+  font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary);
+  position: relative; margin-bottom: 12px; font-weight: 500;
+}
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge {
+  display: inline-block; padding: 6px 16px; border-radius: 20px;
+  font-size: 13px; border: 1px solid var(--c-border-strong);
+  background: rgba(255,255,255,0.85); color: var(--c-text-soft);
+  backdrop-filter: blur(4px);
+}
+
+/* ========== 章节通用 ========== */
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 {
+  font-size: clamp(22px, 3vw, 28px); color: var(--c-heading);
+  margin-bottom: 20px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--c-primary);
+  display: flex; align-items: center; gap: 12px;
+  font-weight: 700; letter-spacing: 0.3px;
+}
+h2 .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--c-primary), var(--c-accent));
+  color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+h3 {
+  font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark);
+  margin: 28px 0 14px; font-weight: 600;
+}
+h4 {
+  font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent);
+  margin: 20px 0 10px; font-weight: 600;
+}
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+
+/* ========== 代码块 ========== */
+.code-block {
+  background: var(--c-code-bg); border: 1px solid #334155;
+  border-radius: var(--radius-md); padding: 0; margin: 20px 0;
+  overflow: hidden; box-shadow: var(--shadow-md);
+}
+.code-header {
+  background: #0f172a; padding: 8px 16px;
+  font-family: var(--font-mono); font-size: 13px; color: #60a5fa;
+  border-bottom: 1px solid #334155;
+  display: flex; align-items: center; gap: 8px;
+}
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre {
+  padding: 20px; overflow-x: auto; font-family: var(--font-mono);
+  font-size: 14px; line-height: 1.7; color: #e2e8f0;
+}
+pre .kw { color: #c792ea; }
+pre .str { color: #c3e88d; }
+pre .com { color: #64748b; font-style: italic; }
+pre .num { color: #f78c6c; }
+pre .fn { color: #82aaff; }
+pre .cls { color: #ffcb6b; }
+
+/* ========== 行内代码 ========== */
+code {
+  font-family: var(--font-mono); font-size: 0.9em;
+  background: var(--c-primary-light); color: var(--c-primary-dark);
+  padding: 2px 6px; border-radius: 4px;
+}
+
+/* ========== 公式块 — 带编号 ========== */
+.formula {
+  background: var(--c-bg-card); border: 1px solid var(--c-border);
+  border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm);
+  padding: 16px 24px; margin: 20px 0; font-size: 17px;
+  color: var(--c-text); box-shadow: var(--shadow-xs);
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+}
+
+.formula[data-eq]::after {
+  content: attr(data-eq);
+  flex-shrink: 0; font-size: 14px; color: var(--c-text-soft);
+  font-family: var(--font-mono); font-weight: 600; white-space: nowrap;
+  margin-left: 16px;
+}
+/* 多行公式块 */
+.formula.multi {
+  text-align: left; padding-left: 32px;
+}
+.formula.multi .katex-display { margin: 8px 0; }
+
+/* ========== SVG 容器 ========== */
+.svg-box {
+  background: var(--c-bg-card); border: 1px solid var(--c-border);
+  border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px);
+  margin: 28px 0; text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+
+/* ========== SVG 动画 ========== */
+@keyframes flow-dash { to { stroke-dashoffset: -20; } }
+@keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+@keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+
+/* ========== 图片卡片 — 统一样式 ========== */
+.fig-card {
+  margin: 24px 0; border-radius: var(--radius-md);
+  overflow: hidden; border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  background: var(--c-bg-card);
+}
+.fig-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.fig-card img {
+  width: 100%; height: auto; display: block;
+  border-radius: 0;
+}
+.fig-caption {
+  padding: 12px 20px; font-size: 14px; color: var(--c-text-soft);
+  text-align: center; border-top: 1px solid var(--c-border);
+  background: var(--c-bg-soft);
+}
+
+/* ========== 双图并排布局 ========== */
+.fig-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0;
+}
+.fig-grid .fig-card { margin: 0; }
+
+/* ========== 表格 ========== */
+.table-wrap {
+  overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md);
+  border: 1px solid var(--c-border); box-shadow: var(--shadow-xs);
+}
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th {
+  background: var(--c-primary-light); color: var(--c-primary-dark);
+  padding: 12px 16px; text-align: left; font-weight: 600;
+}
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+
+/* ========== 提示框 ========== */
+.callout {
+  background: var(--c-accent-light); border-left: 4px solid var(--c-accent);
+  border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0;
+  box-shadow: var(--shadow-xs);
+}
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); }
+.callout.danger .callout-title { color: var(--c-danger); }
+.callout.success .callout-title { color: var(--c-accent2); }
+
+/* ========== 标签 ========== */
+.tag {
+  display: inline-block; padding: 3px 10px; border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+}
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.tag-green { background: var(--c-accent2-light); color: var(--c-accent2); }
+.tag-orange { background: var(--c-warn-light); color: var(--c-warn); }
+.tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+
+/* ========== 时间线 ========== */
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before {
+  content: ''; position: absolute; left: -28px; top: 4px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--c-primary); border: 3px solid var(--c-bg);
+  box-shadow: 0 0 0 2px var(--c-primary);
+}
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+
+/* ========== KaTeX 调整 ========== */
+.formula .katex { font-size: 1.1em; }
+.formula .katex-display { margin: 0; }
+
+/* ========== 返回顶部按钮 ========== */
+#back-to-top {
+  position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px;
+  border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-md); cursor: pointer; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: var(--c-primary);
+  opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+  pointer-events: none;
+}
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+
+/* ========== 移动端汉堡按钮 ========== */
+#menu-toggle {
+  display: none; position: fixed; top: 16px; left: 16px; z-index: 200;
+  background: var(--c-bg-soft); border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer;
+  color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm);
+}
+
+/* ========== 响应式断点 ========== */
+/* 超大屏：侧边栏稍宽，内容铺满 */
+@media (min-width: 1600px) {
+  :root { --sidebar-w: 280px; }
+}
+
+/* 大屏 */
+@media (min-width: 1400px) and (max-width: 1599px) {
+  :root { --sidebar-w: 260px; }
+}
+
+/* 中屏：侧边栏略窄 */
+@media (max-width: 1399px) and (min-width: 901px) {
+  :root { --sidebar-w: 220px; }
+}
+
+/* 小屏：隐藏侧边栏，全宽内容 */
+@media (max-width: 900px) {
+  #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; padding: 60px 20px 24px; }
+  #menu-toggle { display: block; }
+  .hero { padding: 48px 24px; }
+  .fig-grid { grid-template-columns: 1fr; }
+}
+
+/* 手机：更紧凑 */
+@media (max-width: 600px) {
+  body { font-size: 15px; line-height: 1.7; }
+  #main { padding: 56px 16px 20px; }
+  .hero { padding: 32px 16px; border-radius: var(--radius-lg); }
+  .hero .badge { font-size: 12px; padding: 4px 12px; }
+  .formula { padding: 12px 16px; font-size: 15px; }
+  .formula .eq-num { font-size: 12px; }
+  .svg-box { padding: 12px; }
+  .code-block pre { font-size: 12px; padding: 14px; }
+  table { font-size: 13px; }
+  th, td { padding: 8px 10px; }
+  #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; }
+}
+
+/* 超小屏 */
+@media (max-width: 400px) {
+  body { font-size: 14px; }
+  #main { padding: 52px 12px 16px; }
+  .hero h1 { font-size: 28px; }
+  .formula { font-size: 13px; padding: 10px 12px; }
+}
+
+/* 打印优化 */
+@media print {
+  #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; }
+  #main { margin-left: 0; padding: 0; }
+  .svg-box, .fig-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+  section { page-break-inside: avoid; }
+}
+
+</style>
+
+</head>
+<body>
+<div id="progress-bar"></div>
+
+
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ 目录</div>
+
+<!-- ========== 侧边栏 ========== -->
+<aside id="sidebar">
+  <h2>RNN 模型详解</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、序列数据与建模动机</a>
+    <a href="#ch2">二、RNN 的数学基础</a>
+    <a href="#ch3">三、RNN 的训练算法</a>
+    <a href="#ch4">四、LSTM：长短期记忆网络</a>
+    <a href="#ch5">五、GRU：门控循环单元</a>
+    <a href="#ch6">六、双向 RNN</a>
+    <a href="#ch7">七、深层（堆叠）RNN</a>
+    <a href="#ch8">八、Seq2Seq 架构</a>
+    <a href="#ch9">九、其他重要变体</a>
+    <a href="#ch10">十、应用场景与案例</a>
+    <a href="#ch11">十一、PyTorch 代码实现</a>
+    <a href="#ch12">十二、局限与 Transformer 替代</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+
+<!-- ========== 主内容 ========== -->
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>RNN 模型详解</h1>
+  <div class="subtitle">Recurrent Neural Network: 从基础到变体的完整技术族谱</div>
+  <div class="tagline">序列建模的奠基者 · 1986 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">15+ SVG 结构图</span>
+    <span class="badge">7 段 PyTorch 代码</span>
+    <span class="badge">20 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">1</span>序列数据与建模动机</h2>
+
+<h3>1.1 什么是序列数据</h3>
+<p>在现实世界中，大量数据具有<strong>时序结构</strong>——数据点之间存在先后顺序，且当前数据与历史数据相关。这类数据统称为序列数据。常见的序列数据类型包括：</p>
+
+<h4>文本序列</h4>
+<p>自然语言是典型的离散序列。句子"深度学习改变了人工智能"由 8 个汉字按特定顺序排列组成。改变顺序（如"人工智能改变了深度学习"）虽然语法正确，但语义已完全不同。文本序列的特点是：</p>
+<ul>
+  <li>长度可变：句子可以是几个词，也可以是几百个词</li>
+  <li>存在长距离依赖：句首的"主语"可能影响句尾的"谓语"</li>
+  <li>上下文敏感：同一个词在不同上下文中含义不同</li>
+</ul>
+
+<h4>时间序列</h4>
+<p>股票价格、天气数据、传感器读数等连续型时序数据。例如，某股票连续 5 天的收盘价为 <code>[100.2, 101.5, 99.8, 102.3, 103.1]</code>，每一天的价格都与前几天存在相关性。</p>
+
+<h4>音频序列</h4>
+<p>语音信号以 16kHz 采样，一段 10 秒的语音就是 160000 个时间步的序列。语音识别需要将这段长序列映射为文字序列。</p>
+
+<h4>视频序列</h4>
+<p>视频由帧序列组成，30fps 视频每秒 30 帧，帧间存在时序关联。</p>
+
+<h4>生物序列</h4>
+<p>DNA 序列由 A、T、C、G 四种碱基按特定顺序排列，蛋白质序列由 20 种氨基酸组成。</p>
+
+<h3>1.2 前馈网络的局限</h3>
+<p>传统前馈神经网络（MLP、CNN）在处理序列数据时面临根本性困难：</p>
+<div class="table-wrap"><table>
+<tr><th>局限</th><th>说明</th><th>示例</th></tr>
+<tr><td>输入长度固定</td><td>MLP 输入层维度固定，无法直接处理变长序列</td><td>最大长度 100 → 短序列需补齐、长序列需截断</td></tr>
+<tr><td>缺乏时序记忆</td><td>MLP 对每个输入独立处理，无法利用历史信息</td><td>温度预测：7 天温度拼接为向量，丢失时间顺序</td></tr>
+<tr><td>参数不共享</td><td>不同时间步由不同权重处理，无法识别跨位置模式</td><td>"连续上涨回调"无论出现在第几天含义相同</td></tr>
+</table></div>
+
+<h3>1.3 RNN 的核心思想</h3>
+<p>RNN 的设计灵感来源于人类阅读文本的方式：逐词阅读，每读一个词，大脑就在之前理解的基础上更新对当前句子的认识。RNN 模拟了这一过程：</p>
+<div class="callout">
+  <div class="callout-title">核心机制</div>
+  在每个时间步 $t$，RNN 接收当前输入 $x_t$ 和上一时刻的隐藏状态 $h_{t-1}$，计算得到新的隐藏状态 $h_t$。隐藏状态 $h_t$ 编码了从序列开始到当前时刻的所有信息，同时可以生成输出 $y_t$。
+</div>
+
+<!-- SVG: RNN 基本结构 -->
+<div class="svg-box">
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow1g" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/>
+    </marker>
+  </defs>
+  <!-- 左侧：折叠的RNN -->
+  <text x="120" y="30" text-anchor="middle" fill="#f8fafc" font-size="16" font-weight="bold">折叠视图</text>
+  <!-- 循环箭头 -->
+  <path d="M120 80 Q180 50 180 120 Q180 160 120 160" stroke="#7c3aed" stroke-width="2.5" class="pulse-node" fill="none" marker-end="url(#arrow1g)"/>
+  <!-- RNN Cell -->
+  <rect x="70" y="80" width="100" height="80" rx="12" fill="#f8fafc" stroke="#2563eb" stroke-width="2.5" class="pulse-node"/>
+  <text x="120" y="115" text-anchor="middle" fill="#2563eb" font-size="16" font-weight="bold">RNN</text>
+  <text x="120" y="138" text-anchor="middle" fill="#475569" font-size="12">cell</text>
+  <!-- 输入输出 -->
+  <line x1="30" y1="120" x2="68" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="22" y="124" text-anchor="end" fill="#475569" font-size="14">x_t</text>
+  <line x1="170" y1="120" x2="210" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="218" y="124" fill="#475569" font-size="14">y_t</text>
+  <line x1="120" y1="190" x2="120" y2="165" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow1g)"/>
+  <text x="130" y="205" fill="#7c3aed" font-size="13">h_{t-1}</text>
+
+  <!-- 分隔线 -->
+  <line x1="280" y1="40" x2="280" y2="320" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="6,4" class="flow-line"/>
+
+  <!-- 右侧：展开视图 -->
+  <text x="540" y="30" text-anchor="middle" fill="#f8fafc" font-size="16" font-weight="bold">展开视图（沿时间展开）</text>
+  
+  <!-- 三个时间步 -->
+  <!-- t-1 -->
+  <rect x="310" y="80" width="90" height="80" rx="12" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="355" y="115" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">RNN</text>
+  <text x="355" y="138" text-anchor="middle" fill="#475569" font-size="12">t-1</text>
+  <line x1="290" y1="120" x2="308" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="282" y="124" text-anchor="end" fill="#475569" font-size="12">x_{t-1}</text>
+  <line x1="355" y1="80" x2="355" y2="50" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="355" y="42" text-anchor="middle" fill="#475569" font-size="12">y_{t-1}</text>
+
+  <!-- t -->
+  <rect x="450" y="80" width="90" height="80" rx="12" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="495" y="115" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">RNN</text>
+  <text x="495" y="138" text-anchor="middle" fill="#475569" font-size="12">t</text>
+  <line x1="430" y1="120" x2="448" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="422" y="124" text-anchor="end" fill="#475569" font-size="12">x_t</text>
+  <line x1="495" y1="80" x2="495" y2="50" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="495" y="42" text-anchor="middle" fill="#475569" font-size="12">y_t</text>
+
+  <!-- t+1 -->
+  <rect x="590" y="80" width="90" height="80" rx="12" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="635" y="115" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">RNN</text>
+  <text x="635" y="138" text-anchor="middle" fill="#475569" font-size="12">t+1</text>
+  <line x1="570" y1="120" x2="588" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="562" y="124" text-anchor="end" fill="#475569" font-size="12">x_{t+1}</text>
+  <line x1="635" y1="80" x2="635" y2="50" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow1)"/>
+  <text x="635" y="42" text-anchor="middle" fill="#475569" font-size="12">y_{t+1}</text>
+
+  <!-- 隐藏状态传递 -->
+  <line x1="400" y1="120" x2="448" y2="120" stroke="#7c3aed" stroke-width="2.5" class="pulse-node" marker-end="url(#arrow1g)"/>
+  <text x="424" y="108" text-anchor="middle" fill="#7c3aed" font-size="11">h</text>
+  <line x1="540" y1="120" x2="588" y2="120" stroke="#7c3aed" stroke-width="2.5" class="pulse-node" marker-end="url(#arrow1g)"/>
+  <text x="564" y="108" text-anchor="middle" fill="#7c3aed" font-size="11">h</text>
+
+  <!-- 底部说明 -->
+  <text x="355" y="200" text-anchor="middle" fill="#475569" font-size="13">同一组权重</text>
+  <text x="495" y="200" text-anchor="middle" fill="#475569" font-size="13">同一组权重</text>
+  <text x="635" y="200" text-anchor="middle" fill="#475569" font-size="13">同一组权重</text>
+  
+  <!-- 权重标注 -->
+  <text x="424" y="245" text-anchor="middle" fill="#7c3aed" font-size="13" font-family="monospace">W_hh</text>
+  <text x="564" y="245" text-anchor="middle" fill="#7c3aed" font-size="13" font-family="monospace">W_hh</text>
+  <text x="540" y="280" text-anchor="middle" fill="#475569" font-size="14">参数在所有时间步共享</text>
+  <text x="540" y="305" text-anchor="middle" fill="#475569" font-size="13">紫色箭头 = 隐藏状态传递（记忆）</text>
+  <text x="540" y="330" text-anchor="middle" fill="#475569" font-size="13">蓝色箭头 = 数据流（输入→输出）</text>
+</svg>
+<div class="svg-caption">图 1：RNN 基本结构 — 左侧为折叠视图，右侧为沿时间展开的 3 个时间步</div>
+</div>
+
+<h3>1.4 RNN 的任务模式</h3>
+<p>RNN 的灵活性使其能够支持多种输入-输出模式：</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 780 360" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+  </defs>
+  <!-- 1: One-to-One -->
+  <text x="100" y="30" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">一对一</text>
+  <rect x="75" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="90" y="67" text-anchor="middle" fill="#475569" font-size="10">x</text>
+  <rect x="75" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="90" y="112" text-anchor="middle" fill="#475569" font-size="10">y</text>
+  <line x1="90" y1="75" x2="90" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="100" y="145" text-anchor="middle" fill="#475569" font-size="11">逐帧分类</text>
+
+  <!-- 2: One-to-Many -->
+  <text x="260" y="30" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">一对多</text>
+  <rect x="230" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="245" y="67" text-anchor="middle" fill="#475569" font-size="10">x</text>
+  <rect x="210" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <rect x="250" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <rect x="290" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="225" y="112" text-anchor="middle" fill="#475569" font-size="9">y₁</text>
+  <text x="265" y="112" text-anchor="middle" fill="#475569" font-size="9">y₂</text>
+  <text x="305" y="112" text-anchor="middle" fill="#475569" font-size="9">y₃</text>
+  <line x1="245" y1="75" x2="225" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="245" y1="75" x2="265" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="245" y1="75" x2="305" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="260" y="145" text-anchor="middle" fill="#475569" font-size="11">图像描述生成</text>
+
+  <!-- 3: Many-to-One -->
+  <text x="460" y="30" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">多对一</text>
+  <rect x="410" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="450" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="490" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="425" y="67" text-anchor="middle" fill="#475569" font-size="9">x₁</text>
+  <text x="465" y="67" text-anchor="middle" fill="#475569" font-size="9">x₂</text>
+  <text x="505" y="67" text-anchor="middle" fill="#475569" font-size="9">x₃</text>
+  <rect x="450" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="465" y="112" text-anchor="middle" fill="#475569" font-size="10">y</text>
+  <line x1="425" y1="75" x2="465" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="465" y1="75" x2="465" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="505" y1="75" x2="465" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="460" y="145" text-anchor="middle" fill="#475569" font-size="11">情感分析</text>
+
+  <!-- 4: Many-to-Many (Sync) -->
+  <text x="660" y="30" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">多对多（同步）</text>
+  <rect x="610" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="650" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="690" y="50" width="30" height="25" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="610" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <rect x="650" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <rect x="690" y="95" width="30" height="25" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="625" y="67" text-anchor="middle" fill="#475569" font-size="9">x₁</text>
+  <text x="665" y="67" text-anchor="middle" fill="#475569" font-size="9">x₂</text>
+  <text x="705" y="67" text-anchor="middle" fill="#475569" font-size="9">x₃</text>
+  <text x="625" y="112" text-anchor="middle" fill="#475569" font-size="9">y₁</text>
+  <text x="665" y="112" text-anchor="middle" fill="#475569" font-size="9">y₂</text>
+  <text x="705" y="112" text-anchor="middle" fill="#475569" font-size="9">y₃</text>
+  <line x1="625" y1="75" x2="625" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="665" y1="75" x2="665" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <line x1="705" y1="75" x2="705" y2="93" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="660" y="145" text-anchor="middle" fill="#475569" font-size="11">命名实体识别</text>
+
+  <!-- 5: Many-to-Many (Async) -->
+  <text x="100" y="215" text-anchor="middle" fill="#2563eb" font-size="14" font-weight="bold">多对多（异步/Seq2Seq）</text>
+  <rect x="55" y="235" width="25" height="22" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="85" y="235" width="25" height="22" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="115" y="235" width="25" height="22" rx="4" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="67" y="250" text-anchor="middle" fill="#475569" font-size="8">A</text>
+  <text x="97" y="250" text-anchor="middle" fill="#475569" font-size="8">B</text>
+  <text x="127" y="250" text-anchor="middle" fill="#475569" font-size="8">C</text>
+  <text x="100" y="270" text-anchor="middle" fill="#7c3aed" font-size="11">编码器</text>
+  <!-- 上下文向量 -->
+  <rect x="190" y="238" width="50" height="18" rx="9" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="215" y="251" text-anchor="middle" fill="#ea580c" font-size="10">context</text>
+  <line x1="140" y1="247" x2="188" y2="247" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <!-- 解码器 -->
+  <rect x="280" y="235" width="25" height="22" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <rect x="310" y="235" width="25" height="22" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <rect x="340" y="235" width="25" height="22" rx="4" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="292" y="250" text-anchor="middle" fill="#475569" font-size="8">W</text>
+  <text x="322" y="250" text-anchor="middle" fill="#475569" font-size="8">X</text>
+  <text x="352" y="250" text-anchor="middle" fill="#475569" font-size="8">Z</text>
+  <line x1="240" y1="247" x2="278" y2="247" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="320" y="270" text-anchor="middle" fill="#059669" font-size="11">解码器</text>
+  <text x="215" y="300" text-anchor="middle" fill="#475569" font-size="12">机器翻译：输入序列 → 上下文向量 → 输出序列</text>
+</svg>
+<div class="svg-caption">图 2：RNN 的五种任务模式 — 不同输入输出配置适配不同任务类型</div>
+</div>
+
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">2</span>RNN 的数学基础</h2>
+
+<h3>2.1 基本定义与符号</h3>
+<p>给定长度为 $T$ 的输入序列 $X = (x_1, x_2, \ldots, x_T)$，其中每个 $x_t \in \mathbb{R}^d$。RNN 维护隐藏状态序列 $H = (h_1, h_2, \ldots, h_T)$，其中 $h_t \in \mathbb{R}^h$。</p>
+
+<div class="table-wrap"><table>
+<tr><th>符号</th><th>维度</th><th>含义</th></tr>
+<tr><td>$W_{hx}$</td><td>$h \times d$</td><td>输入到隐藏层的权重矩阵</td></tr>
+<tr><td>$W_{hh}$</td><td>$h \times h$</td><td>隐藏层到隐藏层的循环权重</td></tr>
+<tr><td>$W_{hy}$</td><td>$o \times h$</td><td>隐藏层到输出层的权重矩阵</td></tr>
+<tr><td>$b_h$</td><td>$h$</td><td>隐藏层偏置</td></tr>
+<tr><td>$b_y$</td><td>$o$</td><td>输出层偏置</td></tr>
+<tr><td>$h_0$</td><td>$h$</td><td>初始隐藏状态（通常为零向量）</td></tr>
+</table></div>
+
+<h3>2.2 前向传播公式</h3>
+<div class="formula" data-eq="(1)">$$h_t = \tanh(W_{hx} x_t + W_{hh} h_{t-1} + b_h)$$</div>
+<div class="formula" data-eq="(2)">$$y_t = W_{hy} h_t + b_y \quad | \quad \hat{y}_t = \text{softmax}(y_t)$$</div>
+
+<!-- SVG: 单个RNN单元内部结构 -->
+<div class="svg-box">
+<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+  </defs>
+  <!-- 输入 -->
+  <rect x="30" y="140" width="80" height="40" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="70" y="165" text-anchor="middle" fill="#2563eb" font-size="15">x_t</text>
+  <text x="70" y="195" text-anchor="middle" fill="#475569" font-size="11">输入向量</text>
+
+  <!-- 前一隐藏状态 -->
+  <rect x="30" y="30" width="80" height="40" rx="8" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="70" y="55" text-anchor="middle" fill="#7c3aed" font-size="14">h_{t-1}</text>
+  <text x="70" y="22" text-anchor="middle" fill="#475569" font-size="11">上一时刻状态</text>
+
+  <!-- W_hx 矩阵 -->
+  <rect x="160" y="140" width="70" height="40" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="195" y="165" text-anchor="middle" fill="#2563eb" font-size="13" font-family="monospace">W_hx</text>
+
+  <!-- W_hh 矩阵 -->
+  <rect x="160" y="50" width="70" height="40" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="195" y="75" text-anchor="middle" fill="#7c3aed" font-size="13" font-family="monospace">W_hh</text>
+
+  <!-- 矩阵乘法符号 -->
+  <text x="145" y="168" fill="#475569" font-size="18">×</text>
+  <text x="145" y="78" fill="#475569" font-size="18">×</text>
+
+  <!-- 连接线 -->
+  <line x1="110" y1="160" x2="158" y2="160" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <line x1="110" y1="50" x2="158" y2="70" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 加法节点 -->
+  <circle cx="290" cy="120" r="18" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="290" y="126" text-anchor="middle" fill="#ea580c" font-size="20">+</text>
+  <line x1="230" y1="160" x2="274" y2="128" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <line x1="230" y1="70" x2="274" y2="108" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- b_h -->
+  <rect x="250" y="175" width="50" height="30" rx="6" fill="#f8fafc" stroke="#ea580c" stroke-width="1"/>
+  <text x="275" y="194" text-anchor="middle" fill="#ea580c" font-size="12" font-family="monospace">b_h</text>
+  <line x1="275" y1="175" x2="290" y2="138" stroke="#ea580c" stroke-width="1" marker-end="url(#arr3)"/>
+
+  <!-- tanh -->
+  <rect x="340" y="100" width="70" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="375" y="126" text-anchor="middle" fill="#059669" font-size="16" font-weight="bold">tanh</text>
+  <line x1="308" y1="120" x2="338" y2="120" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 当前隐藏状态 -->
+  <rect x="460" y="100" width="80" height="40" rx="8" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="500" y="126" text-anchor="middle" fill="#7c3aed" font-size="15" font-weight="bold">h_t</text>
+  <text x="500" y="92" text-anchor="middle" fill="#475569" font-size="11">当前状态</text>
+  <line x1="410" y1="120" x2="458" y2="120" stroke="#059669" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 输出路径 -->
+  <rect x="460" y="210" width="80" height="40" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="500" y="236" text-anchor="middle" fill="#2563eb" font-size="15">y_t</text>
+  <text x="500" y="270" text-anchor="middle" fill="#475569" font-size="11">输出</text>
+  <line x1="500" y1="140" x2="500" y2="208" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr3)"/>
+  
+  <!-- W_hy -->
+  <rect x="360" y="210" width="70" height="40" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="395" y="236" text-anchor="middle" fill="#2563eb" font-size="12" font-family="monospace">W_hy</text>
+  <line x1="445" y1="120" x2="395" y2="120" stroke="#7c3aed" stroke-width="0" opacity="0.3"/>
+  <line x1="395" y1="120" x2="395" y2="210" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="395" y1="210" x2="395" y2="250" stroke="#2563eb" stroke-width="0" />
+  <line x1="430" y1="230" x2="458" y2="230" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr3)"/>
+  <line x1="395" y1="120" x2="395" y2="210" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr3)" stroke-dasharray="0"/>
+  <line x1="395" y1="250" x2="430" y2="250" stroke="#2563eb" stroke-width="0"/>
+
+  <!-- 循环箭头 -->
+  <path d="M500 100 Q500 20 70 35" stroke="#7c3aed" stroke-width="2" fill="none" stroke-dasharray="6,4" class="flow-line" marker-end="url(#arr3)"/>
+  <text x="280" y="18" text-anchor="middle" fill="#7c3aed" font-size="12">循环连接（下一时间步）</text>
+</svg>
+<div class="svg-caption">图 3：单个 RNN 单元的内部计算流程 — 展示矩阵乘法、加法、tanh 激活和循环连接</div>
+</div>
+
+<h3>2.3 计算过程实例</h3>
+<p>让我们用一个具体的数值例子来演示 RNN 的前向传播过程。假设输入维度 $d=2$，隐藏维度 $h=2$：</p>
+
+<div class="table-wrap"><table>
+<tr><th>参数</th><th>值</th></tr>
+<tr><td>输入序列</td><td>$x_1 = [1, 0]$，$x_2 = [0, 1]$</td></tr>
+<tr><td>$W_{hx}$</td><td>$[[0.5, 0.1], [0.2, 0.3]]$</td></tr>
+<tr><td>$W_{hh}$</td><td>$[[0.4, 0.1], [0.3, 0.2]]$</td></tr>
+<tr><td>$W_{hy}$</td><td>$[[1.0, 0.0], [0.0, 1.0]]$</td></tr>
+<tr><td>$h_0$</td><td>$[0, 0]$</td></tr>
+</table></div>
+
+<h4>时间步 $t=1$</h4>
+<div class="formula multi" data-eq="(3)">
+$$a_1 = W_{hx} \cdot x_1 + W_{hh} \cdot h_0 = [0.5,\; 0.2]$$
+$$h_1 = \tanh(a_1) \approx [0.462,\; 0.197]$$
+$$y_1 = W_{hy} \cdot h_1 \approx [0.462,\; 0.197]$$
+</div>
+
+<h4>时间步 $t=2$</h4>
+<div class="formula multi" data-eq="(4)">
+$$a_2 = W_{hx} \cdot x_2 + W_{hh} \cdot h_1 = [0.1,\; 0.3] + [0.205,\; 0.178] = [0.305,\; 0.478]$$
+$$h_2 = \tanh(a_2) \approx [0.296,\; 0.444]$$
+$$y_2 = W_{hy} \cdot h_2 \approx [0.296,\; 0.444]$$
+</div>
+
+<div class="callout success">
+  <div class="callout-title">观察</div>
+  $y_2$ 不仅反映了 $x_2$ 的信息，还融合了 $x_1$ 通过 $h_1$ 传递的信息。这就是 RNN 的"记忆"效果——但由于经过了 $\tanh$ 非线性变换，$x_1$ 的信息已有一定程度的衰减。
+</div>
+
+<h3>2.4 不同的 RNN 定义形式</h3>
+<div class="table-wrap"><table>
+<tr><th>类型</th><th>公式</th><th>特点</th></tr>
+<tr><td>Elman 网络</td><td>$h_t = f(W_{hx} \cdot x_t + W_{hh} \cdot h_{t-1} + b)$</td><td>最常用，使用隐藏状态反馈</td></tr>
+<tr><td>Jordan 网络</td><td>$h_t = f(W_{hx} \cdot x_t + W_{hy} \cdot y_{t-1} + b)$</td><td>使用输出反馈，较少使用</td></tr>
+<tr><td>多层 RNN</td><td>$h_t^{(l)} = f(W^{(l)} \cdot h_t^{(l-1)} + W_{hh}^{(l)} \cdot h_{t-1}^{(l)} + b)$</td><td>低层输出作高层输入</td></tr>
+</table></div>
+
+</section>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">3</span>RNN 的训练算法</h2>
+
+<h3>3.1 损失函数</h3>
+<p>RNN 的总损失通常是各时间步损失之和：</p>
+<div class="formula" data-eq="(5)">$$L = \sum_t L_t \quad | \quad L_t = -\sum_i y_{t,i} \log \hat{y}_{t,i} \quad \text{（交叉熵）}$$</div>
+
+<h3>3.2 BPTT：沿时间反向传播</h3>
+<p>BPTT（Backpropagation Through Time）将展开的 RNN 视为一个深度为 $T$ 的前馈网络，然后应用反向传播。</p>
+
+<!-- SVG: BPTT 前向与反向传播 -->
+<div class="svg-box">
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrF" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="arrB" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#dc2626"/></marker>
+  </defs>
+  
+  <!-- 4个时间步 -->
+  <g id="bptt-cells">
+    <!-- t1 -->
+    <rect x="40" y="60" width="100" height="60" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+    <text x="90" y="85" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">h₁</text>
+    <text x="90" y="102" text-anchor="middle" fill="#475569" font-size="11">t=1</text>
+    <rect x="55" y="130" width="70" height="25" rx="6" fill="#f8fafc" stroke="#ea580c" stroke-width="1.5"/>
+    <text x="90" y="147" text-anchor="middle" fill="#ea580c" font-size="12">L₁</text>
+    <line x1="90" y1="120" x2="90" y2="128" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrF)"/>
+
+    <!-- t2 -->
+    <rect x="220" y="60" width="100" height="60" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+    <text x="270" y="85" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">h₂</text>
+    <text x="270" y="102" text-anchor="middle" fill="#475569" font-size="11">t=2</text>
+    <rect x="235" y="130" width="70" height="25" rx="6" fill="#f8fafc" stroke="#ea580c" stroke-width="1.5"/>
+    <text x="270" y="147" text-anchor="middle" fill="#ea580c" font-size="12">L₂</text>
+    <line x1="270" y1="120" x2="270" y2="128" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrF)"/>
+
+    <!-- t3 -->
+    <rect x="400" y="60" width="100" height="60" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+    <text x="450" y="85" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">h₃</text>
+    <text x="450" y="102" text-anchor="middle" fill="#475569" font-size="11">t=3</text>
+    <rect x="415" y="130" width="70" height="25" rx="6" fill="#f8fafc" stroke="#ea580c" stroke-width="1.5"/>
+    <text x="450" y="147" text-anchor="middle" fill="#ea580c" font-size="12">L₃</text>
+    <line x1="450" y1="120" x2="450" y2="128" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrF)"/>
+
+    <!-- t4 -->
+    <rect x="580" y="60" width="100" height="60" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+    <text x="630" y="85" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">h₄</text>
+    <text x="630" y="102" text-anchor="middle" fill="#475569" font-size="11">t=4</text>
+    <rect x="595" y="130" width="70" height="25" rx="6" fill="#f8fafc" stroke="#ea580c" stroke-width="1.5"/>
+    <text x="630" y="147" text-anchor="middle" fill="#ea580c" font-size="12">L₄</text>
+    <line x1="630" y1="120" x2="630" y2="128" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrF)"/>
+  </g>
+
+  <!-- 前向连接 -->
+  <line x1="140" y1="90" x2="218" y2="90" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF)" class="flow-line" stroke-dasharray="8,4"/>
+  <line x1="320" y1="90" x2="398" y2="90" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF)" class="flow-line" stroke-dasharray="8,4"/>
+  <line x1="500" y1="90" x2="578" y2="90" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF)"/>
+  <text x="180" y="82" text-anchor="middle" fill="#2563eb" font-size="11">前向</text>
+  <text x="360" y="82" text-anchor="middle" fill="#2563eb" font-size="11">前向</text>
+  <text x="540" y="82" text-anchor="middle" fill="#2563eb" font-size="11">前向</text>
+
+  <!-- 反向梯度 -->
+  <line x1="580" y1="200" x2="502" y2="200" stroke="#dc2626" stroke-width="2.5" class="pulse-node" marker-end="url(#arrB)"/>
+  <line x1="400" y1="200" x2="322" y2="200" stroke="#dc2626" stroke-width="2.5" class="pulse-node" marker-end="url(#arrB)"/>
+  <line x1="220" y1="200" x2="142" y2="200" stroke="#dc2626" stroke-width="2.5" class="pulse-node" marker-end="url(#arrB)"/>
+  <text x="540" y="192" text-anchor="middle" fill="#dc2626" font-size="11">∂L/∂h</text>
+  <text x="360" y="192" text-anchor="middle" fill="#dc2626" font-size="11">∂L/∂h</text>
+  <text x="180" y="192" text-anchor="middle" fill="#dc2626" font-size="11">∂L/∂h</text>
+
+  <!-- 损失到反向 -->
+  <line x1="630" y1="155" x2="630" y2="175" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrB)"/>
+  <line x1="630" y1="180" x2="580" y2="200" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+  <!-- 梯度连乘标注 -->
+  <text x="380" y="240" text-anchor="middle" fill="#dc2626" font-size="13" font-family="monospace">∂L/∂W_hh = Σ ∂L_t/∂h_t · (∏ diag(σ') · W_hh) · ∂h_k/∂W_hh</text>
+  <text x="380" y="265" text-anchor="middle" fill="#475569" font-size="13">蓝色 = 前向传播 &nbsp;|&nbsp; 红色 = 反向梯度传播 &nbsp;|&nbsp; 梯度需沿时间链式传播</text>
+</svg>
+<div class="svg-caption">图 4：BPTT 沿时间反向传播 — 前向传播（蓝色）计算隐藏状态和损失，反向传播（红色）将梯度从后向前传递</div>
+</div>
+
+<h3>3.3 梯度消失与梯度爆炸</h3>
+<p>梯度传播中的连乘项是梯度消失和爆炸的根源：</p>
+<div class="formula" data-eq="(6)">$$\frac{\partial h_t}{\partial h_k} = \prod_{i=k+1}^{t} \text{diag}(\sigma'(a_i)) \cdot W_{hh}$$</div>
+
+<!-- SVG: 梯度消失与爆炸 -->
+<div class="svg-box">
+<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+  <!-- 上半部分：梯度消失 -->
+  <text x="350" y="25" text-anchor="middle" fill="#dc2626" font-size="16" font-weight="bold">梯度消失 (Vanishing Gradient)</text>
+  
+  <!-- 递减箭头 -->
+  <g transform="translate(0, 40)">
+    <rect x="50" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#dc2626" stroke-width="1" opacity="0.2"/>
+    <rect x="150" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#dc2626" stroke-width="1.5" opacity="0.4"/>
+    <rect x="250" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#dc2626" stroke-width="2" opacity="0.6"/>
+    <rect x="350" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#dc2626" stroke-width="2.5" class="pulse-node" opacity="0.8"/>
+    <rect x="450" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#dc2626" stroke-width="3" opacity="1"/>
+    <text x="80" y="35" text-anchor="middle" fill="#dc2626" font-size="11">t=1</text>
+    <text x="180" y="35" text-anchor="middle" fill="#dc2626" font-size="11">t=2</text>
+    <text x="280" y="35" text-anchor="middle" fill="#dc2626" font-size="11">t=3</text>
+    <text x="380" y="35" text-anchor="middle" fill="#dc2626" font-size="11">t=4</text>
+    <text x="480" y="35" text-anchor="middle" fill="#dc2626" font-size="11">t=5</text>
+    
+    <!-- 递减箭头 -->
+    <line x1="530" y1="30" x2="520" y2="30" stroke="#dc2626" stroke-width="3" marker-end="url(#arrB)"/>
+    <line x1="430" y1="30" x2="425" y2="30" stroke="#dc2626" stroke-width="2.5" class="pulse-node" marker-end="url(#arrB)" opacity="0.8"/>
+    <line x1="330" y1="30" x2="328" y2="30" stroke="#dc2626" stroke-width="2" marker-end="url(#arrB)" opacity="0.6"/>
+    <line x1="230" y1="30" x2="229" y2="30" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arrB)" opacity="0.4"/>
+    <line x1="130" y1="30" x2="129.5" y2="30" stroke="#dc2626" stroke-width="1" marker-end="url(#arrB)" opacity="0.2"/>
+    
+    <text x="570" y="35" fill="#dc2626" font-size="12">梯度大</text>
+    <text x="20" y="35" fill="#475569" font-size="12">→0</text>
+    <text x="350" y="75" text-anchor="middle" fill="#475569" font-size="13">W_hh 特征值 &lt; 1 → 连乘指数衰减 → 早期时间步梯度趋零</text>
+  </g>
+
+  <line x1="50" y1="140" x2="650" y2="140" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="6,4" class="flow-line"/>
+
+  <!-- 下半部分：梯度爆炸 -->
+  <text x="350" y="165" text-anchor="middle" fill="#ea580c" font-size="16" font-weight="bold">梯度爆炸 (Exploding Gradient)</text>
+  
+  <g transform="translate(0, 180)">
+    <rect x="50" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="3" opacity="1"/>
+    <rect x="150" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2.5" class="pulse-node" opacity="0.8"/>
+    <rect x="250" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2" opacity="0.6"/>
+    <rect x="350" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="1.5" opacity="0.4"/>
+    <rect x="450" y="10" width="60" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="1" opacity="0.2"/>
+    <text x="80" y="35" text-anchor="middle" fill="#ea580c" font-size="11">t=1</text>
+    <text x="180" y="35" text-anchor="middle" fill="#ea580c" font-size="11">t=2</text>
+    <text x="280" y="35" text-anchor="middle" fill="#ea580c" font-size="11">t=3</text>
+    <text x="380" y="35" text-anchor="middle" fill="#ea580c" font-size="11">t=4</text>
+    <text x="480" y="35" text-anchor="middle" fill="#ea580c" font-size="11">t=5</text>
+    
+    <text x="570" y="35" fill="#ea580c" font-size="12">→∞</text>
+    <text x="20" y="35" fill="#475569" font-size="12">梯度大</text>
+    <text x="350" y="75" text-anchor="middle" fill="#475569" font-size="13">W_hh 特征值 &gt; 1 → 连乘指数增长 → 梯度溢出为 NaN</text>
+  </g>
+</svg>
+<div class="svg-caption">图 5：梯度消失与梯度爆炸 — 上方箭头递减表示梯度随时间步衰减；下方箭头递增表示梯度指数增长</div>
+</div>
+
+<div class="callout danger">
+  <div class="callout-title">数值示例</div>
+  假设 $W_{hh} = 0.9$，$\sigma'(a) = 0.5$，序列长度 $T=10$。则从第 1 步到第 10 步的梯度传播系数为 $(0.45)^9 \approx 7.5 \times 10^{-4}$ —— 第 1 步的梯度信号衰减到原来的万分之七点五。
+</div>
+
+<h3>3.4 截断 BPTT</h3>
+<p>对于长序列，完整 BPTT 内存和计算开销巨大。截断 BPTT 将长序列切分为长度为 $k$ 的片段，在每个片段内独立进行 BPTT。例如序列长度 $T=100$，截断长度 $k=20$，则分 5 次处理。虽然跨片段的梯度传播被切断，但实践中效果良好。</p>
+
+<h3>3.5 数值稳定性技巧</h3>
+<div class="table-wrap"><table>
+<tr><th>技巧</th><th>方法</th><th>作用</th></tr>
+<tr><td>梯度裁剪</td><td>if $\|\nabla\| > \text{threshold}$: $\nabla = \frac{\text{threshold}}{\|\nabla\|} \cdot \nabla$</td><td>防止梯度爆炸</td></tr>
+<tr><td>正交初始化</td><td>将 $W_{hh}$ 初始化为正交矩阵</td><td>特征值模为1，减少衰减/爆炸</td></tr>
+<tr><td>Layer Normalization</td><td>每个时间步对隐藏状态归一化</td><td>稳定激活值尺度</td></tr>
+<tr><td>使用 ReLU</td><td>正区间导数恒为1</td><td>缓解梯度消失（需配合其他技巧）</td></tr>
+</table></div>
+
+<div class="code-block">
+<div class="code-header">Python — 梯度裁剪</div>
+<pre><span class="com"># PyTorch 中梯度裁剪的标准做法</span>
+<span class="fn">torch.nn.utils.clip_grad_norm_</span>(model.parameters(), max_norm=<span class="num">5.0</span>)
+
+<span class="com"># 正交初始化</span>
+<span class="kw">for</span> name, param <span class="kw">in</span> model.named_parameters():
+    <span class="kw">if</span> <span class="str">'weight_hh'</span> <span class="kw">in</span> name:
+        nn.init.orthogonal_(param)</pre>
+</div>
+
+</section>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">4</span>LSTM：长短期记忆网络</h2>
+
+<h3>4.1 设计动机</h3>
+<p>标准 RNN 的隐藏状态 $h_t$ 需要同时承担两个职责：(1) 存储历史信息 (2) 生成当前输出。这两个职责之间存在冲突。LSTM 的核心创新是<strong>分离记忆与计算</strong>：引入独立的"细胞状态" $C_t$ 专门存储信息，通过"门控"机制精确控制信息的流入、保留和输出。</p>
+
+<h3>4.2 LSTM 结构详解</h3>
+<p>LSTM 在每个时间步接收三个输入：当前输入 $x_t$、上一时刻隐藏状态 $h_{t-1}$ 和细胞状态 $C_{t-1}$，输出新的 $h_t$ 和 $C_t$。</p>
+
+<!-- SVG: LSTM 单元结构 -->
+<div class="svg-box">
+<svg viewBox="0 0 780 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrL" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="arrP" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
+    <marker id="arrO" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
+    <marker id="arrG" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
+  </defs>
+
+  <!-- 外框 -->
+  <rect x="10" y="10" width="760" height="400" rx="16" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="390" y="32" text-anchor="middle" fill="#475569" font-size="14">LSTM Cell</text>
+
+  <!-- 输入 -->
+  <rect x="30" y="180" width="60" height="35" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="60" y="203" text-anchor="middle" fill="#2563eb" font-size="14">x_t</text>
+
+  <!-- 上一隐藏状态 -->
+  <rect x="30" y="80" width="70" height="35" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="65" y="103" text-anchor="middle" fill="#7c3aed" font-size="13">h_{t-1}</text>
+
+  <!-- 拼接节点 -->
+  <circle cx="160" cy="140" r="6" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="90" y1="97" x2="155" y2="136" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <line x1="90" y1="197" x2="155" y2="148" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <text x="160" y="127" text-anchor="middle" fill="#475569" font-size="11">[h_{t-1}, x_t]</text>
+
+  <!-- 遗忘门 -->
+  <rect x="200" y="55" width="110" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="255" y="73" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">遗忘门</text>
+  <text x="255" y="89" text-anchor="middle" fill="#ea580c" font-size="11">f_t = σ(W_f·[h,x])</text>
+  <line x1="160" y1="137" x2="225" y2="95" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrL)"/>
+
+  <!-- 输入门 -->
+  <rect x="200" y="110" width="110" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="255" y="128" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">输入门</text>
+  <text x="255" y="144" text-anchor="middle" fill="#059669" font-size="11">i_t = σ(W_i·[h,x])</text>
+  <line x1="160" y1="140" x2="225" y2="130" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrL)"/>
+
+  <!-- 候选值 -->
+  <rect x="200" y="165" width="110" height="40" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="255" y="183" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">候选值</text>
+  <text x="255" y="199" text-anchor="middle" fill="#2563eb" font-size="11">C̃_t = tanh(W_C·[h,x])</text>
+  <line x1="160" y1="145" x2="225" y2="175" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrL)"/>
+
+  <!-- 输出门 -->
+  <rect x="200" y="220" width="110" height="40" rx="8" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="255" y="238" text-anchor="middle" fill="#7c3aed" font-size="13" font-weight="bold">输出门</text>
+  <text x="255" y="254" text-anchor="middle" fill="#7c3aed" font-size="11">o_t = σ(W_o·[h,x])</text>
+  <line x1="160" y1="148" x2="225" y2="225" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrL)"/>
+
+  <!-- 细胞状态路径 -->
+  <!-- C_{t-1} -->
+  <rect x="30" y="340" width="70" height="35" rx="6" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="65" y="362" text-anchor="middle" fill="#ea580c" font-size="13">C_{t-1}</text>
+  
+  <!-- 乘法节点 (f_t * C_{t-1}) -->
+  <circle cx="380" cy="357" r="16" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="380" y="363" text-anchor="middle" fill="#ea580c" font-size="18">×</text>
+  <line x1="100" y1="357" x2="364" y2="357" stroke="#ea580c" stroke-width="2" marker-end="url(#arrO)"/>
+  <line x1="310" y1="75" x2="375" y2="343" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrO)"/>
+  <text x="370" y="340" text-anchor="end" fill="#ea580c" font-size="11">f_t</text>
+
+  <!-- 乘法节点 (i_t * C̃_t) -->
+  <circle cx="380" cy="285" r="16" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="380" y="291" text-anchor="middle" fill="#059669" font-size="18">×</text>
+  <line x1="310" y1="130" x2="375" y2="272" stroke="#059669" stroke-width="1.5" marker-end="url(#arrG)"/>
+  <line x1="310" y1="185" x2="375" y2="280" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrL)"/>
+  <text x="370" y="268" text-anchor="end" fill="#059669" font-size="11">i_t × C̃_t</text>
+
+  <!-- 加法节点 -->
+  <circle cx="470" cy="320" r="18" fill="#f8fafc" stroke="#ea580c" stroke-width="2.5" class="pulse-node"/>
+  <text x="470" y="327" text-anchor="middle" fill="#ea580c" font-size="20">+</text>
+  <line x1="393" y1="352" x2="455" y2="328" stroke="#ea580c" stroke-width="2" marker-end="url(#arrO)"/>
+  <line x1="393" y1="290" x2="455" y2="310" stroke="#059669" stroke-width="2" marker-end="url(#arrG)"/>
+
+  <!-- C_t -->
+  <rect x="540" y="340" width="60" height="35" rx="6" fill="#f8fafc" stroke="#ea580c" stroke-width="2.5" class="pulse-node"/>
+  <text x="570" y="362" text-anchor="middle" fill="#ea580c" font-size="14" font-weight="bold">C_t</text>
+  <line x1="488" y1="322" x2="538" y2="355" stroke="#ea580c" stroke-width="2" marker-end="url(#arrO)"/>
+
+  <!-- tanh -->
+  <rect x="540" y="275" width="60" height="35" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="570" y="298" text-anchor="middle" fill="#059669" font-size="14" font-weight="bold">tanh</text>
+  <line x1="570" y1="340" x2="570" y2="312" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrO)"/>
+
+  <!-- 乘法 (o_t * tanh(C_t)) -->
+  <circle cx="640" cy="240" r="16" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="640" y="246" text-anchor="middle" fill="#7c3aed" font-size="18">×</text>
+  <line x1="570" y1="275" x2="625" y2="248" stroke="#059669" stroke-width="1.5" marker-end="url(#arrG)"/>
+  <line x1="310" y1="240" x2="624" y2="240" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <text x="630" y="230" text-anchor="end" fill="#7c3aed" font-size="11">o_t</text>
+
+  <!-- h_t -->
+  <rect x="690" y="140" width="65" height="40" rx="8" fill="#f8fafc" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
+  <text x="722" y="160" text-anchor="middle" fill="#7c3aed" font-size="15" font-weight="bold">h_t</text>
+  <text x="722" y="176" text-anchor="middle" fill="#475569" font-size="11">输出</text>
+  <line x1="650" y1="232" x2="720" y2="180" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrP)"/>
+
+  <!-- 图例 -->
+  <rect x="30" y="385" width="720" height="20" rx="4" fill="none"/>
+  <circle cx="50" cy="395" r="5" fill="#ea580c"/><text x="62" y="399" fill="#475569" font-size="11">遗忘门</text>
+  <circle cx="130" cy="395" r="5" fill="#059669"/><text x="142" y="399" fill="#475569" font-size="11">输入门</text>
+  <circle cx="210" cy="395" r="5" fill="#7c3aed"/><text x="222" y="399" fill="#475569" font-size="11">输出门</text>
+  <circle cx="290" cy="395" r="5" fill="#2563eb"/><text x="302" y="399" fill="#475569" font-size="11">候选值</text>
+  <text x="370" y="399" fill="#475569" font-size="11">× = 逐元素乘 &nbsp; + = 逐元素加 &nbsp; σ = sigmoid &nbsp; tanh = 双曲正切</text>
+</svg>
+<div class="svg-caption">图 6：LSTM 单元完整结构 — 遗忘门（橙色）、输入门（绿色）、输出门（紫色）、候选值（蓝色）及细胞状态更新路径</div>
+</div>
+
+<h4>遗忘门（Forget Gate）</h4>
+<div class="formula" data-eq="(7)">$$f_t = \sigma(W_f \cdot [h_{t-1}, x_t] + b_f)$$</div>
+<p>$f_t$ 的每个元素在 $[0, 1]$ 之间，1 表示完全保留，0 表示完全遗忘。</p>
+
+<h4>输入门（Input Gate）</h4>
+<div class="formula" data-eq="(8)">$$i_t = \sigma(W_i \cdot [h_{t-1}, x_t] + b_i)$$</div>
+
+<h4>候选值（Candidate Value）</h4>
+<div class="formula" data-eq="(9)">$$\tilde{C}_t = \tanh(W_C \cdot [h_{t-1}, x_t] + b_C)$$</div>
+
+<h4>细胞状态更新</h4>
+<div class="formula" data-eq="(10)">$$C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t$$</div>
+<p>旧记忆 $C_{t-1}$ 按遗忘门 $f_t$ 缩放，新信息 $\tilde{C}_t$ 按输入门 $i_t$ 缩放，两者相加。</p>
+
+<h4>输出门与隐藏状态</h4>
+<div class="formula" data-eq="(11)">$$o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o) \quad | \quad h_t = o_t \odot \tanh(C_t)$$</div>
+
+<h3>4.3 LSTM 缓解梯度消失的原理</h3>
+<p>标准 RNN 中梯度消失的原因是 $h_t$ 到 $h_{t-1}$ 的路径包含矩阵连乘 $\prod W_{hh}$。而 LSTM 的细胞状态更新中：</p>
+<div class="formula" data-eq="(12)">$$\frac{\partial C_t}{\partial C_{t-1}} = f_t$$</div>
+<p>当遗忘门 $f_t \approx 1$ 时，梯度可以几乎无损地从 $C_t$ 传到 $C_{t-1}$。这意味着梯度可以沿细胞状态路径传播很远而不衰减。</p>
+
+<div class="callout">
+  <div class="callout-title">直觉理解</div>
+  LSTM 可以类比为一个带笔记本的人进行会议记录：细胞状态 $C_t$ = 笔记本（长期记忆）；遗忘门 $f_t$ = 划掉旧条目；输入门 $i_t$ = 决定是否写入新内容；候选值 $\tilde{C}_t$ = 新内容草稿；输出门 $o_t$ = 决定提取哪些内容回答问题；隐藏状态 $h_t$ = 当前可用于回答的信息。
+</div>
+
+<h3>4.4 LSTM 计算实例</h3>
+<p>假设输入维度 $d=2$，隐藏维度 $h=1$，输入 $x_t = [0.5, 0.3]$，$h_{t-1} = [0.1]$，$C_{t-1} = [0.2]$：</p>
+
+<div class="table-wrap"><table>
+<tr><th>门</th><th>计算</th><th>结果</th></tr>
+<tr><td>遗忘门 $f_t$</td><td>$\sigma(0.01 + 0.10 + 0.09) = \sigma(0.20)$</td><td>$\approx 0.550$</td></tr>
+<tr><td>输入门 $i_t$</td><td>$\sigma(0.04 + 0.05 + 0.06) = \sigma(0.15)$</td><td>$\approx 0.537$</td></tr>
+<tr><td>候选值 $\tilde{C}_t$</td><td>$\tanh(0.02 + 0.15 + 0.03) = \tanh(0.20)$</td><td>$\approx 0.197$</td></tr>
+<tr><td>细胞状态 $C_t$</td><td>$0.550 \times 0.2 + 0.537 \times 0.197$</td><td>$\approx 0.216$</td></tr>
+<tr><td>输出门 $o_t$</td><td>$\sigma(0.01 + 0.10 + 0.12) = \sigma(0.23)$</td><td>$\approx 0.557$</td></tr>
+<tr><td>隐藏状态 $h_t$</td><td>$0.557 \times \tanh(0.216) = 0.557 \times 0.213$</td><td>$\approx 0.119$</td></tr>
+</table></div>
+
+<h3>4.5 LSTM 的变体</h3>
+<h4>带窥孔连接的 LSTM（Peephole LSTM）</h4>
+<p>让门控信号直接从细胞状态获取：</p>
+<div class="formula" data-eq="(13)">$$f_t = \sigma(W_f \cdot [C_{t-1}, h_{t-1}, x_t] + b_f)$$</div>
+
+<h4>耦合遗忘-输入门</h4>
+<p>将遗忘门和输入门合并为一个门：</p>
+<div class="formula" data-eq="(14)">$$i_t = 1 - f_t \quad | \quad C_t = f_t \odot C_{t-1} + (1 - f_t) \odot \tilde{C}_t$$</div>
+<p>遗忘多少就写入多少，简化了模型。</p>
+
+</section>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">5</span>GRU：门控循环单元</h2>
+
+<h3>5.1 设计思想</h3>
+<p>GRU（Gated Recurrent Unit）由 Cho 等人于 2014 年提出，是 LSTM 的简化版本：(1) 合并细胞状态和隐藏状态，只用 $h_t$ (2) 将三个门简化为两个门：更新门和重置门。</p>
+
+<!-- SVG: GRU 结构 -->
+<div class="svg-box">
+<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrG5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="arrP5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
+    <marker id="arrO5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
+  </defs>
+
+  <rect x="10" y="10" width="740" height="360" rx="16" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="380" y="32" text-anchor="middle" fill="#475569" font-size="14">GRU Cell</text>
+
+  <!-- 输入 -->
+  <rect x="30" y="170" width="60" height="35" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="60" y="193" text-anchor="middle" fill="#2563eb" font-size="14">x_t</text>
+
+  <!-- 上一隐藏状态 -->
+  <rect x="30" y="80" width="70" height="35" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="65" y="103" text-anchor="middle" fill="#7c3aed" font-size="13">h_{t-1}</text>
+
+  <!-- 拼接 -->
+  <circle cx="160" cy="130" r="6" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="100" y1="97" x2="155" y2="126" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrP5)"/>
+  <line x1="90" y1="187" x2="155" y2="138" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrG5)"/>
+
+  <!-- 更新门 -->
+  <rect x="195" y="50" width="110" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="250" y="68" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">更新门</text>
+  <text x="250" y="84" text-anchor="middle" fill="#059669" font-size="11">z_t = σ(W_z·[h,x])</text>
+  <line x1="165" y1="127" x2="220" y2="88" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrG5)"/>
+
+  <!-- 重置门 -->
+  <rect x="195" y="110" width="110" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="250" y="128" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">重置门</text>
+  <text x="250" y="144" text-anchor="middle" fill="#ea580c" font-size="11">r_t = σ(W_r·[h,x])</text>
+  <line x1="165" y1="133" x2="220" y2="130" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrG5)"/>
+
+  <!-- 候选状态 -->
+  <rect x="370" y="170" width="130" height="50" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="435" y="190" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="bold">候选状态</text>
+  <text x="435" y="207" text-anchor="middle" fill="#2563eb" font-size="11">h̃_t = tanh(W·[r_t⊙h_{t-1}, x_t])</text>
+  
+  <!-- 重置门作用于h_{t-1} -->
+  <circle cx="340" cy="180" r="14" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="340" y="186" text-anchor="middle" fill="#ea580c" font-size="16">×</text>
+  <line x1="100" y1="97" x2="328" y2="172" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrP5)"/>
+  <line x1="305" y1="130" x2="334" y2="170" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrO5)"/>
+  <line x1="90" y1="187" x2="368" y2="190" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrG5)"/>
+  <text x="335" y="160" text-anchor="end" fill="#ea580c" font-size="10">r_t</text>
+
+  <!-- 更新融合 -->
+  <circle cx="580" cy="130" r="18" fill="#f8fafc" stroke="#059669" stroke-width="2.5" class="pulse-node"/>
+  <text x="580" y="137" text-anchor="middle" fill="#059669" font-size="18">⊕</text>
+  
+  <!-- z_t 控制 -->
+  <line x1="305" y1="70" x2="565" y2="118" stroke="#059669" stroke-width="1.5" marker-end="url(#arrG5)"/>
+  <text x="430" y="60" text-anchor="middle" fill="#059669" font-size="11">z_t (控制保留比例)</text>
+  
+  <!-- h̃_t -->
+  <line x1="500" y1="190" x2="565" y2="145" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrG5)"/>
+  
+  <!-- h_{t-1} 直连 -->
+  <line x1="100" y1="97" x2="565" y2="125" stroke="#7c3aed" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrP5)"/>
+
+  <!-- 输出 -->
+  <rect x="650" y="110" width="65" height="40" rx="8" fill="#f8fafc" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
+  <text x="682" y="130" text-anchor="middle" fill="#7c3aed" font-size="15" font-weight="bold">h_t</text>
+  <text x="682" y="146" text-anchor="middle" fill="#475569" font-size="11">输出</text>
+  <line x1="598" y1="130" x2="648" y2="130" stroke="#059669" stroke-width="2" marker-end="url(#arrG5)"/>
+
+  <!-- 公式 -->
+  <text x="580" y="200" text-anchor="middle" fill="#059669" font-size="13" font-family="monospace">h_t = (1-z_t)⊙h_{t-1} + z_t⊙h̃_t</text>
+  
+  <!-- 图例 -->
+  <circle cx="40" cy="340" r="5" fill="#059669"/><text x="52" y="344" fill="#475569" font-size="11">更新门</text>
+  <circle cx="120" cy="340" r="5" fill="#ea580c"/><text x="132" y="344" fill="#475569" font-size="11">重置门</text>
+  <circle cx="200" cy="340" r="5" fill="#2563eb"/><text x="212" y="344" fill="#475569" font-size="11">候选状态</text>
+  <text x="290" y="344" fill="#475569" font-size="11">GRU 只需 2 个门，参数比 LSTM 少约 25%</text>
+</svg>
+<div class="svg-caption">图 7：GRU 单元结构 — 更新门（绿色）控制新旧信息比例，重置门（橙色）控制候选状态计算</div>
+</div>
+
+<h3>5.2 GRU 的公式</h3>
+<div class="formula multi" data-eq="(15)">
+$$z_t = \sigma(W_z \cdot [h_{t-1}, x_t] + b_z)$$ <span class="tag tag-green">更新门</span>
+$$r_t = \sigma(W_r \cdot [h_{t-1}, x_t] + b_r)$$ <span class="tag tag-orange">重置门</span>
+$$\tilde{h}_t = \tanh(W_h \cdot [r_t \odot h_{t-1}, x_t] + b_h)$$ <span class="tag tag-blue">候选状态</span>
+$$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$$ <span class="tag tag-purple">状态更新</span>
+</div>
+
+<h3>5.3 GRU vs LSTM 对比</h3>
+<div class="table-wrap"><table>
+<tr><th>特性</th><th>LSTM</th><th>GRU</th></tr>
+<tr><td>门数量</td><td>3（遗忘、输入、输出）</td><td>2（更新、重置）</td></tr>
+<tr><td>状态数量</td><td>2（细胞状态 + 隐藏状态）</td><td>1（隐藏状态）</td></tr>
+<tr><td>参数量</td><td>$\approx 12h(h+d)$</td><td>$\approx 9h(h+d)$（减少约 25%）</td></tr>
+<tr><td>计算速度</td><td>较慢</td><td>较快</td></tr>
+<tr><td>长距离依赖</td><td>较强</td><td>相近</td></tr>
+<tr><td>表达能力</td><td>较强</td><td>略弱但相当</td></tr>
+</table></div>
+
+<h3>5.4 GRU 计算实例</h3>
+<div class="table-wrap"><table>
+<tr><th>门</th><th>计算</th><th>结果</th></tr>
+<tr><td>更新门 $z_t$</td><td>$\sigma(0.03 + 0.20 + 0.06) = \sigma(0.29)$</td><td>$\approx 0.572$</td></tr>
+<tr><td>重置门 $r_t$</td><td>$\sigma(0.01 + 0.10 + 0.09) = \sigma(0.20)$</td><td>$\approx 0.550$</td></tr>
+<tr><td>候选状态 $\tilde{h}_t$</td><td>$\tanh(0.011 + 0.15 + 0.03) = \tanh(0.191)$</td><td>$\approx 0.189$</td></tr>
+<tr><td>隐藏状态 $h_t$</td><td>$0.428 \times 0.1 + 0.572 \times 0.189$</td><td>$\approx 0.151$</td></tr>
+</table></div>
+
+<h3>5.5 何时选择 GRU vs LSTM</h3>
+<ul>
+  <li><strong>数据量较大时</strong>：LSTM 通常表现更好，更强的表达能力可以充分利用更多数据</li>
+  <li><strong>数据量较小时</strong>：GRU 参数更少，不易过拟合，常优于 LSTM</li>
+  <li><strong>追求效率时</strong>：GRU 计算更快、内存占用更少，更适合资源受限的场景</li>
+  <li><strong>长序列依赖</strong>：LSTM 的独立细胞状态在极长序列上可能略有优势</li>
+</ul>
+
+</section>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">6</span>双向 RNN</h2>
+
+<h3>6.1 动机</h3>
+<p>标准 RNN 只能利用当前时刻之前的信息。但在许多任务中，当前时刻的判断依赖于<strong>未来信息</strong>。例如命名实体识别："我 去 了 苹果 发布会"中的"苹果"是公司名还是水果？只看到"我 去 了 苹果"无法确定，但看到后面的"发布会"就可以确定是公司名。</p>
+
+<p>双向 RNN（BiRNN）由 Schuster 和 Paliwal 于 1997 年提出，通过同时从前向后和从后向前处理序列，使每个时间步的输出都融合了全局上下文信息。</p>
+
+<!-- SVG: 双向RNN -->
+<div class="svg-box">
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrF6" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="arrB6" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
+  </defs>
+  <text x="30" y="55" fill="#2563eb" font-size="14" font-weight="bold">前向层 →</text>
+  <rect x="140" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="180" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₁</text>
+  <rect x="300" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="340" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₂</text>
+  <rect x="460" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="500" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₃</text>
+  <rect x="620" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="660" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₄</text>
+  <line x1="220" y1="55" x2="298" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)" class="flow-line" stroke-dasharray="6,4"/>
+  <line x1="380" y1="55" x2="458" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)" class="flow-line" stroke-dasharray="6,4"/>
+  <line x1="540" y1="55" x2="618" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)" class="flow-line" stroke-dasharray="6,4"/>
+
+  <text x="30" y="135" fill="#475569" font-size="14" font-weight="bold">输入</text>
+  <rect x="140" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="180" y="140" text-anchor="middle" fill="#475569" font-size="13">x₁</text>
+  <rect x="300" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="340" y="140" text-anchor="middle" fill="#475569" font-size="13">x₂</text>
+  <rect x="460" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="500" y="140" text-anchor="middle" fill="#475569" font-size="13">x₃</text>
+  <rect x="620" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="660" y="140" text-anchor="middle" fill="#475569" font-size="13">x₄</text>
+  <line x1="180" y1="80" x2="180" y2="113" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="340" y1="80" x2="340" y2="113" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="500" y1="80" x2="500" y2="113" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="660" y1="80" x2="660" y2="113" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <text x="30" y="215" fill="#059669" font-size="14" font-weight="bold">反向层 ←</text>
+  <rect x="140" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="180" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₁</text>
+  <rect x="300" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="340" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₂</text>
+  <rect x="460" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="500" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₃</text>
+  <rect x="620" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="660" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₄</text>
+  <line x1="300" y1="215" x2="222" y2="215" stroke="#059669" stroke-width="2" marker-end="url(#arrB6)"/>
+  <line x1="460" y1="215" x2="382" y2="215" stroke="#059669" stroke-width="2" marker-end="url(#arrB6)"/>
+  <line x1="620" y1="215" x2="542" y2="215" stroke="#059669" stroke-width="2" marker-end="url(#arrB6)"/>
+  <line x1="180" y1="155" x2="180" y2="188" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="340" y1="155" x2="340" y2="188" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="500" y1="155" x2="500" y2="188" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="660" y1="155" x2="660" y2="188" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="30" y="265" fill="#ea580c" font-size="13" font-weight="bold">输出 y_t = [→h_t; ←h_t]</text>
+</svg>
+<div class="svg-caption">图 8：双向 RNN 结构 — 前向层（蓝色）从左到右，反向层（绿色）从右到左，输出拼接两层隐藏状态</div>
+</div>
+
+<h3>6.2 计算公式</h3>
+<div class="formula multi" data-eq="(16)">
+$$\overrightarrow{h}_t = \tanh(W^{(f)} x_t + W^{(f)} \overrightarrow{h}_{t-1} + b^{(f)})$$
+$$\overleftarrow{h}_t = \tanh(W^{(b)} x_t + W^{(b)} \overleftarrow{h}_{t+1} + b^{(b)})$$
+$$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
+</div>
+
+<h3>6.3 适用场景</h3>
+<div class="table-wrap"><table>
+<tr><th>适用（完整序列可见）</th><th>不适用（实时/流式）</th></tr>
+<tr><td>文本分类、命名实体识别</td><td>实时语音识别、实时股票预测</td></tr>
+<tr><td>离线语音识别、翻译编码器</td><td>在线翻译、流式生成</td></tr>
+</table></div>
+
+</section>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">7</span>深层（堆叠）RNN</h2>
+
+<h3>7.1 动机</h3>
+<p>单层 RNN 表达能力受限于隐藏维度。深层 RNN 通过堆叠多层增加深度，低层输出作高层输入，每层学习不同抽象层次的特征。</p>
+
+<!-- SVG: 深层RNN -->
+<div class="svg-box">
+<svg viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr7" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+  </defs>
+  <text x="60" y="50" fill="#ea580c" font-size="14" font-weight="bold">Layer 3</text>
+  <rect x="120" y="30" width="70" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="155" y="55" text-anchor="middle" fill="#ea580c" font-size="12">h₁³</text>
+  <rect x="250" y="30" width="70" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="285" y="55" text-anchor="middle" fill="#ea580c" font-size="12">h₂³</text>
+  <rect x="380" y="30" width="70" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="415" y="55" text-anchor="middle" fill="#ea580c" font-size="12">h₃³</text>
+  <rect x="510" y="30" width="70" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="545" y="55" text-anchor="middle" fill="#ea580c" font-size="12">h₄³</text>
+  <line x1="190" y1="50" x2="248" y2="50" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr7)"/>
+  <line x1="320" y1="50" x2="378" y2="50" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr7)"/>
+  <line x1="450" y1="50" x2="508" y2="50" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr7)"/>
+
+  <text x="60" y="150" fill="#059669" font-size="14" font-weight="bold">Layer 2</text>
+  <rect x="120" y="130" width="70" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="155" y="155" text-anchor="middle" fill="#059669" font-size="12">h₁²</text>
+  <rect x="250" y="130" width="70" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="285" y="155" text-anchor="middle" fill="#059669" font-size="12">h₂²</text>
+  <rect x="380" y="130" width="70" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="415" y="155" text-anchor="middle" fill="#059669" font-size="12">h₃²</text>
+  <rect x="510" y="130" width="70" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="545" y="155" text-anchor="middle" fill="#059669" font-size="12">h₄²</text>
+  <line x1="190" y1="150" x2="248" y2="150" stroke="#059669" stroke-width="1.5" marker-end="url(#arr7)"/>
+  <line x1="320" y1="150" x2="378" y2="150" stroke="#059669" stroke-width="1.5" marker-end="url(#arr7)"/>
+  <line x1="450" y1="150" x2="508" y2="150" stroke="#059669" stroke-width="1.5" marker-end="url(#arr7)"/>
+
+  <text x="60" y="250" fill="#2563eb" font-size="14" font-weight="bold">Layer 1</text>
+  <rect x="120" y="230" width="70" height="40" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="155" y="255" text-anchor="middle" fill="#2563eb" font-size="12">h₁¹</text>
+  <rect x="250" y="230" width="70" height="40" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="285" y="255" text-anchor="middle" fill="#2563eb" font-size="12">h₂¹</text>
+  <rect x="380" y="230" width="70" height="40" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="415" y="255" text-anchor="middle" fill="#2563eb" font-size="12">h₃¹</text>
+  <rect x="510" y="230" width="70" height="40" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="545" y="255" text-anchor="middle" fill="#2563eb" font-size="12">h₄¹</text>
+  <line x1="190" y1="250" x2="248" y2="250" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr7)"/>
+  <line x1="320" y1="250" x2="378" y2="250" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr7)"/>
+  <line x1="450" y1="250" x2="508" y2="250" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr7)"/>
+
+  <text x="60" y="325" fill="#475569" font-size="14" font-weight="bold">输入</text>
+  <rect x="135" y="305" width="40" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="155" y="325" text-anchor="middle" fill="#475569" font-size="12">x₁</text>
+  <rect x="265" y="305" width="40" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="285" y="325" text-anchor="middle" fill="#475569" font-size="12">x₂</text>
+  <rect x="395" y="305" width="40" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="415" y="325" text-anchor="middle" fill="#475569" font-size="12">x₃</text>
+  <rect x="525" y="305" width="40" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="545" y="325" text-anchor="middle" fill="#475569" font-size="12">x₄</text>
+
+  <line x1="155" y1="230" x2="155" y2="172" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="285" y1="230" x2="285" y2="172" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="415" y1="230" x2="415" y2="172" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="545" y1="230" x2="545" y2="172" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="155" y1="130" x2="155" y2="72" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="285" y1="130" x2="285" y2="72" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="415" y1="130" x2="415" y2="72" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="545" y1="130" x2="545" y2="72" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="155" y1="305" x2="155" y2="272" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="285" y1="305" x2="285" y2="272" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="415" y1="305" x2="415" y2="272" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+  <line x1="545" y1="305" x2="545" y2="272" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr7)"/>
+
+  <text x="600" y="55" fill="#7c3aed" font-size="13">→ y</text>
+  <line x1="580" y1="50" x2="595" y2="50" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr7)"/>
+  <text x="350" y="365" text-anchor="middle" fill="#475569" font-size="13">水平 = 层内循环连接 &nbsp;|&nbsp; 垂直 = 层间数据传递</text>
+</svg>
+<div class="svg-caption">图 9：深层堆叠 RNN — 3 层 RNN，每层 4 个时间步，低层输出作高层输入</div>
+</div>
+
+<h3>7.2 层数选择与残差连接</h3>
+<ul>
+  <li><strong>1-2 层</strong>：适合简单任务（情感分析、短文本分类）</li>
+  <li><strong>2-4 层</strong>：适合中等复杂度任务（机器翻译编码器/解码器）</li>
+  <li><strong>4 层以上</strong>：可引入残差连接 $h_t^{(l)} = h_t^{(l-1)} + \text{RNN}^{(l)}(\ldots)$ 缓解梯度消失</li>
+</ul>
+
+</section>
+
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">8</span>Seq2Seq 架构</h2>
+
+<h3>8.1 编码器-解码器框架</h3>
+<p>Seq2Seq 模型由 Sutskever 等人于 2014 年提出，用于输入输出长度不同的序列映射。编码器将完整序列压缩为上下文向量 $c$，解码器从 $c$ 出发逐步生成输出序列。</p>
+
+<!-- SVG: Seq2Seq -->
+<div class="svg-box">
+<svg viewBox="0 0 820 360" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr8" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="arr8g" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
+    <marker id="arr8o" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
+  </defs>
+  <text x="200" y="25" text-anchor="middle" fill="#2563eb" font-size="16" font-weight="bold">编码器 (Encoder)</text>
+  <rect x="60" y="80" width="80" height="55" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="100" y="105" text-anchor="middle" fill="#2563eb" font-size="12">h₁</text>
+  <rect x="180" y="80" width="80" height="55" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="220" y="105" text-anchor="middle" fill="#2563eb" font-size="12">h₂</text>
+  <rect x="300" y="80" width="80" height="55" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="340" y="105" text-anchor="middle" fill="#2563eb" font-size="12">h₃</text>
+  <line x1="140" y1="107" x2="178" y2="107" stroke="#2563eb" stroke-width="2" marker-end="url(#arr8)"/>
+  <line x1="260" y1="107" x2="298" y2="107" stroke="#2563eb" stroke-width="2" marker-end="url(#arr8)"/>
+
+  <rect x="72" y="160" width="56" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="100" y="180" text-anchor="middle" fill="#475569" font-size="12">"I"</text>
+  <rect x="192" y="160" width="56" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="220" y="180" text-anchor="middle" fill="#475569" font-size="12">"love"</text>
+  <rect x="312" y="160" width="56" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="340" y="180" text-anchor="middle" fill="#475569" font-size="12">"you"</text>
+  <line x1="100" y1="135" x2="100" y2="158" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr8)"/>
+  <line x1="220" y1="135" x2="220" y2="158" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr8)"/>
+  <line x1="340" y1="135" x2="340" y2="158" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr8)"/>
+
+  <rect x="400" y="85" width="60" height="45" rx="10" fill="#f8fafc" stroke="#ea580c" stroke-width="2.5" class="pulse-node"/>
+  <text x="430" y="105" text-anchor="middle" fill="#ea580c" font-size="12" font-weight="bold">context</text>
+  <text x="430" y="120" text-anchor="middle" fill="#ea580c" font-size="11">c</text>
+  <line x1="380" y1="107" x2="398" y2="107" stroke="#ea580c" stroke-width="2.5" class="pulse-node" marker-end="url(#arr8o)"/>
+
+  <text x="650" y="25" text-anchor="middle" fill="#059669" font-size="16" font-weight="bold">解码器 (Decoder)</text>
+  <rect x="500" y="80" width="80" height="55" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="540" y="105" text-anchor="middle" fill="#059669" font-size="12">s₁</text>
+  <rect x="620" y="80" width="80" height="55" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="660" y="105" text-anchor="middle" fill="#059669" font-size="12">s₂</text>
+  <rect x="740" y="80" width="60" height="55" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="770" y="105" text-anchor="middle" fill="#059669" font-size="12">s₃</text>
+  <line x1="460" y1="107" x2="498" y2="107" stroke="#ea580c" stroke-width="2" marker-end="url(#arr8o)"/>
+  <line x1="580" y1="107" x2="618" y2="107" stroke="#059669" stroke-width="2" marker-end="url(#arr8g)"/>
+  <line x1="700" y1="107" x2="738" y2="107" stroke="#059669" stroke-width="2" marker-end="url(#arr8g)"/>
+
+  <rect x="512" y="160" width="56" height="30" rx="6" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="540" y="180" text-anchor="middle" fill="#059669" font-size="12">"我"</text>
+  <rect x="632" y="160" width="56" height="30" rx="6" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="660" y="180" text-anchor="middle" fill="#059669" font-size="12">"爱"</text>
+  <rect x="742" y="160" width="56" height="30" rx="6" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="770" y="180" text-anchor="middle" fill="#059669" font-size="12">"你"</text>
+  <line x1="540" y1="135" x2="540" y2="158" stroke="#059669" stroke-width="1" marker-end="url(#arr8g)"/>
+  <line x1="660" y1="135" x2="660" y2="158" stroke="#059669" stroke-width="1" marker-end="url(#arr8g)"/>
+  <line x1="770" y1="135" x2="770" y2="158" stroke="#059669" stroke-width="1" marker-end="url(#arr8g)"/>
+
+  <text x="200" y="220" text-anchor="middle" fill="#475569" font-size="13">读取输入序列 → 压缩为上下文向量</text>
+  <text x="650" y="220" text-anchor="middle" fill="#475569" font-size="13">从上下文向量 → 逐步生成输出序列</text>
+
+  <rect x="60" y="250" width="740" height="95" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="80" y="275" fill="#7c3aed" font-size="14" font-weight="bold">训练技巧</text>
+  <text x="80" y="298" fill="#475569" font-size="13">• <tspan fill="#2563eb" font-weight="bold">教师强制</tspan>：训练时用真实标签作解码器输入，加速收敛</text>
+  <text x="80" y="318" fill="#475569" font-size="13">• <tspan fill="#059669" font-weight="bold">计划采样</tspan>：逐步从教师强制过渡到自回归，缓解暴露偏差</text>
+  <text x="80" y="338" fill="#475569" font-size="13">• <tspan fill="#ea580c" font-weight="bold">束搜索</tspan>：推理时保留 k 条最优路径，k 通常取 4-10</text>
+</svg>
+<div class="svg-caption">图 10：Seq2Seq 编码器-解码器架构 — 编码器压缩输入为上下文向量，解码器逐步生成输出</div>
+</div>
+
+<h3>8.2 注意力增强 Seq2Seq</h3>
+<p>基础 Seq2Seq 的瓶颈是：整个输入序列被压缩为一个固定长度的上下文向量。Bahdanau 注意力机制让解码器在每步动态关注编码器的不同位置：</p>
+<div class="formula" data-eq="(17)">$$e_{t,i} = \text{score}(s_{t-1}, h_i^{\text{enc}}) \;\rightarrow\; \alpha_{t,i} = \text{softmax}(e_{t,i}) \;\rightarrow\; c_t = \sum_i \alpha_{t,i} \cdot h_i^{\text{enc}}$$</div>
+
+</section>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">9</span>其他重要变体</h2>
+
+<h3>9.1 Minimal Gated Unit (MGU)</h3>
+<p>进一步简化 GRU，只保留一个门，参数量约为 GRU 的 2/3：</p>
+<div class="formula" data-eq="(18)">$$h_t = (1 - f_t) \odot h_{t-1} + f_t \odot \tanh(W \cdot [f_t \odot h_{t-1}, x_t])$$</div>
+
+<h3>9.2 回声状态网络 (ESN)</h3>
+<p>储备池——随机初始化且不训练的递归层，只训练输出层线性权重。训练极快但表达能力有限。</p>
+
+<h3>9.3 神经图灵机 (NTM)</h3>
+<p>将 RNN 与外部记忆矩阵结合，RNN 作为控制器通过读写头与外部记忆交互，能执行复制、排序等算法任务。</p>
+
+<h3>9.4 Independently RNN (IndRNN)</h3>
+<p>将神经元连接解耦，每个神经元独立处理自己的序列，可堆叠到 21 层而标准 RNN 通常只能少数几层。</p>
+
+<h3>9.5 变体复杂度对比</h3>
+
+<!-- SVG: 复杂度对比 -->
+<div class="svg-box">
+<svg viewBox="0 0 780 340" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="20" width="230" height="300" rx="12" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="135" y="45" text-anchor="middle" fill="#2563eb" font-size="16" font-weight="bold">Vanilla RNN</text>
+  <text x="135" y="65" text-anchor="middle" fill="#475569" font-size="12">0 个门 · 1 个状态</text>
+  <rect x="60" y="90" width="150" height="60" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="135" y="118" text-anchor="middle" fill="#2563eb" font-size="13">tanh(W·x + W·h)</text>
+  <text x="135" y="195" text-anchor="middle" fill="#dc2626" font-size="13">复杂度：低</text>
+  <text x="135" y="218" text-anchor="middle" fill="#475569" font-size="11">参数：3h(h+d)</text>
+  <text x="135" y="238" text-anchor="middle" fill="#dc2626" font-size="11">长距离依赖：弱</text>
+  <text x="135" y="258" text-anchor="middle" fill="#059669" font-size="11">速度：最快</text>
+  <text x="135" y="278" text-anchor="middle" fill="#475569" font-size="11">适用：短序列、教学</text>
+
+  <rect x="275" y="20" width="230" height="300" rx="12" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="390" y="45" text-anchor="middle" fill="#ea580c" font-size="16" font-weight="bold">LSTM</text>
+  <text x="390" y="65" text-anchor="middle" fill="#475569" font-size="12">3 个门 · 2 个状态</text>
+  <rect x="300" y="90" width="180" height="60" rx="10" fill="#f8fafc" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="390" y="112" text-anchor="middle" fill="#ea580c" font-size="12">f_t, i_t, C̃_t, o_t</text>
+  <text x="390" y="132" text-anchor="middle" fill="#475569" font-size="11">遗忘+输入+输出门</text>
+  <text x="390" y="195" text-anchor="middle" fill="#ea580c" font-size="13">复杂度：高</text>
+  <text x="390" y="218" text-anchor="middle" fill="#475569" font-size="11">参数：12h(h+d)</text>
+  <text x="390" y="238" text-anchor="middle" fill="#059669" font-size="11">长距离依赖：强</text>
+  <text x="390" y="258" text-anchor="middle" fill="#dc2626" font-size="11">速度：慢</text>
+  <text x="390" y="278" text-anchor="middle" fill="#475569" font-size="11">适用：长序列、生产</text>
+
+  <rect x="530" y="20" width="230" height="300" rx="12" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="645" y="45" text-anchor="middle" fill="#059669" font-size="16" font-weight="bold">GRU</text>
+  <text x="645" y="65" text-anchor="middle" fill="#475569" font-size="12">2 个门 · 1 个状态</text>
+  <rect x="560" y="90" width="170" height="60" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="645" y="112" text-anchor="middle" fill="#059669" font-size="13">z_t, r_t, h̃_t</text>
+  <text x="645" y="132" text-anchor="middle" fill="#475569" font-size="11">更新+重置门</text>
+  <text x="645" y="195" text-anchor="middle" fill="#059669" font-size="13">复杂度：中</text>
+  <text x="645" y="218" text-anchor="middle" fill="#475569" font-size="11">参数：9h(h+d)</text>
+  <text x="645" y="238" text-anchor="middle" fill="#059669" font-size="11">长距离依赖：强</text>
+  <text x="645" y="258" text-anchor="middle" fill="#059669" font-size="11">速度：中</text>
+  <text x="645" y="278" text-anchor="middle" fill="#475569" font-size="11">适用：中等序列、高效</text>
+</svg>
+<div class="svg-caption">图 11：RNN / LSTM / GRU 复杂度对比 — 从简单到复杂的门控结构演进</div>
+</div>
+
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">10</span>应用场景与案例</h2>
+
+<h3>10.1 自然语言处理</h3>
+<div class="table-wrap"><table>
+<tr><th>任务</th><th>模式</th><th>说明</th></tr>
+<tr><td>语言模型</td><td>一对一</td><td>给定前文预测下一个词，可生成连贯文本</td></tr>
+<tr><td>情感分析</td><td>多对一</td><td>将评论序列编码为固定向量，分类正面/负面</td></tr>
+<tr><td>机器翻译</td><td>Seq2Seq</td><td>编码器读取源语言，解码器生成目标语言</td></tr>
+<tr><td>命名实体识别</td><td>多对多同步</td><td>BiLSTM-CRF 是经典架构</td></tr>
+<tr><td>文本生成</td><td>一对一</td><td>学习语料风格，生成相似风格文本</td></tr>
+</table></div>
+
+<h3>10.2 语音与音频</h3>
+<div class="table-wrap"><table>
+<tr><th>任务</th><th>说明</th></tr>
+<tr><td>语音识别</td><td>LSTM 在语音识别中长期占主导，DeepSpeech 2 使用双向 LSTM</td></tr>
+<tr><td>音乐生成</td><td>学习旋律和节奏模式，生成新音乐片段</td></tr>
+<tr><td>语音合成</td><td>Tacotron 等系统用 RNN 从文本生成声学参数</td></tr>
+</table></div>
+
+<h3>10.3 时间序列预测</h3>
+<div class="table-wrap"><table>
+<tr><th>任务</th><th>说明</th></tr>
+<tr><td>股票预测</td><td>捕捉价格趋势和周期模式（噪声大，效果有限）</td></tr>
+<tr><td>天气预测</td><td>中短期预测效果较好</td></tr>
+<tr><td>电力负荷预测</td><td>捕捉日/周周期的负荷模式，对电网调度至关重要</td></tr>
+<tr><td>交通流量预测</td><td>预测未来拥堵状况</td></tr>
+</table></div>
+
+<h3>10.4 视频与代码</h3>
+<ul>
+  <li><strong>动作识别</strong>：RNN 处理 CNN 提取的每帧特征序列</li>
+  <li><strong>视频描述生成</strong>：一对多模式，输入视频生成文字描述</li>
+  <li><strong>代码补全</strong>：学习代码语法模式和 API 调用序列</li>
+  <li><strong>程序生成</strong>：给定自然语言描述生成代码片段</li>
+</ul>
+
+</section>
+
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">11</span>PyTorch 代码实现</h2>
+
+<h3>11.1 基础 RNN 从零实现</h3>
+<div class="code-block">
+<div class="code-header">Python — SimpleRNN</div>
+<pre><span class="kw">class</span> <span class="cls">SimpleRNN</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, input_size, hidden_size, output_size):
+        <span class="fn">super</span>().__init__()
+        self.hidden_size = hidden_size
+        self.W_hx = nn.Parameter(torch.randn(hidden_size, input_size) * <span class="num">0.01</span>)
+        self.W_hh = nn.Parameter(torch.randn(hidden_size, hidden_size) * <span class="num">0.01</span>)
+        self.W_hy = nn.Parameter(torch.randn(output_size, hidden_size) * <span class="num">0.01</span>)
+        self.b_h = nn.Parameter(torch.zeros(hidden_size))
+        self.b_y = nn.Parameter(torch.zeros(output_size))
+
+    <span class="kw">def</span> forward(self, x):
+        seq_len, batch_size, _ = x.shape
+        h = torch.zeros(batch_size, self.hidden_size)
+        outputs = []
+        <span class="kw">for</span> t <span class="kw">in</span> range(seq_len):
+            <span class="com"># 核心: h_t = tanh(W_hx * x_t + W_hh * h_{t-1} + b_h)</span>
+            h = torch.tanh(x[t] @ self.W_hx.T + h @ self.W_hh.T + self.b_h)
+            y = h @ self.W_hy.T + self.b_y
+            outputs.append(y)
+        <span class="kw">return</span> torch.stack(outputs), h</pre>
+</div>
+
+<h3>11.2 使用 PyTorch 内置 RNN</h3>
+<div class="code-block">
+<div class="code-header">Python — RNN Language Model</div>
+<pre><span class="kw">class</span> <span class="cls">RNNLanguageModel</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, vocab_size, embed_size, hidden_size, num_layers=<span class="num">1</span>):
+        <span class="fn">super</span>().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_size)
+        self.rnn = nn.RNN(embed_size, hidden_size, num_layers,
+                         batch_first=<span class="kw">True</span>, dropout=<span class="num">0.1</span>)
+        self.fc = nn.Linear(hidden_size, vocab_size)
+
+    <span class="kw">def</span> forward(self, x, hidden=<span class="kw">None</span>):
+        embedded = self.embedding(x)
+        output, hidden = self.rnn(embedded, hidden)
+        logits = self.fc(output)
+        <span class="kw">return</span> logits, hidden</pre>
+</div>
+
+<h3>11.3 LSTM 分类模型</h3>
+<div class="code-block">
+<div class="code-header">Python — BiLSTM Classifier</div>
+<pre><span class="kw">class</span> <span class="cls">LSTMModel</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, vocab_size, embed_size, hidden_size,
+                 num_classes, num_layers=<span class="num">2</span>, bidirectional=<span class="kw">True</span>):
+        <span class="fn">super</span>().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_size)
+        self.lstm = nn.LSTM(embed_size, hidden_size, num_layers,
+                           batch_first=<span class="kw">True</span>,
+                           bidirectional=bidirectional, dropout=<span class="num">0.3</span>)
+        self.num_directions = <span class="num">2</span> <span class="kw">if</span> bidirectional <span class="kw">else</span> <span class="num">1</span>
+        self.fc = nn.Linear(hidden_size * self.num_directions, num_classes)
+
+    <span class="kw">def</span> forward(self, x):
+        embedded = self.embedding(x)
+        output, (h_n, c_n) = self.lstm(embedded)
+        <span class="kw">if</span> self.lstm.bidirectional:
+            hidden = torch.cat([h_n[-<span class="num">2</span>], h_n[-<span class="num">1</span>]], dim=<span class="num">1</span>)
+        <span class="kw">else</span>:
+            hidden = h_n[-<span class="num">1</span>]
+        <span class="kw">return</span> self.fc(hidden)</pre>
+</div>
+
+<h3>11.4 GRU 模型</h3>
+<div class="code-block">
+<div class="code-header">Python — GRU Classifier</div>
+<pre><span class="kw">class</span> <span class="cls">GRUModel</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, input_size, hidden_size, num_classes, num_layers=<span class="num">1</span>):
+        <span class="fn">super</span>().__init__()
+        self.gru = nn.GRU(input_size, hidden_size, num_layers,
+                         batch_first=<span class="kw">True</span>, dropout=<span class="num">0.2</span>)
+        self.fc = nn.Linear(hidden_size, num_classes)
+
+    <span class="kw">def</span> forward(self, x):
+        output, h_n = self.gru(x)
+        <span class="kw">return</span> self.fc(h_n[-<span class="num">1</span>])</pre>
+</div>
+
+<h3>11.5 Seq2Seq 实现</h3>
+<div class="code-block">
+<div class="code-header">Python — Encoder-Decoder</div>
+<pre><span class="kw">class</span> <span class="cls">Encoder</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, vocab_size, embed_size, hidden_size):
+        <span class="fn">super</span>().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_size)
+        self.lstm = nn.LSTM(embed_size, hidden_size, batch_first=<span class="kw">True</span>)
+    <span class="kw">def</span> forward(self, x):
+        embedded = self.embedding(x)
+        <span class="kw">return</span> self.lstm(embedded)
+
+<span class="kw">class</span> <span class="cls">Decoder</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, vocab_size, embed_size, hidden_size):
+        <span class="fn">super</span>().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_size)
+        self.lstm = nn.LSTM(embed_size, hidden_size, batch_first=<span class="kw">True</span>)
+        self.fc = nn.Linear(hidden_size, vocab_size)
+    <span class="kw">def</span> forward(self, x, hidden):
+        output, hidden = self.lstm(self.embedding(x), hidden)
+        <span class="kw">return</span> self.fc(output.squeeze(<span class="num">1</span>)), hidden
+
+<span class="kw">class</span> <span class="cls">Seq2Seq</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, encoder, decoder):
+        <span class="fn">super</span>().__init__()
+        self.encoder = encoder
+        self.decoder = decoder
+    <span class="kw">def</span> forward(self, src, trg, teacher_forcing_ratio=<span class="num">0.5</span>):
+        batch_size, trg_len = trg.shape
+        outputs = torch.zeros(batch_size, trg_len,
+                             self.decoder.fc.out_features)
+        _, hidden = self.encoder(src)
+        dec_input = torch.zeros(batch_size, <span class="num">1</span>, dtype=torch.long)
+        <span class="kw">for</span> t <span class="kw">in</span> range(trg_len):
+            output, hidden = self.decoder(dec_input, hidden)
+            outputs[:, t] = output
+            dec_input = trg[:, t:t+<span class="num">1</span>] <span class="kw">if</span> torch.rand(<span class="num">1</span>).item() &lt; teacher_forcing_ratio \
+                        <span class="kw">else</span> output.argmax(<span class="num">1</span>, keepdim=<span class="kw">True</span>)
+        <span class="kw">return</span> outputs</pre>
+</div>
+
+<h3>11.6 完整训练循环</h3>
+<div class="code-block">
+<div class="code-header">Python — Training Loop with Gradient Clipping</div>
+<pre><span class="com"># 超参数</span>
+VOCAB_SIZE = <span class="num">10000</span>; EMBED_SIZE = <span class="num">128</span>; HIDDEN_SIZE = <span class="num">256</span>
+NUM_LAYERS = <span class="num">2</span>; CLIP = <span class="num">5.0</span>; LR = <span class="num">0.001</span>
+
+model = LSTMModel(VOCAB_SIZE, EMBED_SIZE, HIDDEN_SIZE, <span class="num">2</span>, NUM_LAYERS)
+optimizer = optim.Adam(model.parameters(), lr=LR)
+criterion = nn.CrossEntropyLoss()
+
+<span class="kw">for</span> epoch <span class="kw">in</span> range(NUM_EPOCHS):
+    model.train()
+    <span class="kw">for</span> batch_x, batch_y <span class="kw">in</span> train_loader:
+        optimizer.zero_grad()
+        logits = model(batch_x)
+        loss = criterion(logits, batch_y)
+        loss.backward()
+        <span class="com"># 梯度裁剪 — RNN 训练关键技巧</span>
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=CLIP)
+        optimizer.step()</pre>
+</div>
+
+<h3>11.7 手动实现 LSTM 单元</h3>
+<div class="code-block">
+<div class="code-header">Python — LSTM Cell from Scratch</div>
+<pre><span class="kw">class</span> <span class="cls">LSTMCell</span>(nn.Module):
+    <span class="kw">def</span> __init__(self, input_size, hidden_size):
+        <span class="fn">super</span>().__init__()
+        self.hidden_size = hidden_size
+        <span class="com"># 4个门合并为一个大矩阵</span>
+        self.W_x = nn.Parameter(torch.randn(<span class="num">4</span>*hidden_size, input_size) * <span class="num">0.01</span>)
+        self.W_h = nn.Parameter(torch.randn(<span class="num">4</span>*hidden_size, hidden_size) * <span class="num">0.01</span>)
+        self.b = nn.Parameter(torch.zeros(<span class="num">4</span>*hidden_size))
+
+    <span class="kw">def</span> forward(self, x, state):
+        h_prev, c_prev = state
+        <span class="kw">for</span> t <span class="kw">in</span> range(x.shape[<span class="num">0</span>]):
+            gates = x[t] @ self.W_x.T + h_prev @ self.W_h.T + self.b
+            f, i, g, o = gates.chunk(<span class="num">4</span>, dim=-<span class="num">1</span>)
+            c_prev = torch.sigmoid(f) * c_prev + torch.sigmoid(i) * torch.tanh(g)
+            h_prev = torch.sigmoid(o) * torch.tanh(c_prev)
+        <span class="kw">return</span> h_prev, (h_prev, c_prev)</pre>
+</div>
+
+</section>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">12</span>局限与 Transformer 替代</h2>
+
+<h3>12.1 RNN 的根本局限</h3>
+<div class="table-wrap"><table>
+<tr><th>局限</th><th>说明</th></tr>
+<tr><td>顺序计算瓶颈</td><td>必须逐步处理，$T$ 步计算无法并行化，训练时间与序列长度成正比</td></tr>
+<tr><td>长距离依赖有限</td><td>即使 LSTM/GRU，数百步以上的长距离依赖仍然困难</td></tr>
+<tr><td>隐藏状态瓶颈</td><td>所有历史信息压缩到固定维度向量中，信息容量有限</td></tr>
+<tr><td>无法并行训练</td><td>与 GPU/TPU 大规模并行计算能力不匹配</td></tr>
+</table></div>
+
+<h3>12.2 Transformer 的替代</h3>
+<p>2017 年 Transformer 通过自注意力机制彻底解决了 RNN 的顺序计算瓶颈：</p>
+<div class="table-wrap"><table>
+<tr><th>维度</th><th>RNN/LSTM</th><th>Transformer</th></tr>
+<tr><td>训练并行度</td><td>低（顺序计算）</td><td>高（全并行）</td></tr>
+<tr><td>推理速度（逐 token）</td><td>快（$O(1)$ 每步）</td><td>慢（$O(n^2)$ 注意力）</td></tr>
+<tr><td>内存占用</td><td>低（固定隐藏状态）</td><td>高（KV 缓存增长）</td></tr>
+<tr><td>流式处理</td><td>天然支持</td><td>需要特殊设计</td></tr>
+<tr><td>边缘设备部署</td><td>适合</td><td>较难</td></tr>
+</table></div>
+
+<h3>12.3 RNN 在大模型时代的复兴</h3>
+<div class="callout success">
+  <div class="callout-title">2023-2024 RNN 复兴</div>
+  <p><strong>RWKV</strong>（2023）：将注意力优势融入 RNN 框架，训练可并行、推理保持线性复杂度。</p>
+  <p><strong>Mamba</strong>（2024）：状态空间模型，结合 RNN 递归计算和注意力选择性，在大规模语言建模上展现竞争力。</p>
+  <p>这些工作表明，RNN 的核心思想——递归状态更新——仍然具有强大生命力。</p>
+</div>
+
+</section>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<!-- SVG: 演进时间线 -->
+<div class="svg-box">
+<svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr13" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+  </defs>
+
+  <!-- 主时间轴 -->
+  <line x1="50" y1="210" x2="770" y2="210" stroke="#bfdbfe" stroke-width="4"/>
+
+  <!-- 里程碑节点 -->
+  <!-- 1986 -->
+  <circle cx="80" cy="210" r="10" fill="#2563eb" stroke="#ffffff" stroke-width="3"/>
+  <text x="80" y="180" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">1986</text>
+  <text x="80" y="165" text-anchor="middle" fill="#475569" font-size="11">RNN+BPTT</text>
+  <line x1="80" y1="200" x2="80" y2="190" stroke="#2563eb" stroke-width="1"/>
+  <text x="80" y="240" text-anchor="middle" fill="#475569" font-size="10">Rumelhart</text>
+
+  <!-- 1997 -->
+  <circle cx="180" cy="210" r="10" fill="#ea580c" stroke="#ffffff" stroke-width="3"/>
+  <text x="180" y="180" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">1997</text>
+  <text x="180" y="165" text-anchor="middle" fill="#475569" font-size="11">LSTM</text>
+  <line x1="180" y1="200" x2="180" y2="190" stroke="#ea580c" stroke-width="1"/>
+  <text x="180" y="240" text-anchor="middle" fill="#475569" font-size="10">Hochreiter</text>
+
+  <!-- 1997 BiRNN -->
+  <circle cx="260" cy="210" r="8" fill="#7c3aed" stroke="#ffffff" stroke-width="3"/>
+  <text x="260" y="180" text-anchor="middle" fill="#7c3aed" font-size="12" font-weight="bold">1997</text>
+  <text x="260" y="165" text-anchor="middle" fill="#475569" font-size="11">BiRNN</text>
+  <text x="260" y="240" text-anchor="middle" fill="#475569" font-size="10">Schuster</text>
+
+  <!-- 2005 -->
+  <circle cx="340" cy="210" r="8" fill="#059669" stroke="#ffffff" stroke-width="3"/>
+  <text x="340" y="180" text-anchor="middle" fill="#059669" font-size="12" font-weight="bold">2005</text>
+  <text x="340" y="165" text-anchor="middle" fill="#475569" font-size="11">CTC Loss</text>
+  <text x="340" y="240" text-anchor="middle" fill="#475569" font-size="10">Graves</text>
+
+  <!-- 2014 GRU -->
+  <circle cx="430" cy="210" r="10" fill="#059669" stroke="#ffffff" stroke-width="3"/>
+  <text x="430" y="180" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">2014</text>
+  <text x="430" y="165" text-anchor="middle" fill="#475569" font-size="11">GRU / Seq2Seq</text>
+  <line x1="430" y1="200" x2="430" y2="190" stroke="#059669" stroke-width="1"/>
+  <text x="430" y="240" text-anchor="middle" fill="#475569" font-size="10">Cho / Sutskever</text>
+
+  <!-- 2014 Attention -->
+  <circle cx="530" cy="210" r="10" fill="#7c3aed" stroke="#ffffff" stroke-width="3"/>
+  <text x="530" y="180" text-anchor="middle" fill="#7c3aed" font-size="13" font-weight="bold">2014</text>
+  <text x="530" y="165" text-anchor="middle" fill="#475569" font-size="11">Attention</text>
+  <line x1="530" y1="200" x2="530" y2="190" stroke="#7c3aed" stroke-width="1"/>
+  <text x="530" y="240" text-anchor="middle" fill="#475569" font-size="10">Bahdanau</text>
+
+  <!-- 2017 -->
+  <circle cx="630" cy="210" r="12" fill="#dc2626" stroke="#ffffff" stroke-width="3"/>
+  <text x="630" y="175" text-anchor="middle" fill="#dc2626" font-size="14" font-weight="bold">2017</text>
+  <text x="630" y="158" text-anchor="middle" fill="#dc2626" font-size="12">Transformer</text>
+  <line x1="630" y1="198" x2="630" y2="188" stroke="#dc2626" stroke-width="1"/>
+  <text x="630" y="240" text-anchor="middle" fill="#475569" font-size="10">Vaswani</text>
+
+  <!-- 2023-24 -->
+  <circle cx="740" cy="210" r="10" fill="#2563eb" stroke="#ffffff" stroke-width="3"/>
+  <text x="740" y="180" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">2024</text>
+  <text x="740" y="165" text-anchor="middle" fill="#475569" font-size="11">Mamba/RWKV</text>
+  <line x1="740" y1="200" x2="740" y2="190" stroke="#2563eb" stroke-width="1"/>
+  <text x="740" y="240" text-anchor="middle" fill="#475569" font-size="10">Gu & Dao</text>
+
+  <!-- 底部总结 -->
+  <rect x="50" y="280" width="720" height="120" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="70" y="305" fill="#7c3aed" font-size="14" font-weight="bold">核心规律</text>
+  <text x="70" y="328" fill="#475569" font-size="12">1. 梯度流是关键：从 RNN 梯度消失 → LSTM 加法路径 → Transformer 残差连接</text>
+  <text x="70" y="348" fill="#475569" font-size="12">2. 门控机制是突破：让网络学习何时记忆、何时遗忘</text>
+  <text x="70" y="368" fill="#475569" font-size="12">3. 并行性决定效率：Transformer 消除序列依赖 → 大规模并行训练</text>
+  <text x="70" y="388" fill="#475569" font-size="12">4. 选择性是趋势：从固定全连接 → 可学习门控 → 自注意力动态选择性</text>
+</svg>
+<div class="svg-caption">图 12：RNN 架构演进时间线 — 从 1986 年到 2024 年的关键里程碑</div>
+</div>
+
+<h3>13.1 关键里程碑</h3>
+<div class="timeline">
+  <div class="timeline-item"><span class="year">1986</span><div class="event">RNN + BPTT</div><div class="desc">Rumelhart 等人 — 反向传播训练循环网络</div></div>
+  <div class="timeline-item"><span class="year">1991</span><div class="event">梯度消失问题</div><div class="desc">Hochreiter — 识别 RNN 训练的根本困难</div></div>
+  <div class="timeline-item"><span class="year">1997</span><div class="event">LSTM</div><div class="desc">Hochreiter & Schmidhuber — 门控机制解决长距离依赖</div></div>
+  <div class="timeline-item"><span class="year">1997</span><div class="event">双向 RNN</div><div class="desc">Schuster & Paliwal — 全局上下文建模</div></div>
+  <div class="timeline-item"><span class="year">2005</span><div class="event">CTC Loss</div><div class="desc">Graves — 无对齐序列标注训练</div></div>
+  <div class="timeline-item"><span class="year">2014</span><div class="event">GRU / Seq2Seq</div><div class="desc">Cho / Sutskever — 简化 LSTM / 编码器-解码器框架</div></div>
+  <div class="timeline-item"><span class="year">2014</span><div class="event">Attention</div><div class="desc">Bahdanau — 动态上下文对齐</div></div>
+  <div class="timeline-item"><span class="year">2017</span><div class="event">Transformer</div><div class="desc">Vaswani — 自注意力取代 RNN</div></div>
+  <div class="timeline-item"><span class="year">2024</span><div class="event">Mamba / RWKV</div><div class="desc">状态空间模型复兴，RNN 思想在大模型时代重生</div></div>
+</div>
+
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+  <li>Rumelhart, D. E., Hinton, G. E., & Williams, R. J. (1986). Learning representations by back-propagating errors. <em>Nature</em>, 323(6088), 533-536.</li>
+  <li>Elman, J. L. (1990). Finding structure in time. <em>Cognitive Science</em>, 14(2), 179-211.</li>
+  <li>Hochreiter, S. (1991). Untersuchungen zu dynamischen neuronalen Netzen. <em>Diplomarbeit, TU München</em>.</li>
+  <li>Hochreiter, S., & Schmidhuber, J. (1997). Long short-term memory. <em>Neural Computation</em>, 9(8), 1735-1780.</li>
+  <li>Schuster, M., & Paliwal, K. K. (1997). Bidirectional recurrent neural networks. <em>IEEE TSP</em>, 45(11), 2673-2681.</li>
+  <li>Jaeger, H. (2001). The "echo state" approach to analysing and training recurrent neural networks. <em>GMD Report 148</em>.</li>
+  <li>Graves, A., & Schmidhuber, J. (2005). Framewise phoneme classification with bidirectional LSTM. <em>Neural Networks</em>, 18(5-6), 602-610.</li>
+  <li>Cho, K., et al. (2014). Learning phrase representations using RNN encoder-decoder for statistical machine translation. <em>EMNLP 2014</em>.</li>
+  <li>Sutskever, I., Vinyals, O., & Le, Q. V. (2014). Sequence to sequence learning with neural networks. <em>NeurIPS 2014</em>.</li>
+  <li>Bahdanau, D., Cho, K., & Bengio, Y. (2015). Neural machine translation by jointly learning to align and translate. <em>ICLR 2015</em>.</li>
+  <li>Huang, Z., Xu, W., & Yu, K. (2015). Bidirectional LSTM-CRF models for sequence tagging. <em>arXiv:1508.01991</em>.</li>
+  <li>Vaswani, A., et al. (2017). Attention is all you need. <em>NeurIPS 2017</em>.</li>
+  <li>Peng, B. L., et al. (2023). RWKV: Reinventing RNNs for the transformer era. <em>arXiv:2305.13048</em>.</li>
+  <li>Gu, A., & Dao, T. (2024). Mamba: Linear-time sequence modeling with selective state spaces. <em>arXiv:2312.00752</em>.</li>
+  <li>Pascanu, R., Mikolov, T., & Bengio, Y. (2013). On the difficulty of training recurrent neural networks. <em>ICML 2013</em>.</li>
+</ol>
+</section>
+
+</main>
+<div id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</div>
+
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+
+  function highlight() {
+    var scrollY = window.pageYOffset;
+    var offset = 100;
+    var current = '';
+
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - offset) {
+        current = sections[i].id;
+      }
+    }
+
+    for (var j = 0; j < navLinks.length; j++) {
+      navLinks[j].classList.remove('active');
+      if (navLinks[j].getAttribute('href') === '#' + current) {
+        navLinks[j].classList.add('active');
+      }
+    }
+
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+
+    if (backToTop) {
+      if (scrollY > 300) backToTop.classList.add('visible');
+      else backToTop.classList.remove('visible');
+    }
+  }
+
+  window.addEventListener('scroll', highlight, { passive: true });
+  highlight();
+})();
+
+// KaTeX 渲染策略：
+// 1. 先保存 .formula[data-eq] 的原始内容并清空（防止 auto-render 干扰）
+// 2. 用 auto-render 处理行内公式 $...$ 和 \(...\)
+// 3. 手动渲染块级公式 $$...$$，保留 data-eq 编号
+(function() {
+  // 第一步：保存块级公式内容并清空
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  // 第二步：用 auto-render 处理行内公式（此时 .formula 已清空，不会被误处理）
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') {
+      setTimeout(renderAll, 100);
+      return;
+    }
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false}
+      ],
+      throwOnError: false
+    });
+    // 第三步：手动渲染块级公式
+    savedFormulas.forEach(function(item) {
+      var f = item.el;
+      var rawHTML = item.html;
+      f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div');
+      body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s);
+      var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div');
+          body.appendChild(eqDiv);
+          try {
+            katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false });
+          } catch(e) {
+            eqDiv.textContent = parts[i];
+          }
+        } else if (parts[i].trim()) {
+          var span = document.createElement('span');
+          span.innerHTML = parts[i];
+          body.appendChild(span);
+        }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+
+</body>
+</html>

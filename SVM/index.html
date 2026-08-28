@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVM 详解 — Support Vector Machine 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>SVM 详解</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、起源与直觉</a>
+    <a href="#ch2">二、线性可分 SVM：最大间隔</a>
+    <a href="#ch3">三、对偶问题与 KKT 条件</a>
+    <a href="#ch4">四、核技巧：非线性映射</a>
+    <a href="#ch5">五、软间隔：处理噪声</a>
+    <a href="#ch6">六、SMO 算法</a>
+    <a href="#ch7">七、多分类 SVM</a>
+    <a href="#ch8">八、支持向量回归（SVR）</a>
+    <a href="#ch9">九、One-Class SVM 与异常检测</a>
+    <a href="#ch10">十、PyTorch 代码实现</a>
+    <a href="#ch11">十一、SVM 与其他分类器对比</a>
+    <a href="#ch12">十二、调参实践与工程建议</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>SVM 详解</h1>
+  <div class="subtitle">Support Vector Machine — 支持向量机</div>
+  <div class="tagline">最大间隔分类器 · 统计学习理论的明珠 · 1995 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">7 张 SVG 结构图</span>
+    <span class="badge">19 个公式</span>
+    <span class="badge">6 段 Python 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">1</span>起源与直觉</h2>
+
+<h3>1.1 从感知机到支持向量机</h3>
+<p>1957 年，Rosenblatt 提出了<strong>感知机</strong>（Perceptron），这是第一个可以学习的线性分类器。感知机的目标很简单：找到一个超平面将两类数据分开。但感知机有一个致命弱点——<strong>解不唯一</strong>。只要数据线性可分，感知机就会找到一个可行解然后停止，但这个解可能是"不好的"——离数据点很近，泛化能力差。</p>
+<p>1960 年代，Vapnik 和 Chervonenkis 发展了<strong>统计学习理论</strong>（Statistical Learning Theory），提出了 VC 维和结构风险最小化原则。他们的核心洞察是：在所有能正确分类的超平面中，应该选择<strong>离最近的数据点最远</strong>的那个——这就是<strong>最大间隔</strong>（Maximum Margin）思想。</p>
+
+<div class="callout">
+<div class="callout-title">核心直觉</div>
+<p>想象一条马路，两侧分别是一栋栋红房子和蓝房子。你可以画很多条线把红蓝两边分开，但最稳妥的那条线——风吹雨打都不怕——是<strong>马路正中央的那条线</strong>。马路越宽，容错能力越强。SVM 就是自动找到这条最宽马路的算法。</p>
+</div>
+
+<h3>1.2 统计学习理论的核心概念</h3>
+<p>Vapnik 的统计学习理论为 SVM 提供了坚实的理论基础。以下几个概念至关重要：</p>
+
+<table>
+<tr><th>概念</th><th>含义</th><th>与 SVM 的关系</th></tr>
+<tr><td><strong>VC 维</strong></td><td>模型能够打散（shatter）的最大样本数</td><td>间隔越大，VC 维越低，泛化能力越强</td></tr>
+<tr><td><strong>结构风险</strong></td><td>经验风险 + 置信区间（模型复杂度）</td><td>SVM 通过最大化间隔间接最小化结构风险</td></tr>
+<tr><td><strong>泛化界</strong></td><td>测试误差 $\leq$ 训练误差 + $O(\sqrt{h/n})$</td><td>$h$ 为 VC 维，$n$ 为样本量</td></tr>
+<tr><td><strong>间隔定理</strong></td><td>泛化误差以概率 $1-\delta$ 不超过 $O(R^2/\gamma^2)$</td><td>$R$ 为数据球半径，$\gamma$ 为间隔宽度</td></tr>
+</table>
+
+<p>关键结论是：泛化能力不依赖于特征空间的维度，而是依赖于<strong>间隔宽度</strong> $\gamma$ 和数据分布半径 $R$ 的比值。这使得 SVM 在高维空间中依然能有效工作——也为后来的核技巧埋下了伏笔。</p>
+
+<h3>1.3 "支持向量"的含义</h3>
+<p>SVM 的命名源于一个关键特性：最终的分隔超平面<strong>仅由少数关键数据点决定</strong>，这些点被称为<strong>支持向量</strong>（Support Vectors）。它们是恰好落在间隔边界上的点——如果移动或删除其他点，超平面不会改变；但如果移动支持向量，超平面就会随之变化。</p>
+
+<div class="callout success">
+<div class="callout-title">支持向量的稀疏性</div>
+<p>假设训练集有 $10{,}000$ 个样本，最终可能只有 $200$ 个支持向量。这意味着决策函数只依赖这 $200$ 个点，计算复杂度从 $O(n)$ 降低到 $O(n_{sv})$。这种稀疏性是 SVM 的重要优势。</p>
+</div>
+
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">2</span>线性可分 SVM：最大间隔分类器</h2>
+
+<h3>2.1 超平面与分类决策</h3>
+<p>在 $d$ 维特征空间中，一个<strong>超平面</strong>（Hyperplane）定义为：</p>
+<div class="formula" data-eq="(1)">$$\mathbf{w} \cdot \mathbf{x} + b = 0$$</div>
+<p>其中 $\mathbf{w} \in \mathbb{R}^d$ 是权重向量（超平面的法向量），$b \in \mathbb{R}$ 是偏置项。超平面将空间分为两半：$\mathbf{w} \cdot \mathbf{x} + b > 0$ 的一侧为正类，$\mathbf{w} \cdot \mathbf{x} + b < 0$ 的一侧为负类。</p>
+<p>给定训练集 $\{(\mathbf{x}_i, y_i)\}_{i=1}^n$，其中 $y_i \in \{+1, -1\}$，分类决策函数为：</p>
+<div class="formula" data-eq="(2)">$$f(\mathbf{x}) = \text{sign}(\mathbf{w} \cdot \mathbf{x} + b)$$</div>
+
+<h3>2.2 函数间隔与几何间隔</h3>
+<p>为了量化分类的确信程度，引入两个概念：</p>
+<p><strong>函数间隔</strong>（Functional Margin）：样本 $(\mathbf{x}_i, y_i)$ 的函数间隔为：</p>
+<div class="formula" data-eq="(3)">$$\hat{\gamma}_i = y_i(\mathbf{w} \cdot \mathbf{x}_i + b)$$</div>
+<p>当分类正确时 $\hat{\gamma}_i > 0$，值越大表示确信度越高。但函数间隔有一个问题：如果等比例缩放 $\mathbf{w}$ 和 $b$（如乘以 $2$），超平面不变但函数间隔翻倍。因此函数间隔不能直接用于衡量间隔大小。</p>
+<p><strong>几何间隔</strong>（Geometric Margin）：对 $\mathbf{w}$ 做归一化：</p>
+<div class="formula" data-eq="(4)">$$\gamma_i = \frac{y_i(\mathbf{w} \cdot \mathbf{x}_i + b)}{\|\mathbf{w}\|}$$</div>
+<p>几何间隔就是样本点到超平面的<strong>有符号距离</strong>，不受 $\mathbf{w}$ 缩放影响。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arrow1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6" fill="#334155"/>
+  </marker>
+</defs>
+<!-- 坐标轴 -->
+<line x1="60" y1="300" x2="740" y2="300" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrow1)"/>
+<line x1="100" y1="320" x2="100" y2="40" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrow1)"/>
+<text x="735" y="320" fill="#64748b" font-size="13">x₁</text>
+<text x="75" y="45" fill="#64748b" font-size="13">x₂</text>
+<!-- 分类区域底色 -->
+<rect x="100" y="50" width="300" height="250" fill="#dbeafe" opacity="0.3" rx="4"/>
+<rect x="400" y="50" width="290" height="250" fill="#fee2e2" opacity="0.3" rx="4"/>
+<!-- 间隔边界 w·x+b=-1 -->
+<line x1="350" y1="50" x2="500" y2="300" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,4"/>
+<text x="340" y="65" fill="#2563eb" font-size="12">w·x+b = -1</text>
+<!-- 间隔边界 w·x+b=+1 -->
+<line x1="250" y1="50" x2="400" y2="300" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,4"/>
+<text x="230" y="65" fill="#dc2626" font-size="12">w·x+b = +1</text>
+<!-- 分隔超平面 w·x+b=0 -->
+<line x1="300" y1="50" x2="450" y2="300" stroke="#0f172a" stroke-width="2.5" class="glow-ring"/>
+<text x="380" y="200" fill="#0f172a" font-size="13" font-weight="700" transform="rotate(43 380 200)">w·x+b = 0</text>
+<!-- 间隔宽度标注 -->
+<line x1="325" y1="175" x2="375" y2="175" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="3,3"/>
+<text x="335" y="168" fill="#7c3aed" font-size="13" font-weight="700">2γ</text>
+<!-- w 向量 -->
+<line x1="375" y1="175" x2="430" y2="100" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#arrow1)"/>
+<text x="415" y="95" fill="#7c3aed" font-size="14" font-weight="700">w</text>
+<!-- 正类数据点 -->
+<circle cx="160" cy="250" r="6" fill="#3b82f6"/>
+<circle cx="180" cy="220" r="6" fill="#3b82f6"/>
+<circle cx="140" cy="210" r="6" fill="#3b82f6"/>
+<circle cx="200" cy="190" r="6" fill="#3b82f6"/>
+<circle cx="170" cy="170" r="6" fill="#3b82f6"/>
+<circle cx="220" cy="210" r="6" fill="#3b82f6"/>
+<!-- 负类数据点 -->
+<circle cx="560" cy="130" r="6" fill="#ef4444"/>
+<circle cx="600" cy="100" r="6" fill="#ef4444"/>
+<circle cx="580" cy="80" r="6" fill="#ef4444"/>
+<circle cx="620" cy="140" r="6" fill="#ef4444"/>
+<circle cx="540" cy="100" r="6" fill="#ef4444"/>
+<circle cx="640" cy="90" r="6" fill="#ef4444"/>
+<!-- 支持向量（大圈） -->
+<circle cx="220" cy="210" r="10" fill="none" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
+<circle cx="540" cy="100" r="10" fill="none" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
+<!-- 图例 -->
+<rect x="520" y="245" width="14" height="14" fill="#3b82f6"/>
+<text x="540" y="257" fill="#334155" font-size="12">正类 (y=+1)</text>
+<rect x="630" y="245" width="14" height="14" fill="#ef4444"/>
+<text x="650" y="257" fill="#334155" font-size="12">负类 (y=-1)</text>
+<circle cx="540" cy="278" r="6" fill="none" stroke="#7c3aed" stroke-width="2"/>
+<text x="555" y="282" fill="#334155" font-size="12">支持向量</text>
+</svg>
+</div>
+
+<h3>2.3 最大间隔优化问题</h3>
+<p>SVM 的目标是：在所有能正确分类的超平面中，找到使<strong>最小几何间隔最大化</strong>的那一个。即：</p>
+<p>$$\max_{\mathbf{w}, b} \quad \gamma = \min_{i} \frac{y_i(\mathbf{w} \cdot \mathbf{x}_i + b)}{\|\mathbf{w}\|}$$</p>
+<p>由于 $\mathbf{w}$ 和 $b$ 可以等比例缩放，我们令函数间隔 $\min_i y_i(\mathbf{w} \cdot \mathbf{x}_i + b) = 1$（即归一化约束），于是优化问题变为：</p>
+<div class="formula" data-eq="(5)">$$\min_{\mathbf{w}, b} \quad \frac{1}{2}\|\mathbf{w}\|^2 \qquad \text{s.t.} \quad y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1, \quad i = 1, \ldots, n$$</div>
+<p>这是一个<strong>凸二次规划</strong>（Convex Quadratic Programming）问题：目标函数是二次凸函数，约束是线性不等式。凸 QP 保证了<strong>全局最优解</strong>的存在性和唯一性——这是 SVM 相比感知机的巨大优势。</p>
+
+<div class="callout warn">
+<div class="callout-title">为什么最大化间隔等价于最小化 $\|\mathbf{w}\|^2$？</div>
+<p>间隔宽度为 $\gamma = 1/\|\mathbf{w}\|$（在归一化约束下）。最大化 $\gamma$ 等价于最大化 $1/\|\mathbf{w}\|$，等价于最小化 $\|\mathbf{w}\|$，等价于最小化 $\frac{1}{2}\|\mathbf{w}\|^2$（乘以 $\frac{1}{2}$ 和平方是为了求导方便，不改变最优解）。</p>
+</div>
+
+<h3>2.4 几何间隔与函数间隔的关系</h3>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6" fill="#334155"/>
+  </marker>
+</defs>
+<!-- 超平面 -->
+<line x1="100" y1="280" x2="700" y2="80" stroke="#0f172a" stroke-width="2.5"/>
+<text x="500" y="150" fill="#0f172a" font-size="13" font-weight="700" transform="rotate(-18 500 150)">超平面 w·x+b=0</text>
+<!-- 数据点 -->
+<circle cx="300" cy="130" r="8" fill="#3b82f6"/>
+<text x="280" y="125" fill="#334155" font-size="12">x_i</text>
+<!-- 垂直距离（几何间隔） -->
+<line x1="300" y1="130" x2="400" y2="276" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5,3"/>
+<text x="330" y="220" fill="#7c3aed" font-size="13" font-weight="700">γ (几何间隔)</text>
+<text x="330" y="238" fill="#7c3aed" font-size="11">= ŷ/||w||</text>
+<!-- w 方向 -->
+<line x1="400" y1="276" x2="340" y2="200" stroke="#dc2626" stroke-width="2.5" marker-end="url(#arrow2)"/>
+<text x="315" y="185" fill="#dc2626" font-size="14" font-weight="700">w</text>
+<!-- 函数间隔标注 -->
+<rect x="280" y="115" width="40" height="15" fill="#dbeafe" opacity="0.7" rx="2"/>
+<text x="270" y="100" fill="#2563eb" font-size="12">ŷ=w·x_i+b</text>
+<!-- 法线方向说明 -->
+<text x="100" y="320" fill="#64748b" font-size="12">几何间隔 = 点到超平面的实际距离（垂直），不随 w 缩放变化</text>
+</svg>
+</div>
+
+<p>函数间隔与几何间隔的关系为 $\gamma = \hat{\gamma} / \|\mathbf{w}\|$。在 SVM 的优化中，我们通过固定 $\hat{\gamma} = 1$ 消除缩放不确定性，然后最大化 $\gamma = 1/\|\mathbf{w}\|$。</p>
+
+</section>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">3</span>对偶问题与 KKT 条件</h2>
+
+<h3>3.1 为什么要用对偶？</h3>
+<p>直接求解原始问题（公式 5）需要优化 $d+1$ 个变量（$\mathbf{w}$ 有 $d$ 个分量 + $b$），当特征维度很高时计算困难。通过<strong>拉格朗日对偶</strong>，我们可以将问题转化为只依赖 $n$ 个拉格朗日乘子 $\alpha_i$ 的对偶问题——变量数只与样本数有关，与特征维度无关，这一特性使得<strong>核技巧</strong>成为可能。</p>
+
+<h3>3.2 拉格朗日函数</h3>
+<p>引入拉格朗日乘子 $\alpha_i \geq 0$，构造拉格朗日函数：</p>
+<div class="formula" data-eq="(6)">$$L(\mathbf{w}, b, \boldsymbol{\alpha}) = \frac{1}{2}\|\mathbf{w}\|^2 - \sum_{i=1}^{n} \alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right]$$</div>
+<p>根据 KKT 条件，对 $\mathbf{w}$ 和 $b$ 求偏导并令其为零：</p>
+<div class="formula" data-eq="(7)">$$\mathbf{w} = \sum_{i=1}^{n} \alpha_i y_i \mathbf{x}_i$$</div>
+<div class="formula" data-eq="(8)">$$\sum_{i=1}^{n} \alpha_i y_i = 0$$</div>
+<p>公式 (7) 揭示了 SVM 的一个深刻性质：<strong>权重向量是训练样本的线性组合</strong>，而且只有 $\alpha_i > 0$ 的样本（即支持向量）才贡献非零项。</p>
+
+<h3>3.3 对偶优化问题</h3>
+<p>将公式 (7) 和 (8) 代回拉格朗日函数，消去 $\mathbf{w}$ 和 $b$，得到对偶问题：</p>
+<div class="formula" data-eq="(9)">$$\max_{\boldsymbol{\alpha}} \quad W(\boldsymbol{\alpha}) = \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i=1}^{n}\sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j \, \mathbf{x}_i \cdot \mathbf{x}_j$$</div>
+<p>约束条件为 $\alpha_i \geq 0$ 且 $\sum_i \alpha_i y_i = 0$。</p>
+<p>对偶问题的决策函数为：</p>
+<div class="formula" data-eq="(10)">$$f(\mathbf{x}) = \text{sign}\left( \sum_{i=1}^{n} \alpha_i y_i \, \langle \mathbf{x}_i, \mathbf{x} \rangle + b \right)$$</div>
+
+<div class="callout">
+<div class="callout-title">对偶问题的关键优势</div>
+<ul>
+<li><strong>计算复杂度与特征维度无关</strong>：对偶问题只涉及样本内积 $\mathbf{x}_i \cdot \mathbf{x}_j$，不直接依赖特征维度 $d$</li>
+<li><strong>支持核技巧</strong>：将内积替换为核函数 $K(\mathbf{x}_i, \mathbf{x}_j)$ 即可处理非线性问题</li>
+<li><strong>稀疏性</strong>：大多数 $\alpha_i = 0$，只有支持向量对应的 $\alpha_i > 0$</li>
+</ul>
+</div>
+
+<h3>3.4 KKT 条件的互补松弛性</h3>
+<p>KKT 互补松弛条件为：</p>
+<p>$$\alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right] = 0, \quad \forall i$$</p>
+<p>这个条件将样本分为三类：</p>
+
+<table>
+<tr><th>条件</th><th>$\alpha_i$ 值</th><th>样本类型</th><th>几何含义</th></tr>
+<tr><td>$y_i(\mathbf{w} \cdot \mathbf{x}_i + b) > 1$</td><td>$\alpha_i = 0$</td><td>非支持向量</td><td>在间隔边界之外，被正确分类</td></tr>
+<tr><td>$y_i(\mathbf{w} \cdot \mathbf{x}_i + b) = 1$</td><td>$0 < \alpha_i \leq C$</td><td>间隔上的支持向量</td><td>恰好落在间隔边界上</td></tr>
+<tr><td>$y_i(\mathbf{w} \cdot \mathbf{x}_i + b) < 1$</td><td>$\alpha_i = C$</td><td>间隔内的支持向量</td><td>在间隔边界内，可能被误分类</td></tr>
+</table>
+
+</section>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">4</span>核技巧：非线性映射</h2>
+
+<h3>4.1 从线性到非线性</h3>
+<p>现实中的数据往往<strong>线性不可分</strong>——无法用一个超平面将两类分开。解决思路是将数据从原始空间映射到更高维的空间，在高维空间中数据可能变得线性可分。</p>
+<p>设映射函数为 $\phi(\mathbf{x})$，则在高维空间中的决策函数为：</p>
+<p>$$f(\mathbf{x}) = \text{sign}\left( \sum_i \alpha_i y_i \, \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}) + b \right)$$</p>
+<p>但显式计算 $\phi(\mathbf{x})$ 可能维度极高甚至无限维，计算不可行。<strong>核技巧</strong>的核心思想是：不显式计算映射，而是直接计算映射后的内积。</p>
+
+<div class="formula" data-eq="(11)">$$K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}_j)$$</div>
+
+<p>将对偶问题中的内积替换为核函数：</p>
+<div class="formula" data-eq="(12)">$$\max_{\boldsymbol{\alpha}} \quad \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j y_i y_j \, K(\mathbf{x}_i, \mathbf{x}_j)$$</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arrow3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6" fill="#7c3aed"/>
+  </marker>
+  <linearGradient id="bgLow" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#f1f5f9"/><stop offset="100%" stop-color="#e2e8f0"/>
+  </linearGradient>
+  <linearGradient id="bgHigh" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#ede9fe"/><stop offset="100%" stop-color="#ddd6fe"/>
+  </linearGradient>
+</defs>
+<!-- 左侧：低维空间 -->
+<rect x="30" y="40" width="320" height="280" rx="12" fill="url(#bgLow)" stroke="#cbd5e1" stroke-width="1"/>
+<text x="100" y="65" fill="#334155" font-size="14" font-weight="700">原始空间 (2D)</text>
+<!-- 同心圆数据 -->
+<circle cx="190" cy="180" r="35" fill="none" stroke="#ef4444" stroke-width="2"/>
+<circle cx="190" cy="180" r="25" fill="#ef4444" opacity="0.2"/>
+<circle cx="180" cy="170" r="4" fill="#ef4444"/>
+<circle cx="200" cy="185" r="4" fill="#ef4444"/>
+<circle cx="185" cy="195" r="4" fill="#ef4444"/>
+<circle cx="200" cy="170" r="4" fill="#ef4444"/>
+<circle cx="190" cy="180" r="65" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3"/>
+<circle cx="130" cy="140" r="4" fill="#3b82f6"/>
+<circle cx="250" cy="140" r="4" fill="#3b82f6"/>
+<circle cx="140" cy="220" r="4" fill="#3b82f6"/>
+<circle cx="250" cy="220" r="4" fill="#3b82f6"/>
+<circle cx="190" cy="120" r="4" fill="#3b82f6"/>
+<circle cx="190" cy="240" r="4" fill="#3b82f6"/>
+<text x="120" y="310" fill="#64748b" font-size="11">线性不可分：无法用直线分开红蓝</text>
+<!-- 箭头映射 -->
+<line x1="360" y1="180" x2="440" y2="180" stroke="#7c3aed" stroke-width="3" stroke-dasharray="8,4" class="flow-line" marker-end="url(#arrow3)"/>
+<text x="370" y="165" fill="#7c3aed" font-size="13" font-weight="700">φ(x)</text>
+<!-- 右侧：高维空间 -->
+<rect x="450" y="40" width="320" height="280" rx="12" fill="url(#bgHigh)" stroke="#c4b5fd" stroke-width="1"/>
+<text x="520" y="65" fill="#334155" font-size="14" font-weight="700">映射空间 (3D)</text>
+<!-- 3D 框架 -->
+<line x1="620" y1="260" x2="720" y2="260" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="620" y1="260" x2="570" y2="290" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="620" y1="260" x2="620" y2="130" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="715" y="275" fill="#64748b" font-size="11">z₁</text>
+<text x="552" y="295" fill="#64748b" font-size="11">z₂</text>
+<text x="625" y="125" fill="#64748b" font-size="11">z₃=φ(x)</text>
+<!-- 分隔平面 -->
+<polygon points="580,200 680,170 710,210 610,240" fill="#10b981" opacity="0.15" stroke="#10b981" stroke-width="2"/>
+<text x="620" y="195" fill="#059669" font-size="11" font-weight="600">超平面</text>
+<!-- 红色点上移 -->
+<circle cx="605" cy="180" r="4" fill="#ef4444"/>
+<circle cx="615" cy="175" r="4" fill="#ef4444"/>
+<circle cx="600" cy="185" r="4" fill="#ef4444"/>
+<circle cx="610" cy="170" r="4" fill="#ef4444"/>
+<!-- 蓝色点下移 -->
+<circle cx="590" cy="230" r="4" fill="#3b82f6"/>
+<circle cx="660" cy="225" r="4" fill="#3b82f6"/>
+<circle cx="640" cy="235" r="4" fill="#3b82f6"/>
+<circle cx="670" cy="220" r="4" fill="#3b82f6"/>
+<text x="500" y="310" fill="#64748b" font-size="11">线性可分：可以用平面将红蓝分开</text>
+</svg>
+</div>
+
+<h3>4.2 Mercer 定理</h3>
+<p>并非任意函数都能作为核函数。<strong>Mercer 定理</strong>给出了充分必要条件：函数 $K(\cdot, \cdot)$ 是有效的核函数，当且仅当对任意有限样本集，核矩阵 $\mathbf{K} = [K(\mathbf{x}_i, \mathbf{x}_j)]_{n \times n}$ 是<strong>半正定</strong>的。</p>
+
+<h3>4.3 常用核函数</h3>
+
+<table>
+<tr><th>核函数</th><th>公式</th><th>超参数</th><th>适用场景</th></tr>
+<tr><td><strong>线性核</strong></td><td>$K(\mathbf{x}, \mathbf{z}) = \mathbf{x} \cdot \mathbf{z}$</td><td>无</td><td>线性可分数据、高维稀疏特征（文本）</td></tr>
+<tr><td><strong>多项式核</strong></td><td>$K(\mathbf{x}, \mathbf{z}) = (\mathbf{x} \cdot \mathbf{z} + c)^d$</td><td>$d$（阶数）, $c$（常数）</td><td>中等复杂度非线性</td></tr>
+<tr><td><strong>RBF 核</strong></td><td>$K(\mathbf{x}, \mathbf{z}) = \exp(-\gamma \|\mathbf{x} - \mathbf{z}\|^2)$</td><td>$\gamma$（带宽）</td><td>通用默认选择、复杂非线性边界</td></tr>
+<tr><td><strong>Sigmoid 核</strong></td><td>$K(\mathbf{x}, \mathbf{z}) = \tanh(\kappa \, \mathbf{x} \cdot \mathbf{z} + \theta)$</td><td>$\kappa$, $\theta$</td><td>类似神经网络的非线性</td></tr>
+<tr><td><strong>拉普拉斯核</strong></td><td>$K(\mathbf{x}, \mathbf{z}) = \exp(-\sigma \|\mathbf{x} - \mathbf{z}\|_1)$</td><td>$\sigma$</td><td>对 L1 距离敏感的场景</td></tr>
+</table>
+
+<p>其中最常用的是 <strong>RBF（高斯）核</strong>：</p>
+<div class="formula" data-eq="(13)">$$K(\mathbf{x}, \mathbf{z}) = \exp\left(-\gamma \|\mathbf{x} - \mathbf{z}\|^2\right)$$</div>
+<p>参数 $\gamma > 0$ 控制核的宽度：$\gamma$ 越大，核函数衰减越快，决策边界越复杂（可能过拟合）；$\gamma$ 越小，决策边界越平滑（可能欠拟合）。</p>
+
+<div class="callout warn">
+<div class="callout-title">RBF 核的隐含映射</div>
+<p>RBF 核对应一个<strong>无限维</strong>的特征映射。将 $\exp(-\gamma\|\mathbf{x}-\mathbf{z}\|^2)$ 泰勒展开后，包含所有阶次的多项式特征。这意味着 RBF 核的 SVM 能拟合任意复杂的决策边界——但需要正则化（$C$ 参数）来防止过拟合。</p>
+</div>
+
+<h3>4.4 核函数的选择策略</h3>
+
+<table>
+<tr><th>数据特征</th><th>推荐核函数</th><th>理由</th></tr>
+<tr><td>样本多 ($n > 10^4$)、特征多 ($d > 10^3$)</td><td>线性核</td><td>计算高效，高维中数据大概率线性可分</td></tr>
+<tr><td>样本中等、特征中等</td><td>RBF 核</td><td>最通用，默认首选</td></tr>
+<tr><td>样本少、需要可解释性</td><td>多项式核 ($d \leq 3$)</td><td>决策边界是多项式曲面，可解释</td></tr>
+<tr><td>文本分类 / TF-IDF 特征</td><td>线性核</td><td>稀疏高维特征天然适合线性分类</td></tr>
+</table>
+
+</section>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">5</span>软间隔：处理噪声与不可分数据</h2>
+
+<h3>5.1 为什么需要软间隔？</h3>
+<p>硬间隔 SVM 要求所有样本严格满足 $y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1$，这在以下场景中会出问题：</p>
+<ul>
+<li>数据<strong>线性不可分</strong>（即使在核空间中），约束无解</li>
+<li>数据有<strong>噪声/离群点</strong>，硬间隔会为了一个离群点大幅扭曲决策边界</li>
+<li>过拟合：间隔过窄，泛化能力差</li>
+</ul>
+
+<p><strong>软间隔</strong>（Soft Margin）的核心思想是：允许某些样本违反间隔约束，但对每个违反施加惩罚。</p>
+
+<h3>5.2 松弛变量与软间隔优化</h3>
+<p>对每个样本引入<strong>松弛变量</strong> $\xi_i \geq 0$，表示样本违反间隔约束的程度：</p>
+<ul>
+<li>$\xi_i = 0$：样本在间隔边界外，正确分类</li>
+<li>$0 < \xi_i \leq 1$：样本在间隔内，但正确分类</li>
+<li>$\xi_i > 1$：样本被误分类</li>
+</ul>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+<!-- 超平面 -->
+<line x1="200" y1="40" x2="600" y2="280" stroke="#0f172a" stroke-width="2.5" class="glow-ring"/>
+<text x="560" y="200" fill="#0f172a" font-size="12" font-weight="700" transform="rotate(30 560 200)">w·x+b=0</text>
+<!-- 间隔边界 +1 -->
+<line x1="140" y1="40" x2="540" y2="280" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,4"/>
+<text x="100" y="60" fill="#ef4444" font-size="12">w·x+b=+1</text>
+<!-- 间隔边界 -1 -->
+<line x1="260" y1="40" x2="660" y2="280" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,4"/>
+<text x="620" y="70" fill="#3b82f6" font-size="12">w·x+b=-1</text>
+<!-- 正常正类 -->
+<circle cx="300" cy="120" r="6" fill="#3b82f6"/>
+<circle cx="280" cy="140" r="6" fill="#3b82f6"/>
+<circle cx="250" cy="110" r="6" fill="#3b82f6"/>
+<circle cx="320" cy="100" r="6" fill="#3b82f6"/>
+<!-- 正常负类 -->
+<circle cx="520" cy="240" r="6" fill="#ef4444"/>
+<circle cx="550" cy="220" r="6" fill="#ef4444"/>
+<circle cx="500" cy="260" r="6" fill="#ef4444"/>
+<circle cx="570" cy="250" r="6" fill="#ef4444"/>
+<!-- 离群点：在间隔内的正类 -->
+<circle cx="400" cy="190" r="7" fill="#3b82f6" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
+<text x="410" y="185" fill="#7c3aed" font-size="12">ξ₁ &lt; 1 (间隔内)</text>
+<!-- 离群点：被误分类的负类 -->
+<circle cx="370" cy="160" r="7" fill="#ef4444" stroke="#dc2626" stroke-width="2.5" class="pulse-node"/>
+<text x="380" y="155" fill="#dc2626" font-size="12">ξ₂ &gt; 1 (误分类)</text>
+<!-- 支持向量 -->
+<circle cx="340" cy="155" r="10" fill="none" stroke="#7c3aed" stroke-width="2"/>
+<circle cx="480" cy="230" r="10" fill="none" stroke="#7c3aed" stroke-width="2"/>
+<text x="100" y="300" fill="#64748b" font-size="12">软间隔允许 ξᵢ&gt;0 的样本存在，C 参数控制惩罚力度</text>
+</svg>
+</div>
+
+<p>软间隔 SVM 的原始优化问题为：</p>
+<div class="formula" data-eq="(14)">$$\min_{\mathbf{w}, b, \boldsymbol{\xi}} \quad \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} \xi_i \qquad \text{s.t.} \quad y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0$$</div>
+<p>其中 $C > 0$ 是正则化参数，控制间隔宽度与违反量之间的权衡：</p>
+<ul>
+<li><strong>$C \to \infty$</strong>：对违反零容忍，趋向硬间隔（可能过拟合）</li>
+<li><strong>$C \to 0$</strong>：对违反极度宽容，间隔很宽（可能欠拟合）</li>
+</ul>
+
+<h3>5.3 软间隔的对偶问题</h3>
+<p>软间隔的对偶问题形式与硬间隔几乎相同，唯一区别是 $\alpha_i$ 多了一个上界约束 $C$：</p>
+<div class="formula" data-eq="(15)">$$\max_{\boldsymbol{\alpha}} \quad \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j y_i y_j \, K(\mathbf{x}_i, \mathbf{x}_j) \qquad \text{s.t.} \quad 0 \leq \alpha_i \leq C, \quad \sum_i \alpha_i y_i = 0$$</div>
+
+<h3>5.4 偏置项 b 的计算</h3>
+<p>对于满足 $0 < \alpha_s < C$ 的支持向量（恰好在间隔边界上），可以计算偏置项：</p>
+<div class="formula" data-eq="(16)">$$b = y_s - \sum_{i=1}^{n} \alpha_i y_i \, K(\mathbf{x}_i, \mathbf{x}_s)$$</div>
+<p>实践中通常对所有满足 $0 < \alpha_s < C$ 的支持向量取平均，以提高数值稳定性。</p>
+
+<h3>5.5 参数 $C$ 的影响</h3>
+
+<table>
+<tr><th>$C$ 值</th><th>间隔宽度</th><th>支持向量数</th><th>训练误差</th><th>泛化能力</th></tr>
+<tr><td>大 ($C \to 10^4$)</td><td>窄</td><td>少</td><td>低</td><td>可能过拟合</td></tr>
+<tr><td>中 ($C \sim 1$)</td><td>适中</td><td>适中</td><td>适中</td><td>较好平衡</td></tr>
+<tr><td>小 ($C \to 10^{-4}$)</td><td>宽</td><td>多</td><td>高</td><td>可能欠拟合</td></tr>
+</table>
+
+<div class="callout success">
+<div class="callout-title">$C$ 的本质理解</div>
+<p>参数 $C$ 等价于正则化系数的倒数。大的 $C$ 意味着弱正则化（模型复杂，可能过拟合），小的 $C$ 意味着强正则化（模型简单，可能欠拟合）。这与深度学习中的权重衰减 $\lambda$ 是同样的思想——$C \approx 1/\lambda$。</p>
+</div>
+
+</section>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">6</span>SMO 算法</h2>
+
+<h3>6.1 为什么需要 SMO？</h3>
+<p>SVM 的对偶问题是一个带约束的凸 QP 问题。标准 QP 求解器（如内点法）需要存储和分解 $n \times n$ 的核矩阵，当 $n$ 很大时（$n > 10^4$），内存消耗为 $O(n^2)$，计算复杂度为 $O(n^3)$，不可接受。</p>
+<p><strong>SMO</strong>（Sequential Minimal Optimization）由 John Platt 于 1998 年提出，其核心思想是：每次只选择<strong>两个</strong>拉格朗日乘子进行优化——这是满足等式约束 $\sum \alpha_i y_i = 0$ 的最少变量数，因此每次子问题都有解析解，无需调用通用 QP 求解器。</p>
+
+<h3>6.2 SMO 算法流程</h3>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arrow4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6" fill="#2563eb"/>
+  </marker>
+</defs>
+<!-- 步骤框 -->
+<rect x="250" y="20" width="300" height="50" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="330" y="50" fill="#1e293b" font-size="14" font-weight="700">初始化 αᵢ=0, b=0</text>
+
+<line x1="400" y1="70" x2="400" y2="95" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow4)"/>
+
+<rect x="200" y="95" width="400" height="50" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="270" y="125" fill="#1e293b" font-size="14" font-weight="700">选择两个变量 α₁, α₂ (启发式)</text>
+
+<line x1="400" y1="145" x2="400" y2="170" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow4)"/>
+
+<rect x="150" y="170" width="500" height="60" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="180" y="195" fill="#1e293b" font-size="14" font-weight="700">解析求解 α₂ 的约束优化子问题</text>
+<text x="210" y="215" fill="#64748b" font-size="12">利用等式约束 α₁y₁+α₂y₂=const 求 α₁</text>
+
+<line x1="400" y1="230" x2="400" y2="255" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow4)"/>
+
+<rect x="200" y="255" width="400" height="50" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+<text x="270" y="285" fill="#1e293b" font-size="14" font-weight="700">更新 b 和误差缓存 Eᵢ</text>
+
+<line x1="400" y1="305" x2="400" y2="325" stroke="#2563eb" stroke-width="2"/>
+
+<!-- 判断 -->
+<polygon points="400,325 520,365 400,395 280,365" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+<text x="335" y="368" fill="#1e293b" font-size="13" font-weight="600">收敛?</text>
+
+<!-- Yes 路径 -->
+<line x1="520" y1="365" x2="620" y2="365" stroke="#059669" stroke-width="2" marker-end="url(#arrow4)"/>
+<text x="555" y="358" fill="#059669" font-size="13" font-weight="700">是</text>
+<rect x="620" y="345" width="140" height="40" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="650" y="370" fill="#1e293b" font-size="13" font-weight="700">输出 α, b</text>
+
+<!-- No 路径 -->
+<line x1="400" y1="395" x2="400" y2="400" stroke="#dc2626" stroke-width="2"/>
+<path d="M 400 400 Q 100 400 100 120 Q 100 120 200 120" stroke="#dc2626" stroke-width="2" fill="none" stroke-dasharray="6,4" class="flow-line" marker-end="url(#arrow4)"/>
+<text x="110" y="250" fill="#dc2626" font-size="13" font-weight="700">否</text>
+</svg>
+</div>
+
+<h3>6.3 变量选择策略</h3>
+<p>SMO 的效率高度依赖于选哪两个变量来优化：</p>
+
+<table>
+<tr><th>策略</th><th>第一个变量 ($\alpha_1$)</th><th>第二个变量 ($\alpha_2$)</th></tr>
+<tr><td><strong>外层循环</strong></td><td>遍历所有训练样本，选择违反 KKT 条件的 $\alpha_i$</td><td>—</td></tr>
+<tr><td><strong>内层循环</strong></td><td>—</td><td>选择使 $|E_1 - E_2|$ 最大的 $\alpha_2$（最大化步长）</td></tr>
+<tr><td><strong>退策略</strong></td><td>—</td><td>若上述选择无进展，遍历所有非边界点 ($0 < \alpha < C$)</td></tr>
+<tr><td><strong>最终退化</strong></td><td>—</td><td>遍历整个训练集</td></tr>
+</table>
+
+<p>其中 $E_i = f(\mathbf{x}_i) - y_i$ 是第 $i$ 个样本的预测误差。选择 $|E_1 - E_2|$ 最大的原因是：$\alpha_2$ 的更新步长正比于 $E_1 - E_2$，选择最大步长可以最快收敛。</p>
+
+<h3>6.4 $\alpha_2$ 的解析解</h3>
+<p>固定其他变量后，$\alpha_2$ 的更新公式为：</p>
+<p>$$\alpha_2^{new} = \alpha_2^{old} + \frac{y_2(E_1 - E_2)}{\eta}$$</p>
+<p>其中 $\eta = K_{11} + K_{22} - 2K_{12}$ 是核函数在两个样本上的组合值。然后根据约束 $0 \leq \alpha_2 \leq C$ 对 $\alpha_2^{new}$ 进行裁剪，并由等式约束求出 $\alpha_1^{new}$。</p>
+
+<div class="callout">
+<div class="callout-title">SMO 的时间复杂度</div>
+<p>SMO 每次迭代的计算量为 $O(n)$（计算误差和更新），总迭代次数约为 $O(n)$ 到 $O(n^2)$（取决于数据），因此整体复杂度约为 $O(n^2)$ 到 $O(n^3)$，但常数因子远小于通用 QP 求解器，且内存只需 $O(n)$（存储 $\alpha$ 和误差缓存）。对于 $n < 10^5$ 的数据集，SMO 是非常实用的选择。</p>
+</div>
+
+</section>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">7</span>多分类 SVM</h2>
+
+<h3>7.1 SVM 的二分类本质</h3>
+<p>标准 SVM 是二分类器，输出为 $\{+1, -1\}$。而实际问题往往涉及多分类（如手写数字识别有 10 类）。SVM 通过<strong>分解策略</strong>将多分类问题转化为一组二分类子问题。</p>
+
+<h3>7.2 常用多分类策略</h3>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arrow5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6" fill="#2563eb"/>
+  </marker>
+</defs>
+<!-- 左侧 OvR -->
+<text x="60" y="25" fill="#0f172a" font-size="15" font-weight="700">OvR (One-vs-Rest)</text>
+<rect x="60" y="40" width="300" height="290" rx="10" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5"/>
+<!-- 三类数据 -->
+<circle cx="120" cy="80" r="5" fill="#3b82f6"/>
+<circle cx="135" cy="85" r="5" fill="#3b82f6"/>
+<text x="115" y="100" fill="#3b82f6" font-size="11">类 A</text>
+<rect x="180" y="80" width="30" height="20" rx="3" fill="#ef4444" opacity="0.7"/>
+<rect x="215" y="85" width="25" height="18" rx="3" fill="#ef4444" opacity="0.7"/>
+<text x="200" y="110" fill="#ef4444" font-size="11">类 B</text>
+<polygon points="290,80 300,70 310,80 305,90 295,90" fill="#059669"/>
+<polygon points="315,82 325,72 335,82 330,92 320,92" fill="#059669"/>
+<text x="295" y="110" fill="#059669" font-size="11">类 C</text>
+<!-- 分类器 1 -->
+<rect x="80" y="125" width="260" height="30" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+<text x="100" y="145" fill="#334155" font-size="12">分类器 1: A vs (B+C)</text>
+<!-- 分类器 2 -->
+<rect x="80" y="165" width="260" height="30" rx="6" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+<text x="100" y="185" fill="#334155" font-size="12">分类器 2: B vs (A+C)</text>
+<!-- 分类器 3 -->
+<rect x="80" y="205" width="260" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+<text x="100" y="225" fill="#334155" font-size="12">分类器 3: C vs (A+B)</text>
+<!-- 决策 -->
+<rect x="80" y="250" width="260" height="30" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="95" y="270" fill="#334155" font-size="12">预测: argmax f_k(x)</text>
+<text x="80" y="305" fill="#64748b" font-size="11">需要 K 个分类器（K=类别数）</text>
+
+<!-- 右侧 OvO -->
+<text x="460" y="25" fill="#0f172a" font-size="15" font-weight="700">OvO (One-vs-One)</text>
+<rect x="460" y="40" width="300" height="290" rx="10" fill="#f7f9fc" stroke="#cbd5e1" stroke-width="1.5"/>
+<!-- 分类器列表 -->
+<rect x="480" y="60" width="260" height="25" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+<text x="500" y="78" fill="#334155" font-size="12">分类器 1: A vs B</text>
+<rect x="480" y="90" width="260" height="25" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+<text x="500" y="108" fill="#334155" font-size="12">分类器 2: A vs C</text>
+<rect x="480" y="120" width="260" height="25" rx="5" fill="#fee2e2" stroke="#ef4444" stroke-width="1"/>
+<text x="500" y="138" fill="#334155" font-size="12">分类器 3: B vs C</text>
+<text x="480" y="165" fill="#64748b" font-size="11">...</text>
+<rect x="480" y="175" width="260" height="30" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="490" y="195" fill="#334155" font-size="12">预测: 投票 (多数表决)</text>
+<text x="460" y="230" fill="#64748b" font-size="11">需要 K(K-1)/2 个分类器</text>
+<text x="460" y="250" fill="#64748b" font-size="11">3 类 → 3 个分类器</text>
+<text x="460" y="270" fill="#64748b" font-size="11">10 类 → 45 个分类器</text>
+<text x="460" y="300" fill="#64748b" font-size="11">每个分类器只用 2 类数据训练</text>
+<text x="460" y="320" fill="#64748b" font-size="11">训练更快，但分类器数量多</text>
+</svg>
+</div>
+
+<table>
+<tr><th>策略</th><th>分类器数</th><th>每个分类器训练数据</th><th>预测方式</th><th>优缺点</th></tr>
+<tr><td><strong>OvR</strong></td><td>$K$</td><td>全部数据</td><td>取 $f_k(\mathbf{x})$ 最大的类</td><td>分类器少但类别不平衡；训练慢</td></tr>
+<tr><td><strong>OvO</strong></td><td>$K(K-1)/2$</td><td>仅 2 类数据</td><td>投票表决</td><td>训练快但分类器多；适合中小数据</td></tr>
+<tr><td><strong>DAG-SVM</strong></td><td>$K(K-1)/2$</td><td>仅 2 类数据</td><td>有向无环图逐层淘汰</td><td>预测快($K-1$ 次)；避免投票歧义</td></tr>
+<tr><td><strong>ECOC</strong></td><td>$\sim \log_2 K$</td><td>按编码矩阵划分</td><td>最近编码匹配</td><th>纠错能力强；设计复杂</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-title">实践建议</div>
+<p>对于类别数 $K \leq 10$ 且数据量适中的场景，OvO 是最常用的选择。当 $K$ 很大时（如 100+ 类），OvR 更合适，因为 $K(K-1)/2$ 个分类器的训练和存储开销太大。</p>
+</div>
+
+</section>
+
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">8</span>支持向量回归（SVR）</h2>
+
+<h3>8.1 从分类到回归</h3>
+<p>SVM 不仅用于分类，也可以用于<strong>回归</strong>——这就是支持向量回归（Support Vector Regression, SVR）。SVR 的核心思想与分类 SVM 对称：分类 SVM 寻找最大间隔超平面，而 SVR 寻找一个函数 $f(\mathbf{x}) = \mathbf{w} \cdot \mathbf{x} + b$，使得真实值与预测值的偏差不超过 $\varepsilon$，同时使函数尽可能平坦（$\|\mathbf{w}\|$ 小）。</p>
+
+<h3>8.2 $\varepsilon$-不敏感损失</h3>
+<p>SVR 使用 <strong>$\varepsilon$-不敏感损失函数</strong>（$\varepsilon$-insensitive loss）：</p>
+<p>$$L_\varepsilon(y, f(\mathbf{x})) = \max(0, |y - f(\mathbf{x})| - \varepsilon)$$</p>
+<p>这意味着：只要预测值与真实值的绝对差不超过 $\varepsilon$，损失就为零。$\varepsilon$ 定义了一条宽度为 $2\varepsilon$ 的<strong>不敏感带</strong>。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+<!-- 坐标轴 -->
+<line x1="60" y1="290" x2="740" y2="290" stroke="#cbd5e1" stroke-width="1.5"/>
+<line x1="100" y1="310" x2="100" y2="30" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="735" y="308" fill="#64748b" font-size="12">x</text>
+<text x="75" y="35" fill="#64748b" font-size="12">y</text>
+<!-- ε 不敏感带 -->
+<rect x="100" y="120" width="620" height="80" fill="#dbeafe" opacity="0.25"/>
+<!-- 回归线 f(x) -->
+<path d="M 120 200 Q 250 150 380 130 T 700 80" stroke="#2563eb" stroke-width="2.5" fill="none" class="glow-ring"/>
+<text x="600" y="100" fill="#2563eb" font-size="13" font-weight="700">f(x) = w·x + b</text>
+<!-- 上边界 f(x)+ε -->
+<path d="M 120 160 Q 250 110 380 90 T 700 40" stroke="#7c3aed" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+<!-- 下边界 f(x)-ε -->
+<path d="M 120 240 Q 250 190 380 170 T 700 120" stroke="#7c3aed" stroke-width="1.5" fill="none" stroke-dasharray="5,3"/>
+<!-- ε 标注 -->
+<line x1="680" y1="80" x2="680" y2="40" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="685" y="65" fill="#7c3aed" font-size="13" font-weight="700">+ε</text>
+<line x1="680" y1="120" x2="680" y2="160" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="685" y="145" fill="#7c3aed" font-size="13" font-weight="700">-ε</text>
+<!-- 带内数据点（不产生损失） -->
+<circle cx="180" cy="180" r="5" fill="#3b82f6"/>
+<circle cx="250" cy="155" r="5" fill="#3b82f6"/>
+<circle cx="350" cy="135" r="5" fill="#3b82f6"/>
+<circle cx="450" cy="115" r="5" fill="#3b82f6"/>
+<circle cx="550" cy="100" r="5" fill="#3b82f6"/>
+<!-- 带外数据点（产生损失，支持向量） -->
+<circle cx="200" cy="260" r="6" fill="#ef4444" stroke="#dc2626" stroke-width="2" class="pulse-node"/>
+<text x="160" y="278" fill="#dc2626" font-size="11">ξ*ᵢ (超出下界)</text>
+<circle cx="500" cy="70" r="6" fill="#ef4444" stroke="#dc2626" stroke-width="2" class="pulse-node"/>
+<text x="470" y="60" fill="#dc2626" font-size="11">ξᵢ (超出上界)</text>
+<!-- 图例 -->
+<rect x="520" y="255" width="14" height="14" fill="#3b82f6"/>
+<text x="540" y="267" fill="#334155" font-size="12">带内点 (无损失)</text>
+<rect x="520" y="275" width="14" height="14" fill="#ef4444"/>
+<text x="540" y="287" fill="#334155" font-size="12">带外点 (SV)</text>
+</svg>
+</div>
+
+<h3>8.3 SVR 的优化问题</h3>
+<p>SVR 的原始优化问题引入两组松弛变量 $\xi_i$ 和 $\xi_i^*$（分别对应上偏差和下偏差）：</p>
+<div class="formula" data-eq="(17)">$$\min_{\mathbf{w}, b, \boldsymbol{\xi}, \boldsymbol{\xi}^*} \quad \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} (\xi_i + \xi_i^*) \qquad \text{s.t.} \quad \begin{cases} y_i - f(\mathbf{x}_i) \leq \varepsilon + \xi_i \\ f(\mathbf{x}_i) - y_i \leq \varepsilon + \xi_i^* \\ \xi_i, \xi_i^* \geq 0 \end{cases}$$</div>
+<p>其对偶问题的决策函数为：</p>
+<div class="formula" data-eq="(18)">$$f(\mathbf{x}) = \sum_{i=1}^{n} (\alpha_i - \alpha_i^*) \, K(\mathbf{x}_i, \mathbf{x}) + b$$</div>
+<p>其中 $\alpha_i$ 和 $\alpha_i^*$ 分别对应上下偏差的拉格朗日乘子。只有落在 $\varepsilon$-带之外的样本（$\alpha_i \neq 0$ 或 $\alpha_i^* \neq 0$）才是支持向量。</p>
+
+<h3>8.4 SVR 的关键参数</h3>
+
+<table>
+<tr><th>参数</th><th>作用</th><th>过大</th><th>过小</th></tr>
+<tr><td>$\varepsilon$</td><td>不敏感带宽度</td><td>支持向量少、欠拟合</td><td>支持向量多、过拟合</td></tr>
+<tr><td>$C$</td><td>带外惩罚强度</td><td>过拟合</td><td>欠拟合</td></tr>
+<tr><td>$\gamma$（RBF核）</td><td>核宽度</td><td>决策边界复杂、过拟合</td><td>决策边界平滑、欠拟合</td></tr>
+</table>
+
+</section>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">9</span>One-Class SVM 与异常检测</h2>
+
+<h3>9.1 问题设定</h3>
+<p><strong>异常检测</strong>（Anomaly Detection）是一类特殊的机器学习问题：训练数据中只有正常样本（或正常样本占绝大多数），目标是识别出与正常分布显著不同的异常样本。传统的二分类 SVM 无法直接处理这种"只有一类"的场景。</p>
+
+<h3>9.2 One-Class SVM 原理</h3>
+<p>Schölkopf 等人提出的 <strong>One-Class SVM</strong> 的思想是：将正常数据映射到高维空间中，找到一个将数据与原点分开的超平面，使得超平面距离原点尽可能远。等价地，在特征空间中寻找一个包含大部分数据的<strong>最小体积球</strong>。</p>
+
+<div class="formula" data-eq="(19)">$$\min_{\mathbf{w}, \boldsymbol{\xi}, \rho} \quad \frac{1}{2}\|\mathbf{w}\|^2 + \frac{1}{\nu n} \sum_{i=1}^{n} \xi_i - \rho \qquad \text{s.t.} \quad \mathbf{w} \cdot \phi(\mathbf{x}_i) \geq \rho - \xi_i, \quad \xi_i \geq 0$$</div>
+<p>决策函数为 $f(\mathbf{x}) = \text{sign}(\mathbf{w} \cdot \phi(\mathbf{x}) - \rho)$：$f(\mathbf{x}) = +1$ 为正常，$f(\mathbf{x}) = -1$ 为异常。</p>
+
+<h3>3.3 参数 $\nu$ 的含义</h3>
+<p>参数 $\nu \in (0, 1]$ 有双重含义：</p>
+<ul>
+<li><strong>异常比例上界</strong>：训练集中被判为异常的样本比例不超过 $\nu$</li>
+<li><strong>支持向量比例下界</strong>：支持向量占训练样本的比例至少为 $\nu$</li>
+</ul>
+
+<table>
+<tr><th>异常检测方法</th><th>训练数据</th><th>优势</th><th>劣势</th></tr>
+<tr><td><strong>One-Class SVM</strong></td><td>仅正常样本</td><td>适用于高维数据、非线性边界</td><td>对核参数敏感</td></tr>
+<tr><td>Isolation Forest</td><td>正常 + 少量异常</td><td>高效、可解释</td><td>对低维数据效果一般</td></tr>
+<tr><td>LOF (局部离群因子)</td><td>正常 + 少量异常</td><td>检测局部异常</td><td>计算复杂度高 $O(n^2)$</td></tr>
+<tr><td>Autoencoder</td><td>仅正常样本</td><td>深度特征提取</td><td>需要大量数据、训练困难</td></tr>
+</table>
+
+<div class="callout success">
+<div class="callout-title">One-Class SVM 的典型应用</div>
+<p>故障检测（工业传感器）：正常工况数据训练 One-Class SVM，偏离正常分布的信号触发预警。在电信行业中，可用于网络流量异常检测、欺诈通话识别、基站故障预警等场景。</p>
+</div>
+
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">10</span>PyTorch 代码实现</h2>
+
+<h3>10.1 线性 SVM（Hinge Loss + SGD）</h3>
+<p>最简单的 SVM 实现方式：不使用对偶，而是直接最小化 Hinge Loss + L2 正则化。这种方法天然支持 mini-batch SGD，适合大规模数据。</p>
+
+<div class="code-block">
+<div class="code-header">linear_svm.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">LinearSVM</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""线性 SVM 分类器：min 1/2||w||^2 + C * sum(max(0, 1 - y*f(x)))"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, input_dim, C=<span class="num">1.0</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.linear = <span class="cls">nn</span>.Linear(input_dim, <span class="num">1</span>)
+        <span class="kw">self</span>.C = C
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x):
+        <span class="kw">return</span> <span class="kw">self</span>.linear(x).<span class="fn">squeeze</span>(-<span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">hinge_loss</span>(<span class="kw">self</span>, scores, labels):
+        <span class="str">"""Hinge Loss: max(0, 1 - y * f(x))"""</span>
+        <span class="kw">return</span> <span class="cls">torch</span>.<span class="fn">clamp</span>(<span class="num">1</span> - scores * labels, <span class="fn">min</span>=<span class="num">0</span>).<span class="fn">mean</span>()
+
+    <span class="kw">def</span> <span class="fn">regularization</span>(<span class="kw">self</span>):
+        <span class="kw">return</span> <span class="num">0.5</span> * (<span class="kw">self</span>.linear.weight ** <span class="num">2</span>).<span class="fn">sum</span>()
+
+    <span class="kw">def</span> <span class="fn">loss</span>(<span class="kw">self</span>, scores, labels):
+        <span class="kw">return</span> <span class="kw">self</span>.<span class="fn">regularization</span>() + <span class="kw">self</span>.C * <span class="kw">self</span>.<span class="fn">hinge_loss</span>(scores, labels)
+
+<span class="com"># 训练示例</span>
+<span class="kw">def</span> train_linear_svm(X, y, input_dim, epochs=<span class="num">200</span>, lr=<span class="num">0.01</span>, C=<span class="num">1.0</span>):
+    model = <span class="cls">LinearSVM</span>(input_dim, C=C)
+    optimizer = <span class="cls">torch</span>.optim.SGD(model.<span class="fn">parameters</span>(), lr=lr)
+
+    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="cls">range</span>(epochs):
+        optimizer.zero_grad()
+        scores = model(X)
+        <span class="fn">loss</span> = model.<span class="fn">loss</span>(scores, y)
+        <span class="fn">loss</span>.<span class="fn">backward</span>()
+        optimizer.<span class="fn">step</span>()
+
+        <span class="kw">if</span> (epoch + <span class="num">1</span>) % <span class="num">50</span> == <span class="num">0</span>:
+            acc = ((scores > <span class="num">0</span>).<span class="fn">float</span>() == (y > <span class="num">0</span>).<span class="fn">float</span>()).<span class="fn">float</span>().<span class="fn">mean</span>()
+            <span class="cls">print</span>(f<span class="str">"Epoch {epoch+1}: loss={loss.item():.4f}, acc={acc.item():.4f}"</span>)
+
+    <span class="kw">return</span> model
+</pre>
+</div>
+
+<h3>10.2 核 SVM（RBF 核 + 对偶优化）</h3>
+<p>对于非线性问题，使用 RBF 核。这里实现完整的对偶优化版本。</p>
+
+<div class="code-block">
+<div class="code-header">kernel_svm.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">KernelSVM</span>:
+    <span class="str">"""核 SVM：使用 RBF 核的对偶优化实现"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, C=<span class="num">1.0</span>, gamma=<span class="str">'scale'</span>):
+        <span class="kw">self</span>.C = C
+        <span class="kw">self</span>.gamma = gamma
+        <span class="kw">self</span>.alphas = <span class="kw">None</span>
+        <span class="kw">self</span>.sv_X = <span class="kw">None</span>
+        <span class="kw">self</span>.sv_y = <span class="kw">None</span>
+        <span class="kw">self</span>.b = <span class="num">0.0</span>
+
+    <span class="kw">def</span> <span class="fn">_rbf_kernel</span>(<span class="kw">self</span>, X1, X2):
+        <span class="str">"""RBF 核: K(x,z) = exp(-gamma * ||x-z||^2)"""</span>
+        <span class="kw">if</span> <span class="kw">self</span>.gamma == <span class="str">'scale'</span>:
+            <span class="kw">self</span>.gamma = <span class="num">1.0</span> / (X1.<span class="fn">shape</span>[<span class="num">1</span>] * X1.<span class="fn">var</span>())
+        <span class="com"># 使用展开公式高效计算</span>
+        sq_dist = <span class="cls">torch</span>.<span class="fn">cdist</span>(X1, X2) ** <span class="num">2</span>
+        <span class="kw">return</span> <span class="cls">torch</span>.<span class="fn">exp</span>(-<span class="kw">self</span>.gamma * sq_dist)
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, y, epochs=<span class="num">1000</span>, lr=<span class="num">0.01</span>):
+        n = X.<span class="fn">shape</span>[<span class="num">0</span>]
+        K = <span class="kw">self</span>.<span class="fn">_rbf_kernel</span>(X, X)
+        <span class="kw">self</span>.alphas = <span class="cls">torch</span>.<span class="fn">zeros</span>(n, requires_grad=<span class="kw">True</span>)
+        y_vec = y.<span class="fn">float</span>()
+
+        optimizer = <span class="cls">torch</span>.optim.SGD([<span class="kw">self</span>.alphas], lr=lr)
+        <span class="kw">for</span> epoch <span class="kw">in</span> <span class="cls">range</span>(epochs):
+            optimizer.zero_grad()
+            <span class="com"># 对偶目标: max sum(a_i) - 1/2 * a^T Q a</span>
+            <span class="com"># 其中 Q_ij = y_i * y_j * K(x_i, x_j)</span>
+            Q = y_vec.<span class="fn">unsqueeze</span>(<span class="num">0</span>) * y_vec.<span class="fn">unsqueeze</span>(<span class="num">1</span>) * K
+            dual_obj = <span class="kw">self</span>.alphas.<span class="fn">sum</span>() - <span class="num">0.5</span> * (<span class="kw">self</span>.alphas @ Q @ <span class="kw">self</span>.alphas)
+            <span class="fn">loss</span> = -dual_obj  <span class="com"># 最大化转最小化</span>
+            <span class="fn">loss</span>.<span class="fn">backward</span>()
+            optimizer.<span class="fn">step</span>()
+            <span class="com"># 投影到约束: 0 <= alpha <= C</span>
+            <span class="kw">with</span> <span class="cls">torch</span>.<span class="fn">no_grad</span>():
+                <span class="kw">self</span>.alphas.clamp_(<span class="num">0</span>, <span class="kw">self</span>.C)
+
+        <span class="com"># 选取支持向量</span>
+        sv_mask = <span class="kw">self</span>.alphas > <span class="num">1e-5</span>
+        <span class="kw">self</span>.sv_X = X[sv_mask]
+        <span class="kw">self</span>.sv_y = y_vec[sv_mask]
+        <span class="kw">self</span>.sv_alphas = <span class="kw">self</span>.alphas[sv_mask].<span class="fn">detach</span>()
+
+        <span class="com"># 计算 b (使用 0 < alpha < C 的支持向量)</span>
+        margin_mask = (<span class="kw">self</span>.alphas > <span class="num">1e-5</span>) & (<span class="kw">self</span>.alphas < <span class="kw">self</span>.C - <span class="num">1e-5</span>)
+        <span class="kw">if</span> margin_mask.<span class="fn">any</span>():
+            K_margin = <span class="kw">self</span>.<span class="fn">_rbf_kernel</span>(X[margin_mask], <span class="kw">self</span>.sv_X)
+            b_vals = y_vec[margin_mask] - (K_margin * <span class="kw">self</span>.sv_y * <span class="kw">self</span>.sv_alphas).<span class="fn">sum</span>(<span class="num">1</span>)
+            <span class="kw">self</span>.b = b_vals.<span class="fn">mean</span>().<span class="fn">item</span>()
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        K = <span class="kw">self</span>.<span class="fn">_rbf_kernel</span>(X, <span class="kw">self</span>.sv_X)
+        scores = (K * <span class="kw">self</span>.sv_y * <span class="kw">self</span>.sv_alphas).<span class="fn">sum</span>(<span class="num">1</span>) + <span class="kw">self</span>.b
+        <span class="kw">return</span> <span class="cls">torch</span>.<span class="fn">sign</span>(scores)
+</pre>
+</div>
+
+<h3>10.3 SMO 算法简化实现</h3>
+<p>这是 Platt SMO 的一个简化版本，用于理解核心逻辑。</p>
+
+<div class="code-block">
+<div class="code-header">smo_svm.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">SimpleSVM</span>:
+    <span class="str">"""简化版 SMO 算法实现"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, C=<span class="num">1.0</span>, gamma=<span class="num">0.5</span>, tol=<span class="num">1e-3</span>, max_iter=<span class="num">1000</span>):
+        <span class="kw">self</span>.C = C
+        <span class="kw">self</span>.gamma = gamma
+        <span class="kw">self</span>.tol = tol
+        <span class="kw">self</span>.max_iter = max_iter
+
+    <span class="kw">def</span> <span class="fn">_kernel</span>(<span class="kw">self</span>, x1, x2):
+        diff = x1 - x2
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">exp</span>(-<span class="kw">self</span>.gamma * <span class="cls">np</span>.<span class="fn">dot</span>(diff, diff))
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, y):
+        n = <span class="cls">len</span>(X)
+        <span class="kw">self</span>.X = X
+        <span class="kw">self</span>.y = y.<span class="fn">astype</span>(<span class="cls">float</span>)
+        <span class="kw">self</span>.alphas = <span class="cls">np</span>.<span class="fn">zeros</span>(n)
+        <span class="kw">self</span>.b = <span class="num">0.0</span>
+        <span class="kw">self</span>.errors = <span class="cls">np</span>.<span class="fn">zeros</span>(n)
+
+        <span class="com"># 预计算核矩阵</span>
+        <span class="kw">self</span>.K = <span class="cls">np</span>.<span class="fn">zeros</span>((n, n))
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="cls">range</span>(n):
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="cls">range</span>(n):
+                <span class="kw">self</span>.K[i][j] = <span class="kw">self</span>.<span class="fn">_kernel</span>(X[i], X[j])
+
+        <span class="kw">for</span> it <span class="kw">in</span> <span class="cls">range</span>(<span class="kw">self</span>.max_iter):
+            num_changed = <span class="num">0</span>
+            <span class="kw">for</span> i <span class="kw">in</span> <span class="cls">range</span>(n):
+                <span class="com"># 计算误差</span>
+                Ei = <span class="kw">self</span>.<span class="fn">_predict_raw</span>(X[i]) - y[i]
+                <span class="com"># 检查是否违反 KKT 条件</span>
+                ri = y[i] * Ei
+                <span class="kw">if</span> (ri < -<span class="kw">self</span>.tol <span class="kw">and</span> <span class="kw">self</span>.alphas[i] < <span class="kw">self</span>.C) <span class="kw">or</span> \
+                   (ri > <span class="kw">self</span>.tol <span class="kw">and</span> <span class="kw">self</span>.alphas[i] > <span class="num">0</span>):
+                    <span class="com"># 随机选择 j != i</span>
+                    j = <span class="cls">np</span>.random.choice([x <span class="kw">for</span> x <span class="kw">in</span> <span class="cls">range</span>(n) <span class="kw">if</span> x != i])
+                    Ej = <span class="kw">self</span>.<span class="fn">_predict_raw</span>(X[j]) - y[j]
+
+                    <span class="com"># 保存旧值</span>
+                    alpha_i_old = <span class="kw">self</span>.alphas[i].<span class="fn">copy</span>()
+                    alpha_j_old = <span class="kw">self</span>.alphas[j].<span class="fn">copy</span>()
+
+                    <span class="com"># 计算 L 和 H</span>
+                    <span class="kw">if</span> y[i] != y[j]:
+                        L = <span class="fn">max</span>(<span class="num">0</span>, <span class="kw">self</span>.alphas[j] - <span class="kw">self</span>.alphas[i])
+                        H = <span class="fn">min</span>(<span class="kw">self</span>.C, <span class="kw">self</span>.C + <span class="kw">self</span>.alphas[j] - <span class="kw">self</span>.alphas[i])
+                    <span class="kw">else</span>:
+                        L = <span class="fn">max</span>(<span class="num">0</span>, <span class="kw">self</span>.alphas[j] + <span class="kw">self</span>.alphas[i] - <span class="kw">self</span>.C)
+                        H = <span class="fn">min</span>(<span class="kw">self</span>.C, <span class="kw">self</span>.alphas[j] + <span class="kw">self</span>.alphas[i])
+                    <span class="kw">if</span> L == H:
+                        <span class="kw">continue</span>
+
+                    <span class="com"># 计算 eta</span>
+                    eta = <span class="kw">self</span>.K[i][i] + <span class="kw">self</span>.K[j][j] - <span class="num">2</span> * <span class="kw">self</span>.K[i][j]
+                    <span class="kw">if</span> eta <= <span class="num">0</span>:
+                        <span class="kw">continue</span>
+
+                    <span class="com"># 更新 alpha_j</span>
+                    <span class="kw">self</span>.alphas[j] += y[j] * (Ei - Ej) / eta
+                    <span class="kw">self</span>.alphas[j] = <span class="cls">np</span>.<span class="fn">clip</span>(<span class="kw">self</span>.alphas[j], L, H)
+
+                    <span class="kw">if</span> <span class="cls">abs</span>(<span class="kw">self</span>.alphas[j] - alpha_j_old) < <span class="num">1e-5</span>:
+                        <span class="kw">continue</span>
+
+                    <span class="com"># 更新 alpha_i</span>
+                    <span class="kw">self</span>.alphas[i] += y[i] * y[j] * (alpha_j_old - <span class="kw">self</span>.alphas[j])
+
+                    <span class="com"># 更新 b</span>
+                    b1 = <span class="kw">self</span>.b - Ei - y[i] * (<span class="kw">self</span>.alphas[i] - alpha_i_old) * <span class="kw">self</span>.K[i][i] \
+                              - y[j] * (<span class="kw">self</span>.alphas[j] - alpha_j_old) * <span class="kw">self</span>.K[i][j]
+                    b2 = <span class="kw">self</span>.b - Ej - y[i] * (<span class="kw">self</span>.alphas[i] - alpha_i_old) * <span class="kw">self</span>.K[i][j] \
+                              - y[j] * (<span class="kw">self</span>.alphas[j] - alpha_j_old) * <span class="kw">self</span>.K[j][j]
+                    <span class="kw">if</span> <span class="num">0</span> < <span class="kw">self</span>.alphas[i] < <span class="kw">self</span>.C:
+                        <span class="kw">self</span>.b = b1
+                    <span class="kw">elif</span> <span class="num">0</span> < <span class="kw">self</span>.alphas[j] < <span class="kw">self</span>.C:
+                        <span class="kw">self</span>.b = b2
+                    <span class="kw">else</span>:
+                        <span class="kw">self</span>.b = (b1 + b2) / <span class="num">2</span>
+                    num_changed += <span class="num">1</span>
+
+            <span class="kw">if</span> num_changed == <span class="num">0</span>:
+                <span class="kw">break</span>
+
+        <span class="com"># 保存支持向量</span>
+        sv_mask = <span class="kw">self</span>.alphas > <span class="num">1e-7</span>
+        <span class="kw">self</span>.sv_indices = <span class="cls">np</span>.<span class="fn">where</span>(sv_mask)[<span class="num">0</span>]
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> <span class="fn">_predict_raw</span>(<span class="kw">self</span>, x):
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">sum</span>(<span class="kw">self</span>.alphas * <span class="kw">self</span>.y * <span class="cls">np</span>.<span class="fn">array</span>([<span class="kw">self</span>.<span class="fn">_kernel</span>(xi, x) <span class="kw">for</span> xi <span class="kw">in</span> <span class="kw">self</span>.X])) + <span class="kw">self</span>.b
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        <span class="kw">return</span> <span class="cls">np</span>.<span class="fn">array</span>([<span class="num">1</span> <span class="kw">if</span> <span class="kw">self</span>.<span class="fn">_predict_raw</span>(x) > <span class="num">0</span> <span class="kw">else</span> -<span class="num">1</span> <span class="kw">for</span> x <span class="kw">in</span> X])
+</pre>
+</div>
+
+<h3>10.4 多分类 SVM（OvR）</h3>
+
+<div class="code-block">
+<div class="code-header">multiclass_svm.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
+
+<span class="kw">class</span> <span class="cls">OvRClassifier</span>:
+    <span class="str">"""One-vs-Rest 多分类：为每个类别训练一个二分类器"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, input_dim, num_classes, C=<span class="num">1.0</span>):
+        <span class="kw">self</span>.num_classes = num_classes
+        <span class="kw">self</span>.models = [<span class="cls">LinearSVM</span>(input_dim, C=C) <span class="kw">for</span> _ <span class="kw">in</span> <span class="cls">range</span>(num_classes)]
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, y, epochs=<span class="num">200</span>, lr=<span class="num">0.01</span>):
+        <span class="str">"""y 为整数标签 [0, 1, ..., K-1]"""</span>
+        <span class="kw">for</span> k <span class="kw">in</span> <span class="cls">range</span>(<span class="kw">self</span>.num_classes):
+            <span class="com"># 将类别 k 编码为 +1，其余为 -1</span>
+            y_binary = <span class="cls">torch</span>.<span class="fn">where</span>(y == k, <span class="num">1.0</span>, -<span class="num">1.0</span>)
+            optimizer = <span class="cls">torch</span>.optim.SGD(<span class="kw">self</span>.models[k].<span class="fn">parameters</span>(), lr=lr)
+
+            <span class="kw">for</span> epoch <span class="kw">in</span> <span class="cls">range</span>(epochs):
+                optimizer.zero_grad()
+                scores = <span class="kw">self</span>.models[k](X)
+                <span class="fn">loss</span> = <span class="kw">self</span>.models[k].<span class="fn">loss</span>(scores, y_binary)
+                <span class="fn">loss</span>.<span class="fn">backward</span>()
+                optimizer.<span class="fn">step</span>()
+            <span class="cls">print</span>(f<span class="str">"类别 {k} 训练完成"</span>)
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        <span class="str">"""选择得分最高的分类器对应的类别"""</span>
+        scores = <span class="cls">torch</span>.<span class="fn">stack</span>([m(X) <span class="kw">for</span> m <span class="kw">in</span> <span class="kw">self</span>.models], dim=<span class="num">1</span>)  <span class="com"># (n, K)</span>
+        <span class="kw">return</span> scores.<span class="fn">argmax</span>(dim=<span class="num">1</span>)
+</pre>
+</div>
+
+<h3>10.5 支持向量回归（SVR）</h3>
+
+<div class="code-block">
+<div class="code-header">svr_torch.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">SVR</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""支持向量回归：使用 epsilon-不敏感损失"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, input_dim, C=<span class="num">1.0</span>, epsilon=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.linear = <span class="cls">nn</span>.Linear(input_dim, <span class="num">1</span>)
+        <span class="kw">self</span>.C = C
+        <span class="kw">self</span>.epsilon = epsilon
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x):
+        <span class="kw">return</span> <span class="kw">self</span>.linear(x).<span class="fn">squeeze</span>(-<span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">svr_loss</span>(<span class="kw">self</span>, predictions, targets):
+        <span class="str">"""epsilon-不敏感损失: max(0, |y - f(x)| - epsilon)"""</span>
+        error = <span class="cls">torch</span>.<span class="fn">abs</span>(predictions - targets) - <span class="kw">self</span>.epsilon
+        hinge = <span class="cls">torch</span>.<span class="fn">clamp</span>(error, <span class="fn">min</span>=<span class="num">0</span>).<span class="fn">mean</span>()
+        reg = <span class="num">0.5</span> * (<span class="kw">self</span>.linear.weight ** <span class="num">2</span>).<span class="fn">sum</span>()
+        <span class="kw">return</span> reg + <span class="kw">self</span>.C * hinge
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, y, epochs=<span class="num">500</span>, lr=<span class="num">0.01</span>):
+        optimizer = <span class="cls">torch</span>.optim.SGD(<span class="kw">self</span>.<span class="fn">parameters</span>(), lr=lr)
+        <span class="kw">for</span> epoch <span class="kw">in</span> <span class="cls">range</span>(epochs):
+            optimizer.zero_grad()
+            preds = <span class="kw">self</span>(X)
+            <span class="fn">loss</span> = <span class="kw">self</span>.<span class="fn">svr_loss</span>(preds, y)
+            <span class="fn">loss</span>.<span class="fn">backward</span>()
+            optimizer.<span class="fn">step</span>()
+            <span class="kw">if</span> (epoch + <span class="num">1</span>) % <span class="num">100</span> == <span class="num">0</span>:
+                <span class="cls">print</span>(f<span class="str">"Epoch {epoch+1}: loss={loss.item():.4f}"</span>)
+        <span class="kw">return</span> <span class="kw">self</span>
+</pre>
+</div>
+
+<h3>10.6 One-Class SVM（异常检测）</h3>
+
+<div class="code-block">
+<div class="code-header">one_class_svm.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">OneClassSVM</span>(<span class="cls">nn</span>.Module):
+    <span class="str">"""One-Class SVM：异常检测"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, input_dim, nu=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.linear = <span class="cls">nn</span>.Linear(input_dim, <span class="num">1</span>)
+        <span class="kw">self</span>.nu = nu
+        <span class="kw">self</span>.rho = <span class="cls">nn</span>.Parameter(<span class="cls">torch</span>.tensor(<span class="num">0.0</span>))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x):
+        <span class="kw">return</span> <span class="kw">self</span>.linear(x).<span class="fn">squeeze</span>(-<span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">loss</span>(<span class="kw">self</span>, scores):
+        <span class="str">"""min 1/2||w||^2 + 1/(nu*n) * sum(max(0, rho - f(x))) - rho"""</span>
+        n = scores.<span class="fn">shape</span>[<span class="num">0</span>]
+        hinge = <span class="cls">torch</span>.<span class="fn">clamp</span>(<span class="kw">self</span>.rho - scores, <span class="fn">min</span>=<span class="num">0</span>).<span class="fn">sum</span>() / (<span class="kw">self</span>.nu * n)
+        reg = <span class="num">0.5</span> * (<span class="kw">self</span>.linear.weight ** <span class="num">2</span>).<span class="fn">sum</span>()
+        <span class="kw">return</span> reg + hinge - <span class="kw">self</span>.rho
+
+    <span class="kw">def</span> <span class="fn">fit</span>(<span class="kw">self</span>, X, epochs=<span class="num">500</span>, lr=<span class="num">0.01</span>):
+        optimizer = <span class="cls">torch</span>.optim.SGD(<span class="kw">self</span>.<span class="fn">parameters</span>(), lr=lr)
+        <span class="kw">for</span> epoch <span class="kw">in</span> <span class="cls">range</span>(epochs):
+            optimizer.zero_grad()
+            scores = <span class="kw">self</span>(X)
+            <span class="fn">loss</span> = <span class="kw">self</span>.<span class="fn">loss</span>(scores)
+            <span class="fn">loss</span>.<span class="fn">backward</span>()
+            optimizer.<span class="fn">step</span>()
+            <span class="kw">if</span> (epoch + <span class="num">1</span>) % <span class="num">100</span> == <span class="num">0</span>:
+                <span class="cls">print</span>(f<span class="str">"Epoch {epoch+1}: loss={loss.item():.4f}, rho={self.rho.item():.4f}"</span>)
+        <span class="kw">return</span> <span class="kw">self</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(<span class="kw">self</span>, X):
+        <span class="str">"""+1 = 正常, -1 = 异常"""</span>
+        scores = <span class="kw">self</span>(X)
+        <span class="kw">return</span> <span class="cls">torch</span>.<span class="fn">where</span>(scores >= <span class="kw">self</span>.rho, <span class="num">1.0</span>, -<span class="num">1.0</span>)
+</pre>
+</div>
+
+</section>
+
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">11</span>SVM 与其他分类器对比</h2>
+
+<h3>11.1 SVM vs 逻辑回归</h3>
+<table>
+<tr><th>维度</th><th>SVM</th><th>逻辑回归</th></tr>
+<tr><td>损失函数</td><td>Hinge Loss: $\max(0, 1-yf)$</td><td>Log Loss: $\log(1+e^{-yf})$</td></tr>
+<tr><td>优化目标</td><td>最大化间隔（结构风险）</td><td>最大似然（经验风险）</td></tr>
+<tr><td>解的稀疏性</td><td>仅支持向量参与决策</td><td>所有样本参与决策</td></tr>
+<tr><td>核技巧</td><td>天然支持</td><td>需额外设计（核逻辑回归）</td></tr>
+<tr><td>概率输出</td><td>需后处理（Platt scaling）</td><td>天然输出概率</td></tr>
+<tr><td>大规模数据</td><td>SMO $O(n^2\sim n^3)$</td><td>SGD $O(n)$，线性可扩展</td></tr>
+<tr><td>高维稀疏</td><td>线性核表现优秀</td><td>同样优秀</td></tr>
+</table>
+
+<h3>11.2 SVM vs 随机森林</h3>
+<table>
+<tr><th>维度</th><th>SVM</th><th>随机森林</th></tr>
+<tr><td>决策边界</td><td>光滑连续（核函数决定）</td><td>阶梯状（轴平行分割）</td></tr>
+<tr><td>特征缩放</td><td>必须标准化</td><td>不需要（基于排序）</td></tr>
+<tr><td>缺失值处理</td><td>不支持，需预处理</td><td>原生支持</td></tr>
+<tr><td>可解释性</td><td>支持向量可解释，整体黑箱</td><td>特征重要性可解释</td></tr>
+<tr><td>训练速度</td><td>$O(n^2 \sim n^3)$</td><td>$O(n \log n \times T)$</td></tr>
+<tr><td>多分类</td><td>需 OvR/OvO 分解</td><td>原生支持</td></tr>
+<tr><td>调参难度</td><td>$(C, \gamma)$ 网格搜索</td><td>$(n\_trees, max\_depth)$ 较宽容</td></tr>
+</table>
+
+<h3>11.3 SVM vs 神经网络</h3>
+<table>
+<tr><th>维度</th><th>SVM</th><th>神经网络</th></tr>
+<tr><td>优化目标</td><td>凸优化（全局最优）</td><td>非凸优化（局部最优）</td></tr>
+<tr><td>样本效率</td><td>小样本优秀（$n < 10^4$）</td><td>需要大量样本</td></tr>
+<tr><td>特征学习</td><td>无（需手工特征或核函数）</td><td>端到端特征学习</td></tr>
+<tr><td>GPU 加速</td><td>有限（SMO 串行）</td><td>天然适合 GPU 并行</td></tr>
+<tr><td>超参数</td><td>少（$C, \gamma$）</td><td>多（层数、学习率、正则化等）</td></tr>
+<tr><td>大数据可扩展性</td><td>差</td><td>优秀（mini-batch SGD）</td></tr>
+</table>
+
+<h3>11.4 选择建议</h3>
+<div class="callout success">
+<div class="callout-title">何时选择 SVM？</div>
+<ul>
+<li><strong>小到中等数据集</strong>（$n < 10^5$），尤其是高维特征</li>
+<li><strong>需要精确的决策边界</strong>，且对概率输出要求不高</li>
+<li><strong>数据维度高但样本少</strong>（如生物信息学、文本分类）</li>
+<li><strong>需要理论保障</strong>：SVM 有严格的泛化界保证</li>
+<li><strong>二分类任务</strong>为主，多分类可以分解处理</li>
+</ul>
+</div>
+
+<div class="callout warn">
+<div class="callout-title">何时不选 SVM？</div>
+<ul>
+<li><strong>大数据集</strong>（$n > 10^6$）：SMO 训练时间不可接受，用线性 SVM 或逻辑回归</li>
+<li><strong>需要概率输出</strong>：逻辑回归或神经网络更直接</li>
+<li><strong>图像 / 序列数据</strong>：CNN / Transformer 端到端学习更优</li>
+<li><strong>需要在线学习</strong>：SVM 的增量学习支持有限</li>
+</ul>
+</div>
+
+</section>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">12</span>调参实践与工程建议</h2>
+
+<h3>12.1 核心参数总结</h3>
+<table>
+<tr><th>参数</th><th>范围</th><th>默认值</th><th>作用</th></tr>
+<tr><td>$C$</td><td>$10^{-4} \sim 10^4$</td><td>$1.0$</td><td>正则化强度（惩罚/间隔权衡）</td></tr>
+<tr><td>$\gamma$</td><td>$10^{-4} \sim 10^4$</td><td>$1/(d \cdot \text{Var}(X))$</td><td>RBF 核带宽（决策边界复杂度）</td></tr>
+<tr><td>$\varepsilon$（SVR）</td><td>$0.001 \sim 1.0$</td><td>$0.1$</td><td>不敏感带宽度</td></tr>
+<tr><td>$\nu$（One-Class）</td><td>$0.01 \sim 0.5$</td><td>$0.5$</td><td>异常比例 / 支持向量比例</td></tr>
+</table>
+
+<h3>12.2 网格搜索策略</h3>
+<p>最常用的调参方法是<strong>对数网格搜索</strong>（Log-grid Search）+ 交叉验证：</p>
+<pre><code><span class="com"># 推荐搜索范围</span>
+C_range     = [<span class="num">0.001</span>, <span class="num">0.01</span>, <span class="num">0.1</span>, <span class="num">1</span>, <span class="num">10</span>, <span class="num">100</span>, <span class="num">1000</span>]
+gamma_range = [<span class="num">0.001</span>, <span class="num">0.01</span>, <span class="num">0.1</span>, <span class="num">1</span>, <span class="num">10</span>, <span class="num">100</span>, <span class="num">1000</span>]
+
+<span class="com"># 步骤:</span>
+<span class="com"># 1. 先用大步长粗搜（如 10 的幂次）</span>
+<span class="com"># 2. 找到最优区间后缩小范围细搜</span>
+<span class="com"># 3. 使用 5 折交叉验证评估</code></span></pre>
+
+<h3>12.3 特征预处理</h3>
+<table>
+<tr><th>预处理步骤</th><th>必要性</th><th>原因</th></tr>
+<tr><td><strong>标准化</strong>（StandardScaler）</td><td><span class="tag tag-orange">必须</span></td><td>SVM 基于距离度量，不同尺度特征会扭曲间隔</td></tr>
+<tr><td>归一化（MinMaxScaler）</td><td>可选</td><td>等价于标准化在大多数场景</td></tr>
+<tr><td>缺失值填充</td><td><span class="tag tag-orange">必须</span></td><td>SVM 不支持 NaN 输入</td></tr>
+<tr><td>类别编码</td><td>必须</td><td>SVM 需要数值输入</td></tr>
+<tr><td>PCA 降维</td><td>可选</td><td>减少核矩阵计算量，但可能损失信息</td></tr>
+</table>
+
+<div class="callout danger">
+<div class="callout-title">常见坑</div>
+<ul>
+<li><strong>忘记标准化</strong>：这是 SVM 最常见的错误。一个量级 $10^3$ 的特征会完全主导间隔计算</li>
+<li><strong>$\gamma$ 设置过大</strong>：$\gamma = 100$ 时 RBF 核几乎对所有样本预测为训练值（严重过拟合）</li>
+<li><strong>类别不平衡未处理</strong>：用 <code>class_weight='balanced'</code> 或调整 $C_i = C \cdot n / (2 n_{y_i})$</li>
+<li><strong>大数据用 RBF 核</strong>：$n > 10^5$ 时核矩阵 $O(n^2)$ 内存爆炸，改用线性核或 Nystroem 近似</li>
+</ul>
+</div>
+
+<h3>12.4 工程化建议</h3>
+<table>
+<tr><th>场景</th><th>推荐方案</th><th>替代方案</th></tr>
+<tr><td>$n < 10^4$，需要高精度</td><td>RBF 核 SVM + 网格搜索</td><td>—</td></tr>
+<tr><td>$10^4 < n < 10^5$</td><td>线性 SVM (SGD) 或 RBF + Nystroem 近似</td><td>LightGBM</td></tr>
+<tr><td>$n > 10^5$</td><td>线性 SVM (SGDClassifier)</td><td>逻辑回归 / LightGBM</td></tr>
+<tr><td>高维稀疏（文本）</td><td>线性 SVM (LibLinear)</td><td>逻辑回归 / Naive Bayes</td></tr>
+<tr><td>实时预测</td><td>线性 SVM（$O(d)$ 推理）</td><td>—</td></tr>
+</table>
+
+<div class="callout">
+<div class="callout-title">LibSVM vs LibLinear</div>
+<p><strong>LibSVM</strong> 支持所有核函数，适合中小数据集（$n < 10^5$）。<strong>LibLinear</strong> 专为线性 SVM 设计，使用坐标下降法，训练速度比 LibSVM 的线性核快数百倍，适合大规模数据。scikit-learn 中的 <code>SVC</code> 基于 LibSVM，<code>LinearSVC</code> 基于 LibLinear。</p>
+</div>
+
+</section>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<h3>13.1 SVM 发展时间线</h3>
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">1963</div>
+<div class="event">Vapnik 和 Chervonenkis 提出 VC 维理论</div>
+<div class="desc">奠定了统计学习理论的基础，为 SVM 提供理论支撑</div>
+</div>
+<div class="timeline-item">
+<div class="year">1974</div>
+<div class="event">Vapnik 和 Chervonenkis 提出结构风险最小化</div>
+<div class="desc">泛化能力与模型复杂度之间的权衡原则</div>
+</div>
+<div class="timeline-item">
+<div class="year">1992</div>
+<div class="event">Boser, Guyon, Vapnik 引入核技巧</div>
+<div class="desc">SVM 获得处理非线性问题的能力，论文发表于 COLT 1992</div>
+</div>
+<div class="timeline-item">
+<div class="year">1995</div>
+<div class="event">Cortes 和 Vapnik 提出软间隔 SVM</div>
+<div class="desc">引入松弛变量处理噪声和不可分数据，SVM 走向实用</div>
+</div>
+<div class="timeline-item">
+<div class="year">1996</div>
+<div class="event">Vapnik 提出 Support Vector Regression (SVR)</div>
+<div class="desc">将 SVM 从分类扩展到回归任务</div>
+</div>
+<div class="timeline-item">
+<div class="year">1998</div>
+<div class="event">Platt 提出 SMO 算法</div>
+<div class="desc">高效求解 SVM 对偶问题，使大规模训练成为可能</div>
+</div>
+<div class="timeline-item">
+<div class="year">1999</div>
+<div class="event">Schölkopf 提出 One-Class SVM</div>
+<div class="desc">SVM 扩展到异常检测和密度估计</div>
+</div>
+<div class="timeline-item">
+<div class="year">2001</div>
+<div class="event">Platt 提出 Platt Scaling 概率校准</div>
+<div class="desc">将 SVM 的输出转换为概率，弥补了 SVM 的一个重要缺陷</div>
+</div>
+<div class="timeline-item">
+<div class="year">2007</div>
+<div class="event">LIBLINEAR 发布（Fan 等）</div>
+<div class="desc">专为线性 SVM 设计的极速求解器，支持千万级样本</div>
+</div>
+<div class="timeline-item">
+<div class="year">2012+</div>
+<div class="event">深度学习兴起，SVM 在大规模视觉/NLP 任务中退居二线</div>
+<div class="desc">但在小数据、高维稀疏、需要理论保障的场景中仍是首选之一</div>
+</div>
+</div>
+
+<h3>13.2 SVM 的核心优势</h3>
+<ul>
+<li><strong>理论基础扎实</strong>：统计学习理论提供了严格的泛化界</li>
+<li><strong>凸优化全局最优</strong>：不存在局部最优问题</li>
+<li><strong>核技巧灵活</strong>：通过替换核函数适配不同数据结构</li>
+<li><strong>稀疏解</strong>：决策仅依赖支持向量，推理高效</li>
+<li><strong>小样本表现优秀</strong>：在样本少于特征数的场景仍能工作</li>
+</ul>
+
+<h3>13.3 SVM 的局限</h3>
+<ul>
+<li><strong>大规模训练慢</strong>：SMO 的 $O(n^2 \sim n^3)$ 限制了数据规模</li>
+<li><strong>核矩阵存储</strong>：$O(n^2)$ 内存消耗</li>
+<li><strong>无原生多分类</strong>：需 OvR/OvO 分解</li>
+<li><strong>无原生概率输出</strong>：需后处理校准</li>
+<li><strong>无端到端特征学习</strong>：深度学习时代的核心劣势</li>
+</ul>
+
+<h3>13.4 SVM 的现代价值</h3>
+<p>尽管深度学习在视觉和自然语言处理领域主导了绝大多数任务，SVM 在以下场景中依然具有不可替代的价值：</p>
+<table>
+<tr><th>场景</th><th>SVM 的优势</th></tr>
+<tr><td>生物信息学（基因表达分类）</td><td>高维小样本，SVM 的正则化天然防过拟合</td></tr>
+<tr><td>文本分类（情感分析）</td><td>TF-IDF 特征高维稀疏，线性核 SVM 高效且准确</td></tr>
+<tr><td>医疗诊断辅助</td><td>需要理论保障和可解释性，SVM 的支持向量提供依据</td></tr>
+<tr><td>工业故障检测</td><td>One-Class SVM 是异常检测的经典方法</td></tr>
+<tr><td>金融风控基线模型</td><td>小样本场景下，SVM 常作为强基线</td></tr>
+</table>
+
+<div class="callout success">
+<div class="callout-title">总结</div>
+<p>SVM 是机器学习历史上最重要的算法之一。它完美诠释了"简单而强大"的设计哲学：从最大间隔这一直觉出发，通过凸优化、对偶理论、核技巧的层层构建，实现了在小样本、高维空间中的卓越表现。即使深度学习时代，SVM 的思想——正则化、间隔最大化、对偶变换——仍在深刻影响机器学习的发展。理解 SVM，不仅是理解一个算法，更是理解机器学习的核心思想。</p>
+</div>
+
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Vapnik, V., &amp; Chervonenkis, A. (1974). Theory of Pattern Recognition. <em>Nauka, Moscow</em>. (VC 维理论)</li>
+<li>Boser, B. E., Guyon, I. M., &amp; Vapnik, V. N. (1992). A training algorithm for optimal margin classifiers. <em>COLT 1992</em>. (核技巧引入)</li>
+<li>Cortes, C., &amp; Vapnik, V. (1995). Support-vector networks. <em>Machine Learning, 20(3), 273-297</em>. (软间隔 SVM)</li>
+<li>Vapnik, V. (1995). The Nature of Statistical Learning Theory. <em>Springer</em>. (统计学习理论专著)</li>
+<li>Vapnik, V., Golowich, S. E., &amp; Smola, A. (1996). Support vector method for function approximation, regression estimation, and signal processing. <em>NIPS 1996</em>. (SVR)</li>
+<li>Platt, J. C. (1998). Sequential minimal optimization: A fast algorithm for training support vector machines. <em>Microsoft Research Technical Report</em>. (SMO 算法)</li>
+<li>Schölkopf, B., et al. (1999). Estimating the support of a high-dimensional distribution. <em>Neural Computation, 13(7), 1443-1471</em>. (One-Class SVM)</li>
+<li>Platt, J. C. (1999). Probabilistic outputs for support vector machines and comparisons to regularized likelihood methods. <em>Advances in Large Margin Classifiers</em>. (Platt Scaling)</li>
+<li>Cristianini, N., &amp; Shawe-Taylor, J. (2000). An Introduction to Support Vector Machines. <em>Cambridge University Press</em>. (经典教材)</li>
+<li>Smola, A. J., &amp; Schölkopf, B. (2004). A tutorial on support vector regression. <em>Statistics and Computing, 14(3), 199-222</em>. (SVR 教程)</li>
+<li>Fan, R. E., Chang, K. W., Hsieh, C. J., &amp; Lin, C. J. (2008). LIBLINEAR: A library for large linear classification. <em>JMLR, 9, 1871-1874</em>. (LibLinear)</li>
+<li>Chang, C. C., &amp; Lin, C. J. (2011). LIBSVM: A library for support vector machines. <em>ACM TIST, 2(3), 1-27</em>. (LibSVM)</li>
+<li>Hsu, C. W., Chang, C. C., &amp; Lin, C. J. (2003). A practical guide to support vector classification. <em>Technical Report, NTU</em>. (调参实践指南)</li>
+<li>Ben-Hur, A., et al. (2001). Support vector clustering. <em>JMLR, 2, 125-137</em>. (SVM 聚类扩展)</li>
+<li>Steinwart, I., &amp; Christmann, A. (2008). Support Vector Machines. <em>Springer</em>. (SVM 理论专著)</li>
+</ol>
+</section>
+
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+
+// KaTeX 渲染策略
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

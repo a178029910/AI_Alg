@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graphormer 详解 — 图 Transformer 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>Graphormer</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、GNN 与 Transformer 的相遇</a>
+    <a href="#ch2">二、自注意力机制回顾</a>
+    <a href="#ch3">三、将图结构编码进注意力</a>
+    <a href="#ch4">四、Centrality Encoding</a>
+    <a href="#ch5">五、Spatial Encoding</a>
+    <a href="#ch6">六、Edge Encoding</a>
+    <a href="#ch7">七、Graphormer Block 架构</a>
+    <a href="#ch8">八、图级读出与虚拟节点</a>
+    <a href="#ch9">九、训练策略与数据增强</a>
+    <a href="#ch10">十、Graphormer vs GNN vs ViT</a>
+    <a href="#ch11">十一、Python 代码实现</a>
+    <a href="#ch12">十二、前沿：GraphGPS 与统一框架</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+<section id="hero" class="hero">
+  <h1>Graphormer 详解</h1>
+  <div class="subtitle">Graph Transformer — 用注意力统一图学习</div>
+  <div class="tagline">从消息传递到全局注意力 · 2021 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">3 张 SVG 结构图</span>
+    <span class="badge">16 个公式</span>
+    <span class="badge">6 段 Python 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1">
+<h2><span class="num">1</span>GNN 与 Transformer 的相遇</h2>
+
+<h3>1.1 GNN 的局限性</h3>
+<p>传统 GNN（GCN、GAT、GraphSAGE）通过<strong>局部消息传递</strong>聚合邻居信息，每次只交换一阶邻居的信息。这种范式虽然高效，但存在根本限制：</p>
+<ul>
+  <li><strong>感受野有限</strong>：$L$ 层 GNN 只能感知 $L$ 跳内的信息，远距离节点交互需要大量层堆叠</li>
+  <li><strong>过平滑</strong>：层数增加导致所有节点表示趋同，限制了深层 GNN 的效果</li>
+  <li><strong>表达能力</strong>：消息传递受限于局部邻域，难以捕捉全局图结构</li>
+</ul>
+
+<h3>1.2 Transformer 的优势</h3>
+<p>Transformer 的<strong>全局自注意力</strong>机制让每个 token 直接关注序列中所有其他 token，不存在感受野限制。如果能把自注意力引入图学习，理论上可以实现：</p>
+<ul>
+  <li>任意距离节点间的直接信息交换</li>
+  <li>自适应关注重要节点对，而非均匀聚合</li>
+  <li>避免过平滑（注意力不像消息传递那样混合所有节点）</li>
+</ul>
+
+<h3>1.3 核心挑战</h3>
+<p>将 Transformer 应用于图的关键问题是：<strong>如何把图的结构信息编码进注意力计算</strong>？序列数据有天然的位置顺序（位置编码），但图没有——节点之间没有固定顺序，只有拓扑关系。</p>
+
+<div class="callout">
+<div class="callout-title">Graphormer 的核心贡献</div>
+Ying 等人（2021）提出 Graphormer，通过三种编码方式将图结构信息注入自注意力：Centrality Encoding（节点重要性）、Spatial Encoding（空间距离）、Edge Encoding（边特征）。在 OGB（Open Graph Benchmark）多个榜单上取得 SOTA。
+</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="mk1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"></path></marker>
+</defs>
+<text x="200" y="30" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">GNN (消息传递)</text>
+<circle cx="120" cy="100" r="24" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+<text x="120" y="106" text-anchor="middle" font-size="12" fill="#1d4ed8">$v_i$</text>
+<circle cx="60" cy="60" r="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="60" y="65" text-anchor="middle" font-size="10" fill="#7c3aed">$v_1$</text>
+<circle cx="60" cy="140" r="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="60" y="145" text-anchor="middle" font-size="10" fill="#7c3aed">$v_2$</text>
+<circle cx="200" cy="60" r="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="200" y="65" text-anchor="middle" font-size="10" fill="#7c3aed">$v_3$</text>
+<circle cx="200" cy="140" r="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="200" y="145" text-anchor="middle" font-size="10" fill="#7c3aed">$v_4$</text>
+<line x1="80" y1="70" x2="100" y2="90" stroke="#334155" stroke-width="1.5"/>
+<line x1="80" y1="130" x2="100" y2="110" stroke="#334155" stroke-width="1.5"/>
+<line x1="180" y1="70" x2="140" y2="90" stroke="#334155" stroke-width="1.5"/>
+<line x1="180" y1="130" x2="140" y2="110" stroke="#334155" stroke-width="1.5"/>
+<text x="200" y="175" text-anchor="middle" font-size="11" fill="#64748b">只聚合直接邻居</text>
+<text x="580" y="30" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Graphormer (全局注意力)</text>
+<circle cx="500" cy="100" r="24" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="glow-ring"/>
+<text x="500" y="106" text-anchor="middle" font-size="12" fill="#1d4ed8">$v_i$</text>
+<circle cx="600" cy="60" r="20" fill="#d1fae5" stroke="#059669" stroke-width="1.5" class="pulse-node"/>
+<text x="600" y="65" text-anchor="middle" font-size="10" fill="#059669">$v_j$</text>
+<circle cx="680" cy="100" r="20" fill="#d1fae5" stroke="#059669" stroke-width="1.5" class="pulse-node"/>
+<text x="680" y="105" text-anchor="middle" font-size="10" fill="#059669">$v_k$</text>
+<circle cx="600" cy="140" r="20" fill="#d1fae5" stroke="#059669" stroke-width="1.5" class="pulse-node"/>
+<text x="600" y="145" text-anchor="middle" font-size="10" fill="#059669">$v_l$</text>
+<line x1="524" y1="90" x2="580" y2="72" stroke="#059669" stroke-width="2" stroke-dasharray="4 2" class="flow-line"/>
+<line x1="524" y1="100" x2="660" y2="100" stroke="#059669" stroke-width="2" stroke-dasharray="4 2" class="flow-line"/>
+<line x1="524" y1="110" x2="580" y2="128" stroke="#059669" stroke-width="2" stroke-dasharray="4 2" class="flow-line"/>
+<text x="580" y="175" text-anchor="middle" font-size="11" fill="#64748b">关注所有节点 + 结构编码</text>
+<line x1="290" y1="100" x2="420" y2="100" stroke="#2563eb" stroke-width="2" marker-end="url(#mk1)" class="flow-line"/>
+<text x="355" y="92" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="600">进化</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch2">
+<h2><span class="num">2</span>自注意力机制回顾</h2>
+
+<h3>2.1 Scaled Dot-Product Attention</h3>
+<p>Transformer 的核心是缩放点积注意力：</p>
+<div class="formula" data-eq="(1)">$$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{Q K^\top}{\sqrt{d_k}}\right) V$$</div>
+<p>其中 $Q = X W_Q$，$K = X W_K$，$V = X W_V$，$\sqrt{d_k}$ 防止点积过大导致梯度消失。</p>
+
+<h3>2.2 多头注意力</h3>
+<p>多头注意力将 $d$ 维特征分成 $h$ 个头，每个头独立做注意力后拼接：</p>
+<div class="formula" data-eq="(2)">$$\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) W^O$$</div>
+<div class="formula" data-eq="(3)">$$\text{head}_i = \text{Attention}(Q W_i^Q, K W_i^K, V W_i^V)$$</div>
+
+<h3>2.3 位置编码</h3>
+<p>Transformer 需要位置编码来注入序列顺序信息。标准 Transformer 使用正弦/余弦编码：</p>
+<div class="formula" data-eq="(4)">$$PE_{(pos, 2i)} = \sin(pos / 10000^{2i/d}), \quad PE_{(pos, 2i+1)} = \cos(pos / 10000^{2i/d})$$</div>
+<p>对于图数据，"位置"变成了图中的拓扑位置——这正是 Graphormer 需要解决的。</p>
+
+</section>
+
+<section id="ch3">
+<h2><span class="num">3</span>将图结构编码进注意力</h2>
+
+<h3>3.1 图的三种信息</h3>
+<p>一个图 $G = (V, E)$ 包含三类信息：</p>
+<ul>
+  <li><strong>节点信息</strong>：每个节点的特征 $x_v$ 及其在图中的重要性（如度、中心性）</li>
+  <li><strong>结构信息</strong>：节点对之间的拓扑关系（如最短路径距离）</li>
+  <li><strong>边信息</strong>：边上的特征/类型（如化学键类型、关系类型）</li>
+</ul>
+
+<h3>3.2 Graphormer 的三种编码</h3>
+<p>Graphormer 设计了三种编码来注入图结构信息：</p>
+<div class="table-wrap">
+<table>
+<tr><th>编码</th><th>注入位置</th><th>编码内容</th><th>作用</th></tr>
+<tr><td>Centrality Encoding</td><td>输入嵌入</td><td>节点的入度/出度</td><td>注入节点重要性</td></tr>
+<tr><td>Spatial Encoding</td><td>注意力偏置</td><td>节点对最短路径距离</td><td>注入拓扑结构</td></tr>
+<tr><td>Edge Encoding</td><td>注意力偏置</td><td>最短路径上的边特征</td><td>注入边属性</td></tr>
+</table>
+</div>
+
+<h3>3.3 修改后的注意力公式</h3>
+<p>标准注意力的 $QK^\top$ 不包含结构信息。Graphormer 在注意力 logits 上加入结构偏置项 $b_{ij}$：</p>
+<div class="formula" data-eq="(5)">$$A_{ij} = \frac{q_i^\top k_j}{\sqrt{d}} + b_{ij}$$</div>
+<p>其中 $b_{ij}$ 是从 Spatial Encoding 和 Edge Encoding 计算得到的结构偏置。这样 $\text{softmax}(A)$ 既考虑了特征相似度，也考虑了图结构。</p>
+
+<div class="callout warn">
+<div class="callout-title">关键洞察</div>
+Graphormer 没有修改注意力的 $QK^\top$ 本身，而是在注意力分数上加了一个<strong>可学习的偏置项</strong> $b_{ij}$。这个偏置编码了节点对之间的结构关系，让注意力能在特征相似度和拓扑关系之间做平衡。这种设计既保留了 Transformer 的全局感受野，又注入了图的结构先验。
+</div>
+
+</section>
+
+<section id="ch4">
+<h2><span class="num">4</span>Centrality Encoding</h2>
+
+<h3>4.1 为什么需要中心性编码</h3>
+<p>标准 Transformer 中，不同 token 的初始嵌入仅来自词嵌入，位置信息由位置编码提供。对于图，节点的<strong>度</strong>是其最重要的结构性指标之一——度大的节点在消息传递中影响更大。Centrality Encoding 将节点的入度和出度作为额外的嵌入注入初始特征。</p>
+
+<h3>4.2 公式</h3>
+<p>设节点 $v$ 的入度为 $d^-(v)$，出度为 $d^+(v)$。Centrality Encoding 将度离散化后查表：</p>
+<div class="formula" data-eq="(6)">$$h_v^{(0)} = x_v + z_{\text{deg}}^{-}[d^-(v)] + z_{\text{deg}}^{+}[d^+(v)]$$</div>
+<p>其中 $z_{\text{deg}}^{-}$ 和 $z_{\text{deg}}^{+}$ 是可学习的嵌入表（按度数索引）。对于无向图，$d^- = d^+ = d$，可合并为单个度嵌入。</p>
+
+<h3>4.3 设计细节</h3>
+<ul>
+  <li>度数截断：大图的度数可能很高，设最大度数 $d_{\max}$，超过的截断</li>
+  <li>入度/出度分离：有向图中入度和出度含义不同，分别编码</li>
+  <li>与特征融合：通过加法将度嵌入融入节点初始表示</li>
+</ul>
+
+</section>
+
+<section id="ch5">
+<h2><span class="num">5</span>Spatial Encoding</h2>
+
+<h3>5.1 最短路径距离作为结构偏置</h3>
+<p>Graphormer 用节点对 $(v_i, v_j)$ 之间的<strong>最短路径距离</strong> $\text{SPD}(v_i, v_j)$ 作为结构信息注入注意力偏置：</p>
+<div class="formula" data-eq="(7)">$$b_{\text{spatial}}(v_i, v_j) = b_{\text{spatial}}\left(\text{SPD}(v_i, v_j)\right)$$</div>
+<p>其中 $b_{\text{spatial}}: \mathbb{N}^+ \to \mathbb{R}$ 是一个可学习的映射函数，将距离映射为标量偏置。</p>
+
+<h3>5.2 特殊距离处理</h3>
+<ul>
+  <li><strong>自环</strong>：$\text{SPD}(v_i, v_i) = 0$，使用专门的偏置值</li>
+  <li><strong>不连通</strong>：$\text{SPD}(v_i, v_j) = \infty$，设为一个特殊标记值（如 $-100$），注意力接近零</li>
+  <li><strong>截断</strong>：设最大距离 $\text{SPD}_{\max}$，超过的截断以控制参数量</li>
+</ul>
+
+<h3>5.3 偏置的可学习性</h3>
+<p>$b_{\text{spatial}}$ 是按距离索引的可学习标量表。这意味着模型可以学习到"距离 1 的节点应被更多关注"或"距离 3 的节点也很有用"等模式。不同任务可能需要不同的空间关注模式，可学习偏置提供了灵活性。</p>
+
+<div class="formula" data-eq="(8)">$$b_{ij} = b_{\text{spatial}}(\text{SPD}(v_i, v_j))$$</div>
+<p>最终的注意力矩阵为：</p>
+<div class="formula" data-eq="(9)">$$\alpha_{ij} = \text{softmax}_j\left(\frac{q_i^\top k_j}{\sqrt{d}} + b_{\text{spatial}}(\text{SPD}(v_i, v_j))\right)$$</div>
+
+</section>
+
+<section id="ch6">
+<h2><span class="num">6</span>Edge Encoding</h2>
+
+<h3>6.1 边特征的利用</h3>
+<p>许多图数据包含边特征（如分子图中的化学键类型、知识图中的关系类型）。Graphormer 利用最短路径上的边特征来增强注意力偏置。</p>
+
+<h3>6.2 最短路径上的边编码</h3>
+<p>设 $v_i$ 到 $v_j$ 的最短路径为 $SP_{ij} = (e_1, e_2, \ldots, e_N)$，路径上的边特征为 $x_{e_1}, \ldots, x_{e_N}$。Edge Encoding 为：</p>
+<div class="formula" data-eq="(10)">$$b_{\text{edge}}(v_i, v_j) = \frac{1}{N} \sum_{n=1}^{N} x_{e_n} \cdot w_n^E$$</div>
+<p>其中 $w_n^E$ 是可学习的权重向量，对路径上不同位置的边特征加权求和。这相当于沿最短路径做一次"边特征注意力"。</p>
+
+<h3>6.3 综合偏置</h3>
+<p>最终的注意力偏置是 Spatial Encoding 和 Edge Encoding 之和：</p>
+<div class="formula" data-eq="(11)">$$b_{ij} = b_{\text{spatial}}(\text{SPD}(v_i, v_j)) + b_{\text{edge}}(v_i, v_j)$$</div>
+<p>这使得注意力同时考虑了节点对的拓扑距离和路径上的边类型信息。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg">
+<text x="400" y="25" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Graphormer 三种编码注入位置</text>
+<rect x="20" y="50" width="180" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="110" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="600">节点特征 $x_v$</text>
+<rect x="220" y="50" width="160" height="40" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="300" y="75" text-anchor="middle" font-size="12" fill="#7c3aed" font-weight="600">Centrality Encoding</text>
+<text x="300" y="92" text-anchor="middle" font-size="10" fill="#7c3aed">(入度/出度嵌入)</text>
+<rect x="410" y="50" width="180" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="500" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8">初始嵌入 $h^{(0)}$</text>
+<text x="210" y="70" text-anchor="middle" font-size="18" fill="#334155">+</text>
+<text x="400" y="70" text-anchor="middle" font-size="18" fill="#334155">→</text>
+<rect x="100" y="120" width="600" height="60" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="400" y="145" text-anchor="middle" font-size="13" fill="#059669" font-weight="600">Self-Attention: $A_{ij} = QK^T/sqrt{d} + b_{ij}$</text>
+<text x="400" y="165" text-anchor="middle" font-size="11" fill="#059669">$b_{ij}$ = Spatial Encoding + Edge Encoding</text>
+<rect x="100" y="195" width="280" height="40" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="240" y="220" text-anchor="middle" font-size="12" fill="#ea580c">Spatial: 最短路径距离 SPD</text>
+<rect x="420" y="195" width="280" height="40" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+<text x="560" y="220" text-anchor="middle" font-size="12" fill="#dc2626">Edge: 路径上边特征加权</text>
+<line x1="240" y1="195" x2="350" y2="180" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4 2"/>
+<line x1="560" y1="195" x2="450" y2="180" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 2"/>
+</svg>
+</div>
+
+</section>
+
+<section id="ch7">
+<h2><span class="num">7</span>Graphormer Block 架构</h2>
+
+<h3>7.1 整体结构</h3>
+<p>一个 Graphormer Block 由多头自注意力层（含结构偏置）和前馈网络（FFN）组成，配合残差连接和 LayerNorm：</p>
+<div class="formula" data-eq="(12)">$$H' = \text{LayerNorm}(H + \text{MultiHead}_{\text{graph}}(H))$$</div>
+<div class="formula" data-eq="(13)">$$H'' = \text{LayerNorm}(H' + \text{FFN}(H'))$$</div>
+
+<h3>7.2 图结构感知的多头注意力</h3>
+<p>每个注意力头的计算为：</p>
+<div class="formula" data-eq="(14)">$$\text{head}_m = \text{softmax}\left(\frac{Q_m K_m^\top}{\sqrt{d_m}} + B\right) V_m$$</div>
+<p>其中 $B \in \mathbb{R}^{n \times n}$ 是结构偏置矩阵，$B_{ij} = b_{ij}$ 包含 Spatial Encoding 和 Edge Encoding。注意 $B$ 在所有注意力头之间共享（或每头独立），是 Graphormer 与标准 Transformer 的唯一区别。</p>
+
+<h3>7.3 计算复杂度</h3>
+<p>Graphormer 的注意力计算复杂度为 $O(n^2 d)$，与标准 Transformer 相同。但预处理需要计算所有节点对的最短路径（Floyd-Warshall $O(n^3)$ 或 BFS $O(n(n+m))$），对于大图有额外开销。</p>
+<div class="table-wrap">
+<table>
+<tr><th>操作</th><th>复杂度</th><th>备注</th></tr>
+<tr><td>最短路径计算</td><td>$O(n(n+m))$</td><td>BFS，预处理一次</td></tr>
+<tr><td>注意力计算</td><td>$O(n^2 d)$</td><td>与 Transformer 相同</td></tr>
+<tr><td>FFN</td><td>$O(n d^2)$</td><td>逐节点 FFN</td></tr>
+<tr><td>总复杂度</td><td>$O(n^2 d + n d^2)$</td><td>瓶颈在 $n^2$ 注意力</td></tr>
+</table>
+</div>
+
+</section>
+
+<section id="ch8">
+<h2><span class="num">8</span>图级读出与虚拟节点</h2>
+
+<h3>8.1 图级任务的读出</h3>
+<p>对于图分类任务，需要将节点表示聚合为图级表示。Graphormer 使用特殊节点 <code>[GRAPH]</code>（虚拟节点）来简化读出：</p>
+<div class="formula" data-eq="(15)">$$h_G = h_{\text{[GRAPH]}}^{(L)}$$</div>
+<p>虚拟节点与图中所有节点相连（SPD=1），在注意力中自然聚合所有节点信息。无需额外的读出函数。</p>
+
+<h3>8.2 虚拟节点的优势</h3>
+<ul>
+  <li><strong>端到端学习</strong>：图级表示随网络一起优化，而非固定读出</li>
+  <li><strong>自然集成</strong>：虚拟节点参与每一层注意力，逐步积累全局信息</li>
+  <li><strong>灵活性强</strong>：可添加多个虚拟节点或不同类型的虚拟节点</li>
+</ul>
+
+<h3>8.3 节点级任务</h3>
+<p>对于节点分类/回归任务，直接使用最终层的节点表示 $h_v^{(L)}$，无需虚拟节点。</p>
+
+</section>
+
+<section id="ch9">
+<h2><span class="num">9</span>训练策略与数据增强</h2>
+
+<h3>9.1 OGB 基准</h3>
+<p>Graphormer 在 OGB（Open Graph Benchmark）的多个数据集上验证：</p>
+<div class="table-wrap">
+<table>
+<tr><th>数据集</th><th>任务</th><th>图规模</th><th>Graphormer 排名</th></tr>
+<tr><td>OGBG-MOLHIV</td><td>图分类（分子毒性）</td><td>~4 万分子</td><td>第 1</td></tr>
+<tr><td>OGBG-MOLPCBA</td><td>图分类（分子活性）</td><td>~44 万分子</td><td>第 1</td></tr>
+<tr><td>OGBG-PPA</td><td>图分类（蛋白质）</td><td>~4 万图</td><td>第 1</td></tr>
+<tr><td>OGBG-CODE2</td><td>节点分类（代码）</td><td>~9 万节点</td><td>Top 3</td></tr>
+</table>
+</div>
+
+<h3>9.2 训练技巧</h3>
+<ul>
+  <li><strong>相对位置截断</strong>：对最短路径距离设上限，控制嵌入表大小</li>
+  <li><strong>层间 dropout</strong>：对注意力权重和 FFN 使用 dropout</li>
+  <li><strong>学习率调度</strong>：warmup + cosine decay</li>
+  <li><strong>数据增强</strong>：对分子图做子图采样、随机删边等</li>
+</ul>
+
+<div class="callout success">
+<div class="callout-title">OGB 成绩意义</div>
+Graphormer 在 OGB 上取得 SOTA 具有里程碑意义：OGB 是图学习领域公认的公平基准，此前榜单由 GNN（GIN、GCN、GraphSAGE）主导。Graphormer 证明了 Transformer 架构在图学习上可以超越传统 GNN。
+</div>
+
+</section>
+
+<section id="ch10">
+<h2><span class="num">10</span>Graphormer vs GNN vs ViT</h2>
+
+<h3>10.1 三者对比</h3>
+<div class="table-wrap">
+<table>
+<tr><th>维度</th><th>GNN (GCN/GAT)</th><th>ViT</th><th>Graphormer</th></tr>
+<tr><td>数据结构</td><td>图</td><td>图像（Patch 序列）</td><td>图</td></tr>
+<tr><td>感受野</td><td>局部（$L$ 跳）</td><td>全局（所有 Patch）</td><td>全局（所有节点）</td></tr>
+<tr><td>结构注入</td><td>邻接矩阵直接参与</td><td>位置编码</td><td>Centrality + Spatial + Edge</td></tr>
+<tr><td>复杂度</td><td>$O(m \cdot d)$</td><td>$O(n^2 d)$</td><td>$O(n^2 d)$ + 预处理</td></tr>
+<tr><td>过平滑</td><td>有（深层受限）</td><td>无</td><td>无</td></tr>
+<tr><td>大图适用</td><td>好（线性复杂度）</td><td>好（Patch 数固定）</td><td>受限（$n^2$ 注意力）</td></tr>
+</table>
+</div>
+
+<h3>10.2 何时用 Graphormer vs GNN</h3>
+<ul>
+  <li><strong>用 GNN</strong>：大图（节点数 $> 10^4$）、稀疏图、只需局部信息</li>
+  <li><strong>用 Graphormer</strong>：中小图、需要全局信息、图分类、结构复杂</li>
+  <li><strong>混合</strong>：GraphGPS 等框架混合局部 GNN 和全局注意力</li>
+</ul>
+
+</section>
+
+<section id="ch11">
+<h2><span class="num">11</span>Python 代码实现</h2>
+
+<h3>11.1 Centrality + Spatial Encoding（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">graphormer_encoding.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.<span class="cls">nn</span> <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">GraphormerEncoding</span>(<span class="cls">nn</span>.<span class="cls">Module</span>):
+    <span class="str">"""Graphormer 三种编码: Centrality + Spatial + Edge"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, d_model, max_degree=<span class="num">128</span>, max_path_len=<span class="num">10</span>, n_edge_types=<span class="num">8</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="com"># Centrality Encoding: 入度/出度嵌入</span>
+        <span class="kw">self</span>.deg_in_embed = <span class="cls">nn</span>.<span class="cls">Embedding</span>(max_degree + <span class="num">1</span>, d_model)
+        <span class="kw">self</span>.deg_out_embed = <span class="cls">nn</span>.<span class="cls">Embedding</span>(max_degree + <span class="num">1</span>, d_model)
+        <span class="com"># Spatial Encoding: 按距离索引的标量偏置</span>
+        <span class="kw">self</span>.spatial_bias = <span class="cls">nn</span>.<span class="cls">Embedding</span>(max_path_len + <span class="num">2</span>, <span class="num">1</span>, padding_idx=max_path_len + <span class="num">1</span>)
+        <span class="com"># Edge Encoding: 路径上边特征的可学习权重</span>
+        <span class="kw">self</span>.edge_weight = <span class="cls">nn</span>.<span class="cls">Parameter</span>(<span class="cls">torch</span>.<span class="fn">randn</span>(max_path_len, d_model))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x, deg_in, deg_out, spd, edge_features=<span class="kw">None</span>):
+        <span class="str">"""x: (n, d) 节点特征
+        deg_in/deg_out: (n,) 度数
+        spd: (n, n) 最短路径距离矩阵
+        edge_features: (n, n, max_path_len, d_edge) 或 None
+        """</span>
+        <span class="com"># Centrality: 加到节点特征上</span>
+        h = x + <span class="kw">self</span>.deg_in_embed(deg_in) + <span class="kw">self</span>.deg_out_embed(deg_out)
+        <span class="com"># Spatial: 距离 -> 注意力偏置矩阵</span>
+        spatial_bias = <span class="kw">self</span>.spatial_bias(spd).<span class="fn">squeeze</span>(-<span class="num">1</span>)  <span class="com"># (n, n)</span>
+        <span class="com"># Edge: 路径上边特征加权</span>
+        edge_bias = <span class="num">0</span>
+        <span class="kw">if</span> edge_features <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span>:
+            <span class="com"># (n, n, max_path_len, d) x (max_path_len, d) -> (n, n)</span>
+            edge_bias = (edge_features * <span class="kw">self</span>.edge_weight.<span class="fn">unsqueeze</span>(<span class="num">0</span>).<span class="fn">unsqueeze</span>(<span class="num">0</span>)).<span class="fn">sum</span>(dim=(-<span class="num">1</span>, -<span class="num">2</span>))
+            edge_bias = edge_bias / <span class="fn">max</span>(edge_features.<span class="fn">size</span>(<span class="num">2</span>), <span class="num">1</span>)
+        bias = spatial_bias + edge_bias  <span class="com"># (n, n)</span>
+        <span class="kw">return</span> h, bias
+</pre>
+</div>
+
+<h3>11.2 Graphormer 注意力层（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">graphormer_attention.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.<span class="cls">nn</span> <span class="kw">as</span> <span class="cls">nn</span>
+<span class="kw">import</span> <span class="cls">torch</span>.<span class="cls">nn</span>.functional <span class="kw">as</span> <span class="cls">F</span>
+
+<span class="kw">class</span> <span class="cls">GraphormerAttention</span>(<span class="cls">nn</span>.<span class="cls">Module</span>):
+    <span class="str">"""带结构偏置的多头自注意力"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, d_model, n_heads=<span class="num">8</span>, dropout=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.n_heads = n_heads
+        <span class="kw">self</span>.d_head = d_model // n_heads
+        <span class="kw">self</span>.qkv = <span class="cls">nn</span>.<span class="cls">Linear</span>(d_model, <span class="num">3</span> * d_model)
+        <span class="kw">self</span>.out = <span class="cls">nn</span>.<span class="cls">Linear</span>(d_model, d_model)
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.<span class="cls">Dropout</span>(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, h, bias):
+        <span class="str">"""h: (B, n, d), bias: (B, n, n) 结构偏置"""</span>
+        B, n, d = h.shape
+        qkv = <span class="kw">self</span>.qkv(h).<span class="fn">reshape</span>(B, n, <span class="num">3</span>, <span class="kw">self</span>.n_heads, <span class="kw">self</span>.d_head)
+        q, k, v = qkv.<span class="fn">permute</span>(<span class="num">2</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">3</span>, <span class="num">4</span>)  <span class="com"># (B, n, heads, d_head)</span>
+        <span class="com"># 注意力分数: (B, heads, n, n)</span>
+        attn = <span class="cls">torch</span>.<span class="fn">einsum</span>(<span class="str">'bhid,bhjd->bhij'</span>, q, k) / (<span class="kw">self</span>.d_head ** <span class="num">0.5</span>)
+        <span class="com"># 加入结构偏置 (广播到所有头)</span>
+        attn = attn + bias.<span class="fn">unsqueeze</span>(<span class="num">1</span>)
+        attn = <span class="cls">F</span>.<span class="fn">softmax</span>(attn, dim=-<span class="num">1</span>)
+        attn = <span class="kw">self</span>.dropout(attn)
+        <span class="com"># 加权求和</span>
+        out = <span class="cls">torch</span>.<span class="fn">einsum</span>(<span class="str">'bhij,bhjd->bhid'</span>, attn, v)
+        out = out.<span class="fn">reshape</span>(B, n, d)
+        <span class="kw">return</span> <span class="kw">self</span>.out(out)
+
+<span class="kw">class</span> <span class="cls">GraphormerBlock</span>(<span class="cls">nn</span>.<span class="cls">Module</span>):
+    <span class="str">"""Graphormer 编码器块"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, d_model, n_heads=<span class="num">8</span>, d_ff=<span class="num">2048</span>, dropout=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.attn = <span class="cls">GraphormerAttention</span>(d_model, n_heads, dropout)
+        <span class="kw">self</span>.norm1 = <span class="cls">nn</span>.<span class="cls">LayerNorm</span>(d_model)
+        <span class="kw">self</span>.norm2 = <span class="cls">nn</span>.<span class="cls">LayerNorm</span>(d_model)
+        <span class="kw">self</span>.ffn = <span class="cls">nn</span>.<span class="cls">Sequential</span>(
+            <span class="cls">nn</span>.<span class="cls">Linear</span>(d_model, d_ff),
+            <span class="cls">nn</span>.<span class="cls">GELU</span>(),
+            <span class="cls">nn</span>.<span class="cls">Dropout</span>(dropout),
+            <span class="cls">nn</span>.<span class="cls">Linear</span>(d_ff, d_model)
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, h, bias):
+        h = <span class="kw">self</span>.norm1(h + <span class="kw">self</span>.attn(h, bias))
+        h = <span class="kw">self</span>.norm2(h + <span class="kw">self</span>.ffn(h))
+        <span class="kw">return</span> h
+</pre>
+</div>
+
+<h3>11.3 完整 Graphormer 模型（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">graphormer.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.<span class="cls">nn</span> <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">Graphormer</span>(<span class="cls">nn</span>.<span class="cls">Module</span>):
+    <span class="str">"""完整 Graphormer 模型"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, n_layers=<span class="num">6</span>, d_model=<span class="num">256</span>, n_heads=<span class="num">8</span>, d_ff=<span class="num">1024</span>,
+                 max_degree=<span class="num">128</span>, max_path_len=<span class="num">10</span>, n_classes=<span class="num">2</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.encoder = <span class="cls">GraphormerEncoding</span>(d_model, max_degree, max_path_len)
+        <span class="kw">self</span>.blocks = <span class="cls">nn</span>.<span class="cls">ModuleList</span>([
+            <span class="cls">GraphormerBlock</span>(d_model, n_heads, d_ff) <span class="kw">for</span> _ <span class="kw">in</span> <span class="cls">range</span>(n_layers)
+        ])
+        <span class="kw">self</span>.norm = <span class="cls">nn</span>.<span class="cls">LayerNorm</span>(d_model)
+        <span class="kw">self</span>.classifier = <span class="cls">nn</span>.<span class="cls">Linear</span>(d_model, n_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x, deg_in, deg_out, spd, edge_features=<span class="kw">None</span>):
+        <span class="str">"""x: (B, n, d), spd: (B, n, n)"""</span>
+        h, bias = <span class="kw">self</span>.encoder(x, deg_in, deg_out, spd, edge_features)
+        <span class="kw">for</span> block <span class="kw">in</span> <span class="kw">self</span>.blocks:
+            h = block(h, bias)
+        h = <span class="kw">self</span>.norm(h)
+        <span class="com"># 使用 [GRAPH] 虚拟节点 (index 0) 做图分类</span>
+        <span class="kw">return</span> <span class="kw">self</span>.classifier(h[:, <span class="num">0</span>, :])
+</pre>
+</div>
+
+<h3>11.4 最短路径预计算（NumPy）</h3>
+<div class="code-block">
+<div class="code-header">shortest_path.py</div>
+<pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
+<span class="kw">from</span> collections <span class="kw">import</span> <span class="cls">deque</span>
+
+<span class="kw">def</span> <span class="fn">bfs_shortest_path</span>(adj, source):
+    <span class="str">"""BFS 计算从 source 到所有节点的最短路径距离"""</span>
+    n = adj.shape[<span class="num">0</span>]
+    dist = <span class="cls">np</span>.<span class="fn">full</span>(n, -<span class="num">1</span>, dtype=<span class="cls">int</span>)  <span class="com"># -1 表示不连通</span>
+    dist[source] = <span class="num">0</span>
+    queue = <span class="cls">deque</span>([source])
+    <span class="kw">while</span> queue:
+        u = queue.<span class="fn">popleft</span>()
+        <span class="kw">for</span> v <span class="kw">in</span> <span class="cls">np</span>.<span class="fn">where</span>(adj[u] > <span class="num">0</span>)[<span class="num">0</span>]:
+            <span class="kw">if</span> dist[v] == -<span class="num">1</span>:
+                dist[v] = dist[u] + <span class="num">1</span>
+                queue.<span class="fn">append</span>(v)
+    <span class="kw">return</span> dist
+
+<span class="kw">def</span> <span class="fn">all_pairs_shortest_path</span>(adj, max_dist=<span class="num">10</span>):
+    <span class="str">"""计算所有节点对的最短路径距离矩阵"""</span>
+    n = adj.shape[<span class="num">0</span>]
+    spd = <span class="cls">np</span>.<span class="fn">zeros</span>((n, n), dtype=<span class="cls">int</span>)
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="cls">range</span>(n):
+        dist = <span class="fn">bfs_shortest_path</span>(adj, i)
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="cls">range</span>(n):
+            <span class="kw">if</span> dist[j] == -<span class="num">1</span>:
+                spd[i, j] = max_dist + <span class="num">1</span>  <span class="com"># 不连通</span>
+            <span class="kw">else</span>:
+                spd[i, j] = <span class="fn">min</span>(dist[j], max_dist)
+    <span class="kw">return</span> spd
+
+<span class="com"># 示例: 6 个节点的图</span>
+adj = <span class="cls">np</span>.array([
+    [<span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>],
+    [<span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>],
+    [<span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>],
+    [<span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>],
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>],
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>],
+])
+spd = <span class="fn">all_pairs_shortest_path</span>(adj)
+<span class="fn">print</span>(<span class="str">"最短路径距离矩阵:"</span>)
+<span class="fn">print</span>(spd)
+</pre>
+</div>
+
+<h3>11.5 虚拟节点实现（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">virtual_node.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.<span class="cls">nn</span> <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">GraphormerWithVNode</span>(<span class="cls">nn</span>.<span class="cls">Module</span>):
+    <span class="str">"""带虚拟节点的 Graphormer"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, d_model=<span class="num">256</span>, n_heads=<span class="num">8</span>, n_layers=<span class="num">6</span>, n_classes=<span class="num">2</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="kw">self</span>.vnode_embed = <span class="cls">nn</span>.<span class="cls">Parameter</span>(<span class="cls">torch</span>.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">1</span>, d_model))  <span class="com"># 虚拟节点嵌入</span>
+        <span class="kw">self</span>.blocks = <span class="cls">nn</span>.<span class="cls">ModuleList</span>([
+            <span class="cls">GraphormerBlock</span>(d_model, n_heads) <span class="kw">for</span> _ <span class="kw">in</span> <span class="cls">range</span>(n_layers)
+        ])
+        <span class="kw">self</span>.norm = <span class="cls">nn</span>.<span class="cls">LayerNorm</span>(d_model)
+        <span class="kw">self</span>.classifier = <span class="cls">nn</span>.<span class="cls">Linear</span>(d_model, n_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x, bias):
+        <span class="str">"""x: (B, n, d), bias: (B, n, n)"""</span>
+        B = x.<span class="fn">size</span>(<span class="num">0</span>)
+        <span class="com"># 添加虚拟节点到每个图</span>
+        vnode = <span class="kw">self</span>.vnode_embed.<span class="fn">expand</span>(B, -<span class="num">1</span>, -<span class="num">1</span>)  <span class="com"># (B, 1, d)</span>
+        h = <span class="cls">torch</span>.<span class="fn">cat</span>([vnode, x], dim=<span class="num">1</span>)            <span class="com"># (B, n+1, d)</span>
+        <span class="com"># 扩展偏置: 虚拟节点与所有节点距离=1</span>
+        n = bias.<span class="fn">size</span>(-<span class="num">1</span>)
+        vnode_bias = <span class="cls">torch</span>.<span class="fn">ones</span>(B, n + <span class="num">1</span>, n + <span class="num">1</span>, device=bias.device)
+        vnode_bias[:, <span class="num">1</span>:, <span class="num">1</span>:] = bias                <span class="com"># 原始偏置保留</span>
+        <span class="kw">for</span> block <span class="kw">in</span> <span class="kw">self</span>.blocks:
+            h = block(h, vnode_bias)
+        h = <span class="kw">self</span>.norm(h)
+        <span class="kw">return</span> <span class="kw">self</span>.classifier(h[:, <span class="num">0</span>, :])          <span class="com"># 虚拟节点输出</span>
+</pre>
+</div>
+
+<h3>11.6 GraphGPS 混合块（PyTorch）</h3>
+<div class="code-block">
+<div class="code-header">graphgps_block.py</div>
+<pre>
+<span class="kw">import</span> <span class="cls">torch</span>
+<span class="kw">import</span> <span class="cls">torch</span>.<span class="cls">nn</span> <span class="kw">as</span> <span class="cls">nn</span>
+
+<span class="kw">class</span> <span class="cls">GraphGPSBlock</span>(<span class="cls">nn</span>.<span class="cls">Module</span>):
+    <span class="str">"""GraphGPS: 混合局部 GNN + 全局注意力"""</span>
+    <span class="kw">def</span> __init__(<span class="kw">self</span>, d_model, n_heads=<span class="num">8</span>, d_ff=<span class="num">1024</span>, dropout=<span class="num">0.1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="com"># 局部消息传递 (GAT 风格)</span>
+        <span class="kw">self</span>.local_mp = <span class="cls">GATLayer</span>(d_model, d_model, n_heads)
+        <span class="com"># 全局自注意力 (Graphormer 风格)</span>
+        <span class="kw">self</span>.global_attn = <span class="cls">GraphormerAttention</span>(d_model, n_heads, dropout)
+        <span class="com"># 融合 + FFN</span>
+        <span class="kw">self</span>.norm1 = <span class="cls">nn</span>.<span class="cls">LayerNorm</span>(d_model)
+        <span class="kw">self</span>.norm2 = <span class="cls">nn</span>.<span class="cls">LayerNorm</span>(d_model)
+        <span class="kw">self</span>.ffn = <span class="cls">nn</span>.<span class="cls">Sequential</span>(
+            <span class="cls">nn</span>.<span class="cls">Linear</span>(d_model, d_ff), <span class="cls">nn</span>.<span class="cls">GELU</span>(), <span class="cls">nn</span>.<span class="cls">Dropout</span>(dropout),
+            <span class="cls">nn</span>.<span class="cls">Linear</span>(d_ff, d_model)
+        )
+        <span class="kw">self</span>.dropout = <span class="cls">nn</span>.<span class="cls">Dropout</span>(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, h, adj, bias):
+        <span class="str">"""h: (B,n,d), adj: (B,n,n), bias: (B,n,n)"""</span>
+        <span class="com"># 局部 + 全部 并行 + 残差</span>
+        local_out = <span class="kw">self</span>.local_mp(h, adj)
+        global_out = <span class="kw">self</span>.global_attn(h, bias)
+        h = <span class="kw">self</span>.norm1(h + <span class="kw">self</span>.dropout(local_out + global_out))
+        h = <span class="kw">self</span>.norm2(h + <span class="kw">self</span>.ffn(h))
+        <span class="kw">return</span> h
+</pre>
+</div>
+
+</section>
+
+<section id="ch12">
+<h2><span class="num">12</span>前沿：GraphGPS 与统一框架</h2>
+
+<h3>12.1 GraphGPS 统一框架</h3>
+<p>Rampášek 等人（2022）提出 GraphGPS（General Powerful Scalable），将 GNN 的局部消息传递和 Transformer 的全局注意力统一为模块化框架：</p>
+<div class="formula" data-eq="(16)">$$h^{(l+1)} = \text{Update}\left(h^{(l)} + \text{Local}\_\text{MP}(h^{(l)}, A) + \text{Global}\_\text{Attn}(h^{(l)}, B)\right)$$</div>
+<p>用户可以自由选择局部模块（GAT/GIN/PNA）和全局模块（Graphormer/Performer/线性注意力），实现灵活组合。</p>
+
+<h3>12.2 其他图 Transformer</h3>
+<div class="table-wrap">
+<table>
+<tr><th>模型</th><th>核心特点</th><th>年份</th></tr>
+<tr><td>Graphormer</td><td>SPD 偏置 + Centrality + Edge Encoding</td><td>2021</td></tr>
+<tr><td>SAN</td><td>谱注意力网络，使用拉普拉斯特征值编码</td><td>2022</td></tr>
+<tr><td>GraphGPS</td><td>模块化框架，混合局部+全局</td><td>2022</td></tr>
+<tr><td>GRIT</td><td>随机游走距离 + 位置编码</td><td>2022</td></tr>
+<tr><td>Exphormer</td><td>扩展图注意力，稀疏注意力近似</td><td>2023</td></tr>
+<tr><td>NodeFormer</td><td>节点级 Transformer，可扩展到百万节点</td><td>2023</td></tr>
+</table>
+</div>
+
+<h3>12.3 图 Transformer 的挑战</h3>
+<ul>
+  <li><strong>可扩展性</strong>：$O(n^2)$ 注意力限制了大图应用，需稀疏化或近似</li>
+  <li><strong>预计算开销</strong>：最短路径计算 $O(n(n+m))$ 对大图昂贵</li>
+  <li><strong>3D 图建模</strong>：分子 3D 构象需要空间几何编码</li>
+  <li><strong>预训练</strong>：图预训练 + 微调范式仍在探索中</li>
+</ul>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 220" xmlns="http://www.w3.org/2000/svg">
+<text x="400" y="25" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">图 Transformer 演进路线</text>
+<rect x="20" y="50" width="160" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="100" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="600">GNN (2017+)</text>
+<rect x="220" y="50" width="160" height="40" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="300" y="75" text-anchor="middle" font-size="12" fill="#7c3aed" font-weight="600">Graphormer (2021)</text>
+<rect x="420" y="50" width="160" height="40" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="500" y="75" text-anchor="middle" font-size="12" fill="#059669" font-weight="600">GraphGPS (2022)</text>
+<rect x="620" y="50" width="160" height="40" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+<text x="700" y="75" text-anchor="middle" font-size="12" fill="#ea580c" font-weight="600">大规模图TR (2023+)</text>
+<line x1="180" y1="70" x2="215" y2="70" stroke="#2563eb" stroke-width="1.5" class="flow-line"/>
+<line x1="380" y1="70" x2="415" y2="70" stroke="#7c3aed" stroke-width="1.5" class="flow-line"/>
+<line x1="580" y1="70" x2="615" y2="70" stroke="#059669" stroke-width="1.5" class="flow-line"/>
+<text x="100" y="115" text-anchor="middle" font-size="11" fill="#64748b">局部消息传递</text>
+<text x="300" y="115" text-anchor="middle" font-size="11" fill="#64748b">全局注意力 + 结构编码</text>
+<text x="500" y="115" text-anchor="middle" font-size="11" fill="#64748b">模块化混合</text>
+<text x="700" y="115" text-anchor="middle" font-size="11" fill="#64748b">稀疏 + 可扩展</text>
+<text x="400" y="155" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="600">核心趋势</text>
+<text x="400" y="180" text-anchor="middle" font-size="12" fill="#64748b">局部消息传递的高效性 + 全局注意力的表达力</text>
+</svg>
+</div>
+
+</section>
+
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+<div class="timeline-item">
+<div class="year">2017</div>
+<div class="event">Transformer 提出</div>
+<div class="desc">Vaswani 等人提出自注意力架构，在 NLP 领域革命</div>
+</div>
+<div class="timeline-item">
+<div class="year">2020</div>
+<div class="event">ViT 将 Transformer 引入视觉</div>
+<div class="desc">Dosovitskiy 证明纯 Transformer 在图像分类上可超越 CNN</div>
+</div>
+<div class="timeline-item">
+<div class="year">2021</div>
+<div class="event">Graphormer 提出</div>
+<div class="desc">Ying 等人提出三种结构编码，在 OGB 取得 SOTA</div>
+</div>
+<div class="timeline-item">
+<div class="year">2021</div>
+<div class="event">Graphormer-WLGB 改进</div>
+<div class="desc">引入 Weisfeiler-Lehman 子树编码增强表达力</div>
+</div>
+<div class="timeline-item">
+<div class="year">2022</div>
+<div class="event">SAN 与 GraphGPS 统一框架</div>
+<div class="desc">谱注意力网络提出；GraphGPS 统一局部+全局模块</div>
+</div>
+<div class="timeline-item">
+<div class="year">2022</div>
+<div class="event">GRIT 引入随机游走编码</div>
+<div class="desc">用随机游走距离替代最短路径，降低预计算开销</div>
+</div>
+<div class="timeline-item">
+<div class="year">2023</div>
+<div class="event">Exphormer 稀疏注意力</div>
+<div class="desc">扩展图理论实现稀疏注意力，可扩展到更大图</div>
+</div>
+<div class="timeline-item">
+<div class="year">2023</div>
+<div class="event">NodeFormer 可扩展节点分类</div>
+<div class="desc">核方法近似注意力，处理百万级节点图</div>
+</div>
+<div class="timeline-item">
+<div class="year">2024</div>
+<div class="event">图基础模型探索</div>
+<div class="desc">大规模图预训练 + 跨图迁移微调成为前沿方向</div>
+</div>
+<div class="timeline-item">
+<div class="year">2024</div>
+<div class="event">3D 分子 Graph Transformer</div>
+<div class="desc">引入 3D 空间几何编码，提升分子建模精度</div>
+</div>
+</div>
+
+<div class="callout success">
+<div class="callout-title">总结</div>
+Graphormer 代表了图学习从局部消息传递走向全局注意力的范式转变。其核心创新——通过 Centrality Encoding、Spatial Encoding 和 Edge Encoding 将图结构注入注意力偏置——简洁而有效。虽然 $O(n^2)$ 的复杂度限制了其在大图上的应用，但在分子建模、蛋白质结构预测等中小图场景中已展现巨大潜力。GraphGPS 等统一框架指明了未来方向：混合局部 GNN 的效率与全局 Transformer 的表达力。
+</div>
+
+</section>
+
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+<li>Ying, C., Cai, T., Luo, S., et al. (2021). Do transformers really perform badly for graph representation? <em>NeurIPS</em> (Graphormer).</li>
+<li>Vaswani, A., et al. (2017). Attention is all you need. <em>NIPS</em> (Transformer).</li>
+<li>Dosovitskiy, A., et al. (2021). An image is worth 16×16 words: Transformers for image recognition at scale. <em>ICLR</em> (ViT).</li>
+<li>Kipf, T. N., & Welling, M. (2017). Semi-supervised classification with graph convolutional networks. <em>ICLR</em> (GCN).</li>
+<li>Veličković, P., et al. (2018). Graph attention networks. <em>ICLR</em> (GAT).</li>
+<li>Hamilton, W., et al. (2017). Inductive representation learning on large graphs. <em>NIPS</em> (GraphSAGE).</li>
+<li>Xu, K., et al. (2019). How powerful are graph neural networks? <em>ICLR</em> (GIN).</li>
+<li>Rampášek, L., Galkin, M., Dwivedi, V. P., et al. (2022). Recipe for a general, powerful, scalable graph transformer. <em>NIPS</em> (GraphGPS).</li>
+<li>Kreuzer, D., Beaini, D., Hamilton, W. L., et al. (2021). Rethinking graph transformers with spectral attention. <em>NIPS</em> (SAN).</li>
+<li>Ma, L., et al. (2023). Graph in graph neural network. <em>WWW</em> (NodeFormer).</li>
+<li>Shirzad, H., et al. (2023). Exphormer: Sparse transformers for graphs. <em>ICML</em>.</li>
+<li>Zhang, B., et al. (2022). Rethinking the expressive power of GNNs via graph biconnectivity. <em>ICLR</em> (GRIT).</li>
+<li>Hu, W., et al. (2021). Open graph benchmark: Datasets for machine learning on graphs. <em>NIPS</em> (OGB).</li>
+<li>Devlin, J., et al. (2019). BERT: Pre-training of deep bidirectional transformers. <em>NAACL</em>.</li>
+<li>He, K., et al. (2016). Deep residual learning for image recognition. <em>CVPR</em> (ResNet).</li>
+</ol>
+</section>
+
+</main>
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+<script>
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

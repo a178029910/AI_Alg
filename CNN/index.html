@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNN 模型详解 — 卷积神经网络完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ 目录</div>
+<aside id="sidebar">
+  <h2>CNN 模型详解</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、卷积与图像数据</a>
+    <a href="#ch2">二、卷积运算的数学基础</a>
+    <a href="#ch3">三、池化层</a>
+    <a href="#ch4">四、感受野与特征层次</a>
+    <a href="#ch5">五、经典 CNN 架构</a>
+    <a href="#ch6">六、1×1 卷积与网络设计</a>
+    <a href="#ch7">七、反卷积与转置卷积</a>
+    <a href="#ch8">八、CNN 的训练</a>
+    <a href="#ch9">九、现代变体与发展</a>
+    <a href="#ch10">十、应用场景与案例</a>
+    <a href="#ch11">十一、PyTorch 代码实现</a>
+    <a href="#ch12">十二、CNN vs Transformer</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>CNN 模型详解</h1>
+  <div class="subtitle">Convolutional Neural Network: 从像素到语义的视觉智能之旅</div>
+  <div class="tagline">视觉感知的基石 · 1989 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">12+ SVG 结构图</span>
+    <span class="badge">6 段 PyTorch 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">1</span>卷积与图像数据</h2>
+
+<h3>1.1 图像的数值表示</h3>
+<p>在计算机中，一张彩色图像被表示为一个三维张量 $X \in \mathbb{R}^{H \times W \times C}$，其中 $H$ 为高度，$W$ 为宽度，$C$ 为通道数（RGB 彩色图像 $C=3$，灰度图像 $C=1$）。每个像素的取值范围为 $[0, 255]$（8 位无符号整数）或 $[0, 1]$（归一化浮点数）。</p>
+
+<p>例如，一张 $224 \times 224$ 的 ImageNet 标准输入图像，其形状为 $224 \times 224 \times 3 = 150528$ 个数值。如果用全连接层直接处理，仅第一层就需要数百万参数——这正是 CNN 用卷积替代全连接的核心动机。</p>
+
+<div class="callout">
+  <div class="callout-title">直觉理解</div>
+  图像数据有两个关键特性：<strong>局部性</strong>（相邻像素关联性强，远处像素关联弱）和<strong>平移不变性</strong>（猫在左上角和右下角都是猫）。CNN 通过卷积核的局部感受野和权值共享完美地利用了这两个先验。
+</div>
+
+<h3>1.2 为什么需要卷积</h3>
+<p>传统全连接网络（MLP）处理图像时面临三大困难：</p>
+
+<div class="table-wrap"><table>
+<tr><th>困难</th><th>说明</th><th>示例</th></tr>
+<tr><td>参数爆炸</td><td>$224 \times 224 \times 3$ 输入接 1000 个神经元，仅第一层就有 1.5 亿参数</td><td>MLP → 过拟合 + 内存溢出</td></tr>
+<tr><td>丢失空间结构</td><td>将图像展平为一维向量，像素间的二维邻接关系被破坏</td><td>$3 \times 3$ 图块展平后位置信息消失</td></tr>
+<tr><td>无平移不变性</td><td>特征只出现在特定位置才能被激活，移动几个像素可能完全失效</td><td>猫在训练集左上角，测试集右下角 → 误分类</td></tr>
+</table></div>
+
+<p>CNN 的卷积层通过三个核心设计解决了这些问题：<strong>局部连接</strong>（每个神经元只看局部区域）、<strong>权值共享</strong>（同一卷积核扫描全图）、<strong>空间下采样</strong>（池化层逐步降低分辨率）。</p>
+
+<h3>1.3 卷积的生物学灵感</h3>
+<p>1962 年，神经科学家 Hubel 和 Wiesel 通过猫视觉皮层实验发现：</p>
+<ul>
+  <li><strong>简单细胞（Simple Cell）</strong>：对特定方向、特定位置的边缘有响应</li>
+  <li><strong>复杂细胞（Complex Cell）</strong>：对特定方向的边缘有响应，但不关心精确位置（具有平移不变性）</li>
+  <li><strong>超复杂细胞（Hypercomplex Cell）</strong>：在复杂细胞基础上，对边缘的长度和端点也敏感</li>
+</ul>
+<p>这一发现揭示了视觉系统通过<strong>分层、局部、方向选择性</strong>的方式处理视觉信息。CNN 的卷积层对应简单细胞，池化层对应复杂细胞，深层网络对应层级抽象——这正是 CNN 架构的生物学根基。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+  </defs>
+  <!-- 输入图像 -->
+  <rect x="20" y="40" width="120" height="120" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="80" y="30" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">输入图像</text>
+  <text x="80" y="180" text-anchor="middle" fill="#64748b" font-size="11">224×224×3</text>
+  <!-- 卷积核滑动 -->
+  <rect x="35" y="55" width="40" height="40" rx="4" fill="rgba(37,99,235,0.15)" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="55" y="78" text-anchor="middle" fill="#2563eb" font-size="10">3×3</text>
+  <!-- 卷积核 -->
+  <rect x="180" y="65" width="50" height="50" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" class="glow-ring"/>
+  <text x="205" y="92" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">核</text>
+  <text x="205" y="135" text-anchor="middle" fill="#64748b" font-size="10">3×3×3</text>
+  <!-- 箭头 -->
+  <line x1="145" y1="100" x2="175" y2="90" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
+  <!-- 特征图 -->
+  <rect x="280" y="40" width="100" height="120" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="330" y="30" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">特征图</text>
+  <text x="330" y="180" text-anchor="middle" fill="#64748b" font-size="11">222×222×64</text>
+  <line x1="240" y1="90" x2="272" y2="90" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
+  <!-- 池化层 -->
+  <rect x="430" y="50" width="80" height="100" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="470" y="40" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">池化</text>
+  <text x="470" y="170" text-anchor="middle" fill="#64748b" font-size="11">111×111×64</text>
+  <line x1="385" y1="100" x2="422" y2="100" stroke="#059669" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
+  <!-- 多层叠加 -->
+  <rect x="560" y="40" width="70" height="120" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <rect x="580" y="30" width="70" height="120" rx="8" fill="rgba(248,250,252,0.6)" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="600" y="20" width="70" height="120" rx="8" fill="rgba(248,250,252,0.3)" stroke="#059669" stroke-width="2"/>
+  <text x="615" y="160" text-anchor="middle" fill="#64748b" font-size="11">多层堆叠</text>
+  <line x1="515" y1="100" x2="552" y2="100" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
+  <!-- 输出 -->
+  <rect x="710" y="70" width="60" height="60" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="740" y="105" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="bold">分类</text>
+  <line x1="675" y1="100" x2="702" y2="100" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
+  <!-- 标注 -->
+  <text x="400" y="220" text-anchor="middle" fill="#64748b" font-size="12">蓝色 = 数据流 · 紫色 = 卷积核 · 绿色 = 特征图 · 橙色 = 下采样</text>
+  <text x="400" y="245" text-anchor="middle" fill="#94a3b8" font-size="11">权值共享：同一个 3×3 核扫描全图 → 参数量从 1.5 亿降至 3×3×3 = 27</text>
+</svg>
+<div class="svg-caption">图 1：CNN 基本工作流程 — 输入图像经卷积核扫描生成特征图，池化下采样后逐层堆叠，最终输出分类结果</div>
+</div>
+
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">2</span>卷积运算的数学基础</h2>
+
+<h3>2.1 二维卷积的定义</h3>
+<p>给定输入图像 $X \in \mathbb{R}^{H \times W}$ 和卷积核 $K \in \mathbb{R}^{k_h \times k_w}$，二维卷积运算定义为：</p>
+<div class="formula" data-eq="(1)">$$(X * K)(i, j) = \sum_{m=0}^{k_h-1} \sum_{n=0}^{k_w-1} X(i+m, j+n) \cdot K(m, n)$$</div>
+<p>在深度学习中，"卷积"实际上是<strong>互相关（cross-correlation）</strong>运算——卷积核不做翻转。这一约定简化了实现且不影响学习效果。</p>
+
+<h3>2.2 多通道卷积</h3>
+<p>实际中输入是多通道的（如 RGB 三通道），卷积核也必须与之匹配。对于输入 $X \in \mathbb{R}^{H \times W \times C_{in}}$ 和核 $K \in \mathbb{R}^{k_h \times k_w \times C_{in}}$：</p>
+<div class="formula" data-eq="(2)">$$Y(i,j) = \sum_{c=0}^{C_{in}-1} \sum_{m=0}^{k_h-1} \sum_{n=0}^{k_w-1} X(i+m, j+n, c) \cdot K(m, n, c) + b$$</div>
+<p>其中 $b$ 为偏置。每个卷积核沿所有通道求和后输出一个标量，因此一个核生成一张特征图。</p>
+
+<div class="table-wrap"><table>
+<tr><th>符号</th><th>维度</th><th>含义</th></tr>
+<tr><td>$X$</td><td>$H \times W \times C_{in}$</td><td>输入特征图</td></tr>
+<tr><td>$K$</td><td>$k_h \times k_w \times C_{in}$</td><td>单个卷积核</td></tr>
+<tr><td>$W_{conv}$</td><td>$k_h \times k_w \times C_{in} \times C_{out}$</td><td>全部卷积核权重</td></tr>
+<tr><td>$Y$</td><td>$H' \times W' \times C_{out}$</td><td>输出特征图</td></tr>
+<tr><td>$b$</td><td>$C_{out}$</td><td>偏置向量</td></tr>
+</table></div>
+
+<h3>2.3 输出尺寸计算</h3>
+<p>卷积层的输出空间尺寸由以下公式决定：</p>
+<div class="formula" data-eq="(3)">$$H' = \left\lfloor \frac{H + 2P - k_h}{S} \right\rfloor + 1, \quad W' = \left\lfloor \frac{W + 2P - k_w}{S} \right\rfloor + 1$$</div>
+<p>其中 $P$ 为填充（padding），$S$ 为步幅（stride），$\lfloor \cdot \rfloor$ 为向下取整。</p>
+
+<div class="table-wrap"><table>
+<tr><th>参数</th><th>含义</th><th>典型值</th></tr>
+<tr><td>$k$（核大小）</td><td>卷积核的宽高</td><td>$3 \times 3$、$5 \times 5$、$7 \times 7$</td></tr>
+<tr><td>$P$（填充）</td><td>边缘补零的行/列数</td><td>$0$（valid）、$k/2$（same）</td></tr>
+<tr><td>$S$（步幅）</td><td>核每次移动的像素数</td><td>$1$（默认）、$2$（下采样）</td></tr>
+</table></div>
+
+<div class="callout success">
+  <div class="callout-title">计算实例</div>
+  输入 $32 \times 32 \times 3$，卷积核 $5 \times 5$，步幅 $S=1$，填充 $P=2$（same 模式）：<br>
+  $H' = \lfloor (32 + 2 \times 2 - 5) / 1 \rfloor + 1 = 32$，输出尺寸不变，为 $32 \times 32 \times C_{out}$。<br>
+  若 $S=2$，$P=2$：$H' = \lfloor (32 + 4 - 5) / 2 \rfloor + 1 = 16$，空间尺寸减半。
+</div>
+
+<h3>2.4 参数量与计算量</h3>
+<p>一层卷积的参数量和浮点运算次数（FLOPs）为：</p>
+<div class="formula" data-eq="(4)">$$\text{Params} = C_{out} \times (k_h \times k_w \times C_{in} + 1)$$</div>
+<div class="formula" data-eq="(5)">$$\text{FLOPs} = H' \times W' \times C_{out} \times k_h \times k_w \times C_{in}$$</div>
+
+<div class="callout warn">
+  <div class="callout-title">权值共享的威力</div>
+  以 $3 \times 3$ 核、$C_{in}=64$、$C_{out}=64$ 为例：参数量 $= 64 \times (9 \times 64 + 1) = 36928$。若用全连接处理 $56 \times 56 \times 64 = 200704$ 个输入到 200704 个输出，参数量 $\approx 4 \times 10^{10}$——CNN 的参数量仅为全连接的 $10^{-6}$。
+</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="arr2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker></defs>
+  <!-- 输入多通道 -->
+  <rect x="20" y="60" width="100" height="200" rx="8" fill="rgba(219,234,254,0.7)" stroke="#2563eb" stroke-width="2"/>
+  <text x="70" y="50" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="bold">输入</text>
+  <text x="70" y="280" text-anchor="middle" fill="#64748b" font-size="11">H×W×C_in</text>
+  <line x1="15" y1="65" x2="15" y2="255" stroke="#2563eb" stroke-width="2"/>
+  <line x1="20" y1="65" x2="20" y2="255" stroke="#2563eb" stroke-width="2"/>
+  <line x1="25" y1="65" x2="25" y2="255" stroke="#2563eb" stroke-width="1"/>
+  <!-- 卷积核 -->
+  <rect x="190" y="90" width="70" height="60" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" class="glow-ring"/>
+  <text x="225" y="125" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">K</text>
+  <text x="225" y="165" text-anchor="middle" fill="#64748b" font-size="10">k×k×C_in</text>
+  <line x1="125" y1="120" x2="182" y2="120" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr2)" class="flow-line"/>
+  <text x="155" y="110" text-anchor="middle" fill="#7c3aed" font-size="10">逐通道<br>求和</text>
+  <!-- 输出 -->
+  <rect x="340" y="100" width="80" height="140" rx="8" fill="rgba(209,250,229,0.7)" stroke="#059669" stroke-width="2"/>
+  <text x="380" y="90" text-anchor="middle" fill="#059669" font-size="12" font-weight="bold">输出</text>
+  <text x="380" y="255" text-anchor="middle" fill="#64748b" font-size="11">H'×W'×1</text>
+  <line x1="268" y1="120" x2="332" y2="155" stroke="#059669" stroke-width="1.5" marker-end="url(#arr2)" class="flow-line"/>
+  <!-- 多核叠加 -->
+  <rect x="500" y="70" width="90" height="200" rx="8" fill="rgba(219,234,254,0.5)" stroke="#2563eb" stroke-width="2"/>
+  <rect x="520" y="80" width="80" height="180" rx="6" fill="rgba(209,250,229,0.3)" stroke="#059669" stroke-width="1"/>
+  <text x="545" y="290" text-anchor="middle" fill="#64748b" font-size="11">H'×W'×C_out</text>
+  <text x="545" y="60" text-anchor="middle" fill="#2563eb" font-size="11" font-weight="bold">C_out 个核</text>
+  <line x1="425" y1="170" x2="492" y2="170" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)" class="flow-line"/>
+  <!-- 标注 -->
+  <text x="390" y="310" text-anchor="middle" fill="#64748b" font-size="11">每个核沿 C_in 通道求和输出一张特征图，C_out 个核并行生成 C_out 张</text>
+</svg>
+<div class="svg-caption">图 2：多通道卷积运算 — 卷积核在所有输入通道上做加权和，输出一张特征图</div>
+</div>
+
+</section>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">3</span>池化层</h2>
+
+<h3>3.1 池化的作用</h3>
+<p>池化（Pooling）层是一种<strong>无参数的下采样操作</strong>，主要功能包括：</p>
+<ul>
+  <li><strong>降低空间分辨率</strong>：减少后续层计算量</li>
+  <li><strong>增强平移不变性</strong>：小幅平移不改变池化输出</li>
+  <li><strong>扩大感受野</strong>：空间缩小后，同样大小的核覆盖更大区域</li>
+  <li><strong>防止过拟合</strong>：提供一种信息聚合和正则化效果</li>
+</ul>
+
+<h3>3.2 最大池化与平均池化</h3>
+
+<h4>最大池化（Max Pooling）</h4>
+<p>在每个池化窗口内取最大值：</p>
+<div class="formula" data-eq="(6)">$$Y(i,j) = \max_{0 \le m < k, \, 0 \le n < k} X(i \cdot S + m, \, j \cdot S + n)$$</div>
+
+<h4>平均池化（Average Pooling）</h4>
+<p>在每个池化窗口内取平均值：</p>
+<div class="formula" data-eq="(7)">$$Y(i,j) = \frac{1}{k^2} \sum_{m=0}^{k-1} \sum_{n=0}^{k-1} X(i \cdot S + m, \, j \cdot S + n)$$</div>
+
+<div class="callout">
+  <div class="callout-title">选择建议</div>
+  最大池化保留最显著特征，是 CNN 中最常用的池化方式。平均池化保留更多背景信息，常用于全局平均池化（GAP）替代全连接层。现代架构常用<em>步幅卷积</em>（strided convolution）替代池化来实现可学习的下采样。
+</div>
+
+<h3>3.3 全局平均池化</h3>
+<p>全局平均池化（Global Average Pooling, GAP）对整张特征图取平均，将 $H \times W \times C$ 压缩为 $1 \times 1 \times C$：</p>
+<div class="formula" data-eq="(8)">$$Y(c) = \frac{1}{H \times W} \sum_{i=0}^{H-1} \sum_{j=0}^{W-1} X(i, j, c)$$</div>
+<p>GAP 由 NiN（Network in Network）提出，在 GoogLeNet 中被广泛采用，相比全连接层大幅减少了参数量且增强了可解释性——每个通道直接对应一个类别。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="arr3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker></defs>
+  <!-- 输入特征图 4x4 -->
+  <text x="150" y="25" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">输入特征图 (4×4)</text>
+  <g font-family="monospace" font-size="11" text-anchor="middle">
+    <rect x="70" y="40" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="65" fill="#475569">1</text>
+    <rect x="110" y="40" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="65" fill="#475569">3</text>
+    <rect x="150" y="40" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="65" fill="#1e293b">5</text>
+    <rect x="190" y="40" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="65" fill="#475569">2</text>
+    <rect x="70" y="80" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="105" fill="#1e293b">7</text>
+    <rect x="110" y="80" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="105" fill="#475569">1</text>
+    <rect x="150" y="80" width="40" height="40" fill="#ef4444" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="105" fill="#fff">9</text>
+    <rect x="190" y="80" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="105" fill="#475569">4</text>
+    <rect x="70" y="120" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="145" fill="#1e293b">6</text>
+    <rect x="110" y="120" width="40" height="40" fill="#ef4444" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="145" fill="#fff">8</text>
+    <rect x="150" y="120" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="145" fill="#1e293b">3</text>
+    <rect x="190" y="120" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="145" fill="#475569">2</text>
+    <rect x="70" y="160" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="185" fill="#475569">4</text>
+    <rect x="110" y="160" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="185" fill="#1e293b">5</text>
+    <rect x="150" y="160" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="185" fill="#1e293b">7</text>
+    <rect x="190" y="160" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="185" fill="#1e293b">6</text>
+  </g>
+  <!-- 2x2池化框 (左上) -->
+  <rect x="70" y="40" width="80" height="80" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="5,3"/>
+  <line x1="260" y1="110" x2="370" y2="60" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr3)" class="flow-line"/>
+  <!-- 输出 2x2 -->
+  <text x="430" y="25" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">Max Pool 2×2 输出</text>
+  <g font-family="monospace" font-size="16" text-anchor="middle" font-weight="bold">
+    <rect x="380" y="40" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="405" y="72" fill="#fff">7</text>
+    <rect x="430" y="40" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="455" y="72" fill="#fff">9</text>
+    <rect x="380" y="90" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="405" y="122" fill="#fff">8</text>
+    <rect x="430" y="90" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="455" y="122" fill="#fff">7</text>
+  </g>
+  <text x="560" y="70" fill="#475569" font-size="12">在每个 2×2 窗口中</text>
+  <text x="560" y="90" fill="#475569" font-size="12">取最大值，空间尺寸</text>
+  <text x="560" y="110" fill="#475569" font-size="12">减半 (4×4 → 2×2)</text>
+  <text x="400" y="210" text-anchor="middle" fill="#64748b" font-size="11">红色 = 选中最大值 · 步幅 S=2 · 无参数</text>
+</svg>
+<div class="svg-caption">图 3：2×2 最大池化 — 在每个窗口中选取最大值，空间尺寸减半</div>
+</div>
+
+</section>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">4</span>感受野与特征层次</h2>
+
+<h3>4.1 感受野的定义</h3>
+<p>感受野（Receptive Field）是指特征图中某个神经元在原始输入图像上所覆盖的区域大小。理解感受野对于网络设计至关重要——它决定了网络能"看到"多大范围的上下文信息。</p>
+
+<h3>4.2 感受野的计算</h3>
+<p>单层 $3 \times 3$ 卷积的感受野为 $3$。叠加两层 $3 \times 3$ 卷积的感受野为 $5$——这就是 VGG 用两个 $3 \times 3$ 替代一个 $5 \times 5$ 的核心论据。计算公式为：</p>
+<div class="formula" data-eq="(9)">$$R_l = R_{l-1} + (k_l - 1) \times \prod_{i=1}^{l-1} S_i$$</div>
+<p>其中 $R_l$ 为第 $l$ 层的感受野大小，$k_l$ 为第 $l$ 层卷积核大小，$S_i$ 为第 $i$ 层的步幅。初始 $R_0 = 1$。</p>
+
+<div class="callout success">
+  <div class="callout-title">计算实例</div>
+  层1: Conv 3×3, S=1 → $R_1 = 1 + (3-1) \times 1 = 3$<br>
+  层2: Conv 3×3, S=1 → $R_2 = 3 + (3-1) \times 1 = 5$<br>
+  层3: Conv 3×3, S=1 → $R_3 = 5 + (3-1) \times 1 = 7$<br>
+  层4: Pool 2×2, S=2 → $R_4 = 7 + (2-1) \times 1 = 8$<br>
+  层5: Conv 3×3, S=1 → $R_5 = 8 + (3-1) \times 2 = 12$
+</div>
+
+<h3>4.3 有效感受野</h3>
+<p>理论感受野假设区域内每个像素贡献相等，但实际上<strong>有效感受野（Effective Receptive Field, ERF）</strong>呈高斯分布——中心区域贡献大，边缘贡献迅速衰减。Luo 等人（2016）证明 ERF 与 $\sqrt{R}$ 成正比。</p>
+
+<h3>4.4 特征层次结构</h3>
+<p>CNN 的深层网络自然形成了一个从低级到高级的特征层次：</p>
+
+<div class="table-wrap"><table>
+<tr><th>层级</th><th>空间分辨率</th><th>特征类型</th><th>典型感受野</th></tr>
+<tr><td>浅层（Conv1-2）</td><td>$112 \times 112$</td><td>边缘、角点、纹理</td><td>~$10$px</td></tr>
+<tr><td>中层（Conv3-4）</td><td>$28 \times 28$</td><td>局部模式、部件</td><td>~$50$px</td></tr>
+<tr><td>深层（Conv5）</td><td>$7 \times 7$</td><td>完整物体、语义概念</td><td>~$200$px</td></tr>
+</table></div>
+
+<p>这一分层结构已被 Zeiler & Fergus（2014）通过反卷积可视化技术生动证实——浅层学到的是 Gabor 滤波器般的边缘，深层学到的是"狗脸"、"车轮"等高级概念。</p>
+
+</section>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">5</span>经典 CNN 架构</h2>
+
+<h3>5.1 LeNet-5（1998）</h3>
+<p>LeCun 提出的 LeNet-5 是第一个成功应用的 CNN，用于手写数字识别（MNIST）。架构：$32 \times 32$ 输入 → Conv 5×5 (6) → AvgPool 2×2 → Conv 5×5 (16) → AvgPool 2×2 → FC 120 → FC 84 → 输出 10。参数量约 6 万，在邮编识别中达到商用精度。</p>
+
+<h3>5.2 AlexNet（2012）</h3>
+<p>Krizhevsky 在 ImageNet 2012 竞赛中以 15.3% 的 top-5 错误率大幅领先第二名（26.2%），开启了深度学习时代。关键创新：</p>
+<ul>
+  <li><strong>ReLU 激活函数</strong>：替代 sigmoid/tanh，解决梯度消失，加速训练</li>
+  <li><strong>Dropout 正则化</strong>：全连接层随机失活，防过拟合</li>
+  <li><strong>双 GPU 训练</strong>：将网络分到两块 GPU 上并行训练</li>
+  <li><strong>数据增强</strong>：裁剪、翻转、PCA 颜色抖动</li>
+</ul>
+<p>架构：8 层（5 卷积 + 3 全连接），参数量约 6000 万。</p>
+
+<h3>5.3 VGGNet（2014）</h3>
+<p>Oxford VGG 团队的核心思想：<strong>用堆叠的小卷积核（3×3）替代大核</strong>。</p>
+<div class="formula multi" data-eq="(10)">
+$$\text{两个 3×3 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 2 \times 9 C^2 = 18 C^2$$
+$$\text{一个 5×5 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 25 C^2$$
+</div>
+<p>参数量减少 28%，且引入更多非线性变换。VGG-16 有 16 层（13 卷积 + 3 全连接），参数量约 1.38 亿。</p>
+
+<h3>5.4 GoogLeNet / Inception（2014）</h3>
+<p>Inception 模块在同一个层中并行使用 $1 \times 1$、$3 \times 3$、$5 \times 5$ 卷积和池化，然后拼接输出。关键创新：<strong>$1 \times 1$ 卷积降维</strong>大幅减少计算量。GoogLeNet 仅 680 万参数，却获得 ImageNet 2014 冠军。</p>
+
+<h3>5.5 ResNet（2015）</h3>
+<p>何恺明提出的残差网络解决了深度网络的退化问题。核心是引入<strong>跳跃连接（skip connection）</strong>：</p>
+<div class="formula" data-eq="(11)">$$\mathbf{y} = F(\mathbf{x}, \{W_i\}) + \mathbf{x}$$</div>
+<p>残差块学习的是残差映射 $F(\mathbf{x}) = \mathbf{y} - \mathbf{x}$ 而非直接映射，当 $F(\mathbf{x}) = 0$ 时退化为恒等映射。ResNet-50/101/152 分别有 50/101/152 层，ResNet-152 在 ImageNet 上达到 3.57% 的 top-5 错误率。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="arr4" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker></defs>
+  <!-- 标题 -->
+  <text x="350" y="25" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="bold">残差块 (Residual Block)</text>
+  <!-- 输入 -->
+  <rect x="30" y="120" width="60" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="60" y="145" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">x</text>
+  <text x="60" y="180" text-anchor="middle" fill="#64748b" font-size="10">输入</text>
+  <!-- 分叉点 -->
+  <circle cx="120" cy="140" r="4" fill="#2563eb"/>
+  <line x1="90" y1="140" x2="120" y2="140" stroke="#2563eb" stroke-width="2"/>
+  <!-- 主路径 -->
+  <line x1="120" y1="140" x2="155" y2="140" stroke="#2563eb" stroke-width="2"/>
+  <text x="135" y="130" fill="#64748b" font-size="10">F(x)</text>
+  <!-- Conv1 -->
+  <rect x="155" y="110" width="80" height="60" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2" class="glow-ring"/>
+  <text x="195" y="140" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">Conv 3×3</text>
+  <text x="195" y="155" text-anchor="middle" fill="#64748b" font-size="9">+ BN + ReLU</text>
+  <!-- Conv2 -->
+  <rect x="265" y="110" width="80" height="60" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="305" y="140" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">Conv 3×3</text>
+  <text x="305" y="155" text-anchor="middle" fill="#64748b" font-size="9">+ BN</text>
+  <line x1="235" y1="140" x2="263" y2="140" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr4)"/>
+  <!-- 加法 -->
+  <circle cx="420" cy="140" r="20" fill="#fef3c7" stroke="#ea580c" stroke-width="2.5"/>
+  <text x="420" y="147" text-anchor="middle" fill="#ea580c" font-size="18" font-weight="bold">+</text>
+  <line x1="345" y1="140" x2="398" y2="140" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr4)"/>
+  <!-- 跳跃连接 -->
+  <path d="M120,140 L120,60 L420,60 L420,118" fill="none" stroke="#059669" stroke-width="2.5" stroke-dasharray="6,3" class="flow-line"/>
+  <text x="270" y="50" text-anchor="middle" fill="#059669" font-size="11" font-weight="bold">跳跃连接 (Identity)</text>
+  <!-- 输出 -->
+  <rect x="460" y="110" width="80" height="60" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="500" y="138" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">ReLU</text>
+  <text x="500" y="155" text-anchor="middle" fill="#64748b" font-size="10">y = F(x)+x</text>
+  <line x1="442" y1="140" x2="458" y2="140" stroke="#059669" stroke-width="2" marker-end="url(#arr4)"/>
+  <!-- 最终输出 -->
+  <rect x="580" y="120" width="60" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="610" y="145" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">y</text>
+  <text x="610" y="180" text-anchor="middle" fill="#64748b" font-size="10">输出</text>
+  <line x1="540" y1="140" x2="578" y2="140" stroke="#059669" stroke-width="2" marker-end="url(#arr4)"/>
+  <!-- 说明 -->
+  <text x="350" y="240" text-anchor="middle" fill="#64748b" font-size="11">绿色虚线 = 恒等映射 · 紫色 = 卷积路径 F(x) · 橙色 = 逐元素加法</text>
+  <text x="350" y="265" text-anchor="middle" fill="#94a3b8" font-size="11">当 F(x)=0 时，y=x（恒等映射），解决了深层网络的梯度退化问题</text>
+</svg>
+<div class="svg-caption">图 4：ResNet 残差块 — 跳跃连接让学习目标变为残差映射 F(x) = y - x</div>
+</div>
+
+<h3>5.6 DenseNet（2017）</h3>
+<p>DenseNet 将跳跃连接推向极致——每层的输入包含之前所有层的输出。第 $l$ 层接收 $l$ 个特征图拼接作为输入：</p>
+<div class="formula" data-eq="(12)">$$\mathbf{x}_l = H_l([\mathbf{x}_0, \mathbf{x}_1, \ldots, \mathbf{x}_{l-1}])$$</div>
+<p>这种密集连接实现了特征复用，参数量更少且梯度传播更流畅。</p>
+
+</section>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">6</span>1×1 卷积与网络设计</h2>
+
+<h3>6.1 1×1 卷积的作用</h3>
+<p>$1 \times 1$ 卷积看似无意义（只看一个像素），但实际上有三个关键用途：</p>
+<ul>
+  <li><strong>通道降维/升维</strong>：将 $C_{in}$ 通道映射到 $C_{out}$ 通道，不改变空间尺寸</li>
+  <li><strong>跨通道信息融合</strong>：在通道维度上做线性组合</li>
+  <li><strong>增加非线性</strong>：每个 $1 \times 1$ 卷积后接 ReLU，等效于在每个像素位置做一次 MLP</li>
+</ul>
+<div class="formula" data-eq="(13)">$$\text{FLOPs}(1 \times 1) = H \times W \times C_{in} \times C_{out} \quad \text{vs} \quad \text{FLOPs}(3 \times 3) = 9 \times H \times W \times C_{in} \times C_{out}$$</div>
+<p>在 Inception 和瓶颈结构中，先用 $1 \times 1$ 将通道从 256 降到 64，再用 $3 \times 3$ 在 64 通道上卷积，最后 $1 \times 1$ 升回 256——计算量降低约 8 倍。</p>
+
+<h3>6.2 瓶颈结构</h3>
+<p>ResNet-50/101 使用瓶颈残差块（Bottleneck Block）：$1 \times 1$ 降维 → $3 \times 3$ 卷积 → $1 \times 1$ 升维。对于 $256 \to 64 \to 64 \to 256$ 的瓶颈结构：</p>
+<div class="formula multi" data-eq="(14)">
+$$\text{直接 3×3: } 256 \times 256 \times 9 = 590k \text{ FLOPs/pixel}$$
+$$\text{瓶颈 1×1+3×3+1×1: } 256 \times 64 + 64 \times 64 \times 9 + 64 \times 256 = 74k \text{ FLOPs/pixel}$$
+</div>
+<p>瓶颈结构的计算量仅为直接卷积的 12.5%。</p>
+
+<h3>6.3 深度可分离卷积</h3>
+<p>MobileNet 将标准卷积拆解为深度卷积（Depthwise）+ 逐点卷积（Pointwise），大幅降低计算量：</p>
+<div class="formula" data-eq="(15)">$$\text{标准: } C_{in} \times C_{out} \times k^2 \quad \Rightarrow \quad \text{深度可分离: } C_{in} \times k^2 + C_{in} \times C_{out}$$</div>
+<p>计算量比值为 $\frac{1}{C_{out}} + \frac{1}{k^2}$，对于 $k=3, C_{out}=256$，仅约 11.8% 的计算量。</p>
+
+</section>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">7</span>反卷积与转置卷积</h2>
+
+<h3>7.1 从下采样到上采样</h3>
+<p>卷积和池化将输入缩小，但在语义分割、图像生成等任务中需要将特征图放大——这就是上采样。转置卷积（Transposed Convolution）是一种可学习的上采样方法。</p>
+
+<h3>7.2 转置卷积的原理</h3>
+<p>正向卷积将 $k \times k$ 窗口的信息聚合为一个值；转置卷积则将一个值扩散为 $k \times k$ 窗口。转置卷积的前向传播等价于卷积的<strong>反向传播</strong>。</p>
+<div class="formula" data-eq="(16)">$$H' = (H - 1) \times S - 2P + k$$</div>
+<p>对于 $S=2, P=1, k=4$，输入 $2 \times 2$ → $H' = (2-1) \times 2 - 2 \times 1 + 4 = 4$，空间尺寸翻倍。</p>
+
+<div class="callout warn">
+  <div class="callout-title">棋盘效应</div>
+  转置卷积常产生棋盘伪影（Checkerboard Artifacts），因为相邻输出窗口的重叠区域不均匀。解决方案包括：使用最近邻上采样 + 3×3 卷积替代转置卷积，或使用子像素卷积（PixelShuffle）。
+</div>
+
+</section>
+
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">8</span>CNN 的训练</h2>
+
+<h3>8.1 损失函数</h3>
+
+<h4>分类任务</h4>
+<p>对于 $K$ 类分类，使用交叉熵损失：</p>
+<div class="formula" data-eq="(17)">$$L = -\sum_{k=1}^{K} y_k \log \hat{y}_k, \quad \hat{y}_k = \text{softmax}(z_k) = \frac{e^{z_k}}{\sum_{j} e^{z_j}}$$</div>
+
+<h4>目标检测</h4>
+<p>Faster R-CNN 使用多任务损失：分类损失 + 边界框回归损失：</p>
+<div class="formula" data-eq="(18)">$$L = L_{cls}(\hat{p}, p^*) + \lambda \cdot [p^*] \cdot L_{reg}(\hat{t}, t^*)$$</div>
+<p>其中 $p^*$ 为 IoU 标签（正样本=1），$[\cdot]$ 为指示函数。</p>
+
+<h3>8.2 反向传播</h3>
+<p>卷积层的反向传播需要对卷积运算求导。给定前向 $Y = X * K$，梯度为：</p>
+<div class="formula multi" data-eq="(19)">
+$$\frac{\partial L}{\partial K} = X \circledast \frac{\partial L}{\partial Y} \quad \text{(输入与输出梯度做互相关)}$$
+$$\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y} * \text{rot180}(K) \quad \text{(输出梯度与翻转核做卷积)}$$
+</div>
+<p>其中 $\circledast$ 表示互相关，$\text{rot180}$ 表示 180° 翻转。</p>
+
+<h3>8.3 批归一化（Batch Normalization）</h3>
+<p>BN 对每个通道在小批量内进行归一化：</p>
+<div class="formula" data-eq="(20)">$$\hat{x} = \gamma \cdot \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta$$</div>
+<p>其中 $\mu_B$ 和 $\sigma_B^2$ 是小批量内的均值和方差，$\gamma$ 和 $\beta$ 是可学习的缩放和平移参数。BN 使 CNN 的训练可以使用更大学习率，是 ResNet 及后续架构的关键组件。</p>
+
+<h3>8.4 学习率与优化器</h3>
+<p>CNN 训练通常使用 SGD with Momentum 或 AdamW，配合学习率调度：</p>
+<ul>
+  <li><strong>StepLR</strong>：每 N 个 epoch 衰减为 $\gamma$ 倍（如每 30 epoch × 0.1）</li>
+  <li><strong>Cosine Annealing</strong>：余弦退火，$\eta_t = \eta_{min} + \frac{1}{2}(\eta_{max} - \eta_{min})(1 + \cos(\pi t / T))$</li>
+  <li><strong>Warmup + Cosine</strong>：前 5 个 epoch 线性升温，之后余弦衰减</li>
+</ul>
+
+</section>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">9</span>现代变体与发展</h2>
+
+<h3>9.1 分组卷积（Grouped Convolution）</h3>
+<p>AlexNet 用双 GPU 训练启发了分组卷积——将通道分为 $G$ 组，每组独立卷积。计算量降低为 $1/G$。当 $G = C_{in} = C_{out}$ 时退化为深度卷积（Depthwise）。</p>
+
+<h3>9.2 Squeeze-and-Excitation（SE）</h3>
+<p>SE 模块通过学习通道之间的依赖关系，对每个通道赋予权重：</p>
+<div class="formula" data-eq="(21)">$$\mathbf{s} = \sigma(W_2 \cdot \text{ReLU}(W_1 \cdot \text{GAP}(\mathbf{X}))), \quad \tilde{\mathbf{X}} = \mathbf{s} \odot \mathbf{X}$$</div>
+<p>仅需约 2.5M 额外参数，即可让 ResNet-50 在 ImageNet 上提升 1.5% top-1 准确率。</p>
+
+<h3>9.3 MobileNet 系列</h3>
+<p>MobileNetV1 引入深度可分离卷积；V2 加入倒残差结构（Inverted Residual）和线性瓶颈；V3 引入硬件搜索（NAS）和 h-swish 激活。专为移动端设计，在 0.5B FLOPs 下达到 64% top-1 准确率。</p>
+
+<h3>9.4 EfficientNet</h3>
+<p> EfficientNet 提出复合缩放方法，同时按比例缩放深度、宽度和分辨率：</p>
+<div class="formula" data-eq="(22)">$$\text{depth} = \alpha^\phi, \quad \text{width} = \beta^\phi, \quad \text{resolution} = \gamma^\phi, \quad \text{s.t.} \; \alpha \beta^2 \gamma^2 \approx 2$$</div>
+<p>EfficientNet-B7 在 66M 参数和 37B FLOPs 下达到 84.4% top-1 准确率，是当时的 SOTA。</p>
+
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">10</span>应用场景与案例</h2>
+
+<h3>10.1 图像分类</h3>
+<p>CNN 最初也是最成功的应用。ImageNet 从 2010 年的 28% top-5 错误率降至 2015 年 ResNet 的 3.57%，远超人类水平（5%）。实际应用包括：人脸识别（FaceID）、医学影像筛查、商品识别、自动驾驶场景理解。</p>
+
+<h3>10.2 目标检测</h3>
+<p>从 R-CNN 到 YOLO 系列，CNN 将检测从"分类+滑动窗口"提升为端到端预测。YOLOv8 在 COCO 上达到 53.9 AP，推理速度 280 FPS。</p>
+
+<h3>10.3 语义分割</h3>
+<p>FCN 首次将全连接层替换为卷积，实现像素级分类。U-Net 用对称编解码结构在医学图像分割中成为标准。DeepLab 系列引入空洞卷积（Dilation）扩大感受野而不损失分辨率。</p>
+
+<h3>10.4 风格迁移</h3>
+<p>Gatys 等人发现 CNN 深层特征编码了内容信息、浅层的 Gram 矩阵编码了风格信息，通过优化输入图像使内容损失和风格损失最小化，实现了艺术风格迁移。</p>
+
+</section>
+
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">11</span>PyTorch 代码实现</h2>
+
+<h3>11.1 基础卷积层</h3>
+<div class="code-block">
+<div class="code-header">basic_conv.py</div>
+<pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">BasicConvBlock</span>(nn.Module):
+    <span class="str">"""标准卷积块：Conv -> BN -> ReLU"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, out_ch, kernel_size=<span class="num">3</span>, stride=<span class="num">1</span>, padding=<span class="kw">None</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="com"># padding='same' 自动计算填充（PyTorch 1.9+）</span>
+        <span class="kw">if</span> padding <span class="kw">is</span> <span class="kw">None</span>:
+            padding = kernel_size // <span class="num">2</span>
+        self.conv = nn.Conv2d(in_ch, out_ch, kernel_size, stride, padding, bias=<span class="kw">False</span>)
+        self.bn = nn.BatchNorm2d(out_ch)
+        self.relu = nn.ReLU(inplace=<span class="kw">True</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> self.relu(self.bn(self.conv(x)))
+
+<span class="com"># 参数量验证</span>
+block = BasicConvBlock(<span class="num">3</span>, <span class="num">64</span>, kernel_size=<span class="num">3</span>)
+<span class="fn">print</span>(<span class="str">f"参数量: {sum(p.numel() for p in block.parameters())}"</span>)  <span class="com"># 1792 = 3*64*3*3 + 64*2</span></pre>
+</div>
+
+<h3>11.2 残差块（ResNet Block）</h3>
+<div class="code-block">
+<div class="code-header">resnet_block.py</div>
+<pre><span class="kw">class</span> <span class="cls">ResidualBlock</span>(nn.Module):
+    <span class="str">"""ResNet 基本残差块"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, out_ch, stride=<span class="num">1</span>):
+        <span class="kw">super</span>().__init__()
+        self.conv1 = nn.Conv2d(in_ch, out_ch, <span class="num">3</span>, stride, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn1 = nn.BatchNorm2d(out_ch)
+        self.conv2 = nn.Conv2d(out_ch, out_ch, <span class="num">3</span>, <span class="num">1</span>, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn2 = nn.BatchNorm2d(out_ch)
+        self.relu = nn.ReLU(inplace=<span class="kw">True</span>)
+        <span class="com"># 降采样/维度匹配</span>
+        self.shortcut = nn.Identity()
+        <span class="kw">if</span> stride != <span class="num">1</span> <span class="kw">or</span> in_ch != out_ch:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_ch, out_ch, <span class="num">1</span>, stride, bias=<span class="kw">False</span>),
+                nn.BatchNorm2d(out_ch)
+            )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        identity = self.shortcut(x)
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        <span class="kw">return</span> self.relu(out + identity)  <span class="com"># y = F(x) + x</span></pre>
+</div>
+
+<h3>11.3 瓶颈残差块（Bottleneck）</h3>
+<div class="code-block">
+<div class="code-header">bottleneck.py</div>
+<pre><span class="kw">class</span> <span class="cls">BottleneckBlock</span>(nn.Module):
+    <span class="str">"""ResNet-50 瓶颈块: 1x1 降维 → 3x3 卷积 → 1x1 升维"""</span>
+    expansion = <span class="num">4</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, mid_ch, stride=<span class="num">1</span>):
+        <span class="kw">super</span>().__init__()
+        out_ch = mid_ch * self.expansion
+        <span class="com"># 1x1 降维: in_ch → mid_ch</span>
+        self.conv1 = nn.Conv2d(in_ch, mid_ch, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn1 = nn.BatchNorm2d(mid_ch)
+        <span class="com"># 3x3 卷积: mid_ch → mid_ch</span>
+        self.conv2 = nn.Conv2d(mid_ch, mid_ch, <span class="num">3</span>, stride, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn2 = nn.BatchNorm2d(mid_ch)
+        <span class="com"># 1x1 升维: mid_ch → out_ch</span>
+        self.conv3 = nn.Conv2d(mid_ch, out_ch, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn3 = nn.BatchNorm2d(out_ch)
+        self.relu = nn.ReLU(inplace=<span class="kw">True</span>)
+        self.shortcut = nn.Identity()
+        <span class="kw">if</span> stride != <span class="num">1</span> <span class="kw">or</span> in_ch != out_ch:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_ch, out_ch, <span class="num">1</span>, stride, bias=<span class="kw">False</span>),
+                nn.BatchNorm2d(out_ch)
+            )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        identity = self.shortcut(x)
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.relu(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
+        <span class="kw">return</span> self.relu(out + identity)</pre>
+</div>
+
+<h3>11.4 完整 ResNet-18</h3>
+<div class="code-block">
+<div class="code-header">resnet18.py</div>
+<pre><span class="kw">class</span> <span class="cls">ResNet18</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes=<span class="num">1000</span>):
+        <span class="kw">super</span>().__init__()
+        self.stem = nn.Sequential(
+            nn.Conv2d(<span class="num">3</span>, <span class="num">64</span>, <span class="num">7</span>, <span class="num">2</span>, <span class="num">3</span>, bias=<span class="kw">False</span>),
+            nn.BatchNorm2d(<span class="num">64</span>), nn.ReLU(inplace=<span class="kw">True</span>),
+            nn.MaxPool2d(<span class="num">3</span>, <span class="num">2</span>, <span class="num">1</span>)
+        )
+        <span class="com"># 4 个 stage，每个 stage 2 个残差块</span>
+        self.layer1 = self._make_layer(<span class="num">64</span>, <span class="num">64</span>, <span class="num">2</span>, stride=<span class="num">1</span>)
+        self.layer2 = self._make_layer(<span class="num">64</span>, <span class="num">128</span>, <span class="num">2</span>, stride=<span class="num">2</span>)
+        self.layer3 = self._make_layer(<span class="num">128</span>, <span class="num">256</span>, <span class="num">2</span>, stride=<span class="num">2</span>)
+        self.layer4 = self._make_layer(<span class="num">256</span>, <span class="num">512</span>, <span class="num">2</span>, stride=<span class="num">2</span>)
+        self.gap = nn.AdaptiveAvgPool2d(<span class="num">1</span>)
+        self.fc = nn.Linear(<span class="num">512</span>, num_classes)
+
+    <span class="kw">def</span> <span class="fn">_make_layer</span>(self, in_ch, out_ch, num_blocks, stride):
+        layers = [ResidualBlock(in_ch, out_ch, stride)]
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(num_blocks - <span class="num">1</span>):
+            layers.append(ResidualBlock(out_ch, out_ch))
+        <span class="kw">return</span> nn.Sequential(*layers)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.stem(x)
+        x = self.layer1(x); x = self.layer2(x)
+        x = self.layer3(x); x = self.layer4(x)
+        x = self.gap(x).flatten(<span class="num">1</span>)
+        <span class="kw">return</span> self.fc(x)
+
+<span class="com"># 验证</span>
+model = ResNet18(num_classes=<span class="num">10</span>)
+x = torch.randn(<span class="num">1</span>, <span class="num">3</span>, <span class="num">224</span>, <span class="num">224</span>)
+<span class="fn">print</span>(<span class="str">f"输出: {model(x).shape}"</span>)  <span class="com"># torch.Size([1, 10])</span>
+<span class="fn">print</span>(<span class="str">f"参数量: {sum(p.numel() for p in model.parameters()) / 1e6:.1f}M"</span>)  <span class="com"># ~11.2M</span></pre>
+</div>
+
+<h3>11.5 深度可分离卷积（MobileNet）</h3>
+<div class="code-block">
+<div class="code-header">depthwise_sep.py</div>
+<pre><span class="kw">class</span> <span class="cls">DepthwiseSeparableConv</span>(nn.Module):
+    <span class="str">"""MobileNet 深度可分离卷积: DW + PW"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, out_ch, stride=<span class="num">1</span>):
+        <span class="kw">super</span>().__init__()
+        <span class="com"># 深度卷积: 每个通道独立卷积</span>
+        self.dw = nn.Conv2d(in_ch, in_ch, <span class="num">3</span>, stride, <span class="num">1</span>, groups=in_ch, bias=<span class="kw">False</span>)
+        <span class="com"># 逐点卷积: 1x1 跨通道融合</span>
+        self.pw = nn.Conv2d(in_ch, out_ch, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn1 = nn.BatchNorm2d(in_ch)
+        self.bn2 = nn.BatchNorm2d(out_ch)
+        self.relu = nn.ReLU6(inplace=<span class="kw">True</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.relu(self.bn1(self.dw(x)))
+        <span class="kw">return</span> self.relu(self.bn2(self.pw(x)))
+
+<span class="com"># 计算量对比</span>
+standard = nn.Conv2d(<span class="num">64</span>, <span class="num">128</span>, <span class="num">3</span>, padding=<span class="num">1</span>)
+separable = DepthwiseSeparableConv(<span class="num">64</span>, <span class="num">128</span>)
+x = torch.randn(<span class="num">1</span>, <span class="num">64</span>, <span class="num">32</span>, <span class="num">32</span>)
+std_mac = <span class="num">64</span> * <span class="num">128</span> * <span class="num">9</span> * <span class="num">32</span> * <span class="num">32</span>
+sep_mac = (<span class="num">64</span> * <span class="num">9</span> + <span class="num">64</span> * <span class="num">128</span>) * <span class="num">32</span> * <span class="num">32</span>
+<span class="fn">print</span>(<span class="str">f"标准卷积 MACs: {std_mac/1e6:.1f}M"</span>)
+<span class="fn">print</span>(<span class="str">f"深度可分离 MACs: {sep_mac/1e6:.1f}M"</span>)
+<span class="fn">print</span>(<span class="str">f"压缩比: {std_mac / sep_mac:.1f}x"</span>)  <span class="com"># ~8.9x</span></pre>
+</div>
+
+<h3>11.6 空洞卷积（Dilated Convolution）</h3>
+<div class="code-block">
+<div class="code-header">dilated_conv.py</div>
+<pre><span class="com"># 空洞卷积扩大感受野而不增加参数量和计算量</span>
+<span class="com"># dilation=2 的 3x3 卷积等效于 5x5 感受野，但只有 9 个参数</span>
+
+conv_d1 = nn.Conv2d(<span class="num">64</span>, <span class="num">64</span>, <span class="num">3</span>, dilation=<span class="num">1</span>, padding=<span class="num">1</span>)  <span class="com"># 感受野 3</span>
+conv_d2 = nn.Conv2d(<span class="num">64</span>, <span class="num">64</span>, <span class="num">3</span>, dilation=<span class="num">2</span>, padding=<span class="num">2</span>)  <span class="com"># 感受野 5</span>
+conv_d4 = nn.Conv2d(<span class="num">64</span>, <span class="num">64</span>, <span class="num">3</span>, dilation=<span class="num">4</span>, padding=<span class="num">4</span>)  <span class="com"># 感受野 9</span>
+
+<span class="com"># DeepLab 的 ASPP 模块: 并行使用不同 dilation rate</span>
+<span class="kw">class</span> <span class="cls">ASPP</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, out_ch=<span class="num">256</span>):
+        <span class="kw">super</span>().__init__()
+        self.conv1 = nn.Conv2d(in_ch, out_ch, <span class="num">1</span>)
+        self.conv2 = nn.Conv2d(in_ch, out_ch, <span class="num">3</span>, padding=<span class="num">6</span>, dilation=<span class="num">6</span>)
+        self.conv3 = nn.Conv2d(in_ch, out_ch, <span class="num">3</span>, padding=<span class="num">12</span>, dilation=<span class="num">12</span>)
+        self.conv4 = nn.Conv2d(in_ch, out_ch, <span class="num">3</span>, padding=<span class="num">18</span>, dilation=<span class="num">18</span>)
+        self.gap = nn.AdaptiveAvgPool2d(<span class="num">1</span>)
+        self.conv5 = nn.Conv2d(in_ch, out_ch, <span class="num">1</span>)
+        self.fuse = nn.Conv2d(out_ch * <span class="num">5</span>, out_ch, <span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        f1 = self.conv1(x)
+        f2 = self.conv2(x)
+        f3 = self.conv3(x)
+        f4 = self.conv4(x)
+        f5 = self.conv5(self.gap(x))
+        f5 = nn.functional.interpolate(f5, size=x.shape[<span class="num">2</span>:], mode=<span class="str">'bilinear'</span>, align_corners=<span class="kw">False</span>)
+        <span class="kw">return</span> self.fuse(torch.cat([f1, f2, f3, f4, f5], dim=<span class="num">1</span>))</pre>
+</div>
+
+</section>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">12</span>CNN vs Transformer</h2>
+
+<p>2020 年 ViT（Vision Transformer）的出现对 CNN 在视觉领域的主导地位发起了挑战。以下是两者的对比：</p>
+
+<div class="table-wrap"><table>
+<tr><th>维度</th><th>CNN</th><th>ViT / Transformer</th></tr>
+<tr><td>归纳偏置</td><td>局部性 + 平移不变性（强先验）</td><td>无空间先验（数据驱动学习）</td></tr>
+<tr><td>感受野</td><td>局部 → 全局（逐层扩大）</td><td>全局（第一层即全局注意力）</td></tr>
+<tr><td>数据效率</td><td>小数据集表现好（先验帮助泛化）</td><td>需要大数据集（JFT-300M 级别）</td></tr>
+<tr><td>计算复杂度</td><td>$O(N \cdot k^2)$（线性于序列长度）</td><td>$O(N^2)$（二次复杂度）</td></tr>
+<tr><td>参数量</td><td>较少（权值共享）</td><td>较多（注意力无权值共享）</td></tr>
+<tr><td>特征金字塔</td><td>天然分层（适合检测/分割）</td><td>需额外设计（如 Swin 窗口注意力）</td></tr>
+</table></div>
+
+<div class="callout success">
+  <div class="callout-title">融合趋势</div>
+  现代视觉模型趋向融合两者优势：ConvNeXt 将 Transformer 的设计理念（LayerNorm、GELU、大卷积核 7×7）注入 CNN 架构；Swin Transformer 将注意力限制在局部窗口以获得线性复杂度；CoAtNet 直接混合卷积和注意力层。这表明 CNN 的核心思想（局部性 + 权值共享）仍然是视觉理解的基石。
+</div>
+
+</section>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="year">1962</div>
+    <div class="event">Hubel & Wiesel 发现视觉皮层层级处理机制</div>
+    <div class="desc">CNN 的生物学灵感来源，获 1981 年诺贝尔生理学奖</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">1989</div>
+    <div class="event">LeCun 提出 LeNet，首次将反向传播用于卷积网络</div>
+    <div class="desc">用于手写数字识别（MNIST），在邮编识别中商用</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2012</div>
+    <div class="event">AlexNet 赢得 ImageNet 竞赛，深度学习时代开启</div>
+    <div class="desc">ReLU + Dropout + 双 GPU，top-5 错误率 15.3%</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2014</div>
+    <div class="event">VGGNet 和 GoogLeNet 同年问世</div>
+    <div class="desc">VGG 证明小核堆叠有效；Inception 引入并行多尺度 + 1×1 卷积</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2015</div>
+    <div class="event">ResNet 引入残差连接，训练 152 层网络</div>
+    <div class="desc">跳跃连接解决梯度退化，top-5 错误率 3.57% 超越人类</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2017</div>
+    <div class="event">DenseNet 提出 dense connection，MobileNet 开启轻量化</div>
+    <div class="desc">特征复用减少参数；深度可分离卷积开启移动端 AI</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2018</div>
+    <div class="event">SENet 赢得 ImageNet 竞赛最后一届</div>
+    <div class="desc">通道注意力机制，以极小代价提升性能</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2019</div>
+    <div class="event">EfficientNet 提出复合缩放律</div>
+    <div class="desc">同时缩放深度、宽度、分辨率，B7 达到 84.4% top-1</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2020</div>
+    <div class="event">ViT 证明 Transformer 可直接处理图像块</div>
+    <div class="desc">CNN 面临挑战，但 ConvNeXt（2022）证明 CNN 仍有竞争力</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2022+</div>
+    <div class="event">ConvNeXt 将 Transformer 设计理念注入 CNN</div>
+    <div class="desc">7×7 大卷积核 + LayerNorm + GELU，性能媲美 Swin Transformer</div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">总结</div>
+  CNN 的核心贡献是将<strong>局部性先验</strong>和<strong>权值共享</strong>融入神经网络架构，用一个优雅的归纳偏置解决了视觉数据处理的参数爆炸问题。尽管 Transformer 在大规模数据场景下展现出竞争力，但 CNN 的设计思想——分层特征提取、感受野逐步扩大、参数高效复用——依然是理解视觉智能的基础。在移动端、边缘计算、实时检测等资源受限场景中，CNN 仍然是首选方案。
+</div>
+
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+  <li>Hubel, D. H., & Wiesel, T. N. (1962). Receptive fields, binocular interaction and functional architecture in the cat's visual cortex. <em>J. Physiology</em>, 160(1), 106-154.</li>
+  <li>LeCun, Y., et al. (1998). Gradient-based learning applied to document recognition. <em>Proc. IEEE</em>, 86(11), 2278-2324.</li>
+  <li>Krizhevsky, A., Sutskever, I., & Hinton, G. E. (2012). ImageNet classification with deep convolutional neural networks. <em>NeurIPS 2012</em>.</li>
+  <li>Simonyan, K., & Zisserman, A. (2014). Very deep convolutional networks for large-scale image recognition. <em>arXiv:1409.1556</em>.</li>
+  <li>Szegedy, C., et al. (2015). Going deeper with convolutions. <em>CVPR 2015</em>.</li>
+  <li>He, K., et al. (2016). Deep residual learning for image recognition. <em>CVPR 2016</em>.</li>
+  <li>Huang, G., et al. (2017). Densely connected convolutional networks. <em>CVPR 2017</em>.</li>
+  <li>Howard, A. G., et al. (2017). MobileNets: Efficient convolutional neural networks for mobile vision applications. <em>arXiv:1704.04861</em>.</li>
+  <li>Hu, J., Shen, L., & Sun, G. (2018). Squeeze-and-excitation networks. <em>CVPR 2018</em>.</li>
+  <li>Tan, M., & Le, Q. V. (2019). EfficientNet: Rethinking model scaling for convolutional neural networks. <em>ICML 2019</em>.</li>
+  <li>Zeiler, M. D., & Fergus, R. (2014). Visualizing and understanding convolutional networks. <em>ECCV 2014</em>.</li>
+  <li>Long, J., Shelhamer, E., & Darrell, T. (2015). Fully convolutional networks for semantic segmentation. <em>CVPR 2015</em>.</li>
+  <li>Dosovitskiy, A., et al. (2021). An image is worth 16×16 words: Transformers for image recognition at scale. <em>ICLR 2021</em>.</li>
+  <li>Liu, Z., et al. (2022). A ConvNet for the 2020s. <em>CVPR 2022</em>.</li>
+  <li>Redmon, J., et al. (2016). You only look once: Unified, real-time object detection. <em>CVPR 2016</em>.</li>
+</ol>
+</section>
+
+</main>
+<div id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</div>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+
+// KaTeX 渲染策略
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAE 模型详解 — Masked Autoencoder 完整技术指南</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ 目录</div>
+<aside id="sidebar">
+  <h2>MAE 模型详解</h2>
+  <nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、MAE 的诞生与动机</a>
+    <a href="#ch2">二、掩码策略：随机遮蔽 75%</a>
+    <a href="#ch3">三、非对称编解码器架构</a>
+    <a href="#ch4">四、编码器（ViT Encoder）</a>
+    <a href="#ch5">五、解码器（轻量解码器）</a>
+    <a href="#ch6">六、重建目标与损失函数</a>
+    <a href="#ch7">七、MAE 的数学描述</a>
+    <a href="#ch8">八、为什么 75% 掩码比例</a>
+    <a href="#ch9">九、自监督 vs 有监督预训练</a>
+    <a href="#ch10">十、应用场景与下游任务</a>
+    <a href="#ch11">十一、PyTorch 代码实现</a>
+    <a href="#ch12">十二、MAE 的扩展与变体</a>
+    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<!-- 封面 -->
+<section id="hero" class="hero">
+  <h1>MAE 模型详解</h1>
+  <div class="subtitle">Masked Autoencoders Are Scalable Vision Learners</div>
+  <div class="tagline">视觉自监督预训练的范式革命 · 2021 — 2024</div>
+  <div class="badges">
+    <span class="badge">13 个章节</span>
+    <span class="badge">7 张 SVG 结构图</span>
+    <span class="badge">6 段 PyTorch 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<!-- ========== 第一章 ========== -->
+<section id="ch1">
+<h2><span class="num">1</span>MAE 的诞生与动机</h2>
+
+<h3>1.1 自监督学习的视觉困境</h3>
+<p>在 NLP 领域，BERT 通过掩码语言模型（MLM）实现了成功的自监督预训练：随机遮蔽 15% 的 Token，让模型预测被遮蔽的内容。然而将这一思路迁移到视觉领域时，研究者面临两大核心挑战：</p>
+<table>
+<thead><tr><th>挑战</th><th>NLP（已解决）</th><th>视觉（MAE 之前）</th></tr></thead>
+<tbody>
+<tr><td>信息密度</td><td>语言是高度语义化的，每个词都承载丰富信息</td><td>图像冗余度极高——相邻像素高度相关，遮蔽一块很容易从邻居推断</td></tr>
+<tr><td>掩码比例</td><td>$15$% 足够制造困难</td><td>低比例掩码对视觉太简单，模型无需理解全局语义</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout-title">核心洞察</div>
+<p>图像的信息密度远低于文本。一张照片中，$90$% 以上的内容是冗余的（蓝天、背景、墙面），可以很容易地从邻域推断。因此，要让掩码预测任务对视觉模型产生学习信号，必须大幅提高掩码比例——MAE 遮蔽了 <strong>$75$%</strong> 的图块，迫使模型理解全局结构才能完成重建。</p>
+</div>
+
+<h3>1.2 MAE 的诞生</h3>
+<p>2021 年 11 月，何恺明团队在论文 <em>"Masked Autoencoders Are Scalable Vision Learners"</em> 中提出了 MAE。MAE 的设计哲学极其简洁：<strong>遮蔽图像中大部分图块，训练一个自编码器重建缺失部分</strong>。这一看似简单的方案在 ImageNet 上取得了突破性效果：</p>
+<ul>
+  <li>ViT-Base/16 在 ImageNet-1K 上微调达到 $83.6$% top-1（有监督预训练仅 $81.8$%）</li>
+  <li>ViT-Huge/14 达到 $86.9$% top-1（当时最优），仅用 ImageNet-1K 数据</li>
+  <li>超越此前所有自监督方法（DINO、MoCo v3、BEiT），且训练更简单</li>
+</ul>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ma1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">MAE 核心流程：遮蔽 → 编码可见部分 → 解码重建</text>
+  <!-- 原始图像 -->
+  <rect x="20" y="60" width="120" height="120" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="80" y="50" text-anchor="middle" font-size="11" fill="#2563eb" font-weight="600">224×224 图像</text>
+  <text x="80" y="195" text-anchor="middle" font-size="10" fill="#64748b">RGB 3 通道</text>
+  <!-- 分块+掩码 -->
+  <line x1="145" y1="120" x2="185" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma1)" class="flow-line"/>
+  <text x="165" y="110" text-anchor="middle" font-size="9" fill="#64748b">分块+遮蔽</text>
+  <!-- 掩码后的图块 -->
+  <g transform="translate(190, 60)">
+    <text x="75" y="-10" text-anchor="middle" font-size="11" fill="#7c3aed" font-weight="600">75% 遮蔽</text>
+    <!-- 5x5 grid: 25 blocks, 19 masked (gray), 6 visible (colored) -->
+    <rect x="0" y="0" width="14" height="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="0.5"/>
+    <rect x="15" y="0" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="0" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="45" y="0" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="0" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="15" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="15" y="15" width="14" height="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="0.5"/>
+    <rect x="30" y="15" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="45" y="15" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="15" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="30" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="15" y="30" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="30" width="14" height="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="0.5" class="pulse-node"/>
+    <rect x="45" y="30" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="30" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="45" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="15" y="45" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="45" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="45" y="45" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="45" width="14" height="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="0.5"/>
+    <rect x="0" y="60" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="15" y="60" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="60" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="45" y="60" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="60" width="14" height="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <text x="37" y="90" text-anchor="middle" font-size="9" fill="#64748b">紫色=可见</text>
+    <text x="37" y="102" text-anchor="middle" font-size="9" fill="#64748b">灰色=遮蔽</text>
+  </g>
+  <!-- 箭头到编码器 -->
+  <line x1="275" y1="120" x2="315" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma1)" class="flow-line"/>
+  <text x="295" y="110" text-anchor="middle" font-size="9" fill="#64748b">仅可见部分</text>
+  <!-- 编码器 -->
+  <rect x="320" y="70" width="130" height="100" rx="8" fill="#ecfeff" stroke="#059669" stroke-width="1.5"/>
+  <text x="385" y="95" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">ViT Encoder</text>
+  <text x="385" y="112" text-anchor="middle" font-size="10" fill="#047857">仅处理 25% 图块</text>
+  <text x="385" y="128" text-anchor="middle" font-size="9" fill="#64748b">大幅节省计算</text>
+  <text x="385" y="148" text-anchor="middle" font-size="9" fill="#64748b">学习语义表示</text>
+  <!-- 箭头到解码器 -->
+  <line x1="455" y1="120" x2="495" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma1)" class="flow-line"/>
+  <text x="475" y="110" text-anchor="middle" font-size="9" fill="#64748b">+ mask tokens</text>
+  <!-- 解码器 -->
+  <rect x="500" y="70" width="130" height="100" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="565" y="95" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">轻量解码器</text>
+  <text x="565" y="112" text-anchor="middle" font-size="10" fill="#92400e">处理全部图块</text>
+  <text x="565" y="128" text-anchor="middle" font-size="9" fill="#64748b">预测像素值</text>
+  <text x="565" y="148" text-anchor="middle" font-size="9" fill="#64748b">MSE 损失</text>
+  <!-- 箭头到重建 -->
+  <line x1="635" y1="120" x2="675" y2="120" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma1)" class="flow-line"/>
+  <!-- 重建结果 -->
+  <rect x="680" y="60" width="120" height="120" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="740" y="50" text-anchor="middle" font-size="11" fill="#047857" font-weight="600">重建图像</text>
+  <text x="740" y="195" text-anchor="middle" font-size="10" fill="#64748b">预测被遮蔽像素</text>
+  <!-- 底部说明 -->
+  <text x="400" y="290" text-anchor="middle" font-size="12" fill="#64748b">蓝色=原始图像 · 紫色=可见图块 · 绿色=编码器 · 黄色=解码器 · 绿色重建=预测结果</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 1：MAE 整体架构 — 遮蔽 75% 图块，编码器仅处理可见部分，解码器重建全部图块</div>
+</div>
+
+<h3>1.3 MAE 的核心创新</h3>
+<p>MAE 与之前的视觉自监督方法（如 BEiT、DINO）相比，有两个关键创新：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>创新点</th><th>BEiT / DINO</th><th>MAE</th></tr></thead>
+<tbody>
+<tr><td>掩码比例</td><td>$15$%–$40$%</td><td><strong>$75$%</strong>（大幅提高）</td></tr>
+<tr><td>编码器输入</td><td>全部图块（含 mask token）</td><td><strong>仅可见图块</strong>（25%）</td></tr>
+<tr><td>编码器负担</td><td>与微调时一致</td><td>预训练时仅 $1/4$ 计算量</td></tr>
+<tr><td>解码器</td><td>与编码器同等规模</td><td><strong>轻量解码器</strong>（参数 < $10$%）</td></tr>
+<tr><td>重建目标</td><td>离散 Token（VQ-VAE 码本）</td><td><strong>原始像素值</strong>（简单 MSE）</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">2</span>掩码策略：随机遮蔽 75%</h2>
+
+<h3>2.1 分块与掩码</h3>
+<p>MAE 沿用 ViT 的分块方式：将 $H \times W$ 图像切分为 $N$ 个 $P \times P$ 图块。对于标准 ImageNet 输入 $224 \times 224$，$P = 16$，则 $N = 196$ 个图块。然后随机选择 $N_{\text{mask}}$ 个图块进行遮蔽：</p>
+<div class="formula" data-eq="(1)">$$N_{\text{visible}} = N \times (1 - r), \quad N_{\text{mask}} = N \times r$$</div>
+<p>其中 $r$ 为掩码比例。MAE 默认 $r = 0.75$，即 $N_{\text{visible}} = 49$，$N_{\text{mask}} = 147$。</p>
+
+<h3>2.2 随机掩码 vs 其他策略</h3>
+<p>MAE 采用最简单的<strong>均匀随机采样</strong>策略，而非按区域遮蔽或按语义遮蔽。这一选择看似朴素，却有深层原因：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>策略</th><th>说明</th><th>问题</th></tr></thead>
+<tbody>
+<tr><td>随机遮蔽（MAE）</td><td>每个图块被遮蔽概率相等</td><td>无（简单且有效）</td></tr>
+<tr><td>区块遮蔽</td><td>遮蔽连续区域（如半幅图像）</td><td>太容易从邻域推断，退化为本插值</td></tr>
+<tr><td>语义遮蔽</td><td>遮蔽物体区域（需预训练检测器）</td><td>引入额外依赖，且可能丢失背景信息</td></tr>
+<tr><td>网格遮蔽</td><td>按固定模式遮蔽</td><td>模式可预测，模型可"作弊"</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">
+<div class="callout-title">为什么随机最好？</div>
+<p>高比例随机遮蔽创造了最大的不确定性——模型无法预知哪些位置会被遮蔽，被迫学习<strong>全局语义理解</strong>而非局部插值。区块遮蔽虽然看起来更"难"，但实际上可以从邻域直接插值，反而更简单。随机遮蔽下，如果一个图块周围全被遮蔽，模型必须理解物体结构和全局上下文才能重建。</p>
+</div>
+
+<h3>2.3 掩码比例的消融实验</h3>
+<p>论文中消融实验清晰地展示了掩码比例对性能的影响：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>掩码比例 $r$</th><th>可见图块数</th><th>线性探针 (%)</th><th>微调 top-1 (%)</th></tr></thead>
+<tbody>
+<tr><td>$0.25$</td><td>$147$</td><td>$37.6$</td><td>$80.4$</td></tr>
+<tr><td>$0.50$</td><td>$98$</td><td>$47.6$</td><td>$81.5$</td></tr>
+<tr><td>$0.65$</td><td>$69$</td><td>$53.6$</td><td>$82.5$</td></tr>
+<tr><td>$0.70$</td><td>$59$</td><td>$56.4$</td><td>$82.8$</td></tr>
+<tr style="font-weight:700;"><td>$0.75$</td><td>$49$</td><td>$56.8$</td><td>$83.6$</td></tr>
+<tr><td>$0.80$</td><td>$39$</td><td>$54.4$</td><td>$82.7$</td></tr>
+<tr><td>$0.85$</td><td>$29$</td><td>$48.0$</td><td>$81.3$</td></tr>
+<tr><td>$0.90$</td><td>$20$</td><td>$40.5$</td><td>$80.2$</td></tr>
+</tbody>
+</table>
+</div>
+<p>数据表明：$75$% 是甜蜜点。低于 $75$% 时任务太简单，模型只学到局部插值；高于 $75$% 时可见信息不足，编码器难以提取有效语义。$75$% 的高比例将线性探针准确率推到 $56.8$%——远超 $50$% 掩码的 $47.6$%，说明高比例掩码迫使模型学习更深层语义。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">不同掩码比例下的视觉重建效果</text>
+  <!-- 25% mask -->
+  <g transform="translate(40, 50)">
+    <text x="60" y="-5" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600">25% 遮蔽</text>
+    <rect x="0" y="0" width="120" height="120" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="0" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="0" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="90" y="0" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="0" y="30" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="30" y="30" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="60" y="30" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="90" y="30" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="0" y="60" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="30" y="60" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="60" y="60" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="90" y="60" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="0" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="90" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="60" y="90" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <rect x="90" y="90" width="30" height="30" fill="#dbeafe" stroke="#2563eb" stroke-width="0.5"/>
+    <text x="60" y="145" text-anchor="middle" font-size="10" fill="#64748b">太简单→仅学插值</text>
+  </g>
+  <!-- 75% mask (MAE) -->
+  <g transform="translate(340, 50)">
+    <text x="60" y="-5" text-anchor="middle" font-size="12" fill="#7c3aed" font-weight="700">75% 遮蔽 (MAE)</text>
+    <rect x="0" y="0" width="120" height="120" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="0" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="90" y="0" width="30" height="30" fill="#ede9fe" stroke="#7c3aed" stroke-width="0.5" class="pulse-node"/>
+    <rect x="0" y="30" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="30" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="30" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="90" y="30" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="60" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="60" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="60" width="30" height="30" fill="#ede9fe" stroke="#7c3aed" stroke-width="0.5" class="pulse-node"/>
+    <rect x="90" y="60" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="90" width="30" height="30" fill="#ede9fe" stroke="#7c3aed" stroke-width="0.5" class="pulse-node"/>
+    <rect x="30" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="90" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <text x="60" y="145" text-anchor="middle" font-size="10" fill="#6d28d9" font-weight="600">需全局理解→最优</text>
+  </g>
+  <!-- 90% mask -->
+  <g transform="translate(640, 50)">
+    <text x="60" y="-5" text-anchor="middle" font-size="12" fill="#dc2626" font-weight="600">90% 遮蔽</text>
+    <rect x="0" y="0" width="120" height="120" rx="4" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="0" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="90" y="0" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="30" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="30" width="30" height="30" fill="#fee2e2" stroke="#dc2626" stroke-width="0.5" class="pulse-node"/>
+    <rect x="60" y="30" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="90" y="30" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="60" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="60" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="60" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="90" y="60" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="0" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="30" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="60" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <rect x="90" y="90" width="30" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+    <text x="60" y="145" text-anchor="middle" font-size="10" fill="#dc2626">信息不足→难学</text>
+  </g>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 2：不同掩码比例对比 — 75% 是语义理解与信息可用性的最佳平衡点</div>
+</div>
+</section>
+
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">3</span>非对称编解码器架构</h2>
+
+<h3>3.1 为什么要非对称</h3>
+<p>MAE 架构的核心创新之一是<strong>非对称设计</strong>——编码器和解码器在规模、输入和功能上均不对等：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>维度</th><th>编码器</th><th>解码器</th></tr></thead>
+<tbody>
+<tr><td>输入</td><td>仅可见图块（$25$%）</td><td>全部图块（可见 + mask tokens）</td></tr>
+<tr><td>规模</td><td>ViT-Large/Huge（深度大）</td><td>轻量（深度浅、宽度窄）</td></tr>
+<tr><td>作用</td><td>学习语义表示</td><td>预训练时重建像素，微调时丢弃</td></tr>
+<tr><td>参数占比</td><td>约 $90$%</td><td>约 $10$%</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>3.2 非对称的两大优势</h3>
+<p><strong>优势一：大幅节省计算。</strong>预训练时编码器只处理 $25$% 的图块，计算量约为标准 ViT 的 $1/3$。ViT-Large 预训练的实际 FLOPs 约为有监督预训练的 $31$%，这意味着可以用同样的硬件训练更大模型。</p>
+<p><strong>优势二：编码器输出不被 mask tokens 污染。</strong>如果编码器处理全部图块（含 mask tokens），那么大量 mask tokens 之间的注意力交互会稀释有效信息。MAE 编码器只看真实图块，学到的表示更纯粹——与微调阶段（处理全部图块）的输入分布一致。</p>
+
+<div class="callout">
+<div class="callout-title">预训练 vs 微调的一致性</div>
+<p>MAE 编码器在预训练时处理 $49$ 个图块，微调时处理 $196$ 个图块——数量不同但<strong>每个图块的处理方式完全相同</strong>。编码器不需要处理 mask tokens，因此预训练与微调的编码器行为一致。这是 MAE 优于 BEiT 的关键：BEiT 在编码器中引入 mask tokens，微调时去掉，造成输入分布偏移。</p>
+</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ma3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">MAE 非对称架构：编码器 vs 解码器</text>
+  <!-- 编码器部分 -->
+  <rect x="30" y="50" width="340" height="290" rx="10" fill="#ecfeff" stroke="#059669" stroke-width="1.5"/>
+  <text x="200" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#047857">编码器 (ViT Encoder)</text>
+  <text x="200" y="96" text-anchor="middle" font-size="11" fill="#047857">仅处理 25% 可见图块</text>
+  <!-- 可见图块输入 -->
+  <g transform="translate(50, 110)">
+    <rect x="0" y="0" width="20" height="60" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+    <rect x="26" y="0" width="20" height="60" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+    <text x="70" y="35" font-size="14" fill="#94a3b8">···</text>
+    <rect x="100" y="0" width="20" height="60" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+    <text x="60" y="80" text-anchor="middle" font-size="10" fill="#7c3aed">49 可见图块</text>
+  </g>
+  <!-- 箭头 -->
+  <line x1="200" y1="195" x2="200" y2="215" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma3)"/>
+  <!-- Transformer Blocks -->
+  <rect x="80" y="220" width="240" height="50" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+  <text x="200" y="250" text-anchor="middle" font-size="12" fill="#047857" font-weight="600">12/24 层 Transformer Block</text>
+  <text x="200" y="268" text-anchor="middle" font-size="10" fill="#64748b">+ 位置编码 + CLS Token</text>
+  <!-- 箭头 -->
+  <line x1="200" y1="275" x2="200" y2="295" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma3)"/>
+  <!-- 编码输出 -->
+  <rect x="100" y="300" width="200" height="28" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="200" y="319" text-anchor="middle" font-size="11" fill="#047857" font-weight="600">语义表示 → 微调时使用</text>
+  <!-- 解码器部分 -->
+  <rect x="430" y="50" width="340" height="290" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="600" y="78" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">解码器 (轻量 Decoder)</text>
+  <text x="600" y="96" text-anchor="middle" font-size="11" fill="#92400e">处理全部 196 图块</text>
+  <!-- 编码器输出 + mask tokens -->
+  <g transform="translate(450, 110)">
+    <rect x="0" y="0" width="16" height="60" rx="2" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+    <rect x="20" y="0" width="16" height="60" rx="2" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+    <text x="50" y="35" font-size="14" fill="#94a3b8">···</text>
+    <rect x="80" y="0" width="16" height="60" rx="2" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+    <rect x="100" y="0" width="16" height="60" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2"/>
+    <rect x="120" y="0" width="16" height="60" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="155" y="35" font-size="14" fill="#94a3b8">···</text>
+    <rect x="180" y="0" width="16" height="60" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="100" y="80" text-anchor="middle" font-size="9" fill="#92400e">绿色=编码输出 · 黄虚=mask tokens</text>
+  </g>
+  <line x1="600" y1="195" x2="600" y2="215" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma3)"/>
+  <rect x="480" y="220" width="240" height="50" rx="6" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="600" y="245" text-anchor="middle" font-size="12" fill="#92400e" font-weight="600">4-8 层 Transformer Block</text>
+  <text x="600" y="263" text-anchor="middle" font-size="10" fill="#64748b">浅层窄宽（约编码器 10% 参数）</text>
+  <line x1="600" y1="275" x2="600" y2="295" stroke="#94a3b8" stroke-width="2" marker-end="url(#ma3)"/>
+  <rect x="500" y="300" width="200" height="28" rx="4" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+  <text x="600" y="319" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="600">像素重建 → 预训练后丢弃</text>
+  <!-- 连接线 -->
+  <path d="M 300 160 Q 400 160, 450 110" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#ma3)"/>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 3：非对称编解码器 — 编码器深且重（学习语义），解码器浅且轻（仅预训练时使用）</div>
+</div>
+</section>
+
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">4</span>编码器（ViT Encoder）</h2>
+
+<h3>4.1 编码器结构</h3>
+<p>MAE 的编码器就是一个标准的 ViT。给定 $N_{\text{vis}} = 49$ 个可见图块，编码器对每个图块进行线性嵌入、加位置编码，然后经过 $L$ 层 Transformer Block：</p>
+<div class="formula" data-eq="(2)">$$\mathbf{H} = \text{Encoder}(\mathbf{z}_{\text{vis}} + \mathbf{E}_{\text{pos}}^{\text{vis}})$$</div>
+<p>其中 $\mathbf{z}_{\text{vis}} \in \mathbb{R}^{N_{\text{vis}} \times D}$ 为可见图块的线性投影，$\mathbf{E}_{\text{pos}}^{\text{vis}} \in \mathbb{R}^{N_{\text{vis}} \times D}$ 为对应位置编码，$\mathbf{H} \in \mathbb{R}^{N_{\text{vis}} \times D}$ 为输出表示。</p>
+
+<h3>4.2 编码器规格</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>配置</th><th>ViT-Base</th><th>ViT-Large</th><th>ViT-Huge</th></tr></thead>
+<tbody>
+<tr><td>层数 $L$</td><td>$12$</td><td>$24$</td><td>$32$</td></tr>
+<tr><td>隐藏维度 $D$</td><td>$768$</td><td>$1024$</td><td>$1280$</td></tr>
+<tr><td>注意力头数</td><td>$12$</td><td>$16$</td><td>$16$</td></tr>
+<tr><td>FFN 维度</td><td>$3072$</td><td>$4096$</td><td>$5120$</td></tr>
+<tr><td>参数量</td><td>$86$M</td><td>$307$M</td><td>$632$M</td></tr>
+<tr><td>预训练 FLOPs（仅 25%）</td><td>$4.4$G</td><td>$15.5$G</td><td>$41.9$G</td></tr>
+<tr><td>完整 FLOPs（100%）</td><td>$17.6$G</td><td>$62.0$G</td><td>$167.4$G</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>4.3 计算量节省分析</h3>
+<p>编码器只处理 $25$% 的图块，自注意力的计算量与序列长度的平方成正比：</p>
+<div class="formula" data-eq="(3)">$$\text{FLOPs}_{\text{enc}}^{25\%} = \left(\frac{N_{\text{vis}}}{N}\right)^2 \times \text{FLOPs}_{\text{enc}}^{100\%} = \left(\frac{1}{4}\right)^2 \approx 6.25\%$$</div>
+<p>但由于 FFN 部分与序列长度线性相关，整体计算约为 $25$%–$31$%。实际测量表明，ViT-Large 预训练耗时约为有监督预训练的 $1/3$。</p>
+
+<div class="callout success">
+<div class="callout-title">效率与质量双赢</div>
+<p>MAE 的非对称设计同时实现了<strong>训练更快</strong>和<strong>表示更好</strong>。训练更快是因为编码器只处理 25% 图块；表示更好是因为编码器输出不含 mask token 的噪声，与微调阶段的输入分布一致。</p>
+</div>
+</section>
+
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">5</span>解码器（轻量解码器）</h2>
+
+<h3>5.1 解码器结构</h3>
+<p>MAE 的解码器是一个小型 Transformer。它的输入是编码器输出与 mask tokens 的拼接：</p>
+<div class="formula" data-eq="(4)">$$\mathbf{Z}_{\text{dec}} = [\mathbf{H}; \mathbf{M}] + \mathbf{E}_{\text{pos}}^{\text{all}}$$</div>
+<p>其中 $\mathbf{H} \in \mathbb{R}^{N_{\text{vis}} \times D}$ 为编码器输出，$\mathbf{M} \in \mathbb{R}^{N_{\text{mask}} \times D}$ 为共享的可学习 mask token，$\mathbf{E}_{\text{pos}}^{\text{all}} \in \mathbb{R}^{N \times D}$ 为完整位置编码。拼接后按原始位置排列，再加入位置编码，经解码器处理。</p>
+
+<h3>5.2 解码器规格</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>配置</th><th>编码器（ViT-Large）</th><th>解码器（MAE）</th></tr></thead>
+<tbody>
+<tr><td>层数</td><td>$24$</td><td>$4$</td></tr>
+<tr><td>隐藏维度</td><td>$1024$</td><td>$512$</td></tr>
+<tr><td>注意力头数</td><td>$16$</td><td>$16$</td></tr>
+<tr><td>参数量</td><td>$307$M</td><td>约 $30$M</td></tr>
+<tr><td>输入序列长度</td><td>$49$</td><td>$196$</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>5.3 解码器的可丢弃性</h3>
+<p>解码器仅在预训练时使用。微调阶段，解码器被完全丢弃，编码器直接接分类头。这意味着解码器的容量不会影响下游性能——它只需要足够好以产生有效的学习信号即可。实验表明，解码器深度在 $1$–$8$ 层之间时性能变化不大，$4$ 层即可达到最优。</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>解码器深度</th><th>线性探针 (%)</th><th>微调 (%)</th></tr></thead>
+<tbody>
+<tr><td>$0$（恒等映射）</td><td>$43.2$</td><td>$80.7$</td></tr>
+<tr><td>$1$</td><td>$53.8$</td><td>$82.6$</td></tr>
+<tr><td>$2$</td><td>$55.4$</td><td>$83.1$</td></tr>
+<tr style="font-weight:700;"><td>$4$</td><td>$56.8$</td><td>$83.6$</td></tr>
+<tr><td>$8$</td><td>$57.1$</td><td>$83.5$</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">
+<div class="callout-title">解码器深度的启示</div>
+<p>解码器越深，线性探针越好但微调提升不大。这说明解码器的作用主要是提取更丰富的语义特征用于重建——但对于微调来说，编码器的表示已经足够好。$0$ 层（直接用编码器输出重建）性能大幅下降，说明解码器的非线性变换对于从语义表示到像素重建的跨越是必要的。</p>
+</div>
+</section>
+
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">6</span>重建目标与损失函数</h2>
+
+<h3>6.1 像素重建</h3>
+<p>MAE 的重建目标是<strong>原始像素值</strong>，而非离散 Token。解码器输出每个被遮蔽图块的预测 $\hat{\mathbf{x}}_i \in \mathbb{R}^{P^2 \cdot C}$，与原始像素 $\mathbf{x}_i \in \mathbb{R}^{P^2 \cdot C}$ 做比较：</p>
+<div class="formula" data-eq="(5)">$$\mathcal{L} = \frac{1}{|\mathcal{M}|} \sum_{i \in \mathcal{M}} \| \hat{\mathbf{x}}_i - \mathbf{x}_i \|^2$$</div>
+<p>其中 $\mathcal{M}$ 为被遮蔽图块的索引集合。损失<strong>仅计算被遮蔽图块</strong>，可见图块不参与损失——这与 BERT 的 MLM 损失一致。</p>
+
+<h3>6.2 像素归一化</h3>
+<p>MAE 对每个图块的像素值进行<strong>逐块归一化</strong>：计算每个图块内所有像素的均值和方差，进行标准化。这一步骤显著提升了重建效果：</p>
+<div class="formula" data-eq="(6)">$$\tilde{\mathbf{x}}_i = \frac{\mathbf{x}_i - \mu_i}{\sigma_i}, \quad \mu_i = \frac{1}{P^2 C} \sum_j x_{i,j}, \quad \sigma_i = \sqrt{\frac{1}{P^2 C} \sum_j (x_{i,j} - \mu_i)^2}$$</div>
+<p>归一化的直觉：原始像素值受光照、对比度等低级因素影响很大。逐块归一化去除了这些低级变化，让模型聚焦于<strong>结构和语义</strong>而非像素值的绝对大小。</p>
+
+<h3>6.3 像素 vs Token 重建</h3>
+<p>MAE 选择直接重建像素值，而非像 BEiT 那样重建离散 Token。消融实验表明：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>重建目标</th><th>微调 top-1 (%)</th><th>优势</th></tr></thead>
+<tbody>
+<tr><td>原始像素</td><td>$83.6$</td><td>简单、无额外依赖</td></tr>
+<tr><td>归一化像素</td><td><strong>$83.6$</strong></td><td>性能与原始像素持平，更稳定</td></tr>
+<tr><td>离散 Token (dVAE)</td><td>$83.2$</td><td>需预训练 dVAE，流程更复杂</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout success">
+<div class="callout-title">简单即有效</div>
+<p>MAE 的重建目标选择回归了最简单的像素 MSE，却超越了需要额外 dVAE 预训练的 BEiT。这表明视觉自监督的关键不在重建目标的复杂度，而在<strong>掩码策略</strong>和<strong>架构设计</strong>。像素重建已足够提供强大的学习信号。</p>
+</div>
+</section>
+
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">7</span>MAE 的数学描述</h2>
+
+<h3>7.1 完整流程</h3>
+<p>给定图像 $\mathbf{x} \in \mathbb{R}^{H \times W \times C}$，MAE 的完整流程如下：</p>
+<p><strong>步骤 1：分块与投影。</strong>将图像切分为 $N$ 个图块，线性投影到 $D$ 维：</p>
+<div class="formula" data-eq="(7)">$$\mathbf{z}_i = \text{PatchEmbed}(\mathbf{x}_i^{(p)}) \in \mathbb{R}^D, \quad i = 1, \ldots, N$$</div>
+<p><strong>步骤 2：随机掩码。</strong>从 $N$ 个图块中随机采样 $N_{\text{vis}} = \lfloor N(1-r) \rfloor$ 个保留，其余遮蔽：</p>
+<div class="formula" data-eq="(8)">$$\mathcal{V} = \text{RandomSample}(\{1,\ldots,N\}, N_{\text{vis}}), \quad \mathcal{M} = \{1,\ldots,N\} \setminus \mathcal{V}$$</div>
+<p><strong>步骤 3：编码。</strong>编码器仅处理可见图块：</p>
+<div class="formula" data-eq="(9)">$$\mathbf{H} = \text{Encoder}(\{\mathbf{z}_i + \mathbf{e}_{pos}^i\}_{i \in \mathcal{V}}) \in \mathbb{R}^{N_{\text{vis}} \times D}$$</div>
+<p><strong>步骤 4：拼接 mask tokens。</strong>将编码器输出与可学习 mask tokens 拼接，按原始位置排列：</p>
+<div class="formula" data-eq="(10)">$$\mathbf{Z}_{\text{dec}} = \text{Unshuffle}\left([\mathbf{H}; \mathbf{M}_{\text{mask}}] + \mathbf{E}_{\text{pos}}\right) \in \mathbb{R}^{N \times D}$$</div>
+<p><strong>步骤 5：解码。</strong>解码器处理完整序列：</p>
+<div class="formula" data-eq="(11)">$$\hat{\mathbf{Z}} = \text{Decoder}(\mathbf{Z}_{\text{dec}}) \in \mathbb{R}^{N \times D_{\text{dec}}}$$</div>
+<p><strong>步骤 6：重建与损失。</strong>通过线性层将解码器输出映射回像素空间，计算 MSE：</p>
+<div class="formula" data-eq="(12)">$$\hat{\mathbf{x}}_i = \text{Linear}(\hat{\mathbf{z}}_i) \in \mathbb{R}^{P^2 C}, \quad \mathcal{L} = \frac{1}{|\mathcal{M}|} \sum_{i \in \mathcal{M}} \| \hat{\mathbf{x}}_i - \tilde{\mathbf{x}}_i \|^2$$</div>
+
+<h3>7.2 统计量分析</h3>
+<p>MAE 预训练的统计量（ViT-Large，ImageNet-1K）：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>组件</th><th>参数量</th><th>占比</th></tr></thead>
+<tbody>
+<tr><td>编码器（ViT-Large）</td><td>$307$M</td><td>$90.5$%</td></tr>
+<tr><td>解码器（4 层）</td><td>约 $30$M</td><td>$8.9$%</td></tr>
+<tr><td>Mask Token + 位置编码</td><td>约 $0.3$M</td><td>$0.1$%</td></tr>
+<tr><td>重建线性层</td><td>约 $2.0$M</td><td>$0.5$%</td></tr>
+<tr style="font-weight:700;"><td>总计</td><td>$339$M</td><td>$100$%</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.3 训练超参数</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>超参数</th><th>默认值</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>输入分辨率</td><td>$224 \times 224$</td><td>标准 ImageNet 分辨率</td></tr>
+<tr><td>图块大小</td><td>$16 \times 16$</td><td>$P = 16$，$N = 196$</td></tr>
+<tr><td>掩码比例</td><td>$0.75$</td><td>遮蔽 75%，保留 25%</td></tr>
+<tr><td>训练轮数</td><td>$1600$ epochs</td><td>足够长的预训练</td></tr>
+<tr><td>批大小</td><td>$4096$</td><td>大 batch 训练</td></tr>
+<tr><td>优化器</td><td>AdamW</td><td>$\beta_1 = 0.9, \beta_2 = 0.95$</td></tr>
+<tr><td>学习率</td><td>$1.5 \times 10^{-4}$</td><td>余弦退火，warmup $40$ epochs</td></tr>
+<tr><td>权重衰减</td><td>$0.05$</td><td>标准化衰减</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">
+<div class="callout-title">超参数选择的逻辑</div>
+<p>MAE 的超参数有两个特点：(1) 大 batch（$4096$）配合大学习率，充分利用自监督无标签数据的优势；(2) 超长训练（$1600$ epochs），因为重建任务提供的学习信号比分类弱，需要更多迭代才能收敛。实验表明，MAE 在 $800$ epochs 时接近收敛，$1600$ epochs 达到最优。</p>
+</div>
+</section>
+
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">8</span>为什么 75% 掩码比例</h2>
+
+<h3>8.1 视觉冗余性假设</h3>
+<p>MAE 选择 75% 掩码比例的核心理由是<strong>视觉数据的冗余性</strong>。与文本不同，图像中存在大量空间冗余：</p>
+<ul>
+  <li><strong>像素级冗余</strong>：相邻像素高度相关，一个像素可从邻居推断</li>
+  <li><strong>区域级冗余</strong>：背景区域（天空、墙面）高度均匀，遮蔽后极易重建</li>
+  <li><strong>语义级冗余</strong>：物体的对称性、重复性使缺失部分可从可见部分推断</li>
+</ul>
+<p>低比例掩码（如 15-40%）下，模型只需做局部插值即可完成重建，无需理解图像语义。75% 的高比例掩码将局部信息几乎全部抹去，迫使模型利用全局上下文和语义理解来重建。</p>
+
+<h3>8.2 信息论视角</h3>
+<p>从信息论角度，掩码比例 $ 与任务的信息量 (r)$ 的关系可近似为：</p>
+<div class="formula" data-eq="(13)">I(r) \approx H(\mathbf{x}_{\mathcal{M}} \mid \mathbf{x}_{\mathcal{V}}) = H(\mathbf{x}_{\mathcal{M}}) - I(\mathbf{x}_{\mathcal{M}}; \mathbf{x}_{\mathcal{V}})</div>
+<p>其中 (\mathbf{x}_{\mathcal{M}} \mid \mathbf{x}_{\mathcal{V}})$ 为给定可见图块后遮蔽图块的条件熵（不确定度）。当 $ 较小时，(\mathbf{x}_{\mathcal{M}}; \mathbf{x}_{\mathcal{V}})$ 很大（可见图块几乎完全确定遮蔽图块），任务信息量趋近于 0。当 $ 增大到 75% 时，可见信息不足以确定遮蔽内容，条件熵显著增大，任务才开始有学习信号。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">掩码比例 vs 学习信号强度</text>
+  <!-- 坐标轴 -->
+  <line x1="80" y1="240" x2="750" y2="240" stroke="#cbd5e1" stroke-width="1.5"/>
+  <line x1="80" y1="240" x2="80" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="755" y="255" font-size="11" fill="#64748b">掩码比例 r →</text>
+  <text x="55" y="45" font-size="11" fill="#64748b" transform="rotate(-90 55 45)">学习信号 →</text>
+  <!-- X 轴刻度 -->
+  <text x="100" y="260" font-size="10" fill="#94a3b8" text-anchor="middle">0%</text>
+  <text x="250" y="260" font-size="10" fill="#94a3b8" text-anchor="middle">25%</text>
+  <text x="400" y="260" font-size="10" fill="#94a3b8" text-anchor="middle">50%</text>
+  <text x="550" y="260" font-size="10" fill="#94a3b8" text-anchor="middle">75%</text>
+  <text x="700" y="260" font-size="10" fill="#94a3b8" text-anchor="middle">100%</text>
+  <!-- 曲线: 低区域信号弱，75%达峰，更高则信息不足 -->
+  <path d="M 100 230 Q 250 220, 400 180 Q 500 100, 550 75 Q 620 85, 700 140" stroke="#2563eb" stroke-width="3" fill="none"/>
+  <!-- 区域标注 -->
+  <rect x="100" y="220" width="200" height="20" fill="#fee2e2" opacity="0.4"/>
+  <text x="200" y="235" text-anchor="middle" font-size="10" fill="#dc2626">太简单（插值）</text>
+  <rect x="450" y="60" width="120" height="30" fill="#d1fae5" opacity="0.4"/>
+  <text x="510" y="80" text-anchor="middle" font-size="10" fill="#047857" font-weight="600">最优区域</text>
+  <rect x="600" y="120" width="100" height="30" fill="#fef3c7" opacity="0.4"/>
+  <text x="650" y="135" text-anchor="middle" font-size="10" fill="#92400e">信息不足</text>
+  <!-- 峰值标注 -->
+  <circle cx="550" cy="75" r="6" fill="#7c3aed" class="pulse-node"/>
+  <text x="550" y="55" text-anchor="middle" font-size="11" fill="#7c3aed" font-weight="700">75% 最优</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 4：掩码比例与学习信号的关系 — 75% 处学习信号达到峰值</div>
+</div>
+
+<h3>8.3 75% 的实践验证</h3>
+<p>消融实验进一步验证了 75% 的最优性。在不同下游任务上：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>掩码比例</th><th>分类 (%)</th><th>检测 (%)</th><th>分割 (%)</th></tr></thead>
+<tbody>
+<tr><td>.50$</td><td>.5$</td><td>.8$</td><td>.5$</td></tr>
+<tr><td>.65$</td><td>.5$</td><td>.7$</td><td>.8$</td></tr>
+<tr style="font-weight:700;"><td>.75$</td><td>.6$</td><td>.6$</td><td>.2$</td></tr>
+<tr><td>.85$</td><td>.3$</td><td>.3$</td><td>.9$</td></tr>
+</tbody>
+</table>
+</div>
+<p>75% 在所有下游任务上均取得最优，且优势在密集预测任务（检测、分割）上更为明显——这进一步说明高比例掩码促进了全局语义理解，对需要全局信息的任务更有利。</p>
+
+<div class="callout">
+<div class="callout-title">与 BERT 的对比</div>
+<p>BERT 遮蔽 15% 的 Token，因为文本的信息密度高——每个词都携带独特语义，遮蔽 15% 就足够创造困难。MAE 遮蔽 75% 的图块，因为图像的冗余度高——必须大幅遮蔽才能迫使模型超越局部插值。这一差异本质上是<strong>模态差异</strong>的体现。</p>
+</div>
+</section>
+
+<!-- ========== 第九章 ========== -->
+<section id="ch9">
+<h2><span class="num">9</span>自监督 vs 有监督预训练</h2>
+
+<h3>9.1 性能对比</h3>
+<p>MAE 自监督预训练与有监督预训练的对比（均在 ImageNet-1K 上预训练，微调后评估）：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>方法</th><th>预训练方式</th><th>ViT-Base (%)</th><th>ViT-Large (%)</th><th>ViT-Huge (%)</th></tr></thead>
+<tbody>
+<tr><td>有监督预训练</td><td>分类标签</td><td>.8$</td><td>.1$</td><td>.3$</td></tr>
+<tr><td>DINO</td><td>自监督</td><td>.5$</td><td>.5$</td><td>—</td></tr>
+<tr><td>MoCo v3</td><td>对比学习</td><td>.7$</td><td>.2$</td><td>—</td></tr>
+<tr><td>BEiT</td><td>掩码预测</td><td>.2$</td><td>.2$</td><td>—</td></tr>
+<tr style="font-weight:700;"><td>MAE</td><td>掩码重建</td><td><strong>.6$</strong></td><td><strong>.1$</strong></td><td><strong>.9$</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>9.2 Scaling 行为</h3>
+<p>MAE 的核心优势在于<strong>模型越大收益越大</strong>。有监督预训练在 ViT-Large/Huge 上容易出现过拟合（标签信息有限），而 MAE 不受标签限制，可以从无限数据中学习：</p>
+<div class="formula" data-eq="(14)">\Delta_{\text{MAE-Sup}} = \text{Acc}_{\text{MAE}} - \text{Acc}_{\text{Sup}} \approx +1.8\% \text{ (Base)}, \quad +2.0\% \text{ (Large)}, \quad +2.6\% \text{ (Huge)}</div>
+
+<div class="callout success">
+<div class="callout-title">Scaling Law 的视觉验证</div>
+<p>MAE 首次在视觉领域清晰验证了"模型越大、自监督收益越大"的 Scaling Law。ViT-Huge 从有监督的 84.3% 提升到 MAE 的 86.9%，提升 2.6 个百分点。这为后续视觉基础模型（如 DINOv2、SAM）的训练策略奠定了基础。</p>
+</div>
+
+<h3>9.3 线性探针 vs 微调</h3>
+<p>线性探针（冻结编码器，只训练线性分类头）评估的是表示质量；微调评估的是最终性能。MAE 在两种评估下的表现：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>方法</th><th>线性探针 (%)</th><th>微调 (%)</th><th>差距</th></tr></thead>
+<tbody>
+<tr><td>有监督</td><td>.5$</td><td>.8$</td><td>.3$</td></tr>
+<tr><td>DINO</td><td>.0$</td><td>.5$</td><td>.5$</td></tr>
+<tr style="font-weight:700;"><td>MAE</td><td>.8$</td><td>.6$</td><td>.8$</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+<div class="callout-title">线性探针偏低的原因</div>
+<p>MAE 的线性探针准确率（56.8%）远低于 DINO（71.0%）。这是因为 MAE 编码器学习的是<strong>适合重建</strong>的特征，包含丰富的空间细节但非线性可分性较弱。微调后，非线性分类头能充分利用这些特征，达到 83.6%。DINO 通过对比学习直接优化特征的可分性，线性探针更高但微调上限较低。</p>
+</div>
+
+<h3>9.4 部分微调实验</h3>
+<p>逐步解冻编码器层数的实验揭示了 MAE 表示的层级结构：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>微调层数</th><th>冻结层数</th><th>top-1 (%)</th></tr></thead>
+<tbody>
+<tr><td>$（线性探针）</td><td>$</td><td>.8$</td></tr>
+<tr><td>$</td><td>$</td><td>.3$</td></tr>
+<tr><td>$</td><td>$</td><td>.3$</td></tr>
+<tr><td>$</td><td>$</td><td>.6$</td></tr>
+<tr><td>$</td><td>$</td><td>.0$</td></tr>
+<tr><td>$（全部微调）</td><td>$</td><td>.6$</td></tr>
+</tbody>
+</table>
+</div>
+<p>仅微调最后 1 层就达到 76.3%，微调 4 层达到 81.6%。这说明 MAE 的语义信息集中在最后几层，与有监督预训练的表示结构相似。</p>
+</section>
+
+<!-- ========== 第十章 ========== -->
+<section id="ch10">
+<h2><span class="num">10</span>应用场景与下游任务</h2>
+
+<h3>10.1 图像分类</h3>
+<p>MAE 最直接的应用是图像分类。预训练的编码器在 ImageNet-1K 上微调后达到 .6$%（ViT-Base）至 .9$%（ViT-Huge）。在更大规模的迁移场景中，MAE 在 iNaturalist、Places365 等细粒度数据集上也显著优于有监督预训练。</p>
+
+<h3>10.2 目标检测与实例分割</h3>
+<p>将 MAE 预训练的 ViT 作为检测器骨干，在 COCO 数据集上：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>骨干网络</th><th>预训练</th><th>AP{box}$</th><th>AP{mask}$</th></tr></thead>
+<tbody>
+<tr><td>ResNet-50</td><td>有监督</td><td>.0$</td><td>.8$</td></tr>
+<tr><td>ViT-Base</td><td>有监督</td><td>.1$</td><td>.8$</td></tr>
+<tr style="font-weight:700;"><td>ViT-Base</td><td>MAE</td><td><strong>.6$</strong></td><td><strong>.2$</strong></td></tr>
+<tr><td>ViT-Large</td><td>MAE</td><td><strong>.3$</strong></td><td><strong>.7$</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>10.3 语义分割</h3>
+<p>在 ADE20K 语义分割任务上，MAE 预训练的 ViT 同样优于有监督预训练：</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>骨干网络</th><th>预训练</th><th>mIoU (%)</th></tr></thead>
+<tbody>
+<tr><td>ResNet-50</td><td>有监督</td><td>.7$</td></tr>
+<tr><td>ViT-Base</td><td>有监督</td><td>.2$</td></tr>
+<tr style="font-weight:700;"><td>ViT-Base</td><td>MAE</td><td><strong>.2$</strong></td></tr>
+<tr><td>ViT-Large</td><td>MAE</td><td><strong>.2$</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>10.4 下游任务迁移总结</h3>
+<div class="svg-box">
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ma10" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">MAE 预训练 → 下游任务迁移</text>
+  <!-- MAE 预训练 -->
+  <rect x="280" y="45" width="240" height="60" rx="8" fill="#ecfeff" stroke="#059669" stroke-width="1.5"/>
+  <text x="400" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#047857">MAE 自监督预训练</text>
+  <text x="400" y="90" text-anchor="middle" font-size="11" fill="#047857">ImageNet-1K · 1600 epochs</text>
+  <!-- 4个箭头 -->
+  <path d="M 400 108 L 400 125 L 150 125 L 150 150" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#ma10)" stroke-dasharray="4 3"/>
+  <path d="M 400 108 L 400 125 L 350 125 L 350 150" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#ma10)" stroke-dasharray="4 3"/>
+  <path d="M 400 108 L 400 125 L 550 125 L 550 150" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#ma10)" stroke-dasharray="4 3"/>
+  <path d="M 400 108 L 400 125 L 750 125 L 750 150" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#ma10)" stroke-dasharray="4 3"/>
+  <!-- 4个下游任务 -->
+  <rect x="80" y="155" width="140" height="50" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="150" y="175" text-anchor="middle" font-size="12" fill="#1e40af" font-weight="600">图像分类</text>
+  <text x="150" y="193" text-anchor="middle" font-size="10" fill="#64748b">83.6% → 86.9%</text>
+  <rect x="280" y="155" width="140" height="50" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="350" y="175" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="600">目标检测</text>
+  <text x="350" y="193" text-anchor="middle" font-size="10" fill="#64748b">AP 51.6 → 53.3</text>
+  <rect x="480" y="155" width="140" height="50" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="550" y="175" text-anchor="middle" font-size="12" fill="#047857" font-weight="600">语义分割</text>
+  <text x="550" y="193" text-anchor="middle" font-size="10" fill="#64748b">mIoU 45.2 → 47.2</text>
+  <rect x="680" y="155" width="140" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="750" y="175" text-anchor="middle" font-size="12" fill="#92400e" font-weight="600">视频理解</text>
+  <text x="750" y="193" text-anchor="middle" font-size="10" fill="#64748b">时序扩展</text>
+  <!-- 说明 -->
+  <text x="400" y="260" text-anchor="middle" font-size="12" fill="#64748b">MAE 预训练的编码器可迁移到所有视觉任务，解码器丢弃</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 5：MAE 预训练 → 下游任务迁移 — 编码器通用，解码器丢弃</div>
+</div>
+</section>
+
+<!-- ========== 第十一章 ========== -->
+<section id="ch11">
+<h2><span class="num">11</span>PyTorch 代码实现</h2>
+
+<h3>11.1 Patch Embedding</h3>
+<div class="code-block">
+<div class="code-header">patch_embed.py</div>
+<pre>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">PatchEmbed</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""图像分块嵌入"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, img_size=<span class="num">224</span>, patch_size=<span class="num">16</span>, in_chans=<span class="num">3</span>, embed_dim=<span class="num">768</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        self.num_patches = (img_size // patch_size) ** <span class="num">2</span>
+        self.proj = nn.<span class="cls">Conv2d</span>(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="com"># x: (B, C, H, W) -> (B, N, D)</span>
+        x = self.<span class="fn">proj</span>(x).<span class="fn">flatten</span>(<span class="num">2</span>).<span class="fn">transpose</span>(<span class="num">1</span>, <span class="num">2</span>)
+        <span class="kw">return</span> x
+</pre>
+</div>
+
+<h3>11.2 随机掩码</h3>
+<div class="code-block">
+<div class="code-header">random_masking.py</div>
+<pre>
+<span class="kw">import</span> torch
+
+<span class="kw">def</span> <span class="fn">random_masking</span>(x, mask_ratio=<span class="num">0.75</span>):
+    <span class="str">"""随机遮蔽图块
+    Args:
+        x: (B, N, D) 输入序列
+        mask_ratio: 遮蔽比例
+    Returns:
+        x_vis: (B, N_vis, D) 可见图块
+        mask: (B, N) 二值掩码, 1=遮蔽, 0=可见
+        ids_restore: (B, N) 用于恢复原始顺序的索引
+    """</span>
+    <span class="cls">B</span>, <span class="cls">N</span>, <span class="cls">D</span> = x.shape
+    <span class="cls">N_keep</span> = <span class="fn">int</span>(<span class="cls">N</span> * (<span class="num">1</span> - mask_ratio))  <span class="com"># 保留的图块数</span>
+
+    <span class="com"># 为每个样本生成随机排列</span>
+    ids_shuffle = torch.<span class="fn">argsort</span>(torch.<span class="fn">rand</span>(<span class="cls">B</span>, <span class="cls">N</span>), dim=<span class="num">1</span>)
+    ids_restore = torch.<span class="fn">argsort</span>(ids_shuffle, dim=<span class="num">1</span>)
+
+    <span class="com"># 保留前 N_keep 个（可见），其余遮蔽</span>
+    ids_keep = ids_shuffle[:, :<span class="cls">N_keep</span>]
+    x_vis = torch.<span class="fn">gather</span>(x, dim=<span class="num">1</span>, index=ids_keep.<span class="fn">unsqueeze</span>(-<span class="num">1</span>).<span class="fn">repeat</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="cls">D</span>))
+
+    <span class="com"># 生成二值掩码</span>
+    mask = torch.<span class="fn">ones</span>(<span class="cls">B</span>, <span class="cls">N</span>)
+    mask[:, :<span class="cls">N_keep</span>] = <span class="num">0</span>
+    mask = torch.<span class="fn">gather</span>(mask, dim=<span class="num">1</span>, index=ids_restore)
+
+    <span class="kw">return</span> x_vis, mask, ids_restore
+</pre>
+</div>
+
+<h3>11.3 MAE 编码器</h3>
+<div class="code-block">
+<div class="code-header">mae_encoder.py</div>
+<pre>
+<span class="kw">class</span> <span class="cls">MAEEncoder</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""MAE 编码器（标准 ViT，仅处理可见图块）"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, img_size=<span class="num">224</span>, patch_size=<span class="num">16</span>, in_chans=<span class="num">3</span>,
+                 embed_dim=<span class="num">768</span>, depth=<span class="num">12</span>, num_heads=<span class="num">12</span>, mlp_ratio=<span class="num">4.0</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        self.patch_embed = <span class="cls">PatchEmbed</span>(img_size, patch_size, in_chans, embed_dim)
+        self.num_patches = self.patch_embed.num_patches
+
+        <span class="com"># CLS Token + 位置编码</span>
+        self.cls_token = nn.<span class="cls">Parameter</span>(torch.<span class="fn">zeros</span>(<span class="num">1</span>, <span class="num">1</span>, embed_dim))
+        self.pos_embed = nn.<span class="cls">Parameter</span>(torch.<span class="fn">zeros</span>(<span class="num">1</span>, self.num_patches + <span class="num">1</span>, embed_dim))
+
+        <span class="com"># Transformer Blocks</span>
+        self.blocks = nn.<span class="cls">ModuleList</span>([
+            <span class="cls">TransformerBlock</span>(embed_dim, num_heads, mlp_ratio)
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(depth)
+        ])
+        self.norm = nn.<span class="cls">LayerNorm</span>(embed_dim)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, mask_ratio=<span class="num">0.75</span>):
+        x = self.<span class="fn">patch_embed</span>(x)  <span class="com"># (B, N, D)</span>
+        x = x + self.pos_embed[:, <span class="num">1</span>:]  <span class="com"># 加位置编码</span>
+
+        <span class="com"># 随机掩码</span>
+        x_vis, mask, ids_restore = <span class="fn">random_masking</span>(x, mask_ratio)
+
+        <span class="com"># 插入 CLS Token</span>
+        cls = self.cls_token.<span class="fn">expand</span>(x_vis.shape[<span class="num">0</span>], -<span class="num">1</span>, -<span class="num">1</span>)
+        x_vis = torch.<span class="fn">cat</span>([cls, x_vis], dim=<span class="num">1</span>)
+
+        <span class="com"># Transformer 编码</span>
+        <span class="kw">for</span> blk <span class="kw">in</span> self.blocks:
+            x_vis = <span class="fn">blk</span>(x_vis)
+        x_vis = self.<span class="fn">norm</span>(x_vis)
+
+        <span class="kw">return</span> x_vis, mask, ids_restore
+</pre>
+</div>
+
+<h3>11.4 MAE 解码器</h3>
+<div class="code-block">
+<div class="code-header">mae_decoder.py</div>
+<pre>
+<span class="kw">class</span> <span class="cls">MAEDecoder</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""MAE 轻量解码器"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_patches=<span class="num">196</span>, encoder_dim=<span class="num">768</span>, decoder_dim=<span class="num">512</span>,
+                 depth=<span class="num">4</span>, num_heads=<span class="num">16</span>, mlp_ratio=<span class="num">4.0</span>, patch_size=<span class="num">16</span>, in_chans=<span class="num">3</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        <span class="com"># 编码器输出 -> 解码器维度投影</span>
+        self.decoder_embed = nn.<span class="cls">Linear</span>(encoder_dim, decoder_dim)
+
+        <span class="com"># 可学习 mask token</span>
+        self.mask_token = nn.<span class="cls">Parameter</span>(torch.<span class="fn">zeros</span>(<span class="num">1</span>, <span class="num">1</span>, decoder_dim))
+
+        <span class="com"># 解码器位置编码</span>
+        self.decoder_pos_embed = nn.<span class="cls">Parameter</span>(
+            torch.<span class="fn">zeros</span>(<span class="num">1</span>, num_patches + <span class="num">1</span>, decoder_dim)
+        )
+
+        <span class="com"># 解码器 Transformer Blocks</span>
+        self.blocks = nn.<span class="cls">ModuleList</span>([
+            <span class="cls">TransformerBlock</span>(decoder_dim, num_heads, mlp_ratio)
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(depth)
+        ])
+        self.norm = nn.<span class="cls">LayerNorm</span>(decoder_dim)
+
+        <span class="com"># 重建输出层</span>
+        self.decoder_pred = nn.<span class="cls">Linear</span>(decoder_dim, patch_size ** <span class="num">2</span> * in_chans)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x_vis, ids_restore):
+        <span class="com"># x_vis: (B, N_vis+1, D_enc) — 含 CLS Token</span>
+        <span class="cls">B</span> = x_vis.shape[<span class="num">0</span>]
+
+        <span class="com"># 投影到解码器维度</span>
+        x = self.<span class="fn">decoder_embed</span>(x_vis)  <span class="com"># (B, N_vis+1, D_dec)</span>
+
+        <span class="com"># 拼接 mask tokens</span>
+        mask_tokens = self.mask_token.<span class="fn">expand</span>(<span class="cls">B</span>, ids_restore.shape[<span class="num">1</span>] - (x.shape[<span class="num">1</span>] - <span class="num">1</span>), -<span class="num">1</span>)
+        x_ = torch.<span class="fn">cat</span>([x[:, <span class="num">1</span>:], mask_tokens], dim=<span class="num">1</span>)  <span class="com"># (B, N, D_dec)</span>
+        x_ = torch.<span class="fn">gather</span>(x_, dim=<span class="num">1</span>, index=ids_restore.<span class="fn">unsqueeze</span>(-<span class="num">1</span>).<span class="fn">repeat</span>(<span class="num">1</span>, <span class="num">1</span>, x_.shape[<span class="num">2</span>]))
+        x = torch.<span class="fn">cat</span>([x[:, :<span class="num">1</span>], x_], dim=<span class="num">1</span>)  <span class="com"># (B, N+1, D_dec)</span>
+
+        <span class="com"># 加位置编码</span>
+        x = x + self.decoder_pos_embed
+
+        <span class="com"># 解码</span>
+        <span class="kw">for</span> blk <span class="kw">in</span> self.blocks:
+            x = <span class="fn">blk</span>(x)
+        x = self.<span class="fn">norm</span>(x)
+
+        <span class="com"># 预测像素值</span>
+        x = self.<span class="fn">decoder_pred</span>(x)  <span class="com"># (B, N+1, P^2*C)</span>
+
+        <span class="com"># 去掉 CLS Token</span>
+        x = x[:, <span class="num">1</span>:]
+        <span class="kw">return</span> x
+</pre>
+</div>
+
+<h3>11.5 完整 MAE 模型</h3>
+<div class="code-block">
+<div class="code-header">mae_full.py</div>
+<pre>
+<span class="kw">class</span> <span class="cls">MaskedAutoencoder</span>(nn.<span class="cls">Module</span>):
+    <span class="str">"""完整 MAE 模型"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, img_size=<span class="num">224</span>, patch_size=<span class="num">16</span>, in_chans=<span class="num">3</span>,
+                 enc_dim=<span class="num">768</span>, enc_depth=<span class="num">12</span>, enc_heads=<span class="num">12</span>,
+                 dec_dim=<span class="num">512</span>, dec_depth=<span class="num">4</span>, dec_heads=<span class="num">16</span>,
+                 mlp_ratio=<span class="num">4.0</span>, norm_pix_loss=<span class="kw">True</span>):
+        <span class="kw">super</span>().<span class="fn">__init__</span>()
+        self.patch_size = patch_size
+        self.norm_pix_loss = norm_pix_loss
+
+        <span class="com"># 编码器</span>
+        self.encoder = <span class="cls">MAEEncoder</span>(img_size, patch_size, in_chans,
+                                   enc_dim, enc_depth, enc_heads, mlp_ratio)
+
+        <span class="com"># 解码器</span>
+        self.decoder = <span class="cls">MAEDecoder</span>(
+            (img_size // patch_size) ** <span class="num">2</span>,
+            enc_dim, dec_dim, dec_depth, dec_heads, mlp_ratio,
+            patch_size, in_chans
+        )
+
+    <span class="kw">def</span> <span class="fn">patchify</span>(self, imgs):
+        <span class="str">"""将图像转换为图块表示"""</span>
+        p = self.patch_size
+        h = w = imgs.shape[<span class="num">2</span>] // p
+        x = imgs.<span class="fn">reshape</span>(shape=(imgs.shape[<span class="num">0</span>], <span class="num">3</span>, h, p, w, p))
+        x = torch.<span class="fn">einsum</span>(<span class="str">'nchpwq-&gt;nhwpqc'</span>, x)
+        x = x.<span class="fn">reshape</span>(imgs.shape[<span class="num">0</span>], h * w, p ** <span class="num">2</span> * <span class="num">3</span>)
+        <span class="kw">return</span> x
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, imgs):
+        <span class="com"># 编码可见图块</span>
+        x_vis, mask, ids_restore = self.<span class="fn">encoder</span>(imgs, mask_ratio=<span class="num">0.75</span>)
+
+        <span class="com"># 解码重建</span>
+        pred = self.<span class="fn">decoder</span>(x_vis, ids_restore)  <span class="com"># (B, N, P^2*C)</span>
+
+        <span class="com"># 计算损失</span>
+        target = self.<span class="fn">patchify</span>(imgs)  <span class="com"># (B, N, P^2*C)</span>
+        <span class="kw">if</span> self.norm_pix_loss:
+            mean = target.<span class="fn">mean</span>(dim=-<span class="num">1</span>, keepdim=<span class="kw">True</span>)
+            var = target.<span class="fn">var</span>(dim=-<span class="num">1</span>, keepdim=<span class="kw">True</span>)
+            target = (target - mean) / (var + <span class="num">1</span>e-<span class="num">6</span>) ** <span class="num">0.5</span>
+
+        <span class="com"># 仅计算被遮蔽图块的损失</span>
+        loss = (pred - target) ** <span class="num">2</span>
+        loss = loss.<span class="fn">mean</span>(dim=-<span class="num">1</span>)  <span class="com"># 每个图块的平均 MSE</span>
+        loss = (loss * mask).<span class="fn">sum</span>() / mask.<span class="fn">sum</span>()  <span class="com"># 仅被遮蔽部分</span>
+
+        <span class="kw">return</span> loss, pred, mask
+</pre>
+</div>
+
+<h3>11.6 预训练与微调</h3>
+<div class="code-block">
+<div class="code-header">train_finetune.py</div>
+<pre>
+<span class="kw">def</span> <span class="fn">pretrain_mae</span>(model, dataloader, epochs=<span class="num">1600</span>, lr=<span class="num">1.5</span>e-<span class="num">4</span>):
+    <span class="str">"""MAE 自监督预训练"""</span>
+    optimizer = torch.optim.<span class="cls">AdamW</span>(model.<span class="fn">parameters</span>(), lr=lr, betas=(<span class="num">0.9</span>, <span class="num">0.95</span>),
+                                   weight_decay=<span class="num">0.05</span>)
+    scheduler = torch.optim.lr_scheduler.<span class="cls">CosineAnnealingLR</span>(optimizer, <span class="cls">T_max</span>=epochs)
+
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
+        <span class="kw">for</span> imgs, _ <span class="kw">in</span> dataloader:
+            imgs = imgs.<span class="fn">cuda</span>()
+            loss, pred, mask = <span class="fn">model</span>(imgs)
+            optimizer.<span class="fn">zero_grad</span>()
+            loss.<span class="fn">backward</span>()
+            optimizer.<span class="fn">step</span>()
+        scheduler.<span class="fn">step</span>()
+        <span class="kw">if</span> (epoch + <span class="num">1</span>) % <span class="num">100</span> == <span class="num">0</span>:
+            <span class="fn">print</span>(f<span class="str">"Epoch {epoch+1}, Loss: {loss.item():.6f}"</span>)
+
+<span class="kw">def</span> <span class="fn">finetune_mae</span>(model, dataloader, num_classes=<span class="num">1000</span>, epochs=<span class="num">100</span>, lr=<span class="num">1</span>e-<span class="num">3</span>):
+    <span class="str">"""微调：丢弃解码器，编码器接分类头"""</span>
+    <span class="com"># 丢弃解码器</span>
+    model.encoder.head = nn.<span class="cls">Linear</span>(model.encoder.embed_dim, num_classes)
+    model.encoder.head.weight.data.<span class="fn">normal_</span>(std=<span class="num">0.02</span>)
+    model.decoder = nn.<span class="cls">Identity</span>()
+
+    optimizer = torch.optim.<span class="cls">AdamW</span>(model.encoder.<span class="fn">parameters</span>(), lr=lr,
+                                   weight_decay=<span class="num">0.05</span>)
+    scheduler = torch.optim.lr_scheduler.<span class="cls">CosineAnnealingLR</span>(optimizer, <span class="cls">T_max</span>=epochs)
+    criterion = nn.<span class="cls">CrossEntropyLoss</span>()
+
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
+        <span class="kw">for</span> imgs, labels <span class="kw">in</span> dataloader:
+            logits = model.<span class="fn">encoder</span>(imgs)
+            loss = <span class="fn">criterion</span>(logits, labels)
+            optimizer.<span class="fn">zero_grad</span>()
+            loss.<span class="fn">backward</span>()
+            optimizer.<span class="fn">step</span>()
+        scheduler.<span class="fn">step</span>()
+        <span class="fn">print</span>(f<span class="str">"Epoch {epoch+1}, Loss: {loss.item():.4f}"</span>)
+</pre>
+</div>
+</section>
+
+<!-- ========== 第十二章 ========== -->
+<section id="ch12">
+<h2><span class="num">12</span>MAE 的扩展与变体</h2>
+
+<h3>12.1 MAE 家族</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>模型</th><th>年份</th><th>核心改进</th><th>解决的问题</th></tr></thead>
+<tbody>
+<tr><td><strong>MAE</strong></td><td>2021</td><td>75% 掩码 + 非对称编解码</td><td>视觉自监督预训练</td></tr>
+<tr><td><strong>AudioMAE</strong></td><td>2022</td><td>将 MAE 用于音频频谱图</td><td>音频自监督预训练</td></tr>
+<tr><td><strong>VideoMAE</strong></td><td>2022</td><td>时空图块 + 90% 掩码</td><td>视频冗余更高，需更大掩码比例</td></tr>
+<tr><td><strong>MAE-ST</strong></td><td>2022</td><td>时空注意力分离</td><td>视频计算效率</td></tr>
+<tr><td><strong>Data2Vec 2.0</strong></td><td>2022</td><td>多模态掩码自蒸馏</td><td>统一视觉/音频/文本预训练</td></tr>
+<tr><td><strong>GreenMIM</strong></td><td>2022</td><td>层级掩码 + 分层解码</td><td>分层视觉模型（Swin）的 MAE 扩展</td></tr>
+<tr><td><strong>iBOT</strong></td><td>2022</td><td>MAE + 对比学习结合</td><td>同时优化像素重建和特征判别</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>12.2 VideoMAE</h3>
+<p>视频的冗余度比图像更高（时序冗余 + 空间冗余），因此 VideoMAE 将掩码比例提高到 $%。它将视频分解为时空图块（tubelet），随机遮蔽 90% 后训练自编码器重建。VideoMAE 在 Kinetics-400 上达到 .4$% top-1，大幅超越此前方法。</p>
+
+<div class="formula" data-eq="(15)">r_{\text{video}} = 0.90, \quad N_{\text{vis}} = N_t \times N_s \times (1 - 0.90) = 0.10 \times N_t \times N_s</div>
+<p>其中 $ 为时间维图块数，$ 为空间维图块数。</p>
+
+<h3>12.3 MAE vs 其他自监督方法</h3>
+<div class="svg-box">
+<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ma12" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
+  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">MAE vs 其他视觉自监督方法</text>
+  <!-- 三大流派 -->
+  <rect x="30" y="50" width="230" height="270" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="145" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">掩码重建 (MAE)</text>
+  <text x="145" y="100" text-anchor="middle" font-size="11" fill="#1e40af">核心：重建像素</text>
+  <text x="145" y="125" text-anchor="middle" font-size="10" fill="#64748b">优点：</text>
+  <text x="145" y="145" text-anchor="middle" font-size="10" fill="#64748b">- 像素级监督</text>
+  <text x="145" y="165" text-anchor="middle" font-size="10" fill="#64748b">- 简单高效</text>
+  <text x="145" y="185" text-anchor="middle" font-size="10" fill="#64748b">- Scaling 友好</text>
+  <text x="145" y="215" text-anchor="middle" font-size="10" fill="#64748b">缺点：</text>
+  <text x="145" y="235" text-anchor="middle" font-size="10" fill="#64748b">- 线性探针偏低</text>
+  <text x="145" y="255" text-anchor="middle" font-size="10" fill="#64748b">- 表示偏空间</text>
+  <text x="145" y="280" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="600">代表：MAE, BEiT</text>
+  <text x="145" y="300" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="600">VideoMAE, iBOT</text>
+
+  <rect x="285" y="50" width="230" height="270" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="400" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">对比学习 (DINO)</text>
+  <text x="400" y="100" text-anchor="middle" font-size="11" fill="#6d28d9">核心：特征判别</text>
+  <text x="400" y="125" text-anchor="middle" font-size="10" fill="#64748b">优点：</text>
+  <text x="400" y="145" text-anchor="middle" font-size="10" fill="#64748b">- 线性探针高</text>
+  <text x="400" y="165" text-anchor="middle" font-size="10" fill="#64748b">- 特征可分性强</text>
+  <text x="400" y="185" text-anchor="middle" font-size="10" fill="#64748b">- 无需解码器</text>
+  <text x="400" y="215" text-anchor="middle" font-size="10" fill="#64748b">缺点：</text>
+  <text x="400" y="235" text-anchor="middle" font-size="10" fill="#64748b">- 微调上限较低</text>
+  <text x="400" y="255" text-anchor="middle" font-size="10" fill="#64748b">- 对数据增强敏感</text>
+  <text x="400" y="280" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="600">代表：DINO, MoCo</text>
+  <text x="400" y="300" text-anchor="middle" font-size="10" fill="#7c3aed" font-weight="600">SimCLR, BYOL</text>
+
+  <rect x="540" y="50" width="230" height="270" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="655" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#047857">混合方法</text>
+  <text x="655" y="100" text-anchor="middle" font-size="11" fill="#047857">核心：重建 + 判别</text>
+  <text x="655" y="125" text-anchor="middle" font-size="10" fill="#64748b">优点：</text>
+  <text x="655" y="145" text-anchor="middle" font-size="10" fill="#64748b">- 两者优势兼得</text>
+  <text x="655" y="165" text-anchor="middle" font-size="10" fill="#64748b">- 线性探针+微调均优</text>
+  <text x="655" y="185" text-anchor="middle" font-size="10" fill="#64748b">- 通用性强</text>
+  <text x="655" y="215" text-anchor="middle" font-size="10" fill="#64748b">缺点：</text>
+  <text x="655" y="235" text-anchor="middle" font-size="10" fill="#64748b">- 训练复杂</text>
+  <text x="655" y="255" text-anchor="middle" font-size="10" fill="#64748b">- 超参数多</text>
+  <text x="655" y="280" text-anchor="middle" font-size="10" fill="#047857" font-weight="600">代表：iBOT, data2vec</text>
+  <text x="655" y="300" text-anchor="middle" font-size="10" fill="#047857" font-weight="600">SimMIM, BEiT v2</text>
+</svg>
+<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 6：视觉自监督三大流派 — MAE 属于掩码重建流派，强调像素级监督信号</div>
+</div>
+
+<div class="callout">
+<div class="callout-title">MAE 的历史定位</div>
+<p>MAE 证明了视觉自监督预训练不需要复杂的辅助机制（如 dVAE 码本、对比学习队列、teacher-student 蒸馏），只需<strong>简单的掩码 + 像素重建 + 非对称架构</strong>就能达到最优。这一简洁性使其成为后续视觉基础模型预训练的标准范式。</p>
+</div>
+</section>
+
+<!-- ========== 第十三章 ========== -->
+<section id="ch13">
+<h2><span class="num">13</span>演进时间线与总结</h2>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="year">2019</div>
+    <div class="event">视觉自监督早期探索</div>
+    <div class="desc">MoCo、SimCLR 开创对比学习路线，验证视觉自监督可行性</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2020</div>
+    <div class="event">BERT 式视觉预训练尝试</div>
+    <div class="desc">iGPT、BEiT 尝试掩码预测，但依赖 dVAE 码本，流程复杂</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.04</div>
+    <div class="event">DINO 发布（Meta）</div>
+    <div class="desc">自蒸馏对比学习，线性探针 71.0%，但微调上限有限</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.06</div>
+    <div class="event">BEiT 发布（微软）</div>
+    <div class="desc">首个成功的视觉 MLM，但需预训练 dVAE，编码器含 mask tokens</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2021.11</div>
+    <div class="event">MAE 发布（何恺明团队）</div>
+    <div class="desc">75% 掩码 + 非对称架构 + 像素重建，ImageNet 86.9%，简洁高效</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2022.03</div>
+    <div class="event">SimMIM 发布（微软）</div>
+    <div class="desc">类似 MAE 但用对称架构，验证了非对称设计的优越性</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2022.04</div>
+    <div class="event">iBOT 发布</div>
+    <div class="desc">MAE + 对比学习混合，同时提升线性探针和微调性能</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2022.06</div>
+    <div class="event">VideoMAE 发布</div>
+    <div class="desc">将 MAE 扩展到视频，90% 时空掩码，Kinetics-400 87.4%</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2022.10</div>
+    <div class="event">AudioMAE 发布</div>
+    <div class="desc">将 MAE 扩展到音频频谱图，验证跨模态通用性</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2023+</div>
+    <div class="event">MAE 成为视觉基础模型标配</div>
+    <div class="desc">SAM (Segment Anything)、DINOv2 等均采用 MAE 或其变体预训练</div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">总结</div>
+  MAE 的核心贡献可以归纳为一句话：<strong>视觉自监督预训练不需要比 NLP 更复杂——只需要更激进的掩码</strong>。通过将掩码比例从 15% 提高到 75%，配合非对称编解码器架构，MAE 用最简单的像素 MSE 损失超越了所有复杂方法。它揭示了一个深刻洞察：视觉自监督的关键不在损失函数的复杂度，而在任务设计是否真正迫使模型理解语义。MAE 已成为视觉基础模型预训练的标准范式，其影响延伸至视频、音频、多模态等所有领域。
+</div>
+
+</section>
+
+<!-- ========== 参考文献 ========== -->
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+  <li>He, K., Chen, X., Xie, S., Li, Y., Dollár, P., & Girshick, R. (2022). Masked autoencoders are scalable vision learners. <em>CVPR 2022</em>.</li>
+  <li>Devlin, J., et al. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>NAACL 2019</em>.</li>
+  <li>Dosovitskiy, A., et al. (2021). An image is worth 16×16 words: Transformers for image recognition at scale. <em>ICLR 2021</em>.</li>
+  <li>Bao, H., et al. (2022). BEiT: BERT pre-training of image transformers. <em>ICLR 2022</em>.</li>
+  <li>Caron, M., et al. (2021). Emerging properties in self-supervised vision transformers. <em>ICCV 2021</em>. (DINO)</li>
+  <li>Chen, X., et al. (2020). SimCLR: A simple framework for contrastive learning. <em>ICML 2020</em>.</li>
+  <li>He, K., et al. (2020). Momentum contrast for unsupervised visual representation learning. <em>CVPR 2020</em>. (MoCo)</li>
+  <li>Grill, J.-B., et al. (2020). Bootstrap your own latent. <em>NeurIPS 2020</em>. (BYOL)</li>
+  <li>Tong, Z., et al. (2022). VideoMAE: Masked autoencoders are data-efficient learners for self-supervised video pre-training. <em>NeurIPS 2022</em>.</li>
+  <li>Huang, P., et al. (2022). Masked autoencoders that listen. <em>NeurIPS 2022</em>. (AudioMAE)</li>
+  <li>Zhou, J., et al. (2022). iBOT: Image BERT pre-training with online tokenizer. <em>ICLR 2022</em>.</li>
+  <li>Baevski, A., et al. (2022). data2vec: A general framework for self-supervised learning. <em>ICML 2022</em>.</li>
+  <li>Xie, Z., et al. (2022). SimMIM: A simple framework for masked image modeling. <em>CVPR 2022</em>.</li>
+  <li>Kirillov, A., et al. (2023). Segment anything. <em>ICCV 2023</em>. (SAM)</li>
+  <li>Oquab, M., et al. (2024). DINOv2: Learning robust visual features without supervision. <em>TMLR 2024</em>.</li>
+</ol>
+</section>
+
+</main>
+<div id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</div>
+
+<!-- ========== JavaScript ========== -->
+<script>
+// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var navLinks = document.querySelectorAll('#sidebar nav a');
+  var progressBar = document.getElementById('progress-bar');
+  var backToTop = document.getElementById('back-to-top');
+  function highlight() {
+    var scrollY = window.pageYOffset; var offset = 100; var current = '';
+    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
+    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+
+// KaTeX 渲染策略
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>
