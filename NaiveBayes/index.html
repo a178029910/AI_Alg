@@ -289,33 +289,16 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <div class="callout">
 <div class="callout-title">生活化示例：水果识别（含完整计算过程）</div>
-<p>假设要根据<strong>重量（克）</strong>和<strong>甜度（%）</strong>两个连续指标判断一个水果是<em>苹果</em>还是<em>橙子</em>。已有 10 个苹果和 10 个橙子的标记数据作为<strong>预训练集</strong>（为便于阅读已排序）：</p>
+<p>假设要根据<strong>重量（克）</strong>和<strong>甜度（%）</strong>两个连续指标判断一个水果是<em>苹果</em>还是<em>橙子</em>。已有 10 个苹果和 10 个橙子的标记数据作为<strong>预训练集</strong>（训练样本举例：苹果 140g/10%、150g/12%、160g/14%；橙子 190g/7%、200g/9%、210g/11%……每类各 10 个）。</p>
+
+<p><strong>第一步：预训练（MLE 估计参数）</strong>。对每类的每个特征，用训练数据计算<strong>均值</strong> $\mu$ 和<strong>方差</strong> $\sigma^2$，同时由公式 (10) 估出<strong>类别先验</strong> $\hat{P}(y) = N_y / N$。由于训练集苹果和橙子各 10 个、共 20 个，先验为 $P(\text{apple}) = P(\text{orange}) = 10/20 = 0.5$。参数汇总如下：</p>
 <div class="table-wrap">
 <table>
-<tr><th>类别</th><th>重量（g）</th><th>甜度（%）</th></tr>
-<tr><td rowspan="10">苹果<br>（10 个）</td><td>140</td><td>10</td></tr>
-<tr><td>145</td><td>11</td></tr>
-<tr><td>150</td><td>12</td></tr>
-<tr><td>155</td><td>13</td></tr>
-<tr><td>160</td><td>14</td></tr>
-<tr><td>140</td><td>10</td></tr>
-<tr><td>145</td><td>11</td></tr>
-<tr><td>150</td><td>12</td></tr>
-<tr><td>155</td><td>13</td></tr>
-<tr><td>160</td><td>14</td></tr>
-<tr><td rowspan="10">橙子<br>（10 个）</td><td>190</td><td>7</td></tr>
-<tr><td>195</td><td>8</td></tr>
-<tr><td>200</td><td>9</td></tr>
-<tr><td>205</td><td>10</td></tr>
-<tr><td>210</td><td>11</td></tr>
-<tr><td>190</td><td>7</td></tr>
-<tr><td>195</td><td>8</td></tr>
-<tr><td>200</td><td>9</td></tr>
-<tr><td>205</td><td>10</td></tr>
-<tr><td>210</td><td>11</td></tr>
+<tr><th>类别</th><th>样本数</th><th>先验</th><th>重量 $\mu$（g）</th><th>重量 $\sigma^2$</th><th>甜度 $\mu$（%）</th><th>甜度 $\sigma^2$</th></tr>
+<tr><td>苹果</td><td>10</td><td>0.5</td><td>150</td><td>50</td><td>12</td><td>2</td></tr>
+<tr><td>橙子</td><td>10</td><td>0.5</td><td>200</td><td>50</td><td>9</td><td>2</td></tr>
 </table>
 </div>
-<p><strong>第一步：预训练（MLE 估计参数）</strong>。苹果的重量均值为 $\mu_{\text{apple,w}}=(140+145+\cdots+160)/10=150$g，方差为 $\sigma^2_{\text{apple,w}}=50$；甜度均值 $\mu_{\text{apple,s}}=12\%$、方差 $2$。橙子同理：重量均值 $\mu_{\text{orange,w}}=200$g、方差 $50$，甜度均值 $\mu_{\text{orange,s}}=9\%$、方差 $2$。</p>
 <p>接下来来了三个待测水果：</p>
 <ul>
   <li><strong>样本 A</strong>：重量 170g、甜度 10.5%</li>
@@ -326,9 +309,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p><strong>第二步：预测</strong>。把每个样本代入公式 (7) 的高斯曲线。先看样本 A（170g, 10.5%）：</p>
 <p>苹果类：$P(170 \mid \text{apple}) = \frac{1}{\sqrt{2\pi \cdot 50}} e^{-\frac{(170-150)^2}{2\cdot 50}} \approx 0.00103$，$P(10.5\% \mid \text{apple}) = \frac{1}{\sqrt{2\pi \cdot 2}} e^{-\frac{(10.5-12)^2}{2\cdot 2}} \approx 0.1607$。</p>
 <p>橙子类：$P(170 \mid \text{orange}) = \frac{1}{\sqrt{2\pi \cdot 50}} e^{-\frac{(170-200)^2}{2\cdot 50}} \approx 6.96\times10^{-6}$，$P(10.5\% \mid \text{orange}) = \frac{1}{\sqrt{2\pi \cdot 2}} e^{-\frac{(10.5-9)^2}{2\cdot 2}} \approx 0.1607$。</p>
-<p>乘以先验（苹果 60%、橙子 40%）：苹果后验 $\propto 0.6 \times 0.00103 \times 0.1607 \approx 9.97\times10^{-5}$，橙子后验 $\propto 0.4 \times 6.96\times10^{-6} \times 0.1607 \approx 4.48\times10^{-7}$。<strong>苹果后验约是橙子的 222 倍</strong>，判为<strong>苹果</strong>。</p>
-<p>样本 B（190g, 8.5%）代入后：苹果后验 $\propto 0.6 \times 6.35\times10^{-9} \times 0.0132 \approx 5.03\times10^{-11}$，橙子后验 $\propto 0.4 \times 0.0208 \times 0.265 \approx 2.20\times10^{-3}$。橙子后验远大于苹果，判为<strong>橙子</strong>。</p>
-<p>样本 C（155g, 11.5%）：苹果后验 $\propto 0.6 \times 0.0439 \times 0.265 \approx 6.99\times10^{-3}$，橙子后验 $\propto 0.4 \times 9.06\times10^{-11} \times 0.0591 \approx 2.14\times10^{-12}$。判为<strong>苹果</strong>。</p>
+<p>乘以先验（均 0.5）：苹果后验 $\propto 0.5 \times 0.00103 \times 0.1607 \approx 8.30\times10^{-5}$，橙子后验 $\propto 0.5 \times 6.96\times10^{-6} \times 0.1607 \approx 5.60\times10^{-7}$。<strong>苹果后验约是橙子的 148 倍</strong>，判为<strong>苹果</strong>。</p>
+<p>样本 B（190g, 8.5%）：苹果后验 $\propto 0.5 \times 6.35\times10^{-9} \times 0.0132 \approx 4.19\times10^{-11}$，橙子后验 $\propto 0.5 \times 0.0208 \times 0.265 \approx 2.75\times10^{-3}$。橙子后验远大于苹果，判为<strong>橙子</strong>。</p>
+<p>样本 C（155g, 11.5%）：苹果后验 $\propto 0.5 \times 0.0439 \times 0.265 \approx 5.82\times10^{-3}$，橙子后验 $\propto 0.5 \times 9.06\times10^{-11} \times 0.0591 \approx 2.68\times10^{-12}$。判为<strong>苹果</strong>。</p>
 
 <p><strong>第三步：增量更新模型</strong>。把预测结果带回训练集——样本 A 确认为苹果、样本 B 确认为橙子（本例 C 暂不加入），重新估计参数：</p>
 <div class="table-wrap">
