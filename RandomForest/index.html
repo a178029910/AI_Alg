@@ -189,40 +189,44 @@ tr:hover td { background: var(--c-primary-ghost); }
   </linearGradient>
 </defs>
 
+<!-- 根节点: 花瓣长度 <= 2.45? -->
 <rect x="330" y="20" width="240" height="70" rx="14" fill="url(#gRfRoot)" stroke="#2563eb" stroke-width="2"/>
 <text x="450" y="52" text-anchor="middle" font-size="17" font-weight="700" fill="#1d4ed8">根节点 Root</text>
 <text x="450" y="76" text-anchor="middle" font-size="13" fill="#475569">花瓣长度 &lt;= 2.45 ?</text>
 
-<rect x="60" y="150" width="250" height="70" rx="14" fill="url(#gRfIn)" stroke="#7c3aed" stroke-width="2"/>
-<text x="185" y="182" text-anchor="middle" font-size="15" font-weight="700" fill="#6d28d9">内部节点</text>
-<text x="185" y="206" text-anchor="middle" font-size="13" fill="#475569">花瓣宽度 &lt;= 1.75 ?</text>
+<!-- 左叶子: 山鸢尾 (花瓣长度<=2.45 → 全是 setosa) -->
+<rect x="60" y="150" width="250" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
+<text x="185" y="179" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 山鸢尾</text>
+<text x="185" y="199" text-anchor="middle" font-size="12" fill="#475569">50 / 0 / 0</text>
 
+<!-- 右侧内部节点: 花瓣宽度 <= 1.75? -->
 <rect x="590" y="150" width="250" height="70" rx="14" fill="url(#gRfIn)" stroke="#7c3aed" stroke-width="2"/>
 <text x="715" y="182" text-anchor="middle" font-size="15" font-weight="700" fill="#6d28d9">内部节点</text>
-<text x="715" y="206" text-anchor="middle" font-size="13" fill="#475569">花萼长度 &lt;= 4.95 ?</text>
+<text x="715" y="206" text-anchor="middle" font-size="13" fill="#475569">花瓣宽度 &lt;= 1.75 ?</text>
 
-<line x1="400" y1="90" x2="245" y2="148" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRf)"/>
-<text x="278" y="112" text-anchor="middle" font-size="12" font-weight="600" fill="#2563eb">是 yes</text>
-<line x1="500" y1="90" x2="655" y2="148" class="flow-line" stroke="#ea580c" stroke-width="2.5" marker-end="url(#mRfO)"/>
-<text x="620" y="112" text-anchor="middle" font-size="12" font-weight="600" fill="#c2410c">否 no</text>
+<!-- 根 → 左叶子 (yes) -->
+<line x1="400" y1="90" x2="210" y2="148" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRf)"/>
+<text x="295" y="120" text-anchor="middle" font-size="12" font-weight="600" fill="#2563eb">是 yes</text>
+<!-- 根 → 右内部 (no) -->
+<line x1="500" y1="90" x2="660" y2="148" class="flow-line" stroke="#ea580c" stroke-width="2.5" marker-end="url(#mRfO)"/>
+<text x="590" y="120" text-anchor="middle" font-size="12" font-weight="600" fill="#c2410c">否 no</text>
 
-<rect x="60" y="280" width="250" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
-<text x="185" y="307" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 山鸢尾</text>
-<text x="185" y="328" text-anchor="middle" font-size="12" fill="#475569">50 / 50 / 0</text>
+<!-- 中间叶子: 变色鸢尾 (花瓣宽度<=1.75 → 多为 versicolor) -->
+<rect x="340" y="280" width="220" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
+<text x="450" y="309" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 变色鸢尾</text>
+<text x="450" y="329" text-anchor="middle" font-size="12" fill="#475569">0 / 49 / 1</text>
 
-<rect x="350" y="280" width="200" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
-<text x="450" y="307" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 变色鸢尾</text>
-<text x="450" y="328" text-anchor="middle" font-size="12" fill="#475569">48 / 2 / 0</text>
+<!-- 右叶子: 维吉尼亚鸢尾 (花瓣宽度>1.75 → 多为 virginica) -->
+<rect x="620" y="280" width="250" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
+<text x="745" y="309" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 维吉尼亚鸢尾</text>
+<text x="745" y="329" text-anchor="middle" font-size="12" fill="#475569">0 / 1 / 49</text>
 
-<rect x="590" y="280" width="250" height="60" rx="14" fill="url(#gRfLeaf)" stroke="#059669" stroke-width="2"/>
-<text x="715" y="307" text-anchor="middle" font-size="15" font-weight="700" fill="#047857">叶子: 维吉尼亚鸢尾</text>
-<text x="715" y="328" text-anchor="middle" font-size="12" fill="#475569">0 / 0 / 50</text>
-
-<line x1="185" y1="220" x2="185" y2="276" class="flow-line" stroke="#059669" stroke-width="2.5" marker-end="url(#mRf)"/>
-<line x1="250" y1="220" x2="420" y2="278" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRf)"/>
-<line x1="250" y1="220" x2="420" y2="278" class="flow-line" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mRf)" opacity="0"/>
-<line x1="690" y1="220" x2="715" y2="278" class="flow-line" stroke="#059669" stroke-width="2.5" marker-end="url(#mRf)"/>
-<line x1="740" y1="220" x2="715" y2="278" class="flow-line" stroke="#ea580c" stroke-width="2.5" marker-end="url(#mRfO)"/>
+<!-- 右内部 → 中间叶子 (yes) -->
+<line x1="640" y1="220" x2="480" y2="278" class="flow-line" stroke="#2563eb" stroke-width="2.5" marker-end="url(#mRf)"/>
+<text x="550" y="255" text-anchor="middle" font-size="12" font-weight="600" fill="#2563eb">是 yes</text>
+<!-- 右内部 → 右叶子 (no) -->
+<line x1="790" y1="220" x2="745" y2="278" class="flow-line" stroke="#ea580c" stroke-width="2.5" marker-end="url(#mRfO)"/>
+<text x="783" y="255" text-anchor="middle" font-size="12" font-weight="600" fill="#c2410c">否 no</text>
 </svg>
 </div>
 
