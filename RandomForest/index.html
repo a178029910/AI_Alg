@@ -61,7 +61,7 @@ em { color: var(--c-warn); font-style: normal; font-weight: 600; }
 pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
 pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
 code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
-.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; overflow-x: auto; }
 .formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
 .formula.multi { text-align: left; padding-left: 32px; }
 .formula.multi .katex-display { margin: 8px 0; }
@@ -146,7 +146,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">13 个章节</span>
     <span class="badge">5 张 SVG 结构图</span>
-    <span class="badge">13 个公式</span>
+    <span class="badge">15 个公式</span>
     <span class="badge">6 段 Python 代码</span>
     <span class="badge">14 篇参考文献</span>
   </div>
@@ -242,6 +242,52 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout success">
 <div class="callout-title">ID3 算法</div>
 <p>ID3 在每一层直接选择信息增益最大的特征进行划分。其偏好取值较多的特征（如"编号"这种每行一个唯一值的特征会带来最大增益），因此后续 C4.5 引入增益率加以修正。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">C4.5 算法：增益率（Gain Ratio）</div>
+<p>C4.5（Quinlan, 1993）是 ID3 的后继改进，核心修正用<strong>增益率</strong>替代信息增益来选择特征。首先定义特征的<strong>固有值</strong>（Intrinsic Value），衡量特征取值数量的"分裂度"：</p>
+<div class="formula" data-eq="(3.1)">$$\text{IV}(A) = -\sum_{v=1}^{V} \frac{|D_v|}{|D|} \log_2 \frac{|D_v|}{|D|}$$</div>
+<p>取值越多、各子集越均匀，$\text{IV}(A)$ 越大。增益率定义为信息增益与固有值之比：</p>
+<div class="formula" data-eq="(3.2)">$$g_R(D, A) = \frac{g(D, A)}{\text{IV}(A)}$$</div>
+<p>C4.5 选择增益率最大的特征。由于 $\text{IV}(A)$ 对取值多的特征施加惩罚，增益率有效抑制了 ID3 对"编号"类高基数特征的偏好。实际中 C4.5 做了两步启发式：先挑出信息增益高于平均的特征，再从中选增益率最大者，避免过度偏向低 IV 的特征。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">信息增益计算示例：水果分类</div>
+<p>有 6 个水果组成的数据集 $D$：3 个苹果、2 个橙子、1 个香蕉。有两个候选特征——<strong>颜色</strong>（红/黄）和<strong>大小</strong>（大/小）。数据如下：</p>
+<div class="table-wrap">
+<table>
+<tr><th>水果</th><th>颜色</th><th>大小</th><th>类别</th></tr>
+<tr><td>1</td><td>红</td><td>大</td><td>苹果</td></tr>
+<tr><td>2</td><td>红</td><td>小</td><td>苹果</td></tr>
+<tr><td>3</td><td>红</td><td>小</td><td>苹果</td></tr>
+<tr><td>4</td><td>红</td><td>大</td><td>香蕉</td></tr>
+<tr><td>5</td><td>黄</td><td>小</td><td>橙子</td></tr>
+<tr><td>6</td><td>黄</td><td>小</td><td>橙子</td></tr>
+</table>
+</div>
+
+<p><strong>第一步：计算划分前的熵 $H(D)$</strong>。三类的比例为 $p_1=3/6$、$p_2=2/6$、$p_3=1/6$：</p>
+<div class="formula">$$H(D) = -\left(\frac{3}{6}\log_2\frac{3}{6} + \frac{2}{6}\log_2\frac{2}{6} + \frac{1}{6}\log_2\frac{1}{6}\right) \approx 1.459 \text{ bits}$$</div>
+
+<p><strong>第二步：计算颜色的条件熵 $H(D \mid \text{color})$</strong>。颜色将 $D$ 分为两个子集：红色 $D_1$（4 个：3 苹果 + 1 香蕉）、黄色 $D_2$（2 个：2 橙子，纯净）。</p>
+<div class="formula">$$H(D_1) = -\left(\frac{3}{4}\log_2\frac{3}{4} + \frac{1}{4}\log_2\frac{1}{4}\right) \approx 0.811 \text{ bits}$$</div>
+<div class="formula">$$H(D_2) = -\left(\frac{2}{2}\log_2\frac{2}{2}\right) = 0 \text{ bits} \quad (\text{纯子集})$$</div>
+<div class="formula">$$H(D \mid \text{color}) = \frac{4}{6} \times 0.811 + \frac{2}{6} \times 0 \approx 0.541 \text{ bits}$$</div>
+
+<p><strong>第三步：计算颜色的信息增益</strong>：</p>
+<div class="formula">$$g(D, \text{color}) = H(D) - H(D \mid \text{color}) = 1.459 - 0.541 = 0.918 \text{ bits}$$</div>
+
+<p><strong>对比：计算大小的信息增益</strong>。大小将 $D$ 分为：大 $D_1$（2 个：1 苹果 + 1 香蕉）、小 $D_2$（4 个：2 苹果 + 1 橙子 + 1 香蕉）。</p>
+<div class="formula">$$H(D_{\text{大}}) = -\left(\frac{1}{2}\log_2\frac{1}{2} + \frac{1}{2}\log_2\frac{1}{2}\right) = 1.000 \text{ bits}$$</div>
+<div class="formula">$$H(D_{\text{小}}) = -\left(\frac{2}{4}\log_2\frac{2}{4} + \frac{1}{4}\log_2\frac{1}{4} + \frac{1}{4}\log_2\frac{1}{4}\right) = 1.500 \text{ bits}$$</div>
+<div class="formula">$$H(D \mid \text{size}) = \frac{2}{6} \times 1.000 + \frac{4}{6} \times 1.500 \approx 1.333 \text{ bits}$$</div>
+<div class="formula">$$g(D, \text{size}) = 1.459 - 1.333 = 0.126 \text{ bits}$$</div>
+
+<p><strong>结论</strong>：$g(D, \text{color}) = 0.918 \gg g(D, \text{size}) = 0.126$，ID3 选择<strong>颜色</strong>作为根节点划分特征。直觉上红色已能区分出大部分苹果、黄色完全区分出橙子，而大小对类别的区分力很弱。</p>
+
+<p><strong>C4.5 增益率验证</strong>。两个特征都有 2 个取值，固有值相同：$\text{IV}(\text{color}) = \text{IV}(\text{size}) = 0.918$。增益率：颜色 $g_R = 0.918/0.918 = 1.000$、大小 $g_R = 0.126/0.918 = 0.137$。C4.5 同样选择颜色——当两个特征取值数相同时，增益率排名与信息增益一致。</p>
 </div>
 
 <h3>1.3 基尼指数（Gini Index）</h3>
@@ -1624,7 +1670,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   });
   function renderAll() {
     if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
-    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
     savedFormulas.forEach(function(item) {
       var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
       var body = document.createElement('div'); body.className = 'formula-body';
