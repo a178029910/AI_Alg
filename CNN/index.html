@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CNN 模型详解 — 卷积神经网络完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -187,48 +188,162 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>这一发现揭示了视觉系统通过<strong>分层、局部、方向选择性</strong>的方式处理视觉信息。CNN 的卷积层对应简单细胞，池化层对应复杂细胞，深层网络对应层级抽象——这正是 CNN 架构的生物学根基。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <marker id="arr1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="bioarr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
   </defs>
-  <!-- 输入图像 -->
-  <rect x="20" y="40" width="120" height="120" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="80" y="30" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">输入图像</text>
-  <text x="80" y="180" text-anchor="middle" fill="#64748b" font-size="11">224×224×3</text>
-  <!-- 卷积核滑动 -->
-  <rect x="35" y="55" width="40" height="40" rx="4" fill="rgba(37,99,235,0.15)" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,2"/>
-  <text x="55" y="78" text-anchor="middle" fill="#2563eb" font-size="10">3×3</text>
-  <!-- 卷积核 -->
-  <rect x="180" y="65" width="50" height="50" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" class="glow-ring"/>
-  <text x="205" y="92" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">核</text>
-  <text x="205" y="135" text-anchor="middle" fill="#64748b" font-size="10">3×3×3</text>
-  <!-- 箭头 -->
-  <line x1="145" y1="100" x2="175" y2="90" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
-  <!-- 特征图 -->
-  <rect x="280" y="40" width="100" height="120" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
-  <text x="330" y="30" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">特征图</text>
-  <text x="330" y="180" text-anchor="middle" fill="#64748b" font-size="11">222×222×64</text>
-  <line x1="240" y1="90" x2="272" y2="90" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
-  <!-- 池化层 -->
-  <rect x="430" y="50" width="80" height="100" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
-  <text x="470" y="40" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">池化</text>
-  <text x="470" y="170" text-anchor="middle" fill="#64748b" font-size="11">111×111×64</text>
-  <line x1="385" y1="100" x2="422" y2="100" stroke="#059669" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
-  <!-- 多层叠加 -->
-  <rect x="560" y="40" width="70" height="120" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <rect x="580" y="30" width="70" height="120" rx="8" fill="rgba(248,250,252,0.6)" stroke="#7c3aed" stroke-width="2"/>
-  <rect x="600" y="20" width="70" height="120" rx="8" fill="rgba(248,250,252,0.3)" stroke="#059669" stroke-width="2"/>
-  <text x="615" y="160" text-anchor="middle" fill="#64748b" font-size="11">多层堆叠</text>
-  <line x1="515" y1="100" x2="552" y2="100" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
-  <!-- 输出 -->
-  <rect x="710" y="70" width="60" height="60" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="740" y="105" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="bold">分类</text>
-  <line x1="675" y1="100" x2="702" y2="100" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr1)" class="flow-line"/>
-  <!-- 标注 -->
-  <text x="400" y="220" text-anchor="middle" fill="#64748b" font-size="12">蓝色 = 数据流 · 紫色 = 卷积核 · 绿色 = 特征图 · 橙色 = 下采样</text>
-  <text x="400" y="245" text-anchor="middle" fill="#94a3b8" font-size="11">权值共享：同一个 3×3 核扫描全图 → 参数量从 1.5 亿降至 3×3×3 = 27</text>
+  <text x="400" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Hubel & Wiesel：视觉皮层的层级结构（1962，猫实验）</text>
+  <!-- 光线/眼睛 -->
+  <ellipse cx="60" cy="140" rx="28" ry="18" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="60" y="145" text-anchor="middle" fill="#92400e" font-size="11" font-weight="bold">眼</text>
+  <text x="60" y="185" text-anchor="middle" fill="#64748b" font-size="10">光刺激</text>
+  <!-- 视网膜 -->
+  <rect x="120" y="95" width="60" height="90" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="150" y="145" text-anchor="middle" fill="#2563eb" font-size="11" font-weight="bold">视网膜</text>
+  <text x="150" y="205" text-anchor="middle" fill="#64748b" font-size="10">感光细胞 · 光电转换</text>
+  <line x1="92" y1="140" x2="115" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#bioarr)"/>
+  <!-- LGN (可选) -->
+  <rect x="215" y="105" width="55" height="70" rx="6" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5"/>
+  <text x="242" y="145" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">LGN</text>
+  <text x="242" y="200" text-anchor="middle" fill="#64748b" font-size="10">中继</text>
+  <line x1="185" y1="140" x2="210" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#bioarr)"/>
+  <!-- 简单细胞 -->
+  <rect x="305" y="85" width="90" height="110" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="350" y="115" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">简单细胞</text>
+  <text x="350" y="135" text-anchor="middle" fill="#64748b" font-size="9">特定方向边缘</text>
+  <text x="350" y="150" text-anchor="middle" fill="#64748b" font-size="9">特定位置</text>
+  <text x="350" y="215" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="bold">≈ 卷积层</text>
+  <line x1="275" y1="140" x2="300" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#bioarr)"/>
+  <!-- 复杂细胞 -->
+  <rect x="430" y="85" width="90" height="110" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="475" y="115" text-anchor="middle" fill="#059669" font-size="11" font-weight="bold">复杂细胞</text>
+  <text x="475" y="135" text-anchor="middle" fill="#64748b" font-size="9">特定方向边缘</text>
+  <text x="475" y="150" text-anchor="middle" fill="#64748b" font-size="9">平移不变性</text>
+  <text x="475" y="215" text-anchor="middle" fill="#059669" font-size="10" font-weight="bold">≈ 池化层</text>
+  <line x1="400" y1="140" x2="425" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#bioarr)"/>
+  <!-- 超复杂细胞 -->
+  <rect x="555" y="85" width="95" height="110" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="602" y="112" text-anchor="middle" fill="#dc2626" font-size="11" font-weight="bold">超复杂细胞</text>
+  <text x="602" y="132" text-anchor="middle" fill="#64748b" font-size="9">边缘长度/端点</text>
+  <text x="602" y="147" text-anchor="middle" fill="#64748b" font-size="9">端点抑制</text>
+  <text x="602" y="215" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="bold">≈ 层级抽象</text>
+  <line x1="525" y1="140" x2="550" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#bioarr)"/>
+  <!-- 高级视觉区 -->
+  <rect x="685" y="95" width="85" height="90" rx="8" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="727" y="125" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">高级视觉区</text>
+  <text x="727" y="145" text-anchor="middle" fill="#64748b" font-size="9">V2 / V4 / IT</text>
+  <text x="727" y="160" text-anchor="middle" fill="#64748b" font-size="9">物体识别</text>
+  <line x1="655" y1="140" x2="680" y2="140" stroke="#64748b" stroke-width="1.5" marker-end="url(#bioarr)"/>
+  <!-- 底部对应关系 -->
+  <text x="400" y="265" text-anchor="middle" fill="#64748b" font-size="11">视觉系统：分层 · 局部感受野 · 方向选择性 → CNN：卷积层（局部+方向） · 池化层（不变性） · 深层堆叠（层级抽象）</text>
+  <text x="400" y="285" text-anchor="middle" fill="#94a3b8" font-size="10">Hubel & Wiesel 因此发现获 1981 年诺贝尔生理学奖</text>
 </svg>
-<div class="svg-caption">图 1：CNN 基本工作流程 — 输入图像经卷积核扫描生成特征图，池化下采样后逐层堆叠，最终输出分类结果</div>
+<div class="svg-caption">图 1：卷积的生物学灵感 — 视觉皮层自下而上分层处理：简单细胞检测局部边缘，复杂细胞获得平移不变性，层级堆叠形成抽象</div>
+</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 860 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="cnnstr-arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+    <linearGradient id="cnnstr-input-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#93c5fd"/></linearGradient>
+    <linearGradient id="cnnstr-conv1-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ede9fe"/><stop offset="100%" stop-color="#c4b5fd"/></linearGradient>
+    <linearGradient id="cnnstr-pool1-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d1fae5"/><stop offset="100%" stop-color="#6ee7b7"/></linearGradient>
+    <linearGradient id="cnnstr-conv2-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#fcd34d"/></linearGradient>
+    <linearGradient id="cnnstr-pool2-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fce7f3"/><stop offset="100%" stop-color="#f9a8d4"/></linearGradient>
+    <linearGradient id="cnnstr-fc-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e0e7ff"/><stop offset="100%" stop-color="#a5b4fc"/></linearGradient>
+    <linearGradient id="cnnstr-out-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fee2e2"/><stop offset="100%" stop-color="#fca5a5"/></linearGradient>
+  </defs>
+
+  <text x="430" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">CNN 经典架构：卷积层提取特征 → 池化层降维 → 全连接层分类</text>
+
+  <!-- 1. 输入图像 -->
+  <rect x="20" y="70" width="70" height="70" rx="6" fill="url(#cnnstr-input-grad)" stroke="#2563eb" stroke-width="2"/>
+  <text x="55" y="100" text-anchor="middle" fill="#1e3a5f" font-size="11" font-weight="bold">输入</text>
+  <text x="55" y="118" text-anchor="middle" fill="#1e3a5f" font-size="9">32×32×3</text>
+  <text x="55" y="160" text-anchor="middle" fill="#64748b" font-size="10">原始图像</text>
+  <text x="55" y="174" text-anchor="middle" fill="#94a3b8" font-size="9">RGB 三通道</text>
+
+  <!-- 箭头 1→2 -->
+  <line x1="95" y1="105" x2="125" y2="105" stroke="#64748b" stroke-width="1.5" marker-end="url(#cnnstr-arr)"/>
+
+  <!-- 2. 卷积层 1 -->
+  <rect x="130" y="55" width="80" height="100" rx="8" fill="url(#cnnstr-conv1-grad)" stroke="#7c3aed" stroke-width="2"/>
+  <text x="170" y="85" text-anchor="middle" fill="#5b21b6" font-size="11" font-weight="bold">卷积层 1</text>
+  <text x="170" y="103" text-anchor="middle" fill="#6d28d9" font-size="9">3×3 核, 32 个</text>
+  <text x="170" y="118" text-anchor="middle" fill="#6d28d9" font-size="9">ReLU 激活</text>
+  <text x="170" y="133" text-anchor="middle" fill="#6d28d9" font-size="9">输出 32×32×32</text>
+  <text x="170" y="175" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">特征提取</text>
+  <text x="170" y="189" text-anchor="middle" fill="#94a3b8" font-size="9">边缘 / 纹理</text>
+
+  <!-- 箭头 2→3 -->
+  <line x1="215" y1="105" x2="245" y2="105" stroke="#64748b" stroke-width="1.5" marker-end="url(#cnnstr-arr)"/>
+
+  <!-- 3. 池化层 1 -->
+  <rect x="250" y="65" width="70" height="80" rx="8" fill="url(#cnnstr-pool1-grad)" stroke="#059669" stroke-width="2"/>
+  <text x="285" y="95" text-anchor="middle" fill="#064e3b" font-size="11" font-weight="bold">池化层 1</text>
+  <text x="285" y="113" text-anchor="middle" fill="#047857" font-size="9">2×2 最大池化</text>
+  <text x="285" y="128" text-anchor="middle" fill="#047857" font-size="9">输出 16×16×32</text>
+  <text x="285" y="175" text-anchor="middle" fill="#059669" font-size="10" font-weight="600">下采样</text>
+  <text x="285" y="189" text-anchor="middle" fill="#94a3b8" font-size="9">空间减半</text>
+
+  <!-- 箭头 3→4 -->
+  <line x1="325" y1="105" x2="355" y2="105" stroke="#64748b" stroke-width="1.5" marker-end="url(#cnnstr-arr)"/>
+
+  <!-- 4. 卷积层 2 -->
+  <rect x="360" y="55" width="80" height="100" rx="8" fill="url(#cnnstr-conv2-grad)" stroke="#d97706" stroke-width="2"/>
+  <text x="400" y="85" text-anchor="middle" fill="#78350f" font-size="11" font-weight="bold">卷积层 2</text>
+  <text x="400" y="103" text-anchor="middle" fill="#92400e" font-size="9">3×3 核, 64 个</text>
+  <text x="400" y="118" text-anchor="middle" fill="#92400e" font-size="9">ReLU 激活</text>
+  <text x="400" y="133" text-anchor="middle" fill="#92400e" font-size="9">输出 16×16×64</text>
+  <text x="400" y="175" text-anchor="middle" fill="#d97706" font-size="10" font-weight="600">特征提取</text>
+  <text x="400" y="189" text-anchor="middle" fill="#94a3b8" font-size="9">部件 / 形状</text>
+
+  <!-- 箭头 4→5 -->
+  <line x1="445" y1="105" x2="475" y2="105" stroke="#64748b" stroke-width="1.5" marker-end="url(#cnnstr-arr)"/>
+
+  <!-- 5. 池化层 2 -->
+  <rect x="480" y="65" width="70" height="80" rx="8" fill="url(#cnnstr-pool2-grad)" stroke="#db2777" stroke-width="2"/>
+  <text x="515" y="95" text-anchor="middle" fill="#831843" font-size="11" font-weight="bold">池化层 2</text>
+  <text x="515" y="113" text-anchor="middle" fill="#9d174d" font-size="9">2×2 最大池化</text>
+  <text x="515" y="128" text-anchor="middle" fill="#9d174d" font-size="9">输出 8×8×64</text>
+  <text x="515" y="175" text-anchor="middle" fill="#db2777" font-size="10" font-weight="600">下采样</text>
+  <text x="515" y="189" text-anchor="middle" fill="#94a3b8" font-size="9">空间减半</text>
+
+  <!-- 虚线分隔：展平 -->
+  <line x1="555" y1="105" x2="585" y2="105" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#cnnstr-arr)"/>
+  <text x="570" y="98" text-anchor="middle" fill="#94a3b8" font-size="8">展平</text>
+
+  <!-- 6. 全连接层 -->
+  <rect x="590" y="55" width="80" height="100" rx="8" fill="url(#cnnstr-fc-grad)" stroke="#4f46e5" stroke-width="2"/>
+  <text x="630" y="85" text-anchor="middle" fill="#312e81" font-size="11" font-weight="bold">全连接层</text>
+  <text x="630" y="103" text-anchor="middle" fill="#3730a3" font-size="9">Flatten → 4096</text>
+  <text x="630" y="118" text-anchor="middle" fill="#3730a3" font-size="9">ReLU + Dropout</text>
+  <text x="630" y="133" text-anchor="middle" fill="#3730a3" font-size="9">输出 128</text>
+  <text x="630" y="175" text-anchor="middle" fill="#4f46e5" font-size="10" font-weight="600">分类决策</text>
+  <text x="630" y="189" text-anchor="middle" fill="#94a3b8" font-size="9">高级特征组合</text>
+
+  <!-- 箭头 6→7 -->
+  <line x1="675" y1="105" x2="705" y2="105" stroke="#64748b" stroke-width="1.5" marker-end="url(#cnnstr-arr)"/>
+
+  <!-- 7. 输出层 -->
+  <rect x="710" y="70" width="70" height="70" rx="6" fill="url(#cnnstr-out-grad)" stroke="#dc2626" stroke-width="2"/>
+  <text x="745" y="100" text-anchor="middle" fill="#7f1d1d" font-size="11" font-weight="bold">输出</text>
+  <text x="745" y="118" text-anchor="middle" fill="#991b1b" font-size="9">Softmax</text>
+  <text x="745" y="160" text-anchor="middle" fill="#64748b" font-size="10">类别概率</text>
+  <text x="745" y="174" text-anchor="middle" fill="#94a3b8" font-size="9">10 类</text>
+
+  <!-- 底部特征维度变化标注 -->
+  <text x="430" y="230" text-anchor="middle" font-size="11" fill="#475569" font-weight="600">特征图尺寸变化：32×32 → 32×32 → 16×16 → 16×16 → 8×8 → 1×1 → 1×1</text>
+
+  <!-- 底部说明 -->
+  <rect x="20" y="255" width="820" height="65" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="430" y="278" text-anchor="middle" font-size="11" fill="#334155">
+    <tspan x="430" dy="0">卷积层：局部连接 + 权值共享，提取空间特征（边缘→纹理→部件→物体）</tspan>
+    <tspan x="430" dy="18">池化层：无参数操作，降低空间分辨率，提供平移不变性</tspan>
+    <tspan x="430" dy="18">全连接层：整合全局特征，通过 Softmax 输出类别概率分布</tspan>
+  </text>
+</svg>
+<div class="svg-caption">图 2：CNN 常规结构 — 输入图像经过交替的卷积层和池化层逐级提取特征，空间分辨率逐步降低、通道数逐步增加，最后展平通过全连接层输出分类结果</div>
 </div>
 
 </section>
@@ -287,35 +402,170 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <div class="svg-box">
 <svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="arr2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker></defs>
-  <!-- 输入多通道 -->
-  <rect x="20" y="60" width="100" height="200" rx="8" fill="rgba(219,234,254,0.7)" stroke="#2563eb" stroke-width="2"/>
-  <text x="70" y="50" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="bold">输入</text>
-  <text x="70" y="280" text-anchor="middle" fill="#64748b" font-size="11">H×W×C_in</text>
-  <line x1="15" y1="65" x2="15" y2="255" stroke="#2563eb" stroke-width="2"/>
-  <line x1="20" y1="65" x2="20" y2="255" stroke="#2563eb" stroke-width="2"/>
-  <line x1="25" y1="65" x2="25" y2="255" stroke="#2563eb" stroke-width="1"/>
-  <!-- 卷积核 -->
-  <rect x="190" y="90" width="70" height="60" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" class="glow-ring"/>
-  <text x="225" y="125" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">K</text>
-  <text x="225" y="165" text-anchor="middle" fill="#64748b" font-size="10">k×k×C_in</text>
-  <line x1="125" y1="120" x2="182" y2="120" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr2)" class="flow-line"/>
-  <text x="155" y="110" text-anchor="middle" fill="#7c3aed" font-size="10">逐通道<br>求和</text>
-  <!-- 输出 -->
-  <rect x="340" y="100" width="80" height="140" rx="8" fill="rgba(209,250,229,0.7)" stroke="#059669" stroke-width="2"/>
-  <text x="380" y="90" text-anchor="middle" fill="#059669" font-size="12" font-weight="bold">输出</text>
-  <text x="380" y="255" text-anchor="middle" fill="#64748b" font-size="11">H'×W'×1</text>
-  <line x1="268" y1="120" x2="332" y2="155" stroke="#059669" stroke-width="1.5" marker-end="url(#arr2)" class="flow-line"/>
-  <!-- 多核叠加 -->
-  <rect x="500" y="70" width="90" height="200" rx="8" fill="rgba(219,234,254,0.5)" stroke="#2563eb" stroke-width="2"/>
-  <rect x="520" y="80" width="80" height="180" rx="6" fill="rgba(209,250,229,0.3)" stroke="#059669" stroke-width="1"/>
-  <text x="545" y="290" text-anchor="middle" fill="#64748b" font-size="11">H'×W'×C_out</text>
-  <text x="545" y="60" text-anchor="middle" fill="#2563eb" font-size="11" font-weight="bold">C_out 个核</text>
-  <line x1="425" y1="170" x2="492" y2="170" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr2)" class="flow-line"/>
-  <!-- 标注 -->
-  <text x="390" y="310" text-anchor="middle" fill="#64748b" font-size="11">每个核沿 C_in 通道求和输出一张特征图，C_out 个核并行生成 C_out 张</text>
+  <defs>
+    <marker id="pararr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+  </defs>
+  <text x="390" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">单层卷积的参数量构成（公式 4 的可视化）</text>
+  <!-- 一个卷积核的参数 -->
+  <rect x="40" y="60" width="150" height="150" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" class="glow-ring"/>
+  <text x="115" y="82" text-anchor="middle" fill="#7c3aed" font-size="12" font-weight="bold">单个卷积核</text>
+  <!-- 核内小格 -->
+  <g font-size="9" fill="#64748b" text-anchor="middle">
+    <rect x="70" y="95" width="22" height="22" fill="#fff" stroke="#c4b5fd"/><rect x="94" y="95" width="22" height="22" fill="#fff" stroke="#c4b5fd"/><rect x="118" y="95" width="22" height="22" fill="#fff" stroke="#c4b5fd"/>
+    <rect x="70" y="119" width="22" height="22" fill="#fff" stroke="#c4b5fd"/><rect x="94" y="119" width="22" height="22" fill="#fff" stroke="#c4b5fd"/><rect x="118" y="119" width="22" height="22" fill="#fff" stroke="#c4b5fd"/>
+    <rect x="70" y="143" width="22" height="22" fill="#fff" stroke="#c4b5fd"/><rect x="94" y="143" width="22" height="22" fill="#fff" stroke="#c4b5fd"/><rect x="118" y="143" width="22" height="22" fill="#fff" stroke="#c4b5fd"/>
+  </g>
+  <text x="115" y="182" text-anchor="middle" fill="#64748b" font-size="10">k×k×C_in</text>
+  <text x="115" y="196" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="bold">+ 偏置 b ×1</text>
+  <!-- 乘法 -->
+  <text x="230" y="145" text-anchor="middle" fill="#0f172a" font-size="22" font-weight="bold">×</text>
+  <!-- C_out 个核 -->
+  <g>
+    <rect x="270" y="55" width="60" height="160" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <rect x="282" y="65" width="60" height="160" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.8"/>
+    <rect x="294" y="75" width="60" height="160" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.6"/>
+    <rect x="306" y="85" width="60" height="160" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" opacity="0.4"/>
+  </g>
+  <text x="300" y="240" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="bold">C_out 个核并行</text>
+  <!-- 等号 -->
+  <text x="410" y="145" text-anchor="middle" fill="#0f172a" font-size="22" font-weight="bold">=</text>
+  <!-- 参数量 -->
+  <rect x="450" y="85" width="130" height="120" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2.5"/>
+  <text x="515" y="115" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">总参数量</text>
+  <text x="515" y="140" text-anchor="middle" fill="#334155" font-size="11">C_out ×</text>
+  <text x="515" y="158" text-anchor="middle" fill="#334155" font-size="11">(k×k×C_in + 1)</text>
+  <line x1="370" y1="145" x2="445" y2="145" stroke="#059669" stroke-width="2" marker-end="url(#pararr)"/>
+  <!-- 实例 -->
+  <rect x="620" y="60" width="140" height="170" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="690" y="85" text-anchor="middle" fill="#92400e" font-size="12" font-weight="bold">实例</text>
+  <text x="690" y="108" text-anchor="middle" fill="#334155" font-size="10">3×3 核</text>
+  <text x="690" y="126" text-anchor="middle" fill="#334155" font-size="10">C_in=64, C_out=64</text>
+  <text x="690" y="150" text-anchor="middle" fill="#334155" font-size="10">= 64×(9×64+1)</text>
+  <text x="690" y="172" text-anchor="middle" fill="#92400e" font-size="12" font-weight="bold">= 36,928</text>
+  <line x1="585" y1="145" x2="615" y2="145" stroke="#f59e0b" stroke-width="2" marker-end="url(#pararr)"/>
+  <!-- 底部说明 -->
+  <text x="390" y="270" text-anchor="middle" fill="#64748b" font-size="11">FLOPs（公式 5）：再乘上输出空间尺寸 H'×W' — 每个输出位置的每个核都要做 k×k×C_in 次乘加</text>
+  <text x="390" y="292" text-anchor="middle" fill="#94a3b8" font-size="10">权值共享：同一个核在 H'×W' 个位置复用，参数只算一份，计算量却与输出面积成正比</text>
 </svg>
-<div class="svg-caption">图 2：多通道卷积运算 — 卷积核在所有输入通道上做加权和，输出一张特征图</div>
+<div class="svg-caption">图 3：参数量与计算量 — 参数量 = 核大小 × 输入通道 × 输出通道（+偏置），与特征图尺寸无关；计算量还与输出面积成正比</div>
+</div>
+
+<h3>2.5 卷积计算示例</h3>
+<p>下面用一个手算级的小例子演示卷积的完整计算过程：输入为 $5 \times 5$ 矩阵，卷积核为 $3 \times 3$（无填充、步幅 1），输出为 $3 \times 3$。</p>
+<div class="svg-box">
+<svg viewBox="0 0 820 330" xmlns="http://www.w3.org/2000/svg">
+  <text x="410" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">卷积计算示例：5×5 输入 × 3×3 卷积核 → 3×3 输出（无填充，步幅 1）</text>
+  <text x="145" y="42" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="bold">输入 X (5×5)</text>
+  <rect x="60" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="77" y="81" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="94" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="111" y="81" text-anchor="middle" fill="#334155" font-size="12">2</text>
+  <rect x="128" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="145" y="81" text-anchor="middle" fill="#334155" font-size="12">3</text>
+  <rect x="162" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="179" y="81" text-anchor="middle" fill="#334155" font-size="12">0</text>
+  <rect x="196" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="213" y="81" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="60" y="94" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="77" y="115" text-anchor="middle" fill="#334155" font-size="12">0</text>
+  <rect x="94" y="94" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="111" y="115" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="128" y="94" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="145" y="115" text-anchor="middle" fill="#334155" font-size="12">2</text>
+  <rect x="162" y="94" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="179" y="115" text-anchor="middle" fill="#334155" font-size="12">3</text>
+  <rect x="196" y="94" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="213" y="115" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="60" y="128" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="77" y="149" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="94" y="128" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="111" y="149" text-anchor="middle" fill="#334155" font-size="12">0</text>
+  <rect x="128" y="128" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="145" y="149" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="162" y="128" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="179" y="149" text-anchor="middle" fill="#334155" font-size="12">2</text>
+  <rect x="196" y="128" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="213" y="149" text-anchor="middle" fill="#334155" font-size="12">0</text>
+  <rect x="60" y="162" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="77" y="183" text-anchor="middle" fill="#334155" font-size="12">2</text>
+  <rect x="94" y="162" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="111" y="183" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="128" y="162" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="145" y="183" text-anchor="middle" fill="#334155" font-size="12">0</text>
+  <rect x="162" y="162" width="34" height="34" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="179" y="183" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="196" y="162" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="213" y="183" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="60" y="196" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="77" y="217" text-anchor="middle" fill="#334155" font-size="12">0</text>
+  <rect x="94" y="196" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="111" y="217" text-anchor="middle" fill="#334155" font-size="12">2</text>
+  <rect x="128" y="196" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="145" y="217" text-anchor="middle" fill="#334155" font-size="12">1</text>
+  <rect x="162" y="196" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="179" y="217" text-anchor="middle" fill="#334155" font-size="12">0</text>
+  <rect x="196" y="196" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="213" y="217" text-anchor="middle" fill="#334155" font-size="12">2</text>
+  <rect x="94" y="94" width="102" height="102" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="6,3"/>
+  <text x="145" y="248" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="bold">当前位置 (1,1)</text>
+  <text x="387" y="57" text-anchor="middle" fill="#7c3aed" font-size="12" font-weight="bold">卷积核 K (3×3)</text>
+  <rect x="330" y="75" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="349" y="99" text-anchor="middle" fill="#334155" font-size="13">1</text>
+  <rect x="368" y="75" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="387" y="99" text-anchor="middle" fill="#334155" font-size="13">0</text>
+  <rect x="406" y="75" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="425" y="99" text-anchor="middle" fill="#334155" font-size="13">1</text>
+  <rect x="330" y="113" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="349" y="137" text-anchor="middle" fill="#334155" font-size="13">0</text>
+  <rect x="368" y="113" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="387" y="137" text-anchor="middle" fill="#334155" font-size="13">1</text>
+  <rect x="406" y="113" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="425" y="137" text-anchor="middle" fill="#334155" font-size="13">0</text>
+  <rect x="330" y="151" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="349" y="175" text-anchor="middle" fill="#334155" font-size="13">1</text>
+  <rect x="368" y="151" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="387" y="175" text-anchor="middle" fill="#334155" font-size="13">0</text>
+  <rect x="406" y="151" width="38" height="38" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="425" y="175" text-anchor="middle" fill="#334155" font-size="13">1</text>
+  <text x="631" y="42" text-anchor="middle" fill="#059669" font-size="12" font-weight="bold">输出 Y (3×3)</text>
+  <rect x="580" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="597" y="81" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">7</text>
+  <rect x="614" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="631" y="81" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">6</text>
+  <rect x="648" y="60" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="665" y="81" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">8</text>
+  <rect x="580" y="94" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="597" y="115" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">4</text>
+  <rect x="614" y="94" width="34" height="34" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="631" y="115" text-anchor="middle" fill="#065f46" font-size="12" font-weight="bold">7</text>
+  <rect x="648" y="94" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="665" y="115" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">6</text>
+  <rect x="580" y="128" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="597" y="149" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">4</text>
+  <rect x="614" y="128" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="631" y="149" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">4</text>
+  <rect x="648" y="128" width="34" height="34" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="665" y="149" text-anchor="middle" fill="#065f46" font-size="12" font-weight="normal">5</text>
+  <defs><marker id="cvarr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker></defs>
+  <line x1="245" y1="130" x2="322" y2="130" stroke="#64748b" stroke-width="1.5" marker-end="url(#cvarr)"/>
+  <line x1="460" y1="130" x2="572" y2="130" stroke="#64748b" stroke-width="1.5" marker-end="url(#cvarr)"/>
+  <text x="285" y="118" text-anchor="middle" fill="#64748b" font-size="10">逐元素相乘</text>
+  <text x="516" y="118" text-anchor="middle" fill="#64748b" font-size="10">求和</text>
+  <rect x="40" y="240" width="740" height="70" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="410" y="268" text-anchor="middle" fill="#334155" font-size="12" font-weight="bold">位置 (1,1) 的计算过程（黄色子块 ⊙ 核）：</text>
+  <text x="410" y="292" text-anchor="middle" fill="#0f172a" font-size="13" font-family="monospace">1×1 + 3×1 + 1×1 + 1×1 + 1×1 = 7</text>
+</svg>
+<div class="svg-caption">图 4：卷积计算示例 — 核在输入上滑动（步幅 1），每个位置做逐元素乘加得到输出值；橙色为当前计算位置，输出 3×3 由核滑过全部 9 个位置得到</div>
+</div>
+
+<div class="callout success">
+  <div class="callout-title">如何读这张图</div>
+  <ol>
+    <li><strong>橙色虚线框</strong>是核当前覆盖的 3×3 输入子块（本例为位置 (1,1)，即行 1-3、列 1-3）；</li>
+    <li>子块与<strong>紫色卷积核</strong>逐元素相乘再求和：只有核中为 1 的位置参与（本例为四个角和中心），得 $Y(1,1) = 1\times1 + 3\times1 + 1\times1 + 1\times1 + 1\times1 = 7$；</li>
+    <li>核向右滑动 1 格（步幅 1）计算 $Y(1,2)$，滑到最右后回到行首向下移动，共 $3\times3 = 9$ 个位置填满输出；</li>
+    <li>输出尺寸验证：$H' = \lfloor (5 + 0 - 3)/1 \rfloor + 1 = 3$，与公式 (3) 一致。</li>
+  </ol>
 </div>
 
 </section>
@@ -354,45 +604,92 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>GAP 由 NiN（Network in Network）提出，在 GoogLeNet 中被广泛采用，相比全连接层大幅减少了参数量且增强了可解释性——每个通道直接对应一个类别。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="arr3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker></defs>
-  <!-- 输入特征图 4x4 -->
-  <text x="150" y="25" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">输入特征图 (4×4)</text>
-  <g font-family="monospace" font-size="11" text-anchor="middle">
-    <rect x="70" y="40" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="65" fill="#475569">1</text>
-    <rect x="110" y="40" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="65" fill="#475569">3</text>
-    <rect x="150" y="40" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="65" fill="#1e293b">5</text>
-    <rect x="190" y="40" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="65" fill="#475569">2</text>
-    <rect x="70" y="80" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="105" fill="#1e293b">7</text>
-    <rect x="110" y="80" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="105" fill="#475569">1</text>
-    <rect x="150" y="80" width="40" height="40" fill="#ef4444" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="105" fill="#fff">9</text>
-    <rect x="190" y="80" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="105" fill="#475569">4</text>
-    <rect x="70" y="120" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="145" fill="#1e293b">6</text>
-    <rect x="110" y="120" width="40" height="40" fill="#ef4444" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="145" fill="#fff">8</text>
-    <rect x="150" y="120" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="145" fill="#1e293b">3</text>
-    <rect x="190" y="120" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="145" fill="#475569">2</text>
-    <rect x="70" y="160" width="40" height="40" fill="#fef3c7" stroke="#cbd5e1" stroke-width="1"/><text x="90" y="185" fill="#475569">4</text>
-    <rect x="110" y="160" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="130" y="185" fill="#1e293b">5</text>
-    <rect x="150" y="160" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="170" y="185" fill="#1e293b">7</text>
-    <rect x="190" y="160" width="40" height="40" fill="#fbbf24" stroke="#cbd5e1" stroke-width="1"/><text x="210" y="185" fill="#1e293b">6</text>
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="pool-arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+
+  <text x="380" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">2×2 最大池化（步幅 2）：4×4 输入 → 2×2 输出</text>
+
+  <!-- ===== 输入特征图 4×4 ===== -->
+  <text x="150" y="58" text-anchor="middle" fill="#334155" font-size="13" font-weight="bold">输入特征图 (4×4)</text>
+
+  <!-- 窗口1 蓝色 (0,0)-(1,1): 值 1,3 / 7,1 → max=7 -->
+  <!-- 窗口2 紫色 (0,2)-(1,3): 值 5,2 / 9,4 → max=9 -->
+  <!-- 窗口3 绿色 (2,0)-(3,1): 值 6,8 / 4,5 → max=8 -->
+  <!-- 窗口4 橙色 (2,2)-(3,3): 值 3,2 / 7,6 → max=7 -->
+
+  <g font-family="monospace" font-size="13" text-anchor="middle">
+    <!-- Row 0: 1, 3, 5, 2 -->
+    <rect x="70"  y="70" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="91"  y="96" fill="#64748b">1</text>
+    <rect x="112" y="70" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="133" y="96" fill="#64748b">3</text>
+    <rect x="154" y="70" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="175" y="96" fill="#64748b">5</text>
+    <rect x="196" y="70" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="217" y="96" fill="#64748b">2</text>
+    <!-- Row 1: 7, 1, 9, 4 -->
+    <rect x="70"  y="112" width="42" height="42" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/><text x="91"  y="138" fill="#1e3a5f" font-weight="bold">7</text>
+    <rect x="112" y="112" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="133" y="138" fill="#64748b">1</text>
+    <rect x="154" y="112" width="42" height="42" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/><text x="175" y="138" fill="#4c1d95" font-weight="bold">9</text>
+    <rect x="196" y="112" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="217" y="138" fill="#64748b">4</text>
+    <!-- Row 2: 6, 8, 3, 2 -->
+    <rect x="70"  y="154" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="91"  y="180" fill="#64748b">6</text>
+    <rect x="112" y="154" width="42" height="42" fill="#d1fae5" stroke="#059669" stroke-width="2"/><text x="133" y="180" fill="#064e3b" font-weight="bold">8</text>
+    <rect x="154" y="154" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="175" y="180" fill="#64748b">3</text>
+    <rect x="196" y="154" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="217" y="180" fill="#64748b">2</text>
+    <!-- Row 3: 4, 5, 7, 6 -->
+    <rect x="70"  y="196" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="91"  y="222" fill="#64748b">4</text>
+    <rect x="112" y="196" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="133" y="222" fill="#64748b">5</text>
+    <rect x="154" y="196" width="42" height="42" fill="#fef3c7" stroke="#d97706" stroke-width="2"/><text x="175" y="222" fill="#78350f" font-weight="bold">7</text>
+    <rect x="196" y="196" width="42" height="42" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/><text x="217" y="222" fill="#64748b">6</text>
   </g>
-  <!-- 2x2池化框 (左上) -->
-  <rect x="70" y="40" width="80" height="80" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="5,3"/>
-  <line x1="260" y1="110" x2="370" y2="60" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr3)" class="flow-line"/>
-  <!-- 输出 2x2 -->
-  <text x="430" y="25" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">Max Pool 2×2 输出</text>
+
+  <!-- 4个池化窗口虚线框 -->
+  <rect x="69"  y="69"  width="85" height="85" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="5,3" rx="2"/>
+  <rect x="153" y="69"  width="85" height="85" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="5,3" rx="2"/>
+  <rect x="69"  y="153" width="85" height="85" fill="none" stroke="#059669" stroke-width="2.5" stroke-dasharray="5,3" rx="2"/>
+  <rect x="153" y="153" width="85" height="85" fill="none" stroke="#d97706" stroke-width="2.5" stroke-dasharray="5,3" rx="2"/>
+
+  <!-- 窗口标签 -->
+  <text x="111" y="64" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="bold">窗口①</text>
+  <text x="195" y="64" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="bold">窗口②</text>
+  <text x="111" y="250" text-anchor="middle" fill="#059669" font-size="9" font-weight="bold">窗口③</text>
+  <text x="195" y="250" text-anchor="middle" fill="#d97706" font-size="9" font-weight="bold">窗口④</text>
+
+  <!-- ===== 中间箭头区 ===== -->
+  <line x1="255" y1="140" x2="365" y2="140" stroke="#64748b" stroke-width="2" marker-end="url(#pool-arr)"/>
+  <text x="310" y="132" text-anchor="middle" fill="#64748b" font-size="11">max pooling</text>
+  <text x="310" y="155" text-anchor="middle" fill="#94a3b8" font-size="10">S=2 · 无参数</text>
+
+  <!-- ===== 输出特征图 2×2 ===== -->
+  <text x="475" y="58" text-anchor="middle" fill="#334155" font-size="13" font-weight="bold">输出特征图 (2×2)</text>
+
   <g font-family="monospace" font-size="16" text-anchor="middle" font-weight="bold">
-    <rect x="380" y="40" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="405" y="72" fill="#fff">7</text>
-    <rect x="430" y="40" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="455" y="72" fill="#fff">9</text>
-    <rect x="380" y="90" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="405" y="122" fill="#fff">8</text>
-    <rect x="430" y="90" width="50" height="50" fill="#ef4444" stroke="#059669" stroke-width="2"/><text x="455" y="122" fill="#fff">7</text>
+    <!-- 输出对应4个窗口，颜色匹配 -->
+    <rect x="430" y="70"  width="46" height="46" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="4"/><text x="453" y="100" fill="#1e3a5f">7</text>
+    <rect x="476" y="70"  width="46" height="46" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" rx="4"/><text x="499" y="100" fill="#4c1d95">9</text>
+    <rect x="430" y="116" width="46" height="46" fill="#d1fae5" stroke="#059669" stroke-width="2" rx="4"/><text x="453" y="146" fill="#064e3b">8</text>
+    <rect x="476" y="116" width="46" height="46" fill="#fef3c7" stroke="#d97706" stroke-width="2" rx="4"/><text x="499" y="146" fill="#78350f">7</text>
   </g>
-  <text x="560" y="70" fill="#475569" font-size="12">在每个 2×2 窗口中</text>
-  <text x="560" y="90" fill="#475569" font-size="12">取最大值，空间尺寸</text>
-  <text x="560" y="110" fill="#475569" font-size="12">减半 (4×4 → 2×2)</text>
-  <text x="400" y="210" text-anchor="middle" fill="#64748b" font-size="11">红色 = 选中最大值 · 步幅 S=2 · 无参数</text>
+
+  <!-- 输出对应标签 -->
+  <text x="453" y="66" text-anchor="middle" fill="#2563eb" font-size="8">①</text>
+  <text x="499" y="66" text-anchor="middle" fill="#7c3aed" font-size="8">②</text>
+  <text x="453" y="175" text-anchor="middle" fill="#059669" font-size="8">③</text>
+  <text x="499" y="175" text-anchor="middle" fill="#d97706" font-size="8">④</text>
+
+  <!-- ===== 右侧说明 ===== -->
+  <rect x="560" y="72" width="180" height="100" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="650" y="96"  text-anchor="middle" fill="#334155" font-size="11" font-weight="600">池化规则</text>
+  <text x="570" y="116" fill="#475569" font-size="10">每个 2×2 窗口取最大值</text>
+  <text x="570" y="134" fill="#475569" font-size="10">窗口不重叠，步幅 S=2</text>
+  <text x="570" y="152" fill="#475569" font-size="10">空间尺寸：4×4 → 2×2</text>
+
+  <!-- 颜色图例 -->
+  <text x="650" y="190" text-anchor="middle" fill="#64748b" font-size="10">
+    <tspan fill="#2563eb">■</tspan><tspan fill="#64748b"> 蓝 </tspan><tspan fill="#7c3aed">■</tspan><tspan fill="#64748b"> 紫 </tspan><tspan fill="#059669">■</tspan><tspan fill="#64748b"> 绿 </tspan><tspan fill="#d97706">■</tspan><tspan fill="#64748b"> 橙 = 4 个池化窗口</tspan>
+  </text>
+  <text x="650" y="208" text-anchor="middle" fill="#94a3b8" font-size="9">高亮单元格 = 各窗口的最大值</text>
 </svg>
-<div class="svg-caption">图 3：2×2 最大池化 — 在每个窗口中选取最大值，空间尺寸减半</div>
+<div class="svg-caption">图 5：2×2 最大池化 — 在每个窗口中选取最大值，空间尺寸减半</div>
 </div>
 
 </section>
@@ -442,6 +739,80 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>5.1 LeNet-5（1998）</h3>
 <p>LeCun 提出的 LeNet-5 是第一个成功应用的 CNN，用于手写数字识别（MNIST）。架构：$32 \times 32$ 输入 → Conv 5×5 (6) → AvgPool 2×2 → Conv 5×5 (16) → AvgPool 2×2 → FC 120 → FC 84 → 输出 10。参数量约 6 万，在邮编识别中达到商用精度。</p>
 
+<div class="svg-box">
+<svg viewBox="0 0 860 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="lenet-arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="430" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">LeNet-5 架构（1998）— 手写数字识别的开创性 CNN</text>
+  <!-- 输入 -->
+  <rect x="15" y="65" width="60" height="60" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="45" y="92" text-anchor="middle" fill="#1e3a5f" font-size="11" font-weight="bold">输入</text>
+  <text x="45" y="108" text-anchor="middle" fill="#2563eb" font-size="9">32×32×1</text>
+  <text x="45" y="145" text-anchor="middle" fill="#64748b" font-size="9">灰度图</text>
+  <line x1="78" y1="95" x2="100" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#lenet-arr)"/>
+  <!-- Conv1 -->
+  <rect x="105" y="55" width="70" height="80" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="140" y="82" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">Conv1</text>
+  <text x="140" y="97" text-anchor="middle" fill="#7c3aed" font-size="9">5×5, 6核</text>
+  <text x="140" y="112" text-anchor="middle" fill="#7c3aed" font-size="9">输出 28×28×6</text>
+  <text x="140" y="125" text-anchor="middle" fill="#94a3b8" font-size="8">+ Sigmoid</text>
+  <text x="140" y="155" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">特征提取</text>
+  <line x1="178" y1="95" x2="200" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#lenet-arr)"/>
+  <!-- Pool1 -->
+  <rect x="205" y="65" width="60" height="60" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="235" y="92" text-anchor="middle" fill="#064e3b" font-size="10" font-weight="bold">Pool1</text>
+  <text x="235" y="107" text-anchor="middle" fill="#059669" font-size="9">2×2 Avg</text>
+  <text x="235" y="122" text-anchor="middle" fill="#059669" font-size="9">14×14×6</text>
+  <text x="235" y="155" text-anchor="middle" fill="#059669" font-size="9" font-weight="600">下采样</text>
+  <line x1="268" y1="95" x2="290" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#lenet-arr)"/>
+  <!-- Conv2 -->
+  <rect x="295" y="55" width="70" height="80" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="330" y="82" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">Conv2</text>
+  <text x="330" y="97" text-anchor="middle" fill="#7c3aed" font-size="9">5×5, 16核</text>
+  <text x="330" y="112" text-anchor="middle" fill="#7c3aed" font-size="9">10×10×16</text>
+  <text x="330" y="125" text-anchor="middle" fill="#94a3b8" font-size="8">+ Sigmoid</text>
+  <text x="330" y="155" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">特征提取</text>
+  <line x1="368" y1="95" x2="390" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#lenet-arr)"/>
+  <!-- Pool2 -->
+  <rect x="395" y="65" width="60" height="60" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="425" y="92" text-anchor="middle" fill="#064e3b" font-size="10" font-weight="bold">Pool2</text>
+  <text x="425" y="107" text-anchor="middle" fill="#059669" font-size="9">2×2 Avg</text>
+  <text x="425" y="122" text-anchor="middle" fill="#059669" font-size="9">5×5×16</text>
+  <text x="425" y="155" text-anchor="middle" fill="#059669" font-size="9" font-weight="600">下采样</text>
+  <line x1="458" y1="95" x2="480" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#lenet-arr)"/>
+  <!-- 展平标注 -->
+  <text x="470" y="88" text-anchor="middle" fill="#94a3b8" font-size="8">展平</text>
+  <text x="470" y="100" text-anchor="middle" fill="#94a3b8" font-size="8">400</text>
+  <!-- FC1 -->
+  <rect x="485" y="65" width="65" height="60" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="517" y="92" text-anchor="middle" fill="#312e81" font-size="10" font-weight="bold">FC1</text>
+  <text x="517" y="107" text-anchor="middle" fill="#4f46e5" font-size="9">120</text>
+  <text x="517" y="122" text-anchor="middle" fill="#94a3b8" font-size="8">+ Sigmoid</text>
+  <text x="517" y="155" text-anchor="middle" fill="#4f46e5" font-size="9" font-weight="600">分类</text>
+  <line x1="553" y1="95" x2="575" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#lenet-arr)"/>
+  <!-- FC2 -->
+  <rect x="580" y="65" width="65" height="60" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="612" y="92" text-anchor="middle" fill="#312e81" font-size="10" font-weight="bold">FC2</text>
+  <text x="612" y="107" text-anchor="middle" fill="#4f46e5" font-size="9">84</text>
+  <text x="612" y="122" text-anchor="middle" fill="#94a3b8" font-size="8">+ Sigmoid</text>
+  <text x="612" y="155" text-anchor="middle" fill="#4f46e5" font-size="9" font-weight="600">分类</text>
+  <line x1="648" y1="95" x2="670" y2="95" stroke="#64748b" stroke-width="1.5" marker-end="url(#lenet-arr)"/>
+  <!-- 输出 -->
+  <rect x="675" y="65" width="65" height="60" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="707" y="92" text-anchor="middle" fill="#7f1d1d" font-size="10" font-weight="bold">输出</text>
+  <text x="707" y="107" text-anchor="middle" fill="#dc2626" font-size="9">10 类</text>
+  <text x="707" y="122" text-anchor="middle" fill="#dc2626" font-size="9">RBF</text>
+  <text x="707" y="155" text-anchor="middle" fill="#dc2626" font-size="9" font-weight="600">数字 0-9</text>
+  <!-- 底部说明 -->
+  <rect x="15" y="175" width="830" height="35" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="430" y="198" text-anchor="middle" fill="#475569" font-size="11">
+    <tspan x="430" dy="0">7 层网络 · 参数量 ~6 万 · 激活函数：Sigmoid（当时 ReLU 尚未提出）· 无 BN、无 Dropout</tspan>
+  </text>
+</svg>
+<div class="svg-caption">图 6：LeNet-5 架构 — 首个成功应用的 CNN，用交替的卷积和池化层提取特征，全连接层分类</div>
+</div>
+
 <h3>5.2 AlexNet（2012）</h3>
 <p>Krizhevsky 在 ImageNet 2012 竞赛中以 15.3% 的 top-5 错误率大幅领先第二名（26.2%），开启了深度学习时代。关键创新：</p>
 <ul>
@@ -452,16 +823,305 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 <p>架构：8 层（5 卷积 + 3 全连接），参数量约 6000 万。</p>
 
+<div class="svg-box">
+<svg viewBox="0 0 880 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="alex-arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="440" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">AlexNet 架构（2012）— 开启深度学习时代</text>
+  <!-- 输入 -->
+  <rect x="15" y="60" width="55" height="55" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="42" y="84" text-anchor="middle" fill="#1e3a5f" font-size="10" font-weight="bold">输入</text>
+  <text x="42" y="99" text-anchor="middle" fill="#2563eb" font-size="8">224×224×3</text>
+  <line x1="73" y1="87" x2="92" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Conv1 -->
+  <rect x="97" y="50" width="65" height="75" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="129" y="75" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Conv1</text>
+  <text x="129" y="89" text-anchor="middle" fill="#7c3aed" font-size="8">11×11, 96</text>
+  <text x="129" y="102" text-anchor="middle" fill="#7c3aed" font-size="8">stride 4</text>
+  <text x="129" y="115" text-anchor="middle" fill="#94a3b8" font-size="7">ReLU+LRN</text>
+  <text x="129" y="143" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">55×55×96</text>
+  <line x1="165" y1="87" x2="183" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Pool1 -->
+  <rect x="188" y="60" width="48" height="55" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="212" y="82" text-anchor="middle" fill="#064e3b" font-size="9" font-weight="bold">Pool1</text>
+  <text x="212" y="96" text-anchor="middle" fill="#059669" font-size="8">3×3, S2</text>
+  <text x="212" y="115" text-anchor="middle" fill="#059669" font-size="8" font-weight="600">27×27×96</text>
+  <line x1="239" y1="87" x2="257" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Conv2 -->
+  <rect x="262" y="50" width="65" height="75" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="294" y="75" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Conv2</text>
+  <text x="294" y="89" text-anchor="middle" fill="#7c3aed" font-size="8">5×5, 256</text>
+  <text x="294" y="102" text-anchor="middle" fill="#7c3aed" font-size="8">pad 2</text>
+  <text x="294" y="115" text-anchor="middle" fill="#94a3b8" font-size="7">ReLU+LRN</text>
+  <text x="294" y="143" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">27×27×256</text>
+  <line x1="330" y1="87" x2="348" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Pool2 -->
+  <rect x="353" y="60" width="48" height="55" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="377" y="82" text-anchor="middle" fill="#064e3b" font-size="9" font-weight="bold">Pool2</text>
+  <text x="377" y="96" text-anchor="middle" fill="#059669" font-size="8">3×3, S2</text>
+  <text x="377" y="115" text-anchor="middle" fill="#059669" font-size="8" font-weight="600">13×13×256</text>
+  <line x1="404" y1="87" x2="422" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Conv3 -->
+  <rect x="427" y="50" width="60" height="75" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="457" y="75" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Conv3</text>
+  <text x="457" y="89" text-anchor="middle" fill="#7c3aed" font-size="8">3×3, 384</text>
+  <text x="457" y="102" text-anchor="middle" fill="#7c3aed" font-size="8">pad 1</text>
+  <text x="457" y="115" text-anchor="middle" fill="#94a3b8" font-size="7">ReLU</text>
+  <text x="457" y="143" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">13×13×384</text>
+  <line x1="490" y1="87" x2="508" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Conv4 -->
+  <rect x="513" y="50" width="60" height="75" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="543" y="75" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Conv4</text>
+  <text x="543" y="89" text-anchor="middle" fill="#7c3aed" font-size="8">3×3, 384</text>
+  <text x="543" y="102" text-anchor="middle" fill="#7c3aed" font-size="8">pad 1</text>
+  <text x="543" y="115" text-anchor="middle" fill="#94a3b8" font-size="7">ReLU</text>
+  <text x="543" y="143" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">13×13×384</text>
+  <line x1="576" y1="87" x2="594" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Conv5 -->
+  <rect x="599" y="50" width="60" height="75" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="629" y="75" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Conv5</text>
+  <text x="629" y="89" text-anchor="middle" fill="#7c3aed" font-size="8">3×3, 256</text>
+  <text x="629" y="102" text-anchor="middle" fill="#7c3aed" font-size="8">pad 1</text>
+  <text x="629" y="115" text-anchor="middle" fill="#94a3b8" font-size="7">ReLU</text>
+  <text x="629" y="143" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">13×13×256</text>
+  <line x1="662" y1="87" x2="675" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- Pool3 -->
+  <rect x="680" y="60" width="42" height="55" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="701" y="82" text-anchor="middle" fill="#064e3b" font-size="9" font-weight="bold">Pool3</text>
+  <text x="701" y="96" text-anchor="middle" fill="#059669" font-size="8">3×3</text>
+  <text x="701" y="115" text-anchor="middle" fill="#059669" font-size="8" font-weight="600">6×6×256</text>
+  <line x1="725" y1="87" x2="738" y2="87" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <text x="731" y="80" text-anchor="middle" fill="#94a3b8" font-size="7">展平</text>
+  <!-- FC + 输出竖排 -->
+  <rect x="743" y="45" width="55" height="35" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="770" y="67" text-anchor="middle" fill="#312e81" font-size="9" font-weight="bold">FC1 4096</text>
+  <text x="770" y="87" text-anchor="middle" fill="#4f46e5" font-size="8">+ReLU+Dropout</text>
+  <rect x="743" y="95" width="55" height="35" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="770" y="117" text-anchor="middle" fill="#312e81" font-size="9" font-weight="bold">FC2 4096</text>
+  <text x="770" y="137" text-anchor="middle" fill="#4f46e5" font-size="8">+ReLU+Dropout</text>
+  <rect x="743" y="145" width="55" height="35" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="770" y="167" text-anchor="middle" fill="#7f1d1d" font-size="9" font-weight="bold">FC3 1000</text>
+  <text x="770" y="183" text-anchor="middle" fill="#dc2626" font-size="8">Softmax</text>
+  <line x1="770" y1="80" x2="770" y2="93" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="770" y1="130" x2="770" y2="143" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="724" y1="87" x2="740" y2="62" stroke="#64748b" stroke-width="1.5" marker-end="url(#alex-arr)"/>
+  <!-- 底部说明 -->
+  <rect x="15" y="195" width="850" height="35" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="440" y="218" text-anchor="middle" fill="#475569" font-size="11">
+    <tspan x="440" dy="0">8 层（5 Conv + 3 FC）· 参数量 ~6000 万 · 创新：ReLU 替代 Sigmoid · Dropout 防过拟合 · 双 GPU 并行 · 数据增强</tspan>
+  </text>
+</svg>
+<div class="svg-caption">图 7：AlexNet 架构 — 5 个卷积层 + 3 个全连接层，引入 ReLU 和 Dropout，开启深度学习时代</div>
+</div>
+
 <h3>5.3 VGGNet（2014）</h3>
 <p>Oxford VGG 团队的核心思想：<strong>用堆叠的小卷积核（3×3）替代大核</strong>。</p>
 <div class="formula multi" data-eq="(10)">
-$$\text{两个 3×3 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 2 \times 9 C^2 = 18 C^2$$
-$$\text{一个 5×5 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 25 C^2$$
+$$\text{两个 } 3 \times 3 \text{ 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 2 \times 9 C^2 = 18 C^2$$
+$$\text{一个 } 5 \times 5 \text{ 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 25 C^2$$
 </div>
 <p>参数量减少 28%，且引入更多非线性变换。VGG-16 有 16 层（13 卷积 + 3 全连接），参数量约 1.38 亿。</p>
 
+<div class="svg-box">
+<svg viewBox="0 0 870 250" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="vgg-arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="435" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">VGG-16 架构（2014）— 统一使用 3×3 小卷积核</text>
+  <!-- 输入 -->
+  <rect x="12" y="65" width="45" height="50" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="34" y="85" text-anchor="middle" fill="#1e3a5f" font-size="9" font-weight="bold">输入</text>
+  <text x="34" y="100" text-anchor="middle" fill="#2563eb" font-size="8">224×224×3</text>
+  <line x1="60" y1="90" x2="72" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <!-- Block 1: 2×Conv3-64 + Pool -->
+  <rect x="77" y="50" width="80" height="80" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="117" y="72" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Block 1</text>
+  <text x="117" y="87" text-anchor="middle" fill="#7c3aed" font-size="8">2× Conv 3×3</text>
+  <text x="117" y="100" text-anchor="middle" fill="#7c3aed" font-size="8">64 通道</text>
+  <text x="117" y="113" text-anchor="middle" fill="#7c3aed" font-size="8">+ ReLU</text>
+  <text x="117" y="126" text-anchor="middle" fill="#94a3b8" font-size="7">224×224×64</text>
+  <text x="117" y="148" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">→ Pool 2×2</text>
+  <text x="117" y="161" text-anchor="middle" fill="#059669" font-size="8">112×112×64</text>
+  <line x1="160" y1="90" x2="172" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <!-- Block 2: 2×Conv3-128 + Pool -->
+  <rect x="177" y="50" width="80" height="80" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="217" y="72" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Block 2</text>
+  <text x="217" y="87" text-anchor="middle" fill="#7c3aed" font-size="8">2× Conv 3×3</text>
+  <text x="217" y="100" text-anchor="middle" fill="#7c3aed" font-size="8">128 通道</text>
+  <text x="217" y="113" text-anchor="middle" fill="#7c3aed" font-size="8">+ ReLU</text>
+  <text x="217" y="126" text-anchor="middle" fill="#94a3b8" font-size="7">112×112×128</text>
+  <text x="217" y="148" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">→ Pool 2×2</text>
+  <text x="217" y="161" text-anchor="middle" fill="#059669" font-size="8">56×56×128</text>
+  <line x1="260" y1="90" x2="272" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <!-- Block 3: 3×Conv3-256 + Pool -->
+  <rect x="277" y="50" width="80" height="80" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="317" y="72" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Block 3</text>
+  <text x="317" y="87" text-anchor="middle" fill="#7c3aed" font-size="8">3× Conv 3×3</text>
+  <text x="317" y="100" text-anchor="middle" fill="#7c3aed" font-size="8">256 通道</text>
+  <text x="317" y="113" text-anchor="middle" fill="#7c3aed" font-size="8">+ ReLU</text>
+  <text x="317" y="126" text-anchor="middle" fill="#94a3b8" font-size="7">56×56×256</text>
+  <text x="317" y="148" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">→ Pool 2×2</text>
+  <text x="317" y="161" text-anchor="middle" fill="#059669" font-size="8">28×28×256</text>
+  <line x1="360" y1="90" x2="372" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <!-- Block 4: 3×Conv3-512 + Pool -->
+  <rect x="377" y="50" width="80" height="80" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="417" y="72" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Block 4</text>
+  <text x="417" y="87" text-anchor="middle" fill="#7c3aed" font-size="8">3× Conv 3×3</text>
+  <text x="417" y="100" text-anchor="middle" fill="#7c3aed" font-size="8">512 通道</text>
+  <text x="417" y="113" text-anchor="middle" fill="#7c3aed" font-size="8">+ ReLU</text>
+  <text x="417" y="126" text-anchor="middle" fill="#94a3b8" font-size="7">28×28×512</text>
+  <text x="417" y="148" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">→ Pool 2×2</text>
+  <text x="417" y="161" text-anchor="middle" fill="#059669" font-size="8">14×14×512</text>
+  <line x1="460" y1="90" x2="472" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <!-- Block 5: 3×Conv3-512 + Pool -->
+  <rect x="477" y="50" width="80" height="80" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="517" y="72" text-anchor="middle" fill="#5b21b6" font-size="9" font-weight="bold">Block 5</text>
+  <text x="517" y="87" text-anchor="middle" fill="#7c3aed" font-size="8">3× Conv 3×3</text>
+  <text x="517" y="100" text-anchor="middle" fill="#7c3aed" font-size="8">512 通道</text>
+  <text x="517" y="113" text-anchor="middle" fill="#7c3aed" font-size="8">+ ReLU</text>
+  <text x="517" y="126" text-anchor="middle" fill="#94a3b8" font-size="7">14×14×512</text>
+  <text x="517" y="148" text-anchor="middle" fill="#7c3aed" font-size="8" font-weight="600">→ Pool 2×2</text>
+  <text x="517" y="161" text-anchor="middle" fill="#059669" font-size="8">7×7×512</text>
+  <line x1="560" y1="90" x2="575" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <text x="567" y="83" text-anchor="middle" fill="#94a3b8" font-size="7">展平</text>
+  <!-- FC1 -->
+  <rect x="580" y="55" width="60" height="70" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="610" y="78" text-anchor="middle" fill="#312e81" font-size="9" font-weight="bold">FC1</text>
+  <text x="610" y="92" text-anchor="middle" fill="#4f46e5" font-size="8">4096</text>
+  <text x="610" y="105" text-anchor="middle" fill="#94a3b8" font-size="7">+ReLU</text>
+  <text x="610" y="118" text-anchor="middle" fill="#94a3b8" font-size="7">+Dropout</text>
+  <line x1="643" y1="90" x2="655" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <!-- FC2 -->
+  <rect x="660" y="55" width="60" height="70" rx="6" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="690" y="78" text-anchor="middle" fill="#312e81" font-size="9" font-weight="bold">FC2</text>
+  <text x="690" y="92" text-anchor="middle" fill="#4f46e5" font-size="8">4096</text>
+  <text x="690" y="105" text-anchor="middle" fill="#94a3b8" font-size="7">+ReLU</text>
+  <text x="690" y="118" text-anchor="middle" fill="#94a3b8" font-size="7">+Dropout</text>
+  <line x1="723" y1="90" x2="735" y2="90" stroke="#64748b" stroke-width="1.5" marker-end="url(#vgg-arr)"/>
+  <!-- FC3/输出 -->
+  <rect x="740" y="65" width="60" height="50" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="770" y="85" text-anchor="middle" fill="#7f1d1d" font-size="9" font-weight="bold">FC3</text>
+  <text x="770" y="100" text-anchor="middle" fill="#dc2626" font-size="8">1000</text>
+  <text x="770" y="113" text-anchor="middle" fill="#dc2626" font-size="8">Softmax</text>
+  <!-- 底部说明 -->
+  <rect x="12" y="185" width="845" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="435" y="208" text-anchor="middle" fill="#475569" font-size="11">
+    <tspan x="435" dy="0">16 层（13 Conv + 3 FC）· 参数量 ~1.38 亿 · 全部使用 3×3 卷积 · 每 Block 末尾 2×2 最大池化</tspan>
+    <tspan x="435" dy="18">核心思想：两个 3×3 卷积感受野 = 一个 5×5，参数更少且非线性更多</tspan>
+  </text>
+</svg>
+<div class="svg-caption">图 8：VGG-16 架构 — 5 个卷积块（统一 3×3 核）+ 3 个全连接层，简洁而深度的设计</div>
+</div>
+
 <h3>5.4 GoogLeNet / Inception（2014）</h3>
 <p>Inception 模块在同一个层中并行使用 $1 \times 1$、$3 \times 3$、$5 \times 5$ 卷积和池化，然后拼接输出。关键创新：<strong>$1 \times 1$ 卷积降维</strong>大幅减少计算量。GoogLeNet 仅 680 万参数，却获得 ImageNet 2014 冠军。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 820 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="incep-arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="410" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Inception 模块 — 并行多尺度特征提取 + 1×1 降维</text>
+
+  <!-- 输入 -->
+  <rect x="20" y="155" width="60" height="50" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="50" y="178" text-anchor="middle" fill="#1e3a5f" font-size="11" font-weight="bold">输入</text>
+  <text x="50" y="194" text-anchor="middle" fill="#2563eb" font-size="9">256 ch</text>
+
+  <!-- 分叉到4条路径 -->
+  <line x1="82" y1="180" x2="100" y2="180" stroke="#64748b" stroke-width="2"/>
+  <!-- 分叉节点 -->
+  <circle cx="100" cy="180" r="4" fill="#64748b"/>
+  <line x1="100" y1="180" x2="100" y2="60" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="100" y1="60" x2="135" y2="60" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <line x1="100" y1="180" x2="100" y2="120" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="100" y1="120" x2="135" y2="120" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <line x1="100" y1="180" x2="100" y2="240" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="100" y1="240" x2="135" y2="240" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <line x1="100" y1="180" x2="100" y2="300" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="100" y1="300" x2="135" y2="300" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+
+  <!-- 路径1: 1×1 Conv -->
+  <rect x="140" y="40" width="70" height="45" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="175" y="60" text-anchor="middle" fill="#78350f" font-size="10" font-weight="bold">1×1 Conv</text>
+  <text x="175" y="75" text-anchor="middle" fill="#d97706" font-size="8">64 ch + ReLU</text>
+  <line x1="212" y1="62" x2="290" y2="62" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+
+  <!-- 路径2: 1×1 → 3×3 -->
+  <rect x="140" y="100" width="70" height="45" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="175" y="120" text-anchor="middle" fill="#78350f" font-size="10" font-weight="bold">1×1 Conv</text>
+  <text x="175" y="135" text-anchor="middle" fill="#d97706" font-size="8">96 ch (降维)</text>
+  <line x1="212" y1="122" x2="230" y2="122" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <rect x="235" y="100" width="70" height="45" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="270" y="120" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">3×3 Conv</text>
+  <text x="270" y="135" text-anchor="middle" fill="#7c3aed" font-size="8">128 ch + ReLU</text>
+  <line x1="307" y1="122" x2="325" y2="122" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+
+  <!-- 路径3: 1×1 → 5×5 -->
+  <rect x="140" y="220" width="70" height="45" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="175" y="240" text-anchor="middle" fill="#78350f" font-size="10" font-weight="bold">1×1 Conv</text>
+  <text x="175" y="255" text-anchor="middle" fill="#d97706" font-size="8">16 ch (降维)</text>
+  <line x1="212" y1="242" x2="230" y2="242" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <rect x="235" y="220" width="70" height="45" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="270" y="240" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">5×5 Conv</text>
+  <text x="270" y="255" text-anchor="middle" fill="#7c3aed" font-size="8">32 ch + ReLU</text>
+  <line x1="307" y1="242" x2="325" y2="242" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+
+  <!-- 路径4: 3×3 Pool → 1×1 -->
+  <rect x="140" y="280" width="70" height="45" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+  <text x="175" y="300" text-anchor="middle" fill="#064e3b" font-size="10" font-weight="bold">3×3 Pool</text>
+  <text x="175" y="315" text-anchor="middle" fill="#059669" font-size="8">+ pad 1</text>
+  <line x1="212" y1="302" x2="230" y2="302" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <rect x="235" y="280" width="70" height="45" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="270" y="300" text-anchor="middle" fill="#78350f" font-size="10" font-weight="bold">1×1 Conv</text>
+  <text x="270" y="315" text-anchor="middle" fill="#d97706" font-size="8">32 ch + ReLU</text>
+  <line x1="307" y1="302" x2="325" y2="302" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+
+  <!-- 拼接 -->
+  <line x1="295" y1="62" x2="340" y2="62" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <line x1="330" y1="122" x2="340" y2="122" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <line x1="330" y1="242" x2="340" y2="242" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+  <line x1="330" y1="302" x2="340" y2="302" stroke="#64748b" stroke-width="1.5" marker-end="url(#incep-arr)"/>
+
+  <!-- 拼接节点 -->
+  <rect x="345" y="45" width="75" height="270" rx="8" fill="#f8fafc" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="5,3"/>
+  <text x="382" y="170" text-anchor="middle" fill="#dc2626" font-size="12" font-weight="bold">
+    <tspan x="382" dy="0">Concat</tspan>
+    <tspan x="382" dy="16">深度拼接</tspan>
+  </text>
+  <text x="382" y="305" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="bold">256 ch</text>
+
+  <line x1="422" y1="180" x2="445" y2="180" stroke="#64748b" stroke-width="2" marker-end="url(#incep-arr)"/>
+
+  <!-- 输出 -->
+  <rect x="450" y="155" width="60" height="50" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="480" y="178" text-anchor="middle" fill="#1e3a5f" font-size="11" font-weight="bold">输出</text>
+  <text x="480" y="194" text-anchor="middle" fill="#2563eb" font-size="9">256 ch</text>
+
+  <!-- 右侧说明 -->
+  <rect x="540" y="50" width="265" height="110" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="672" y="72" text-anchor="middle" fill="#334155" font-size="11" font-weight="600">Inception 模块核心思想</text>
+  <text x="550" y="92" fill="#475569" font-size="10">多尺度并行：不同核大小捕获不同尺度特征</text>
+  <text x="550" y="110" fill="#475569" font-size="10">1×1 降维：先降通道再做大核卷积，大幅</text>
+  <text x="550" y="125" fill="#475569" font-size="10">减少计算量（如 256→96 再 3×3 卷积）</text>
+  <text x="550" y="145" fill="#475569" font-size="10">拼接输出：4 条路径在通道维度拼接</text>
+
+  <rect x="540" y="175" width="265" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="672" y="195" text-anchor="middle" fill="#334155" font-size="11" font-weight="600">GoogLeNet 整体</text>
+  <text x="550" y="215" fill="#475569" font-size="10">9 个 Inception 模块 + 辅助分类器</text>
+  <text x="550" y="230" fill="#475569" font-size="10">参数量仅 680 万（VGG-16 的 1/20）</text>
+
+  <!-- 底部颜色说明 -->
+  <text x="410" y="325" text-anchor="middle" fill="#64748b" font-size="10">
+    <tspan fill="#d97706" font-weight="bold">■</tspan><tspan fill="#64748b"> 1×1 降维</tspan>
+    <tspan dx="12" fill="#7c3aed" font-weight="bold">■</tspan><tspan fill="#64748b"> 大核卷积</tspan>
+    <tspan dx="12" fill="#059669" font-weight="bold">■</tspan><tspan fill="#64748b"> 池化路径</tspan>
+    <tspan dx="12" fill="#dc2626" font-weight="bold">■</tspan><tspan fill="#64748b"> 拼接</tspan>
+  </text>
+</svg>
+<div class="svg-caption">图 9：Inception 模块 — 4 条并行路径（1×1 / 1×1→3×3 / 1×1→5×5 / Pool→1×1）在通道维度拼接，1×1 卷积降维大幅减少计算量</div>
+</div>
 
 <h3>5.5 ResNet（2015）</h3>
 <p>何恺明提出的残差网络解决了深度网络的退化问题。核心是引入<strong>跳跃连接（skip connection）</strong>：</p>
@@ -513,13 +1173,103 @@ $$\text{一个 5×5 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 2
   <text x="350" y="240" text-anchor="middle" fill="#64748b" font-size="11">绿色虚线 = 恒等映射 · 紫色 = 卷积路径 F(x) · 橙色 = 逐元素加法</text>
   <text x="350" y="265" text-anchor="middle" fill="#94a3b8" font-size="11">当 F(x)=0 时，y=x（恒等映射），解决了深层网络的梯度退化问题</text>
 </svg>
-<div class="svg-caption">图 4：ResNet 残差块 — 跳跃连接让学习目标变为残差映射 F(x) = y - x</div>
+<div class="svg-caption">图 10：ResNet 残差块 — 跳跃连接让学习目标变为残差映射 F(x) = y - x</div>
 </div>
 
 <h3>5.6 DenseNet（2017）</h3>
 <p>DenseNet 将跳跃连接推向极致——每层的输入包含之前所有层的输出。第 $l$ 层接收 $l$ 个特征图拼接作为输入：</p>
 <div class="formula" data-eq="(12)">$$\mathbf{x}_l = H_l([\mathbf{x}_0, \mathbf{x}_1, \ldots, \mathbf{x}_{l-1}])$$</div>
 <p>这种密集连接实现了特征复用，参数量更少且梯度传播更流畅。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 820 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="dense-arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="410" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">DenseNet 密集连接 — 每层接收之前所有层的输出</text>
+
+  <!-- 输入 -->
+  <rect x="20" y="120" width="55" height="45" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="47" y="140" text-anchor="middle" fill="#1e3a5f" font-size="10" font-weight="bold">x₀</text>
+  <text x="47" y="156" text-anchor="middle" fill="#2563eb" font-size="8">输入</text>
+
+  <!-- 层1 -->
+  <rect x="120" y="120" width="60" height="45" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="150" y="140" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">H₁</text>
+  <text x="150" y="156" text-anchor="middle" fill="#7c3aed" font-size="8">Conv</text>
+
+  <!-- 层2 -->
+  <rect x="250" y="120" width="60" height="45" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="280" y="140" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">H₂</text>
+  <text x="280" y="156" text-anchor="middle" fill="#7c3aed" font-size="8">Conv</text>
+
+  <!-- 层3 -->
+  <rect x="380" y="120" width="60" height="45" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="410" y="140" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">H₃</text>
+  <text x="410" y="156" text-anchor="middle" fill="#7c3aed" font-size="8">Conv</text>
+
+  <!-- 层4 -->
+  <rect x="510" y="120" width="60" height="45" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="540" y="140" text-anchor="middle" fill="#5b21b6" font-size="10" font-weight="bold">H₄</text>
+  <text x="540" y="156" text-anchor="middle" fill="#7c3aed" font-size="8">Conv</text>
+
+  <!-- 输出 -->
+  <rect x="630" y="120" width="60" height="45" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="660" y="140" text-anchor="middle" fill="#7f1d1d" font-size="10" font-weight="bold">输出</text>
+  <text x="660" y="156" text-anchor="middle" fill="#dc2626" font-size="8">Transition</text>
+
+  <!-- 连接：x0 → H1 -->
+  <line x1="78" y1="142" x2="118" y2="142" stroke="#64748b" stroke-width="1.5" marker-end="url(#dense-arr)"/>
+  <!-- x0 → H2 (跳过 H1) -->
+  <path d="M47,118 Q47,75 280,75 L280,118" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dense-arr)"/>
+  <!-- x0 → H3 -->
+  <path d="M47,118 Q47,55 410,55 L410,118" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dense-arr)"/>
+  <!-- x0 → H4 -->
+  <path d="M47,118 Q47,38 540,38 L540,118" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dense-arr)"/>
+
+  <!-- H1 输出 → H2 -->
+  <line x1="181" y1="142" x2="248" y2="142" stroke="#64748b" stroke-width="1.5" marker-end="url(#dense-arr)"/>
+  <!-- H1 输出 → H3 -->
+  <path d="M150,118 Q150,80 410,80 L410,118" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dense-arr)"/>
+  <!-- H1 输出 → H4 -->
+  <path d="M150,118 Q150,62 540,62 L540,118" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dense-arr)"/>
+
+  <!-- H2 输出 → H3 -->
+  <line x1="311" y1="142" x2="378" y2="142" stroke="#64748b" stroke-width="1.5" marker-end="url(#dense-arr)"/>
+  <!-- H2 输出 → H4 -->
+  <path d="M280,118 Q280,88 540,88 L540,118" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dense-arr)"/>
+
+  <!-- H3 输出 → H4 -->
+  <line x1="441" y1="142" x2="508" y2="142" stroke="#64748b" stroke-width="1.5" marker-end="url(#dense-arr)"/>
+  <!-- H4 → 输出 -->
+  <line x1="571" y1="142" x2="628" y2="142" stroke="#64748b" stroke-width="1.5" marker-end="url(#dense-arr)"/>
+
+  <!-- 标注 -->
+  <text x="150" y="195" text-anchor="middle" fill="#7c3aed" font-size="9">输入: [x₀]</text>
+  <text x="280" y="195" text-anchor="middle" fill="#7c3aed" font-size="9">输入: [x₀, x₁]</text>
+  <text x="410" y="195" text-anchor="middle" fill="#7c3aed" font-size="9">输入: [x₀, x₁, x₂]</text>
+  <text x="540" y="195" text-anchor="middle" fill="#7c3aed" font-size="9">输入: [x₀, x₁, x₂, x₃]</text>
+
+  <!-- 右侧对比说明 -->
+  <rect x="720" y="55" width="85" height="175" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="762" y="78" text-anchor="middle" fill="#334155" font-size="10" font-weight="600">DenseNet vs ResNet</text>
+  <text x="728" y="100" fill="#475569" font-size="9">ResNet: 加法</text>
+  <text x="728" y="115" fill="#475569" font-size="9">y = F(x) + x</text>
+  <text x="728" y="140" fill="#475569" font-size="9">DenseNet: 拼接</text>
+  <text x="728" y="155" fill="#475569" font-size="9">x_l = H([x₀..x_{l-1}])</text>
+  <text x="728" y="185" fill="#475569" font-size="9">特征复用</text>
+  <text x="728" y="200" fill="#475569" font-size="9">梯度传播好</text>
+  <text x="728" y="215" fill="#475569" font-size="9">参数量更少</text>
+
+  <!-- 底部说明 -->
+  <rect x="20" y="220" width="670" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="355" y="242" text-anchor="middle" fill="#475569" font-size="10">
+    <tspan x="355" dy="0">每层接收前面所有层的输出做拼接（Concat），而非 ResNet 的逐元素加法</tspan>
+    <tspan x="355" dy="18">虚线 = 跨层连接 · 实线 = 相邻连接 · k 个特征图增长率（growth rate）控制每层输出通道数</tspan>
+  </text>
+</svg>
+<div class="svg-caption">图 11：DenseNet 密集连接 — 每层接收之前所有层的特征拼接，实现特征复用和梯度流畅传播</div>
+</div>
 
 </section>
 
@@ -540,8 +1290,8 @@ $$\text{一个 5×5 卷积的感受野} = 5 \times 5, \quad \text{参数量} = 2
 <h3>6.2 瓶颈结构</h3>
 <p>ResNet-50/101 使用瓶颈残差块（Bottleneck Block）：$1 \times 1$ 降维 → $3 \times 3$ 卷积 → $1 \times 1$ 升维。对于 $256 \to 64 \to 64 \to 256$ 的瓶颈结构：</p>
 <div class="formula multi" data-eq="(14)">
-$$\text{直接 3×3: } 256 \times 256 \times 9 = 590k \text{ FLOPs/pixel}$$
-$$\text{瓶颈 1×1+3×3+1×1: } 256 \times 64 + 64 \times 64 \times 9 + 64 \times 256 = 74k \text{ FLOPs/pixel}$$
+$$\text{直接 } 3 \times 3 \text{: } 256 \times 256 \times 9 = 590k \text{ FLOPs/pixel}$$
+$$\text{瓶颈 } 1 \times 1 + 3 \times 3 + 1 \times 1 \text{: } 256 \times 64 + 64 \times 64 \times 9 + 64 \times 256 = 74k \text{ FLOPs/pixel}$$
 </div>
 <p>瓶颈结构的计算量仅为直接卷积的 12.5%。</p>
 
@@ -994,7 +1744,8 @@ conv_d4 = nn.Conv2d(<span class="num">64</span>, <span class="num">64</span>, <s
       for (var i = 0; i < parts.length; i++) {
         if (isFormula && parts[i].trim()) {
           var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
-          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+          var eqSrc = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(eqSrc, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = eqSrc; }
         } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
         isFormula = !isFormula;
       }

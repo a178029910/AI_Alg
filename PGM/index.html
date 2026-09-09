@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>概率图模型 — 贝叶斯网络 · 马尔可夫随机场 · 推断 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -197,7 +198,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>对于节点 $X_i$，其所有直接前驱称为<strong>父节点</strong>集 $\mathrm{Pa}(X_i)$，所有直接后继称为<strong>子节点</strong>集 $\mathrm{Ch}(X_i)$。没有父节点的节点称为<strong>根节点</strong>。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" style="max-width: 680px;">
   <defs>
     <linearGradient id="bn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
@@ -207,33 +208,34 @@ tr:hover td { background: var(--c-primary-ghost); }
       <path d="M0,0 L8,4 L0,8 Z" fill="#2563eb"/>
     </marker>
   </defs>
-  <text x="300" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">贝叶斯网络 DAG 示例</text>
+  <text x="300" y="30" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">贝叶斯网络 DAG 示例</text>
   <!-- 节点 -->
-  <circle cx="120" cy="80" r="28" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="120" y="86" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">D</text>
-  <text x="120" y="130" text-anchor="middle" font-size="11" fill="#64748b">（疾病）</text>
-  <circle cx="300" cy="80" r="28" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="300" y="86" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">T</text>
-  <text x="300" y="130" text-anchor="middle" font-size="11" fill="#64748b">（检查）</text>
-  <circle cx="480" cy="80" r="28" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="480" y="86" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">S</text>
-  <text x="480" y="130" text-anchor="middle" font-size="11" fill="#64748b">（症状）</text>
-  <circle cx="210" cy="240" r="28" fill="url(#bn-grad)" stroke="#7c3aed" stroke-width="2" class="pulse-node"/>
-  <text x="210" y="246" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">L</text>
-  <text x="210" y="295" text-anchor="middle" font-size="11" fill="#64748b">（用药）</text>
-  <circle cx="390" cy="240" r="28" fill="url(#bn-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
-  <text x="390" y="246" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">R</text>
-  <text x="390" y="295" text-anchor="middle" font-size="11" fill="#64748b">（康复）</text>
+  <circle cx="120" cy="75" r="24" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="120" y="82" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">D</text>
+  <circle cx="300" cy="75" r="24" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="300" y="82" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">T</text>
+  <circle cx="480" cy="75" r="24" fill="url(#bn-grad)" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="480" y="82" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">S</text>
+  <circle cx="205" cy="225" r="24" fill="url(#bn-grad)" stroke="#7c3aed" stroke-width="2" class="pulse-node"/>
+  <text x="205" y="232" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">L</text>
+  <circle cx="395" cy="225" r="24" fill="url(#bn-grad)" stroke="#059669" stroke-width="2" class="pulse-node"/>
+  <text x="395" y="232" text-anchor="middle" font-size="16" fill="#0f172a" font-weight="700">R</text>
+  <!-- 中文标注（远离连线） -->
+  <text x="120" y="145" text-anchor="middle" font-size="12" fill="#64748b">（疾病）</text>
+  <text x="300" y="145" text-anchor="middle" font-size="12" fill="#64748b">（检查）</text>
+  <text x="480" y="145" text-anchor="middle" font-size="12" fill="#64748b">（症状）</text>
+  <text x="205" y="268" text-anchor="middle" font-size="12" fill="#64748b">（用药）</text>
+  <text x="395" y="268" text-anchor="middle" font-size="12" fill="#64748b">（康复）</text>
   <!-- 边 -->
-  <line x1="148" y1="80" x2="272" y2="80" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
-  <line x1="328" y1="80" x2="452" y2="80" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
-  <line x1="120" y1="108" x2="190" y2="212" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
-  <line x1="300" y1="108" x2="225" y2="212" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
-  <line x1="480" y1="108" x2="405" y2="212" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
-  <line x1="238" y1="240" x2="362" y2="240" stroke="#7c3aed" stroke-width="2" marker-end="url(#bn-arrow)"/>
-  <!-- 标注 -->
-  <text x="180" y="70" font-size="11" fill="#94a3b8">Pa(T)={D}</text>
-  <text x="395" y="180" font-size="11" fill="#94a3b8">Pa(R)={L,S}</text>
+  <line x1="144" y1="75" x2="276" y2="75" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="324" y1="75" x2="456" y2="75" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="131.8" y1="95.9" x2="193.2" y2="204.1" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="287.2" y1="95.3" x2="217.8" y2="204.7" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="468.2" y1="95.9" x2="406.8" y2="204.1" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <line x1="229" y1="225" x2="371" y2="225" stroke="#7c3aed" stroke-width="2" marker-end="url(#bn-arrow)"/>
+  <!-- 父节点标注 -->
+  <text x="190" y="63" font-size="12" fill="#94a3b8">Pa(T)={D}</text>
+  <text x="300" y="213" font-size="12" fill="#94a3b8">Pa(R)={L,S}</text>
 </svg>
 </div>
 
@@ -271,42 +273,42 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 
 <div class="svg-box">
-<svg viewBox="0 0 720 280" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 235" xmlns="http://www.w3.org/2000/svg">
   <text x="360" y="25" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">d-分离三种基本结构</text>
   <!-- 链式 -->
-  <text x="120" y="60" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">链式结构</text>
-  <circle cx="60" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="60" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
-  <circle cx="120" cy="120" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
-  <text x="120" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
-  <circle cx="180" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="180" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
-  <line x1="82" y1="120" x2="98" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
-  <line x1="142" y1="120" x2="158" y2="120" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
-  <text x="120" y="175" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y | W ✓</text>
+  <text x="120" y="55" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">链式结构</text>
+  <circle cx="60" cy="105" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="60" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
+  <circle cx="120" cy="105" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="120" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
+  <circle cx="180" cy="105" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="180" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
+  <line x1="82" y1="105" x2="98" y2="105" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <line x1="142" y1="105" x2="158" y2="105" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <text x="120" y="160" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y | W ✓</text>
   <!-- 分叉 -->
-  <text x="360" y="60" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">分叉结构</text>
-  <circle cx="300" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="300" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
-  <circle cx="360" cy="120" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
-  <text x="360" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
-  <circle cx="420" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="420" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
-  <line x1="352" y1="113" x2="312" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
-  <line x1="368" y1="113" x2="408" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
-  <text x="360" y="175" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y | W ✓</text>
+  <text x="360" y="55" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">分叉结构</text>
+  <circle cx="300" cy="105" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="300" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
+  <circle cx="360" cy="105" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="360" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
+  <circle cx="420" cy="105" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="420" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
+  <line x1="352" y1="98" x2="312" y2="98" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <line x1="368" y1="98" x2="408" y2="98" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <text x="360" y="160" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y | W ✓</text>
   <!-- 汇合 -->
-  <text x="600" y="60" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">汇合结构</text>
-  <circle cx="540" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="540" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
-  <circle cx="600" cy="120" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
-  <text x="600" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
-  <circle cx="660" cy="120" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
-  <text x="660" y="126" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
-  <line x1="562" y1="113" x2="578" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
-  <line x1="638" y1="113" x2="622" y2="113" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
-  <text x="600" y="175" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y 默认；观察W则相关</text>
-  <text x="600" y="195" text-anchor="middle" font-size="11" fill="#dc2626">X ⊥̸ Y | W ✗</text>
+  <text x="600" y="55" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">汇合结构</text>
+  <circle cx="540" cy="105" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="540" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">X</text>
+  <circle cx="600" cy="105" r="22" fill="#ffedd5" stroke="#ea580c" stroke-width="2" class="glow-ring"/>
+  <text x="600" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">W</text>
+  <circle cx="660" cy="105" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node"/>
+  <text x="660" y="111" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Y</text>
+  <line x1="562" y1="98" x2="578" y2="98" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <line x1="638" y1="98" x2="622" y2="98" stroke="#2563eb" stroke-width="2" marker-end="url(#bn-arrow)" class="flow-line"/>
+  <text x="600" y="155" text-anchor="middle" font-size="11" fill="#64748b">X ⊥ Y 默认；观察 W 则相关</text>
+  <text x="600" y="175" text-anchor="middle" font-size="11" fill="#dc2626">X ⊥ Y | W ✗</text>
 </svg>
 </div>
 
@@ -345,7 +347,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p><strong>马尔可夫随机场</strong>（Markov Random Field, MRF）用无向图 $H = (V, E)$ 描述变量间的对称依赖关系。与贝叶斯网络不同，MRF 的边没有方向，不编码因果关系，而是表达变量间的相互关联——适合建模空间、图像像素、社交网络等具有对称依赖的场景。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg" style="max-width: 640px;">
   <defs>
     <linearGradient id="mrf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
@@ -453,7 +455,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p><strong>因子图</strong>（Factor Graph）是统一表示 BN 和 MRF 的二分图框架。它包含两类节点：<strong>变量节点</strong>（圆圈）和<strong>因子节点</strong>（方块），边只连接变量与因子。因子图将因子分解中的每个因子显式地表示为图中的节点，使得结构更加清晰。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 520 280" xmlns="http://www.w3.org/2000/svg" style="max-width: 700px;">
   <defs>
     <linearGradient id="fg-var" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
@@ -552,6 +554,65 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>精确推断在一般图上是 NP-hard。但对于<strong>树结构图</strong>（单连通图），诱导宽度 $w = 1$，VE 退化为线性复杂度 $O(n \cdot r^2)$，这正是信念传播高效的基础。</p>
 </div>
 
+<div class="callout">
+<div class="callout-title">VE 算例：链式网络 $X \to Y \to Z$ 的边缘 $P(Z)$</div>
+<p>设一个最简单的链式贝叶斯网络 $X \to Y \to Z$，三个变量均为二值（取 0/1），因子分解为：</p>
+<div class="formula">$$P(X, Y, Z) = P(X) \cdot P(Y \mid X) \cdot P(Z \mid Y)$$</div>
+<p>参数：$P(X) = (0.6, 0.4)$，$P(Y \mid X) = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}$（行 $X$、列 $Y$），$P(Z \mid Y) = \begin{pmatrix} 0.8 & 0.2 \\ 0.1 & 0.9 \end{pmatrix}$（行 $Y$、列 $Z$）。</p>
+<p>目标：求 $P(Z) = \sum_X \sum_Y P(X) P(Y \mid X) P(Z \mid Y)$。若直接展开联合表需 $2^3 = 8$ 项，VE 只需逐步消去。</p>
+<p><strong>第一步：消除 $X$</strong>。收集含 $X$ 的因子 $\{P(X), P(Y \mid X)\}$，相乘后对 $X$ 求和：</p>
+<div class="formula">$$\tau_1(Y) = \sum_{X} P(X) \cdot P(Y \mid X) = \begin{pmatrix} 0.6 \times 0.7 + 0.4 \times 0.4 \\ 0.6 \times 0.3 + 0.4 \times 0.6 \end{pmatrix} = \begin{pmatrix} 0.58 \\ 0.42 \end{pmatrix}$$</div>
+<p>这实际上就是边缘分布 $P(Y)$——消除 $X$ 后，$Y$ 的分布已"吸收"了 $X$ 的信息。</p>
+<p><strong>第二步：消除 $Y$</strong>。收集含 $Y$ 的因子 $\{\tau_1(Y), P(Z \mid Y)\}$，相乘后对 $Y$ 求和：</p>
+<div class="formula">$$P(Z) = \sum_{Y} \tau_1(Y) \cdot P(Z \mid Y) = \begin{pmatrix} 0.58 \times 0.8 + 0.42 \times 0.1 \\ 0.58 \times 0.2 + 0.42 \times 0.9 \end{pmatrix} = \begin{pmatrix} 0.506 \\ 0.494 \end{pmatrix}$$</div>
+<p><strong>解读</strong>：VE 的每一步只涉及两个小因子的乘积与求和，最大中间因子 scope 大小为 2（即 $w = 1$），总计算量 $O(3 \times 2^2) = 12$ 次乘法，远小于直接展开 8 项联合表再对 6 项求和。消除顺序 $X \to Y$ 比 $Y \to X$ 更优——先消叶子节点不会产生大因子。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">VE 算例二：多父节点网络 $W \to R \to G \gets I$ 的边缘 $P(G)$</div>
+<p>上一个算例是简单链式结构，本例展示更一般的情况——<strong>多父节点</strong>。设一个考试预测贝叶斯网络，4 个二值变量（取 0/1）：</p>
+<ul>
+<li><strong>W</strong>（天气，0=坏/1=好）：$P(W) = (0.7, 0.3)$</li>
+<li><strong>I</strong>（智商，0=低/1=高）：$P(I) = (0.8, 0.2)$</li>
+<li><strong>R</strong>（复习，0=否/1=是）：$P(R \mid W)$，天气好时更可能复习</li>
+<li><strong>G</strong>（考试分数，0=不及格/1=及格）：$P(G \mid I, R)$，受智商和复习双重影响</li>
+</ul>
+<p>网络结构为 $W \to R \to G \gets I$（$G$ 有两个父节点 $I$ 和 $R$），因子分解为：</p>
+<div class="formula">$$P(W, I, R, G) = P(W) \cdot P(I) \cdot P(R \mid W) \cdot P(G \mid I, R)$$</div>
+<p>条件概率表：</p>
+<div class="formula">$$P(R \mid W) = \begin{pmatrix} 0.6 & 0.4 \\ 0.1 & 0.9 \end{pmatrix} \text{（行 $W$、列 $R$）}, \qquad P(G \mid I, R) = \begin{pmatrix} 0.9 & 0.1 \\ 0.6 & 0.4 \\ 0.4 & 0.6 \\ 0.1 & 0.9 \end{pmatrix} \text{（行 $(I,R)$、列 $G$）}$$</div>
+<p>其中 $P(G \mid I, R)$ 的四行依次对应 $(I{=}0, R{=}0)$、$(I{=}0, R{=}1)$、$(I{=}1, R{=}0)$、$(I{=}1, R{=}1)$。</p>
+
+<p><strong>目标</strong>：求 $P(G) = \sum_W \sum_I \sum_R P(W) \cdot P(I) \cdot P(R \mid W) \cdot P(G \mid I, R)$。暴力展开需 $2^4 = 16$ 项联合表。VE 按 $W \to I \to R$ 顺序消元，每步只处理小因子。</p>
+
+<p><strong>第一步：消除 $W$</strong>。收集含 $W$ 的因子 $\{P(W), P(R \mid W)\}$，相乘后对 $W$ 求和：</p>
+<div class="formula">$$\tau_1(R) = \sum_{W} P(W) \cdot P(R \mid W) = \begin{pmatrix} 0.7 \times 0.6 + 0.3 \times 0.1 \\ 0.7 \times 0.4 + 0.3 \times 0.9 \end{pmatrix} = \begin{pmatrix} 0.45 \\ 0.55 \end{pmatrix}$$</div>
+<p>这实际上就是边缘分布 $P(R)$——天气信息被"吸收"进 $R$ 的分布中。</p>
+
+<p><strong>第二步：消除 $I$</strong>。收集含 $I$ 的因子 $\{P(I), P(G \mid I, R)\}$，相乘后对 $I$ 求和：</p>
+<div class="formula">$$\tau_2(G, R) = \sum_{I} P(I) \cdot P(G \mid I, R)$$</div>
+<div class="formula">$$= \begin{pmatrix} 0.8 \times 0.9 + 0.2 \times 0.4 & 0.8 \times 0.1 + 0.2 \times 0.6 \\ 0.8 \times 0.6 + 0.2 \times 0.1 & 0.8 \times 0.4 + 0.2 \times 0.9 \end{pmatrix}_{(G,R)} = \begin{pmatrix} 0.80 & 0.20 \\ 0.50 & 0.50 \end{pmatrix}_{(G,R)}$$</div>
+<p>此处 $\tau_2$ 的 scope 为 $\{G, R\}$（大小 2），是消元过程中产生的最大中间因子。</p>
+
+<p><strong>第三步：消除 $R$</strong>。收集含 $R$ 的因子 $\{\tau_1(R), \tau_2(G, R)\}$，相乘后对 $R$ 求和：</p>
+<div class="formula">$$P(G) = \sum_{R} \tau_1(R) \cdot \tau_2(G, R) = \begin{pmatrix} 0.45 \times 0.80 + 0.55 \times 0.50 \\ 0.45 \times 0.20 + 0.55 \times 0.50 \end{pmatrix} = \begin{pmatrix} 0.635 \\ 0.365 \end{pmatrix}$$</div>
+<p>学生考试及格的概率 $P(G=1) = 0.365$，即约 36.5%。</p>
+
+<p><strong>与暴力法对比</strong>：</p>
+<table class="data-table">
+<thead><tr><th>维度</th><th>暴力法</th><th>变量消除法</th></tr></thead>
+<tbody>
+<tr><td>计算方式</td><td>展开 $2^4 = 16$ 项联合表 $P(W)P(I)P(R|W)P(G|I,R)$，对 $W, I, R$ 的 8 种组合求和得 $P(G)$</td><td>分 3 步消元，每步只涉及 2~3 个小因子的乘法与求和</td></tr>
+<tr><td>乘法次数</td><td>16 项 $\times$ 4 个因子 = 64 次</td><td>步骤1: 4 次；步骤2: 8 次；步骤3: 4 次；合计 16 次</td></tr>
+<tr><td>加法次数</td><td>8 项求和 = 8 次</td><td>步骤1: 2 次；步骤2: 4 次；步骤3: 2 次；合计 8 次</td></tr>
+<tr><td>中间因子最大 scope</td><td>$\{W, I, R, G\}$，大小 4</td><td>$\{G, R\}$，大小 2（诱导宽度 $w = 1$）</td></tr>
+<tr><td>复杂度</td><td>$O(2^n)$，$n=4$ 时为 16；$n=10$ 时爆炸为 1024</td><td>$O(n \cdot r^{w+1})$，$w=1$ 时为 $O(n \cdot r^2)$，线性增长</td></tr>
+<tr><td>可扩展性</td><td>每增加一个变量翻倍</td><td>取决于图结构诱导宽度，稀疏图下高效</td></tr>
+</tbody>
+</table>
+<p><strong>关键洞察</strong>：暴力法对联合分布做"先展开再求和"，中间表大小随变量数指数增长；VE 通过<strong>早期求和</strong>（early summation）将求和推进到乘法之前——消去 $W$ 时只需 $P(W)$ 和 $P(R|W)$ 两个小因子，无需等待联合表展开。这正是 VE 的核心优势：<strong>利用条件独立性避免显式构造联合分布</strong>。在本例中，$W \perp I$，消去 $W$ 不影响 $I$ 的因子，两者可独立消元——若消元顺序选 $W \to I$（先消叶子），最大中间因子 scope 仅为 2；若先消 $R$，则需合并 $P(R|W)$ 和 $P(G|I,R)$，产生 scope 为 3 的因子，反而更差。</p>
+</div>
+
 </section>
 
 <!-- ==================== 第八章 ==================== -->
@@ -569,7 +630,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="formula" data-eq="(15)">$$b(x_i) \propto \prod_{a \in \mathrm{Nb}(i)} m_{a \to i}(x_i)$$</div>
 
 <div class="svg-box">
-<svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg" style="max-width: 820px;">
   <defs>
     <linearGradient id="bp-grad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1"/>
@@ -620,6 +681,60 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <p>对于含有环的图，标准 BP 不保证收敛，但实践中<strong>环状信念传播</strong>（Loopy BP）仍常被用作近似推断方法——通过迭代传递消息直至收敛或达到最大迭代次数。Loopy BP 在 LDPC 解码、图像分割等任务中取得了优异的实证效果。</p>
 
+<div class="callout">
+<div class="callout-title">BP 算例：链式因子图 $x_1 \text{—} f_a \text{—} x_2 \text{—} f_b \text{—} x_3$ 的消息传递</div>
+<p>沿用 VE 算例的同一链式模型 $X_1 \to X_2 \to X_3$，二值变量，因子图结构为 $x_1 \text{—} f_a \text{—} x_2 \text{—} f_b \text{—} x_3$，其中：</p>
+<div class="formula">$$f_a(x_1, x_2) = P(x_1) \cdot P(x_2 \mid x_1), \qquad f_b(x_2, x_3) = P(x_3 \mid x_2)$$</div>
+<p>参数与 VE 算例一致：$P(x_1) = (0.6, 0.4)$，$P(x_2 \mid x_1) = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}$，$P(x_3 \mid x_2) = \begin{pmatrix} 0.8 & 0.2 \\ 0.1 & 0.9 \end{pmatrix}$。选 $x_2$ 为根节点，叶节点 $x_1, x_3$ 向根传递。</p>
+
+<p><strong>第一阶段：收集（叶 $\to$ 根）</strong></p>
+<p>叶节点 $x_1$ 只有一个邻居 $f_a$，发出的消息为 $m_{x_1 \to f_a} = (1, 1)$（无其他信息）。因子 $f_a$ 汇总后传给 $x_2$：</p>
+<div class="formula">$$m_{f_a \to x_2}(x_2) = \sum_{x_1} f_a(x_1, x_2) \cdot m_{x_1 \to f_a}(x_1) = \sum_{x_1} P(x_1) \cdot P(x_2 \mid x_1)$$</div>
+<div class="formula">$$= \begin{pmatrix} 0.6 \times 0.7 + 0.4 \times 0.4 \\ 0.6 \times 0.3 + 0.4 \times 0.6 \end{pmatrix} = \begin{pmatrix} 0.58 \\ 0.42 \end{pmatrix}$$</div>
+<p>同理，叶节点 $x_3$ 发出 $m_{x_3 \to f_b} = (1, 1)$，因子 $f_b$ 传给 $x_2$：</p>
+<div class="formula">$$m_{f_b \to x_2}(x_2) = \sum_{x_3} P(x_3 \mid x_2) \cdot 1 = \begin{pmatrix} 0.8 + 0.2 \\ 0.1 + 0.9 \end{pmatrix} = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$$</div>
+<p>此时 $x_2$ 已收到两侧消息，收集阶段完成。</p>
+
+<p><strong>第二阶段：分发（根 $\to$ 叶）</strong></p>
+<p>$x_2$ 将"非目标方向"的入消息转发给另一侧因子。向 $f_a$ 转发 $m_{x_2 \to f_a} = m_{f_b \to x_2} = (1, 1)$，因子 $f_a$ 据此传给 $x_1$：</p>
+<div class="formula">$$m_{f_a \to x_1}(x_1) = \sum_{x_2} f_a(x_1, x_2) \cdot m_{x_2 \to f_a}(x_2) = \sum_{x_2} P(x_1) \cdot P(x_2 \mid x_1) \cdot 1$$</div>
+<div class="formula">$$= \begin{pmatrix} 0.6 \times (0.7 + 0.3) \\ 0.4 \times (0.4 + 0.6) \end{pmatrix} = \begin{pmatrix} 0.6 \\ 0.4 \end{pmatrix}$$</div>
+<p>向 $f_b$ 转发 $m_{x_2 \to f_b} = m_{f_a \to x_2} = (0.58, 0.42)$，因子 $f_b$ 据此传给 $x_3$：</p>
+<div class="formula">$$m_{f_b \to x_3}(x_3) = \sum_{x_2} P(x_3 \mid x_2) \cdot m_{x_2 \to f_b}(x_2) = \begin{pmatrix} 0.58 \times 0.8 + 0.42 \times 0.1 \\ 0.58 \times 0.2 + 0.42 \times 0.9 \end{pmatrix} = \begin{pmatrix} 0.506 \\ 0.494 \end{pmatrix}$$</div>
+
+<p><strong>最终信念</strong>（入消息乘积归一化）：</p>
+<div class="formula">$$b(x_1) \propto m_{f_a \to x_1} = (0.6, 0.4), \quad b(x_2) \propto m_{f_a \to x_2} \cdot m_{f_b \to x_2} = (0.58, 0.42), \quad b(x_3) \propto m_{f_b \to x_3} = (0.506, 0.494)$$</div>
+<p><strong>与 VE 对照</strong>：$b(x_3) = P(Z) = (0.506, 0.494)$，与 7.3 节 VE 算例结果完全一致；$b(x_2) = P(Y) = (0.58, 0.42)$，与 VE 第一步的 $\tau_1(Y)$ 一致。BP 的优势在于一次运行即获得<strong>所有变量</strong>的边缘概率，而 VE 每次只能求一个目标——若需全部边缘，VE 需重复 $n$ 次，BP 仅需两轮。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">BP 算例二：多父节点网络 $W \to R \to G \gets I$ 的边缘 $P(G)$</div>
+<p>沿用 7.3 节 VE 算例二的同一考试预测模型 $W \to R \to G \gets I$（$G$ 有 $R$、$I$ 两个父节点），参数完全一致：$P(W) = (0.7, 0.3)$，$P(I) = (0.8, 0.2)$，$P(R \mid W)$ 与 $P(G \mid I, R)$ 同前。其因子图结构为 $W \text{—} f_a \text{—} R \text{—} f_b \text{—} G$，且 $f_b$ 额外连接 $I$：</p>
+<div class="formula">$$f_a(W, R) = P(W) \cdot P(R \mid W), \qquad f_b(I, R, G) = P(I) \cdot P(G \mid I, R)$$</div>
+<p>这是一个树结构（$W \text{—} f_a \text{—} R \text{—} f_b \text{—} G$ 为主链，$I$ 作为 $f_b$ 的叶子）。选 $R$ 为根节点（连接两个因子的枢纽），叶节点 $W, I, G$ 向根传递。</p>
+
+<p><strong>第一阶段：收集（叶 $\to$ 根 $R$）</strong></p>
+<p>叶节点 $W$ 发出 $m_{W \to f_a} = (1, 1)$，因子 $f_a$ 汇总后传给 $R$：</p>
+<div class="formula">$$m_{f_a \to R}(R) = \sum_{W} f_a(W, R) \cdot m_{W \to f_a}(W) = \sum_{W} P(W) \cdot P(R \mid W)$$</div>
+<div class="formula">$$= \begin{pmatrix} 0.7 \times 0.6 + 0.3 \times 0.1 \\ 0.7 \times 0.4 + 0.3 \times 0.9 \end{pmatrix} = \begin{pmatrix} 0.45 \\ 0.55 \end{pmatrix}$$</div>
+<p>这恰是 $P(R)$——与 VE 算例二第一步的 $\tau_1(R)$ 相同。</p>
+<p>叶节点 $I$ 发出 $m_{I \to f_b} = (1, 1)$，叶节点 $G$ 发出 $m_{G \to f_b} = (1, 1)$，因子 $f_b$ 对 $I, G$ 求和后传给 $R$：</p>
+<div class="formula">$$m_{f_b \to R}(R) = \sum_{I, G} P(I) \cdot P(G \mid I, R) \cdot m_{I \to f_b}(I) \cdot m_{G \to f_b}(G) = \begin{pmatrix} \sum_I P(I) \sum_G P(G \mid I, R=0) \\ \sum_I P(I) \sum_G P(G \mid I, R=1) \end{pmatrix}$$</div>
+<div class="formula">$$= \begin{pmatrix} (0.8+0.2) \times (0.9+0.1) \\ (0.8+0.2) \times (0.6+0.4) \end{pmatrix} = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$$</div>
+<p>此处 $\sum_G P(G \mid I, R) = 1$ 对每个 $(I,R)$ 恒成立（概率表行和为 1），故消息为 $(1, 1)$——$f_b$ 这一侧未向 $R$ 提供信息，全部信息来自 $f_a$ 一侧。</p>
+
+<p><strong>第二阶段——分发（根 $R$ $\to$ 叶）</strong></p>
+<p>$R$ 向 $f_a$ 转发 $m_{R \to f_a} = m_{f_b \to R} = (1, 1)$，因子 $f_a$ 据此传给 $W$：</p>
+<div class="formula">$$m_{f_a \to W}(W) = \sum_{R} P(W) \cdot P(R \mid W) \cdot m_{R \to f_a}(R) = \begin{pmatrix} 0.7 \times (0.6 + 0.4) \\ 0.3 \times (0.1 + 0.9) \end{pmatrix} = \begin{pmatrix} 0.7 \\ 0.3 \end{pmatrix}$$</div>
+<p>$R$ 向 $f_b$ 转发 $m_{R \to f_b} = m_{f_a \to R} = (0.45, 0.55)$，因子 $f_b$ 据此传给 $G$——这是最关键的一步：</p>
+<div class="formula">$$m_{f_b \to G}(G) = \sum_{I, R} P(I) \cdot P(G \mid I, R) \cdot m_{R \to f_b}(R) \cdot m_{I \to f_b}(I)$$</div>
+<div class="formula">$$= \begin{pmatrix} 0.8 \times [0.45 \times 0.9 + 0.55 \times 0.6] + 0.2 \times [0.45 \times 0.4 + 0.55 \times 0.1] \\ 0.8 \times [0.45 \times 0.1 + 0.55 \times 0.4] + 0.2 \times [0.45 \times 0.6 + 0.55 \times 0.9] \end{pmatrix}$$</div>
+<div class="formula">$$= \begin{pmatrix} 0.8 \times 0.735 + 0.2 \times 0.235 \\ 0.8 \times 0.265 + 0.2 \times 0.765 \end{pmatrix} = \begin{pmatrix} 0.635 \\ 0.365 \end{pmatrix}$$</div>
+
+<p><strong>最终信念</strong>：$b(G) \propto m_{f_b \to G} = (0.635, 0.365)$，即学生及格概率 $P(G{=}1) = 0.365$；其余变量信念 $b(W) = (0.7, 0.3)$、$b(I) = (0.8, 0.2)$、$b(R) = (0.45, 0.55)$ 均与先验一致（该网络无证据，边缘即先验）。</p>
+<p><strong>与 VE 对照</strong>：$b(G) = P(G) = (0.635, 0.365)$ 与 7.3 节 VE 算例二完全一致；$b(R) = P(R) = (0.45, 0.55)$ 与 VE 第一步 $\tau_1(R)$ 一致。本例进一步说明 BP 的多因子优势：VE 需按 $W \to I \to R$ 消元，中途产生 scope 为 2 的 $\tau_2(G, R)$；BP 则通过 $R$ 枢纽把信息拆成两路独立传播，树结构上两轮即得全部边缘，无需排序、无需维护中间因子表。</p>
+</div>
+
 <h3>8.3 最大积信念传播</h3>
 <p><strong>最大积 BP</strong>（Max-Product BP）将和积 BP 中的求和 $\sum$ 替换为取最大 $\max$，用于求解<strong>最大后验概率（MAP）</strong>问题——寻找最可能的变量赋值 $\mathbf{x}^* = \arg\max_{\mathbf{x}} P(\mathbf{x} \mid \mathbf{e})$：</p>
 <div class="formula" data-eq="(16)">$$m_{a \to i}(x_i) = \max_{\mathbf{x}_a \setminus x_i} f_a(\mathbf{x}_a) \prod_{j \in \mathrm{Nb}(a) \setminus i} m_{j \to a}(x_j)$$</div>
@@ -641,6 +756,21 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="formula" data-eq="(18)">$$x_i^{(t+1)} \sim P\left(X_i \mid X_{-i}^{(t)}\right) = P\left(X_i \mid \mathrm{MB}(X_i)\right)$$</div>
 <p>其中 $X_{-i}$ 表示除 $X_i$ 外的所有变量。关键优势：在 PGM 中，完整条件分布只依赖于<strong>马尔可夫毯</strong>，不需要计算配分函数 $Z$（在条件分布中 $Z$ 被消去）。吉布斯采样在贝叶斯网络中特别自然——每个节点的条件分布即为 CPD。</p>
 
+<div class="callout">
+<div class="callout-title">吉布斯采样算例：考试预测网络的逐变量循环采样</div>
+<p>沿用前文的多父节点网络 $W \to R \to G \gets I$。目标：不计算任何联合分布，仅通过反复从<strong>完整条件分布</strong>采样来估计 $P(G{=}1)$。</p>
+<p>每个变量的完整条件分布只依赖其马尔可夫毯（父 + 子 + 子父）：</p>
+<div class="formula">$$P(W \mid R) \propto P(W) \cdot P(R \mid W), \qquad P(I \mid G, R) \propto P(I) \cdot P(G \mid I, R)$$</div>
+<div class="formula">$$P(R \mid W, I, G) \propto P(R \mid W) \cdot P(G \mid I, R), \qquad P(G \mid I, R) = \text{CPD 表}$$</div>
+<p><strong>初始状态</strong>：$(W, I, R, G) = (0, 0, 0, 0)$。按顺序循环更新各变量（以当前所有其他变量为条件）：</p>
+<div class="formula">$$P(W{=}1 \mid R{=}0) = \frac{0.3 \times 0.1}{0.7 \times 0.6 + 0.3 \times 0.1} = \frac{0.03}{0.45} \approx 0.0667$$</div>
+<p>即天气好的概率仅约 6.7%——因为若"天气好"但"没复习"不太符合 $P(R\mid W)$ 的倾向。采样得 $W$ 后，继续以当前值依次更新 $I, R, G$，如此循环。</p>
+<p><strong>一轮完整更新示例</strong>（假设采样结果）：</p>
+<div class="formula">$$(0,0,0,0) \xrightarrow{W} (0,0,0,0) \xrightarrow{I} (0,0,0,0) \xrightarrow{R} (0,0,1,0) \xrightarrow{G} (0,0,1,0)$$</div>
+<p><strong>为什么成立</strong>：$P(G \mid I, R)$ 是 CPD 表，直接查表采样即可；完整条件分布中的配分函数 $Z$ 被消去——这正是不需要计算 $Z$ 的关键。当 $R$ 更新为 1 后，$G$ 的条件分布变为 $P(G \mid I{=}0, R{=}1) = (0.6, 0.4)$，采样结果进入"及格"概率 40% 的通道。</p>
+<p><strong>数值验证</strong>：对 $W, I, R, G$ 依次循环采样 20 万次后统计 $G$ 的频率，$P(G{=}1) \approx 0.364$，与精确值 $0.365$ 一致。完整条件分布仅涉及相邻节点，无需配分函数——这是吉布斯在 PGM 中高效的根本原因。</p>
+</div>
+
 <h3>9.3 MCMC 与 Metropolis-Hastings</h3>
 <p><strong>马尔可夫链蒙特卡洛</strong>（MCMC）通过构造一个以目标分布为平稳分布的马尔可夫链来采样。<strong>Metropolis-Hastings（MH）算法</strong>是最通用的 MCMC 方法：</p>
 <ol>
@@ -655,6 +785,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout">
 <div class="callout-title">MCMC 的关键考量</div>
 <p><strong>收敛诊断</strong>（Burn-in、Gelman-Rubin $\hat{R}$）、<strong>自相关</strong>（Effective Sample Size）、<strong>混合速度</strong>是 MCMC 实践的核心问题。Burn-in 期丢弃初始样本以消除初始值影响；高自相关意味着有效样本量远小于实际样本量，需要更长链或并行链来获得可靠估计。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">MH 采样算例：翻转提议采样 $(W, R)$ 联合分布</div>
+<p>目标：从 $P(W, R) = P(W) \cdot P(R \mid W)$ 采样（沿用考试模型，忽略 $I, G$），其中 $P(W) = (0.7, 0.3)$，$P(R \mid W)$ 行 $W$、列 $R$。MH 只需要<strong>未归一化</strong>的 $P(W, R)$——此处恰好归一，但对 MRF 等含 $Z$ 的分布同样适用，因为 $Z$ 在接受比中消去。</p>
+<p><strong>提议分布</strong>：随机选一个变量翻转（等概率选 $W$ 或 $R$ 取反）。这是对称提议（$q(x' \mid x) = q(x \mid x') = \tfrac{1}{2}$），接受概率简化为：</p>
+<div class="formula">$$\alpha = \min\left(1, \frac{P(x')}{P(x)}\right)$$</div>
+<p><strong>从 $x = (W{=}0, R{=}0)$ 出发</strong>（$P = 0.7 \times 0.6 = 0.42$），随机选中翻转 $R$，提议 $x' = (0, 1)$：</p>
+<div class="formula">$$\alpha = \min\left(1, \frac{P(W{=}0, R{=}1)}{P(W{=}0, R{=}0)}\right) = \min\left(1, \frac{0.28}{0.42}\right) = \min(1, 0.667) = 0.667$$</div>
+<p>以 66.7% 概率接受 $x'$；若拒绝则停留在 $x$。若提议 $x' = (1, 0)$（翻转 $W$）：</p>
+<div class="formula">$$\alpha = \min\left(1, \frac{0.3 \times 0.1}{0.42}\right) = \min(1, 0.0714) = 0.0714$$</div>
+<p>接受率仅 7.1%——因为 $(W{=}1, R{=}0)$ 概率极低，多数此类提议被拒绝，马尔可夫链通过"拒绝"自动避免进入低概率区域。</p>
+<p><strong>核心思想</strong>：MH 不直接采样目标分布，而是构造一条"倾向高概率状态、偶尔接受低概率状态"的马尔可夫链。数值实验：20 万步后经验分布为 $P(W{=}0,R{=}0) \approx 0.420$、$P(W{=}1,R{=}1) \approx 0.270$，与精确值 $0.42$、$0.27$ 一致；总接受率约 61%。</p>
 </div>
 
 </section>
@@ -686,8 +829,40 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ol>
 <p>CAVI 类似 EM 的交替优化：每步提升 ELBO，保证收敛到局部最优。但平均场假设可能导致低估后验不确定性——真实后验中相关的变量被强制独立。</p>
 
+<div class="callout">
+<div class="callout-title">VI 算例：Beta-Bernoulli 的变分后验</div>
+<p>考虑最简单的贝叶斯推断问题：估计一枚硬币的正面概率 $\theta$。先验 $\theta \sim \mathrm{Beta}(2, 2)$，观测 10 次抛掷得到 7 次正面。真实后验是共轭的：</p>
+<div class="formula">$$P(\theta \mid \text{数据}) = \mathrm{Beta}(2 + 7, 2 + 3) = \mathrm{Beta}(9, 5)$$</div>
+<p><strong>核心思想</strong>：VI 不求后验本身，而是选一个参数化的近似分布 $q(\theta) = \mathrm{Beta}(\alpha, \beta)$，通过最大化 ELBO 使 $q$ 逼近真实后验。由于共轭性，本例中变分族恰包含真实后验，最优解即 $\alpha^* = 9$、$\beta^* = 5$：</p>
+<div class="formula">$$q^*(\theta) = \mathrm{Beta}(9, 5), \quad \mathbb{E}[\theta] = \frac{9}{14} \approx 0.643$$</div>
+<p>ELBO 在该点的取值为 $-6.98$，而初始化 $\alpha = \beta = 2$ 时仅为 $-8.33$——优化过程使 ELBO 单调上升并收敛。</p>
+<p><strong>关键对比</strong>：若用平均场坐标上升（CAVI），各 $q_i$ 更新公式 $\log q_i^*(Z_i) = \mathbb{E}_{q_{-i}}[\log P(X, Z)] + \text{const}$ 退化为逐参数更新 $\alpha \leftarrow a_0 + \sum_n \mathbb{E}_{q}[z_n]$；本例中每个潜在指示变量 $z_n$ 的变分后验为 $\mathrm{Bernoulli}(\frac{\alpha}{\alpha + \beta})$。VI 的核心是<strong>把推断变成优化</strong>——用梯度/坐标上升替代积分。</p>
+<p><strong>误差来源</strong>：平均场假设忽略变量间相关性；本例若引入共轭结构则无损失，但一般模型 $q$ 的分布族选择（如高斯）会系统性低估方差。</p>
+</div>
+
 <h3>10.4 随机变分推断（SVI）</h3>
 <p><strong>随机变分推断</strong>（Stochastic Variational Inference, SVI）将自然梯度上升与随机采样结合，使用数据子集（mini-batch）估计 ELBO 梯度，适用于大规模数据集。SVI 是变分自编码器（VAE）等深度生成模型的基础——通过重参数化技巧（Reparameterization Trick）使 ELBO 梯度可通过反向传播计算。</p>
+
+<div class="callout">
+<div class="callout-title">SVI 算例：大数据场景下的随机梯度更新</div>
+<p>将上一算例扩展到大数据：$N = 1000$ 次抛掷中 700 次正面，先验仍为 $\mathrm{Beta}(2, 1)$。真实后验为 $\mathrm{Beta}(702, 302)$，均值 $\approx 0.699$。若用完整 VI（CAVI），每一轮都要扫过全部 1000 个数据点计算充分统计量——成本高。</p>
+<p><strong>核心思想</strong>：SVI 每步只随机抽取一个小批量（mini-batch，如 $B = 100$），用批内统计量估计全数据梯度，配合<strong>衰减步长</strong> $\rho_t = 0.1 \cdot (t+1)^{-0.6}$ 做随机梯度上升：</p>
+<div class="formula">$$\alpha_t = \rho_t \left(a_0 - 1 + \frac{N}{B} \sum_{n \in \mathcal{B}_t} x_n - \alpha_{t-1}\right), \qquad \beta_t = \rho_t \left(b_0 - 1 + \frac{N}{B} \sum_{n \in \mathcal{B}_t} (1 - x_n) - \beta_{t-1}\right)$$</div>
+<p>其中 $\frac{N}{B}$ 将小批量统计量放大到全数据规模（本例放大 10 倍）。每步成本从 $O(N)$ 降到 $O(B)$。</p>
+<p><strong>收敛过程</strong>（$B=100$，500 轮迭代）：</p>
+<table>
+<thead><tr><th>迭代 t</th><th>$\alpha$</th><th>$\beta$</th><th>$\mathbb{E}[\theta]$</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>73.0</td><td>28.9</td><td>0.716</td></tr>
+<tr><td>100</td><td>529.6</td><td>227.6</td><td>0.699</td></tr>
+<tr><td>200</td><td>596.2</td><td>257.2</td><td>0.699</td></tr>
+<tr><td>300</td><td>626.8</td><td>271.9</td><td>0.698</td></tr>
+<tr><td>400</td><td>646.6</td><td>278.4</td><td>0.699</td></tr>
+<tr><td>499</td><td>658.7</td><td>283.4</td><td>0.699</td></tr>
+</tbody>
+</table>
+<p><strong>收敛性</strong>：均值 $\mathbb{E}[\theta]$ 快速逼近真实后验均值 0.699；参数 $\alpha, \beta$ 仍在缓慢增长（衰减步长下渐近收敛），方差收敛慢于均值。SVI 的意义在于：<strong>每一步只需 $O(B)$ 而非 $O(N)$</strong>，大数据集下总成本大幅下降，且收敛目标与全数据 VI 相同。</p>
+</div>
 
 <div class="table-wrap">
 <table>
@@ -1263,7 +1438,7 @@ structure = <span class="fn">greedy_search</span>(data, num_nodes=<span class="n
 })();
 (function() {
   var savedFormulas = [];
-  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+  document.querySelectorAll('.formula').forEach(function(f) {
     savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
     f.innerHTML = '';
   });
@@ -1271,7 +1446,8 @@ structure = <span class="fn">greedy_search</span>(data, num_nodes=<span class="n
     if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
     renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
     savedFormulas.forEach(function(item) {
-      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) { f.setAttribute('data-eq', item.eq); } else { f.removeAttribute('data-eq'); }
       var body = document.createElement('div'); body.className = 'formula-body';
       body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
       f.appendChild(body);

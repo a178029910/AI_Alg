@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BERT 模型详解 — Bidirectional Encoder Representations from Transformers 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -509,8 +510,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 <h3>5.3 MLM 的双向优势</h3>
-<p>与 GPT 的单向语言模型相比，MLM 的关键优势在于<strong>双向性</strong>。在 GPT 中，Token $x_t$ 只能依赖 $x_{<t}$；而在 BERT 中，$x_t$ 可以同时依赖 $x_{<t}$ 和 $x_{>t}$。这使得 BERT 的表示更加丰富，特别是在需要全局上下文的任务上。</p>
-<div class="formula" data-eq="(9)">$$P_{\text{BERT}}(x_i \mid x_{\setminus i}) \quad \text{vs} \quad P_{\text{GPT}}(x_i \mid x_{<i})$$</div>
+<p>与 GPT 的单向语言模型相比，MLM 的关键优势在于<strong>双向性</strong>。在 GPT 中，Token $x_t$ 只能依赖 $x_{&lt;t}$；而在 BERT 中，$x_t$ 可以同时依赖 $x_{&lt;t}$ 和 $x_{&gt;t}$。这使得 BERT 的表示更加丰富，特别是在需要全局上下文的任务上。</p>
+<div class="formula" data-eq="(9)">$$P_{\text{BERT}}(x_i \mid x_{\setminus i}) \quad \text{vs} \quad P_{\text{GPT}}(x_i \mid x_{&lt;i})$$</div>
 
 <div class="svg-box">
 <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
@@ -1280,7 +1281,7 @@ tr:hover td { background: var(--c-primary-ghost); }
       for (var i = 0; i < parts.length; i++) {
         if (isFormula && parts[i].trim()) {
           var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
-          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+          try { katex.render(parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
         } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
         isFormula = !isFormula;
       }

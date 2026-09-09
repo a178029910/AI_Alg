@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>人工智能算法精华介绍 — 算法总览</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -104,7 +105,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 <section class="hero">
   <h1>人工智能算法精华介绍</h1>
   <div class="subtitle">从经典机器学习到前沿深度学习 — 完整技术文档系列</div>
-  <div class="tagline">21 个核心算法与基础 · 浅色主题 · KaTeX 公式编号 · SVG 结构图 · PyTorch 代码 · 响应式布局</div>
+  <div class="tagline">24 个核心算法与基础 · KaTeX 公式编号 · SVG 结构图 · PyTorch 代码 · 响应式布局</div>
 </section>
 
 <nav class="filter-bar">
@@ -112,11 +113,12 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
   <button class="filter-btn active" data-cat="all">全部</button>
   <button class="filter-btn" data-cat="math">数学基础</button>
   <button class="filter-btn" data-cat="ml">机器学习</button>
+  <button class="filter-btn" data-cat="prob">随机过程</button>
   <button class="filter-btn" data-cat="deep">深度学习</button>
   <button class="filter-btn" data-cat="cv">计算机视觉</button>
   <button class="filter-btn" data-cat="nlp">自然语言处理</button>
   <button class="filter-btn" data-cat="graph">图学习</button>
-  <button class="filter-btn" data-cat="prob">概率与随机过程</button>
+  <button class="filter-btn" data-cat="rl">强化学习</button>
 </nav>
 
 <div class="container">
@@ -127,100 +129,40 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
   <div class="section-title" id="resultTitle">全部算法</div>
   <div class="grid" id="grid">
 
-    <!-- MathFoundation -->
-    <a class="card" href="MathFoundation/index.html" data-cat="math" data-name="数学基础 线性代数 矩阵分解 概率论 微积分 凸优化 贝叶斯 特征值 SVD Gram-Schmidt 条件数 KKT">
+    <!-- LinearAlgebra -->
+    <a class="card" href="LinearAlgebra/index.html" data-cat="math" data-name="线性代数 Linear Algebra 矩阵 向量 基 坐标 变换 特征值 对角化 SVD QR分解 最小二乘 范数 条件数 特殊矩阵">
       <div class="icon cat-math">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" opacity="0.3"/><path d="M3 12h18M12 3v18"/><circle cx="12" cy="12" r="2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18M3 21h18M3 3v18M21 3v18" opacity="0.3"/><path d="M7 8l4 8M17 8l-4 8M10 8h4M8 16h8"/></svg>
       </div>
-      <h3>数学基础</h3>
-      <div class="en-name">Math Foundation · Linear Algebra + Probability + Calculus</div>
-      <p class="desc">机器学习数学基石：线性代数（矩阵运算、分解、投影矩阵、特殊矩阵构建、范数、SVD）、概率论（贝叶斯、分布、极限定理）、微积分与凸优化（梯度、KKT 条件）三大模块 19 章完整知识体系。</p>
-      <div class="tags"><span class="tag tag-blue">线性代数</span><span class="tag tag-purple">概率论</span><span class="tag tag-green">微积分</span><span class="tag tag-orange">凸优化</span></div>
-      <div class="meta"><span class="count">82 公式 / 16 SVG / 8 代码</span><span class="arrow">&#8594;</span></div>
+      <h3>线性代数</h3>
+      <div class="en-name">Linear Algebra · Matrices, Vectors, Eigenvalues & Decompositions</div>
+      <p class="desc">从向量与矩阵运算出发，系统讲解基与坐标变换、特征值与矩阵分解（SVD/PCA/QR/LU/Cholesky）、正交化与最小二乘、范数与条件数、特殊矩阵与结构化矩阵，9 章完整知识体系。</p>
+      <div class="tags"><span class="tag tag-blue">线性代数</span><span class="tag tag-purple">矩阵分解</span><span class="tag tag-green">SVD</span><span class="tag tag-orange">最小二乘</span></div>
+      <div class="meta"><span class="count">64 公式 / 3 SVG / 14 参考文献</span><span class="arrow">&#8594;</span></div>
     </a>
 
-    <!-- MLP -->
-    <a class="card" href="MLP/index.html" data-cat="deep" data-name="MLP 多层感知机 Multilayer Perceptron 前馈网络 激活函数 反向传播">
-      <div class="icon cat-deep">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6l3 6M7 18l3-6M14 12l3-6M14 12l3 6"/></svg>
+    <!-- Probability -->
+    <a class="card" href="Probability/index.html" data-cat="math" data-name="概率论 Probability 贝叶斯 条件独立 随机变量 期望 方差 大数定律 中心极限定理 马尔可夫链 泊松过程 高斯过程 MCMC HMM 贝叶斯推断 共轭先验">
+      <div class="icon cat-math">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21C6 21 6 3 12 3S18 21 21 21" opacity="0.3"/><path d="M3 21h18"/><path d="M5 18C8 18 8 6 12 6S16 18 19 18"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
       </div>
-      <h3>多层感知机</h3>
-      <div class="en-name">MLP · Multilayer Perceptron</div>
-      <p class="desc">最基础的前馈神经网络，通过堆叠全连接层和激活函数实现非线性映射。理解 MLP 是理解所有深度学习模型的起点。</p>
-      <div class="tags"><span class="tag tag-blue">深度学习</span><span class="tag tag-orange">基础</span></div>
-      <div class="meta"><span class="count">35 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+      <h3>概率论</h3>
+      <div class="en-name">Probability Theory · Bayes · Random Variables · Limit Theorems · Stochastic Processes</div>
+      <p class="desc">从概率公理与贝叶斯定理出发，系统讲解条件独立、随机变量与分布、期望与方差性质、多元概率与极限定理、高级分布与贝叶斯推断、随机过程（马尔可夫链/泊松过程/高斯过程），7 章完整知识体系。</p>
+      <div class="tags"><span class="tag tag-blue">概率论</span><span class="tag tag-purple">贝叶斯</span><span class="tag tag-green">极限定理</span><span class="tag tag-orange">随机过程</span></div>
+      <div class="meta"><span class="count">41 公式 / 5 SVG / 15 参考文献</span><span class="arrow">&#8594;</span></div>
     </a>
 
-    <!-- RNN -->
-    <a class="card" href="RNN/index.html" data-cat="deep" data-name="RNN 循环神经网络 Recurrent Neural Network 循环 LSTM GRU 序列">
-      <div class="icon cat-deep">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 0 1-18 0z"/><path d="M3 12h4l3-6 4 12 3-6h4"/></svg>
+    <!-- Calculus -->
+    <a class="card" href="Calculus/index.html" data-cat="math" data-name="微积分与凸优化 Calculus 极限 连续 导数 链式法则 中值定理 泰勒展开 积分 级数 梯度 海森矩阵 雅可比 方向导数 全微分 凸集 凸函数 KKT 对偶 交叉熵 KL散度 信息熵 互信息 Adam SGD 牛顿法">
+      <div class="icon cat-math">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20C6 20 9 4 12 4S18 20 21 20" opacity="0.3"/><path d="M3 20h18"/><path d="M7 17l3-6 4 8 3-5" stroke-dasharray="2 2" opacity="0.6"/><circle cx="10" cy="11" r="1.5" fill="currentColor"/></svg>
       </div>
-      <h3>循环神经网络</h3>
-      <div class="en-name">RNN · Recurrent Neural Network</div>
-      <p class="desc">处理序列数据的核心架构，通过隐藏状态记忆历史信息。涵盖 BPTT、LSTM、GRU 等关键变体，是理解 Transformer 的重要基础。</p>
-      <div class="tags"><span class="tag tag-blue">深度学习</span><span class="tag tag-purple">序列建模</span></div>
-      <div class="meta"><span class="count">18 公式 / 12 SVG / 7 代码</span><span class="arrow">&#8594;</span></div>
-    </a>
-
-    <!-- CNN -->
-    <a class="card" href="CNN/index.html" data-cat="deep" data-name="CNN 卷积神经网络 Convolutional Neural Network 卷积 池化 感受野">
-      <div class="icon cat-deep">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      </div>
-      <h3>卷积神经网络</h3>
-      <div class="en-name">CNN · Convolutional Neural Network</div>
-      <p class="desc">通过局部卷积和权值共享高效提取空间特征，是计算机视觉的基石。涵盖卷积运算、池化、感受野、经典架构等。</p>
-      <div class="tags"><span class="tag tag-blue">深度学习</span><span class="tag tag-green">计算机视觉</span></div>
-      <div class="meta"><span class="count">22 公式 / 4 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
-    </a>
-
-    <!-- ViT -->
-    <a class="card" href="ViT/index.html" data-cat="cv" data-name="ViT 视觉Transformer Vision Transformer 图像分类 Patch Embedding">
-      <div class="icon cat-cv">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      </div>
-      <h3>视觉 Transformer</h3>
-      <div class="en-name">ViT · Vision Transformer</div>
-      <p class="desc">将 Transformer 引入计算机视觉，将图像切分为 Patch 序列处理。证明了纯注意力架构在视觉任务上的强大能力。</p>
-      <div class="tags"><span class="tag tag-green">计算机视觉</span><span class="tag tag-purple">注意力</span></div>
-      <div class="meta"><span class="count">25 公式 / 14 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
-    </a>
-
-    <!-- MAE -->
-    <a class="card" href="MAE/index.html" data-cat="cv" data-name="MAE 掩码自编码器 Masked Autoencoder 自监督 预训练 图像重建">
-      <div class="icon cat-cv">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" opacity="0.3"/><path d="M9 12h6M12 9v6"/></svg>
-      </div>
-      <h3>掩码自编码器</h3>
-      <div class="en-name">MAE · Masked Autoencoder</div>
-      <p class="desc">He 等提出的自监督视觉预训练方法，随机遮盖图像 Patch 后重建。非对称编解码器设计实现极高预训练效率。</p>
-      <div class="tags"><span class="tag tag-green">计算机视觉</span><span class="tag tag-purple">自监督</span></div>
-      <div class="meta"><span class="count">15 公式 / 7 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
-    </a>
-
-    <!-- BERT -->
-    <a class="card" href="BERT/index.html" data-cat="nlp" data-name="BERT 双向编码器 Bidirectional Encoder MLM NSP 预训练 语言模型">
-      <div class="icon cat-nlp">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/><path d="M10 7h4M10 17h4M7 10v4M17 10v4"/></svg>
-      </div>
-      <h3>BERT</h3>
-      <div class="en-name">BERT · Bidirectional Encoder Representations</div>
-      <p class="desc">基于双向 Transformer 编码器的预训练语言模型，通过 MLM 和 NSP 任务学习通用语言表示，开创了 NLP 预训练范式。</p>
-      <div class="tags"><span class="tag tag-orange">NLP</span><span class="tag tag-purple">预训练</span></div>
-      <div class="meta"><span class="count">23 公式 / 7 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
-    </a>
-
-    <!-- CLIP -->
-    <a class="card" href="CLIP/index.html" data-cat="cv" data-name="CLIP 对比学习 图文匹配 Contrastive Language-Image Pre-training 多模态">
-      <div class="icon cat-cv">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8l4-4 4 4M4 16l4 4 4-4M8 4v16M14 8h6M14 12h6M14 16h6"/></svg>
-      </div>
-      <h3>CLIP</h3>
-      <div class="en-name">CLIP · Contrastive Language-Image Pre-training</div>
-      <p class="desc">OpenAI 提出的多模态对比学习模型，通过对齐图像和文本的嵌入空间实现零样本分类，是视觉-语言模型的里程碑。</p>
-      <div class="tags"><span class="tag tag-green">多模态</span><span class="tag tag-purple">对比学习</span></div>
-      <div class="meta"><span class="count">18 公式 / 5 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+      <h3>微积分与凸优化</h3>
+      <div class="en-name">Calculus & Convex Optimization · Limits · Gradients · KKT · Information Theory</div>
+      <p class="desc">从极限与连续出发，沿微积分主线（一元微分 → 积分级数 → 多元微积分）与优化主线（凸优化理论 → 优化算法）展开，以信息论收官，串联概率论 + 微积分 + 凸优化，9 章完整知识体系。</p>
+      <div class="tags"><span class="tag tag-blue">微积分</span><span class="tag tag-purple">凸优化</span><span class="tag tag-green">信息论</span><span class="tag tag-orange">KKT</span></div>
+      <div class="meta"><span class="count">36 公式 / 3 SVG / 14 参考文献</span><span class="arrow">&#8594;</span></div>
     </a>
 
     <!-- LearningParadigms -->
@@ -295,16 +237,52 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
       <div class="meta"><span class="count">24 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
     </a>
 
-    <!-- GNN -->
-    <a class="card" href="GNN/index.html" data-cat="graph" data-name="GNN 图神经网络 Graph Neural Network 图卷积 GCN GAT GraphSAGE 消息传递">
-      <div class="icon cat-graph">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="12" cy="12" r="2"/><path d="M8 6h2M14 6h2M8 18h2M14 18h2M6 8v8M18 8v8"/></svg>
+    <!-- CRF -->
+    <a class="card" href="CRF/index.html" data-cat="prob" data-name="CRF 条件随机场 Conditional Random Field 序列标注 判别式 线性链 Viterbi 前向后向 NER">
+      <div class="icon cat-prob">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="8" r="2"/><circle cx="12" cy="8" r="2"/><circle cx="19" cy="8" r="2"/><path d="M7 8h3M14 8h3"/><path d="M5 10v8M12 10v8M19 10v8" stroke-dasharray="3 2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></svg>
       </div>
-      <h3>图神经网络</h3>
-      <div class="en-name">GNN · Graph Neural Network</div>
-      <p class="desc">在非欧图结构上学习的深度学习架构，通过消息传递聚合邻居信息。涵盖 GCN、GAT、GraphSAGE、GIN 等核心模型。</p>
-      <div class="tags"><span class="tag tag-purple">图学习</span><span class="tag tag-blue">深度学习</span></div>
-      <div class="meta"><span class="count">18 公式 / 4 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+      <h3>条件随机场</h3>
+      <div class="en-name">CRF · Conditional Random Field</div>
+      <p class="desc">判别式概率图模型，直接对条件概率 P(y|x) 建模。通过全局归一化解决标注偏置问题，结合前向-后向算法与 Viterbi 解码，是序列标注的核心方法。</p>
+      <div class="tags"><span class="tag tag-blue">概率</span><span class="tag tag-orange">序列标注</span><span class="tag tag-purple">判别式</span></div>
+      <div class="meta"><span class="count">29 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- MLP -->
+    <a class="card" href="MLP/index.html" data-cat="deep" data-name="MLP 多层感知机 Multilayer Perceptron 前馈网络 激活函数 反向传播">
+      <div class="icon cat-deep">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6l3 6M7 18l3-6M14 12l3-6M14 12l3 6"/></svg>
+      </div>
+      <h3>多层感知机</h3>
+      <div class="en-name">MLP · Multilayer Perceptron</div>
+      <p class="desc">最基础的前馈神经网络，通过堆叠全连接层和激活函数实现非线性映射。理解 MLP 是理解所有深度学习模型的起点。</p>
+      <div class="tags"><span class="tag tag-blue">深度学习</span><span class="tag tag-orange">基础</span></div>
+      <div class="meta"><span class="count">35 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- CNN -->
+    <a class="card" href="CNN/index.html" data-cat="deep" data-name="CNN 卷积神经网络 Convolutional Neural Network 卷积 池化 感受野">
+      <div class="icon cat-deep">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </div>
+      <h3>卷积神经网络</h3>
+      <div class="en-name">CNN · Convolutional Neural Network</div>
+      <p class="desc">通过局部卷积和权值共享高效提取空间特征，是计算机视觉的基石。涵盖卷积运算、池化、感受野、经典架构等。</p>
+      <div class="tags"><span class="tag tag-blue">深度学习</span><span class="tag tag-green">计算机视觉</span></div>
+      <div class="meta"><span class="count">22 公式 / 4 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- RNN -->
+    <a class="card" href="RNN/index.html" data-cat="deep" data-name="RNN 循环神经网络 Recurrent Neural Network 循环 LSTM GRU 序列">
+      <div class="icon cat-deep">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 0 1-18 0z"/><path d="M3 12h4l3-6 4 12 3-6h4"/></svg>
+      </div>
+      <h3>循环神经网络</h3>
+      <div class="en-name">RNN · Recurrent Neural Network</div>
+      <p class="desc">处理序列数据的核心架构，通过隐藏状态记忆历史信息。涵盖 BPTT、LSTM、GRU 等关键变体，是理解 Transformer 的重要基础。</p>
+      <div class="tags"><span class="tag tag-blue">深度学习</span><span class="tag tag-purple">序列建模</span></div>
+      <div class="meta"><span class="count">18 公式 / 12 SVG / 7 代码</span><span class="arrow">&#8594;</span></div>
     </a>
 
     <!-- ResNet -->
@@ -331,16 +309,28 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
       <div class="meta"><span class="count">公式 / SVG / 代码</span><span class="arrow">&#8594;</span></div>
     </a>
 
-    <!-- CRF -->
-    <a class="card" href="CRF/index.html" data-cat="prob" data-name="CRF 条件随机场 Conditional Random Field 序列标注 判别式 线性链 Viterbi 前向后向 NER">
-      <div class="icon cat-prob">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="8" r="2"/><circle cx="12" cy="8" r="2"/><circle cx="19" cy="8" r="2"/><path d="M7 8h3M14 8h3"/><path d="M5 10v8M12 10v8M19 10v8" stroke-dasharray="3 2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="19" cy="18" r="2"/></svg>
+    <!-- RL -->
+    <a class="card" href="RL/index.html" data-cat="rl" data-name="强化学习 Reinforcement Learning Q-Learning DQN PPO Actor-Critic DDPG 马尔可夫决策过程 策略梯度 时序差分">
+      <div class="icon cat-deep">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 11l8-5M7 13l8 5"/><path d="M17 7v4M17 13v4"/></svg>
       </div>
-      <h3>条件随机场</h3>
-      <div class="en-name">CRF · Conditional Random Field</div>
-      <p class="desc">判别式概率图模型，直接对条件概率 P(y|x) 建模。通过全局归一化解决标注偏置问题，结合前向-后向算法与 Viterbi 解码，是序列标注的核心方法。</p>
-      <div class="tags"><span class="tag tag-blue">概率</span><span class="tag tag-orange">序列标注</span><span class="tag tag-purple">判别式</span></div>
-      <div class="meta"><span class="count">29 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+      <h3>强化学习</h3>
+      <div class="en-name">RL · Reinforcement Learning</div>
+      <p class="desc">智能体通过与环境交互试错学习最优策略。涵盖马尔可夫决策过程、动态规划、Q-Learning、DQN、策略梯度、Actor-Critic、PPO、DDPG 等完整体系，是迈向通用智能的核心范式。</p>
+      <div class="tags"><span class="tag tag-blue">强化学习</span><span class="tag tag-purple">智能体</span><span class="tag tag-green">决策</span></div>
+      <div class="meta"><span class="count">24 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- GNN -->
+    <a class="card" href="GNN/index.html" data-cat="graph" data-name="GNN 图神经网络 Graph Neural Network 图卷积 GCN GAT GraphSAGE 消息传递">
+      <div class="icon cat-graph">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="12" cy="12" r="2"/><path d="M8 6h2M14 6h2M8 18h2M14 18h2M6 8v8M18 8v8"/></svg>
+      </div>
+      <h3>图神经网络</h3>
+      <div class="en-name">GNN · Graph Neural Network</div>
+      <p class="desc">在非欧图结构上学习的深度学习架构，通过消息传递聚合邻居信息。涵盖 GCN、GAT、GraphSAGE、GIN 等核心模型。</p>
+      <div class="tags"><span class="tag tag-purple">图学习</span><span class="tag tag-blue">深度学习</span></div>
+      <div class="meta"><span class="count">18 公式 / 4 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
     </a>
 
     <!-- Graphormer -->
@@ -355,6 +345,66 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
       <div class="meta"><span class="count">16 公式 / 3 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
     </a>
 
+    <!-- ViT -->
+    <a class="card" href="ViT/index.html" data-cat="cv" data-name="ViT 视觉Transformer Vision Transformer 图像分类 Patch Embedding">
+      <div class="icon cat-cv">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </div>
+      <h3>视觉 Transformer</h3>
+      <div class="en-name">ViT · Vision Transformer</div>
+      <p class="desc">将 Transformer 引入计算机视觉，将图像切分为 Patch 序列处理。证明了纯注意力架构在视觉任务上的强大能力。</p>
+      <div class="tags"><span class="tag tag-green">计算机视觉</span><span class="tag tag-purple">注意力</span></div>
+      <div class="meta"><span class="count">25 公式 / 14 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- MAE -->
+    <a class="card" href="MAE/index.html" data-cat="cv" data-name="MAE 掩码自编码器 Masked Autoencoder 自监督 预训练 图像重建">
+      <div class="icon cat-cv">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" opacity="0.3"/><path d="M9 12h6M12 9v6"/></svg>
+      </div>
+      <h3>掩码自编码器</h3>
+      <div class="en-name">MAE · Masked Autoencoder</div>
+      <p class="desc">He 等提出的自监督视觉预训练方法，随机遮盖图像 Patch 后重建。非对称编解码器设计实现极高预训练效率。</p>
+      <div class="tags"><span class="tag tag-green">计算机视觉</span><span class="tag tag-purple">自监督</span></div>
+      <div class="meta"><span class="count">15 公式 / 7 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- CLIP -->
+    <a class="card" href="CLIP/index.html" data-cat="cv" data-name="CLIP 对比学习 图文匹配 Contrastive Language-Image Pre-training 多模态">
+      <div class="icon cat-cv">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8l4-4 4 4M4 16l4 4 4-4M8 4v16M14 8h6M14 12h6M14 16h6"/></svg>
+      </div>
+      <h3>CLIP</h3>
+      <div class="en-name">CLIP · Contrastive Language-Image Pre-training</div>
+      <p class="desc">OpenAI 提出的多模态对比学习模型，通过对齐图像和文本的嵌入空间实现零样本分类，是视觉-语言模型的里程碑。</p>
+      <div class="tags"><span class="tag tag-green">多模态</span><span class="tag tag-purple">对比学习</span></div>
+      <div class="meta"><span class="count">18 公式 / 5 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- BERT -->
+    <a class="card" href="BERT/index.html" data-cat="nlp" data-name="BERT 双向编码器 Bidirectional Encoder MLM NSP 预训练 语言模型">
+      <div class="icon cat-nlp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/><path d="M10 7h4M10 17h4M7 10v4M17 10v4"/></svg>
+      </div>
+      <h3>BERT</h3>
+      <div class="en-name">BERT · Bidirectional Encoder Representations</div>
+      <p class="desc">基于双向 Transformer 编码器的预训练语言模型，通过 MLM 和 NSP 任务学习通用语言表示，开创了 NLP 预训练范式。</p>
+      <div class="tags"><span class="tag tag-orange">NLP</span><span class="tag tag-purple">预训练</span></div>
+      <div class="meta"><span class="count">23 公式 / 7 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
+    <!-- GPT -->
+    <a class="card" href="GPT/index.html" data-cat="nlp" data-name="GPT 生成式预训练 Transformer 自回归 语言模型 decoder 预训练 In-Context Learning ChatGPT GPT-4 RLHF PPO Scaling Laws 涌现能力">
+      <div class="icon cat-nlp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="12" r="2"/><path d="M18 14v5"/></svg>
+      </div>
+      <h3>GPT 生成式预训练</h3>
+      <div class="en-name">GPT · Generative Pre-trained Transformer</div>
+      <p class="desc">基于 Transformer Decoder 的自回归语言模型，通过"预测下一个词"预训练获得通用语言能力。涵盖 GPT-1 到 GPT-4 的演进、Scaling Laws、In-Context Learning、RLHF 对齐等核心技术。</p>
+      <div class="tags"><span class="tag tag-orange">NLP</span><span class="tag tag-purple">自回归</span></div>
+      <div class="meta"><span class="count">22 公式 / 8 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
+    </a>
+
     <a class="card" href="Flamingo/index.html" data-cat="nlp" data-name="Flamingo 视觉语言模型 Visual Language Model Few-Shot 多模态 Cross-Attention Perceiver Resampler 门控 DeepMind Chinchilla NFNet">
       <div class="icon cat-nlp">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10" opacity="0.4" stroke-dasharray="2 2"/><circle cx="12" cy="11" r="1.5" fill="currentColor" stroke="none"/><circle cx="6" cy="14" r="1.5" fill="currentColor" stroke="none" opacity="0.6"/><circle cx="18" cy="14" r="1.5" fill="currentColor" stroke="none" opacity="0.6"/></svg>
@@ -365,24 +415,12 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
       <div class="tags"><span class="tag tag-orange">多模态</span><span class="tag tag-green">Few-Shot</span></div>
       <div class="meta"><span class="count">19 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
     </a>
-
-    <!-- RL -->
-    <a class="card" href="RL/index.html" data-cat="deep" data-name="强化学习 Reinforcement Learning Q-Learning DQN PPO Actor-Critic DDPG 马尔可夫决策过程 策略梯度 时序差分">
-      <div class="icon cat-deep">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M7 11l8-5M7 13l8 5"/><path d="M17 7v4M17 13v4"/></svg>
-      </div>
-      <h3>强化学习</h3>
-      <div class="en-name">RL · Reinforcement Learning</div>
-      <p class="desc">智能体通过与环境交互试错学习最优策略。涵盖马尔可夫决策过程、动态规划、Q-Learning、DQN、策略梯度、Actor-Critic、PPO、DDPG 等完整体系，是迈向通用智能的核心范式。</p>
-      <div class="tags"><span class="tag tag-blue">深度学习</span><span class="tag tag-purple">智能体</span><span class="tag tag-green">决策</span></div>
-      <div class="meta"><span class="count">24 公式 / 6 SVG / 6 代码</span><span class="arrow">&#8594;</span></div>
-    </a>
-
+  
   </div>
 </div>
 
 <footer class="footer">
-  人工智能算法精华介绍系列技术文档 · 统一浅色主题 + KaTeX 公式编号 + SVG 结构图 + PyTorch 代码 · 响应式布局
+  人工智能算法精华介绍系列技术文档 By SanJoseCN
 </footer>
 
 <script>
@@ -390,7 +428,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 const filterBtns = document.querySelectorAll('.filter-btn');
 const cards = document.querySelectorAll('.card');
 const resultTitle = document.getElementById('resultTitle');
-  const catNames = { all: '全部算法', deep: '深度学习', cv: '计算机视觉', nlp: '自然语言处理', ml: '机器学习', graph: '图学习', prob: '概率与随机过程', math: '数学基础' };
+  const catNames = { all: '全部算法', math: '数学基础', ml: '机器学习', prob: '随机过程', deep: '深度学习', cv: '计算机视觉', nlp: '自然语言处理', graph: '图学习', rl: '强化学习' };
 
 filterBtns.forEach(btn => {
   btn.addEventListener('click', () => {

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flamingo 模型详解 — Visual Language Model with Few-Shot Learning 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -720,9 +721,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 </table>
 
 <p>训练目标统一为<strong>自回归语言建模损失</strong>——给定图像（或多张图像）和上文文本，预测下一个 token：</p>
-<div class="formula" data-eq="(16)">$$\mathcal{L} = -\sum_{t=1}^{T} \log p(x_t \mid x_{<t}, \mathbf{I}_1, \ldots, \mathbf{I}_K)$$</div>
+<div class="formula" data-eq="(16)">$$\mathcal{L} = -\sum_{t=1}^{T} \log p(x_t \mid x_{&lt;t}, \mathbf{I}_1, \ldots, \mathbf{I}_K)$$</div>
 
-<p>其中 $x_t$ 是第 $t$ 个文本 token，$x_{<t}$ 是上文 token，$\mathbf{I}_1, \ldots, \mathbf{I}_K$ 是 $K$ 张图像的视觉特征。注意图像部分不参与损失计算（仅在 Cross-Attention 中提供视觉信息），损失只计算文本部分。</p>
+<p>其中 $x_t$ 是第 $t$ 个文本 token，$x_{&lt;t}$ 是上文 token，$\mathbf{I}_1, \ldots, \mathbf{I}_K$ 是 $K$ 张图像的视觉特征。注意图像部分不参与损失计算（仅在 Cross-Attention 中提供视觉信息），损失只计算文本部分。</p>
 </section>
 
 <!-- ========== 第八章 ========== -->
@@ -789,8 +790,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h2><span class="num">9</span>多图像推理与 Flamingo-Mini</h2>
 
 <h3>9.1 多图像推理</h3>
-<p>Flamingo 的一个独特能力是<strong>多图像推理</strong>——在单个 prompt 中包含多张图像，模型可以综合多张图像的信息进行推理。这是通过在文本序列中插入特殊图像占位符 `<image>` 实现的：</p>
-<div class="formula" data-eq="(18)">$$\text{Input} = \text{"<image>"}\;\text{img}_1\;\text{"<image>"}\;\text{img}_2\;\ldots\;\text{"<image>"}\;\text{img}_K\;\text{Question?}$$</div>
+<p>Flamingo 的一个独特能力是<strong>多图像推理</strong>——在单个 prompt 中包含多张图像，模型可以综合多张图像的信息进行推理。这是通过在文本序列中插入特殊图像占位符 <code>&lt;image&gt;</code> 实现的：</p>
+<div class="formula" data-eq="(18)">$$\text{Input} = \text{"&lt;image&gt;"}\;\text{img}_1\;\text{"&lt;image&gt;"}\;\text{img}_2\;\ldots\;\text{"&lt;image&gt;"}\;\text{img}_K\;\text{Question?}$$</div>
 
 <p>每张图像通过 Perceiver Resampler 独立提取 latent tokens，然后所有图像的 latent tokens 按顺序拼接，送入 LLM 的 Cross-Attention 层。这使得 Flamingo 可以处理视频理解、多图比较等任务。</p>
 
@@ -1275,7 +1276,7 @@ def train_flamingo(model, dataloader, epochs=10, lr=1e-4, device="cuda"):
       for (var i = 0; i < parts.length; i++) {
         if (isFormula && parts[i].trim()) {
           var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
-          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+          try { katex.render(parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
         } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
         isFormula = !isFormula;
       }

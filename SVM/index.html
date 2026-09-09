@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SVM 详解 — Support Vector Machine 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -61,7 +62,7 @@ em { color: var(--c-warn); font-style: normal; font-weight: 600; }
 pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
 pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
 code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
-.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; overflow-x: auto; }
 .formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
 .formula.multi { text-align: left; padding-left: 32px; }
 .formula.multi .katex-display { margin: 8px 0; }
@@ -208,66 +209,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="formula" data-eq="(4)">$$\gamma_i = \frac{y_i(\mathbf{w} \cdot \mathbf{x}_i + b)}{\|\mathbf{w}\|}$$</div>
 <p>几何间隔就是样本点到超平面的<strong>有符号距离</strong>，不受 $\mathbf{w}$ 缩放影响。</p>
 
-<div class="svg-box">
-<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <marker id="arrow1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L6,3 L0,6" fill="#334155"/>
-  </marker>
-</defs>
-<!-- 坐标轴 -->
-<line x1="60" y1="300" x2="740" y2="300" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrow1)"/>
-<line x1="100" y1="320" x2="100" y2="40" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arrow1)"/>
-<text x="735" y="320" fill="#64748b" font-size="13">x₁</text>
-<text x="75" y="45" fill="#64748b" font-size="13">x₂</text>
-<!-- 分类区域底色 -->
-<rect x="100" y="50" width="300" height="250" fill="#dbeafe" opacity="0.3" rx="4"/>
-<rect x="400" y="50" width="290" height="250" fill="#fee2e2" opacity="0.3" rx="4"/>
-<!-- 间隔边界 w·x+b=-1 -->
-<line x1="350" y1="50" x2="500" y2="300" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,4"/>
-<text x="340" y="65" fill="#2563eb" font-size="12">w·x+b = -1</text>
-<!-- 间隔边界 w·x+b=+1 -->
-<line x1="250" y1="50" x2="400" y2="300" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,4"/>
-<text x="230" y="65" fill="#dc2626" font-size="12">w·x+b = +1</text>
-<!-- 分隔超平面 w·x+b=0 -->
-<line x1="300" y1="50" x2="450" y2="300" stroke="#0f172a" stroke-width="2.5" class="glow-ring"/>
-<text x="380" y="200" fill="#0f172a" font-size="13" font-weight="700" transform="rotate(43 380 200)">w·x+b = 0</text>
-<!-- 间隔宽度标注 -->
-<line x1="325" y1="175" x2="375" y2="175" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="3,3"/>
-<text x="335" y="168" fill="#7c3aed" font-size="13" font-weight="700">2γ</text>
-<!-- w 向量 -->
-<line x1="375" y1="175" x2="430" y2="100" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#arrow1)"/>
-<text x="415" y="95" fill="#7c3aed" font-size="14" font-weight="700">w</text>
-<!-- 正类数据点 -->
-<circle cx="160" cy="250" r="6" fill="#3b82f6"/>
-<circle cx="180" cy="220" r="6" fill="#3b82f6"/>
-<circle cx="140" cy="210" r="6" fill="#3b82f6"/>
-<circle cx="200" cy="190" r="6" fill="#3b82f6"/>
-<circle cx="170" cy="170" r="6" fill="#3b82f6"/>
-<circle cx="220" cy="210" r="6" fill="#3b82f6"/>
-<!-- 负类数据点 -->
-<circle cx="560" cy="130" r="6" fill="#ef4444"/>
-<circle cx="600" cy="100" r="6" fill="#ef4444"/>
-<circle cx="580" cy="80" r="6" fill="#ef4444"/>
-<circle cx="620" cy="140" r="6" fill="#ef4444"/>
-<circle cx="540" cy="100" r="6" fill="#ef4444"/>
-<circle cx="640" cy="90" r="6" fill="#ef4444"/>
-<!-- 支持向量（大圈） -->
-<circle cx="220" cy="210" r="10" fill="none" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
-<circle cx="540" cy="100" r="10" fill="none" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
-<!-- 图例 -->
-<rect x="520" y="245" width="14" height="14" fill="#3b82f6"/>
-<text x="540" y="257" fill="#334155" font-size="12">正类 (y=+1)</text>
-<rect x="630" y="245" width="14" height="14" fill="#ef4444"/>
-<text x="650" y="257" fill="#334155" font-size="12">负类 (y=-1)</text>
-<circle cx="540" cy="278" r="6" fill="none" stroke="#7c3aed" stroke-width="2"/>
-<text x="555" y="282" fill="#334155" font-size="12">支持向量</text>
-</svg>
-</div>
-
 <h3>2.3 最大间隔优化问题</h3>
 <p>SVM 的目标是：在所有能正确分类的超平面中，找到使<strong>最小几何间隔最大化</strong>的那一个。即：</p>
-<p>$$\max_{\mathbf{w}, b} \quad \gamma = \min_{i} \frac{y_i(\mathbf{w} \cdot \mathbf{x}_i + b)}{\|\mathbf{w}\|}$$</p>
+<div class="formula">$$\max_{\mathbf{w}, b} \quad \gamma = \min_{i} \frac{y_i(\mathbf{w} \cdot \mathbf{x}_i + b)}{\|\mathbf{w}\|}$$</div>
 <p>由于 $\mathbf{w}$ 和 $b$ 可以等比例缩放，我们令函数间隔 $\min_i y_i(\mathbf{w} \cdot \mathbf{x}_i + b) = 1$（即归一化约束），于是优化问题变为：</p>
 <div class="formula" data-eq="(5)">$$\min_{\mathbf{w}, b} \quad \frac{1}{2}\|\mathbf{w}\|^2 \qquad \text{s.t.} \quad y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1, \quad i = 1, \ldots, n$$</div>
 <p>这是一个<strong>凸二次规划</strong>（Convex Quadratic Programming）问题：目标函数是二次凸函数，约束是线性不等式。凸 QP 保证了<strong>全局最优解</strong>的存在性和唯一性——这是 SVM 相比感知机的巨大优势。</p>
@@ -280,30 +224,50 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>2.4 几何间隔与函数间隔的关系</h3>
 
 <div class="svg-box">
-<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
 <defs>
-  <marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-    <path d="M0,0 L6,3 L0,6" fill="#334155"/>
+  <marker id="arrW" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6" fill="#dc2626"/>
   </marker>
 </defs>
-<!-- 超平面 -->
-<line x1="100" y1="280" x2="700" y2="80" stroke="#0f172a" stroke-width="2.5"/>
-<text x="500" y="150" fill="#0f172a" font-size="13" font-weight="700" transform="rotate(-18 500 150)">超平面 w·x+b=0</text>
-<!-- 数据点 -->
-<circle cx="300" cy="130" r="8" fill="#3b82f6"/>
-<text x="280" y="125" fill="#334155" font-size="12">x_i</text>
-<!-- 垂直距离（几何间隔） -->
-<line x1="300" y1="130" x2="400" y2="276" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5,3"/>
-<text x="330" y="220" fill="#7c3aed" font-size="13" font-weight="700">γ (几何间隔)</text>
-<text x="330" y="238" fill="#7c3aed" font-size="11">= ŷ/||w||</text>
-<!-- w 方向 -->
-<line x1="400" y1="276" x2="340" y2="200" stroke="#dc2626" stroke-width="2.5" marker-end="url(#arrow2)"/>
-<text x="315" y="185" fill="#dc2626" font-size="14" font-weight="700">w</text>
+
+<!-- 超平面（水平线，便于理解） -->
+<line x1="80" y1="280" x2="720" y2="280" stroke="#0f172a" stroke-width="2.5"/>
+<text x="640" y="302" fill="#0f172a" font-size="13" font-weight="700">超平面 w·x + b = 0</text>
+
+<!-- 数据点 x_i -->
+<circle cx="380" cy="100" r="7" fill="#3b82f6"/>
+<text x="392" y="96" fill="#334155" font-size="13" font-weight="600">x_i</text>
+
+<!-- 垂足 H（x_i 在超平面上的投影） -->
+<circle cx="380" cy="280" r="4" fill="#0f172a"/>
+<text x="392" y="296" fill="#334155" font-size="12">H</text>
+
+<!-- 几何间隔：x_i 到 H 的垂直距离 -->
+<line x1="380" y1="107" x2="380" y2="273" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#arrW)"/>
+<rect x="357" y="180" width="46" height="22" fill="#f8fafc" stroke="none"/>
+<text x="380" y="196" text-anchor="middle" fill="#7c3aed" font-size="14" font-weight="700">γ</text>
+<text x="400" y="165" fill="#7c3aed" font-size="11">几何间隔</text>
+
+<!-- w 向量（法向量，从 H 向上，与垂线方向一致） -->
+<line x1="380" y1="280" x2="380" y2="200" stroke="#dc2626" stroke-width="2" marker-end="url(#arrW)" opacity="0"/>
+<line x1="460" y1="280" x2="460" y2="200" stroke="#dc2626" stroke-width="2.5" marker-end="url(#arrW)"/>
+<text x="470" y="245" fill="#dc2626" font-size="14" font-weight="700">w</text>
+<text x="470" y="262" fill="#dc2626" font-size="10">法向量</text>
+
 <!-- 函数间隔标注 -->
-<rect x="280" y="115" width="40" height="15" fill="#dbeafe" opacity="0.7" rx="2"/>
-<text x="270" y="100" fill="#2563eb" font-size="12">ŷ=w·x_i+b</text>
-<!-- 法线方向说明 -->
-<text x="100" y="320" fill="#64748b" font-size="12">几何间隔 = 点到超平面的实际距离（垂直），不随 w 缩放变化</text>
+<rect x="410" y="120" width="120" height="26" rx="6" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+<text x="470" y="138" text-anchor="middle" fill="#1d4ed8" font-size="12" font-weight="600">ŷ = y_i(w·x_i+b)</text>
+<line x1="387" y1="103" x2="410" y2="128" stroke="#2563eb" stroke-width="1" stroke-dasharray="3,3"/>
+<text x="430" y="115" fill="#2563eb" font-size="10">函数间隔</text>
+
+<!-- 关系公式 -->
+<rect x="520" y="170" width="170" height="60" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+<text x="605" y="195" text-anchor="middle" fill="#334155" font-size="14" font-weight="700">γ = ŷ / ||w||</text>
+<text x="605" y="215" text-anchor="middle" fill="#64748b" font-size="11">几何间隔 = 函数间隔 / 范数</text>
+
+<!-- 底部说明 -->
+<text x="400" y="340" text-anchor="middle" fill="#64748b" font-size="12">γ 是点到超平面的真实垂直距离，不随 w 等比缩放变化；ŷ 随 w 缩放而变化</text>
 </svg>
 </div>
 
@@ -344,7 +308,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>3.4 KKT 条件的互补松弛性</h3>
 <p>KKT 互补松弛条件为：</p>
-<p>$$\alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right] = 0, \quad \forall i$$</p>
+<div class="formula">$$\alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right] = 0, \quad \forall i$$</div>
 <p>这个条件将样本分为三类：</p>
 
 <table>
@@ -363,7 +327,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>4.1 从线性到非线性</h3>
 <p>现实中的数据往往<strong>线性不可分</strong>——无法用一个超平面将两类分开。解决思路是将数据从原始空间映射到更高维的空间，在高维空间中数据可能变得线性可分。</p>
 <p>设映射函数为 $\phi(\mathbf{x})$，则在高维空间中的决策函数为：</p>
-<p>$$f(\mathbf{x}) = \text{sign}\left( \sum_i \alpha_i y_i \, \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}) + b \right)$$</p>
+<div class="formula">$$f(\mathbf{x}) = \text{sign}\left( \sum_i \alpha_i y_i \, \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}) + b \right)$$</div>
 <p>但显式计算 $\phi(\mathbf{x})$ 可能维度极高甚至无限维，计算不可行。<strong>核技巧</strong>的核心思想是：不显式计算映射，而是直接计算映射后的内积。</p>
 
 <div class="formula" data-eq="(11)">$$K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}_j)$$</div>
@@ -627,7 +591,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>6.4 $\alpha_2$ 的解析解</h3>
 <p>固定其他变量后，$\alpha_2$ 的更新公式为：</p>
-<p>$$\alpha_2^{new} = \alpha_2^{old} + \frac{y_2(E_1 - E_2)}{\eta}$$</p>
+<div class="formula">$$\alpha_2^{new} = \alpha_2^{old} + \frac{y_2(E_1 - E_2)}{\eta}$$</div>
 <p>其中 $\eta = K_{11} + K_{22} - 2K_{12}$ 是核函数在两个样本上的组合值。然后根据约束 $0 \leq \alpha_2 \leq C$ 对 $\alpha_2^{new}$ 进行裁剪，并由等式约束求出 $\alpha_1^{new}$。</p>
 
 <div class="callout">
@@ -678,7 +642,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <!-- 决策 -->
 <rect x="80" y="250" width="260" height="30" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
 <text x="95" y="270" fill="#334155" font-size="12">预测: argmax f_k(x)</text>
-<text x="80" y="305" fill="#64748b" font-size="11">需要 K 个分类器（K=类别数）</text>
+<text x="100" y="305" fill="#64748b" font-size="11">需要 K 个分类器（K=类别数）</text>
 
 <!-- 右侧 OvO -->
 <text x="460" y="25" fill="#0f172a" font-size="15" font-weight="700">OvO (One-vs-One)</text>
@@ -706,7 +670,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td><strong>OvR</strong></td><td>$K$</td><td>全部数据</td><td>取 $f_k(\mathbf{x})$ 最大的类</td><td>分类器少但类别不平衡；训练慢</td></tr>
 <tr><td><strong>OvO</strong></td><td>$K(K-1)/2$</td><td>仅 2 类数据</td><td>投票表决</td><td>训练快但分类器多；适合中小数据</td></tr>
 <tr><td><strong>DAG-SVM</strong></td><td>$K(K-1)/2$</td><td>仅 2 类数据</td><td>有向无环图逐层淘汰</td><td>预测快($K-1$ 次)；避免投票歧义</td></tr>
-<tr><td><strong>ECOC</strong></td><td>$\sim \log_2 K$</td><td>按编码矩阵划分</td><td>最近编码匹配</td><th>纠错能力强；设计复杂</td></tr>
+<tr><td><strong>ECOC</strong></td><td>$\sim \log_2 K$</td><td>按编码矩阵划分</td><td>最近编码匹配</td><td>纠错能力强；设计复杂</td></tr>
 </table>
 
 <div class="callout">
@@ -725,7 +689,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>8.2 $\varepsilon$-不敏感损失</h3>
 <p>SVR 使用 <strong>$\varepsilon$-不敏感损失函数</strong>（$\varepsilon$-insensitive loss）：</p>
-<p>$$L_\varepsilon(y, f(\mathbf{x})) = \max(0, |y - f(\mathbf{x})| - \varepsilon)$$</p>
+<div class="formula">$$L_\varepsilon(y, f(\mathbf{x})) = \max(0, |y - f(\mathbf{x})| - \varepsilon)$$</div>
 <p>这意味着：只要预测值与真实值的绝对差不超过 $\varepsilon$，损失就为零。$\varepsilon$ 定义了一条宽度为 $2\varepsilon$ 的<strong>不敏感带</strong>。</p>
 
 <div class="svg-box">
@@ -1443,7 +1407,7 @@ gamma_range = [<span class="num">0.001</span>, <span class="num">0.01</span>, <s
   });
   function renderAll() {
     if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
-    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
     savedFormulas.forEach(function(item) {
       var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
       var body = document.createElement('div'); body.className = 'formula-body';

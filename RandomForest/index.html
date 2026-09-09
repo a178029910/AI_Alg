@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>随机森林与集成学习 详解 — Random Forest &amp; Ensemble Learning 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -304,6 +305,26 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="formula" data-eq="(5)">$$\text{Gini}(D, A) = \sum_{v=1}^{V} \frac{|D_v|}{|D|} \, \text{Gini}(D_v)$$</div>
 
 <p>CART 分类树在候选特征中选取<strong>基尼指数最小</strong>的特征作为最优划分特征，并支持对连续特征做二分。</p>
+
+<div class="callout">
+<div class="callout-title">基尼指数计算示例：水果分类（同前数据集）</div>
+<p>沿用信息增益示例的水果数据集 $D$（3 苹果、2 橙子、1 香蕉），对比<strong>颜色</strong>和<strong>大小</strong>两个特征的基尼指数。</p>
+
+<p><strong>第一步：计算划分前的基尼值 $\text{Gini}(D)$</strong>：</p>
+<div class="formula">$$\text{Gini}(D) = 1 - \left[\left(\frac{3}{6}\right)^2 + \left(\frac{2}{6}\right)^2 + \left(\frac{1}{6}\right)^2\right] = 1 - \frac{14}{36} \approx 0.611$$</div>
+
+<p><strong>第二步：计算颜色的加权基尼指数</strong>。红色 $D_1$（4 个：3 苹果 + 1 香蕉）、黄色 $D_2$（2 个：2 橙子，纯净）：</p>
+<div class="formula">$$\text{Gini}(D_1) = 1 - \left[\left(\frac{3}{4}\right)^2 + \left(\frac{1}{4}\right)^2\right] = 1 - \frac{10}{16} = 0.375$$</div>
+<div class="formula">$$\text{Gini}(D_2) = 1 - \left(\frac{2}{2}\right)^2 = 0 \quad (\text{纯子集})$$</div>
+<div class="formula">$$\text{Gini}(D, \text{color}) = \frac{4}{6} \times 0.375 + \frac{2}{6} \times 0 = 0.250$$</div>
+
+<p><strong>第三步：计算大小的加权基尼指数</strong>。大 $D_1$（2 个：1 苹果 + 1 香蕉）、小 $D_2$（4 个：2 苹果 + 1 橙子 + 1 香蕉）：</p>
+<div class="formula">$$\text{Gini}(D_{\text{大}}) = 1 - \left[\left(\frac{1}{2}\right)^2 + \left(\frac{1}{2}\right)^2\right] = 0.500$$</div>
+<div class="formula">$$\text{Gini}(D_{\text{小}}) = 1 - \left[\left(\frac{2}{4}\right)^2 + \left(\frac{1}{4}\right)^2 + \left(\frac{1}{4}\right)^2\right] = 1 - \frac{6}{16} = 0.625$$</div>
+<div class="formula">$$\text{Gini}(D, \text{size}) = \frac{2}{6} \times 0.500 + \frac{4}{6} \times 0.625 \approx 0.583$$</div>
+
+<p><strong>结论</strong>：$\text{Gini}(D, \text{color}) = 0.250 \ll \text{Gini}(D, \text{size}) = 0.583$，CART 同样选择<strong>颜色</strong>作为最优划分特征。与信息增益的结论一致——颜色的划分使子集更纯。值得注意的是，基尼指数与信息熵虽然公式不同，但在大多数实际任务中的特征选择结果高度一致，而基尼指数因无需对数运算，计算更快，这也是 CART 选择它的原因之一。</p>
+</div>
 
 <h3>1.4 ID3 / C4.5 / CART 对比</h3>
 <div class="table-wrap">
@@ -1509,10 +1530,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>从单棵决策树到梯度提升框架，集成学习走过了 30 余年。下图给出关键里程碑的总览：</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
+<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" font-family="'Microsoft YaHei','PingFang SC',sans-serif">
 <defs>
   <marker id="mTL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
     <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/>
+  </marker>
+  <marker id="mTLP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
   </marker>
   <linearGradient id="gTL" x1="0" y1="0" x2="1" y2="0">
     <stop offset="0%" stop-color="#2563eb"/>
@@ -1551,14 +1575,39 @@ tr:hover td { background: var(--c-primary-ghost); }
 <text x="845" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">至今</text>
 <text x="845" y="95" text-anchor="middle" font-size="11" fill="#334155">AutoML / 深度集成</text>
 
-<rect x="120" y="140" width="660" height="120" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-<text x="450" y="170" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">从"一棵树"到"一片森林"，从"加权"到"梯度"再到"二阶优化"</text>
-<text x="220" y="202" text-anchor="middle" font-size="13" fill="#475569">Bagging 路线</text>
-<line x1="300" y1="198" x2="620" y2="198" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="8 6" marker-end="url(#mTL)"/>
-<text x="460" y="198" text-anchor="middle" font-size="12" fill="#2563eb">Bagging → Random Forest（样本随机 + 特征随机）</text>
-<text x="220" y="234" text-anchor="middle" font-size="13" fill="#475569">Boosting 路线</text>
-<line x1="300" y1="230" x2="620" y2="230" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#mTL)"/>
-<text x="460" y="230" text-anchor="middle" font-size="12" fill="#6d28d9">AdaBoost → GBDT → XGBoost → LightGBM / CatBoost</text>
+<rect x="20" y="130" width="860" height="230" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+<text x="450" y="160" text-anchor="middle" font-size="14" font-weight="600" fill="#1e293b">从"一棵树"到"一片森林"，从"加权"到"梯度"再到"二阶优化"</text>
+
+<!-- Bagging 路线 (capsule center y=205) -->
+<text x="75" y="202" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Bagging 路线</text>
+<text x="75" y="218" text-anchor="middle" font-size="10" fill="#64748b">并行 · 降方差</text>
+<rect x="155" y="187" width="110" height="36" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="210" y="210" text-anchor="middle" font-size="12.5" fill="#1d4ed8" font-weight="600">Bagging</text>
+<line x1="265" y1="205" x2="303" y2="205" stroke="#2563eb" stroke-width="2" marker-end="url(#mTL)"/>
+<rect x="307" y="187" width="210" height="36" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.2"/>
+<text x="412" y="205" text-anchor="middle" font-size="12.5" fill="#1d4ed8" font-weight="600">Random Forest</text>
+<text x="412" y="218" text-anchor="middle" font-size="9.5" fill="#64748b">样本随机 + 特征随机</text>
+<line x1="517" y1="205" x2="557" y2="205" stroke="#2563eb" stroke-width="2.2" marker-end="url(#mTL)"/>
+<text x="565" y="202" text-anchor="start" font-size="11" fill="#1d4ed8">并行扩展</text>
+<text x="565" y="216" text-anchor="start" font-size="10" fill="#64748b">→</text>
+
+<!-- Boosting 路线 (capsule center y=275) -->
+<text x="75" y="272" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Boosting 路线</text>
+<text x="75" y="288" text-anchor="middle" font-size="10" fill="#64748b">串行 · 降偏差</text>
+<rect x="155" y="257" width="95" height="36" rx="8" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1.2"/>
+<text x="202" y="280" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="600">AdaBoost</text>
+<line x1="250" y1="275" x2="283" y2="275" stroke="#7c3aed" stroke-width="2" marker-end="url(#mTLP)"/>
+<rect x="287" y="257" width="75" height="36" rx="8" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1.2"/>
+<text x="324" y="280" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="600">GBDT</text>
+<line x1="362" y1="275" x2="395" y2="275" stroke="#7c3aed" stroke-width="2" marker-end="url(#mTLP)"/>
+<rect x="399" y="257" width="90" height="36" rx="8" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1.2"/>
+<text x="444" y="280" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="600">XGBoost</text>
+<line x1="489" y1="275" x2="522" y2="275" stroke="#7c3aed" stroke-width="2" marker-end="url(#mTLP)"/>
+<rect x="526" y="257" width="155" height="36" rx="8" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1.2"/>
+<text x="603" y="280" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="600">LightGBM / CatBoost</text>
+<line x1="681" y1="275" x2="715" y2="275" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#mTLP)"/>
+<text x="723" y="272" text-anchor="start" font-size="11" fill="#6d28d9">梯度</text>
+<text x="723" y="286" text-anchor="start" font-size="10" fill="#64748b">→</text>
 </svg>
 </div>
 

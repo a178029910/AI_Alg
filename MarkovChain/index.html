@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>马尔科夫链详解 — Markov Chain 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -224,33 +225,45 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>状态空间 $S = \{$晴(S), 阴(C), 雨(R)$\}$。转移矩阵：</p>
 </div>
 
-<div class="formula multi" data-eq="(4)">$$\mathbf{P} = \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix} \begin{matrix} \text{晴} \\ \text{阴} \\ \text{雨} \end{matrix}$$</div>
-<p>例如 $p_{SR} = 0.1$ 表示"今天晴天→明天雨天"的概率为 $10\%$。</p>
+<div class="formula multi" data-eq="(4)">$$\mathbf{P} = \begin{array}{c}
+\begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix}
+\begin{matrix} \text{晴} \\ \text{阴} \\ \text{雨} \end{matrix} \\[6pt]
+\begin{matrix} \text{晴} & \text{阴} & \text{雨} \end{matrix}
+\end{array}$$</div>
+<p>矩阵右侧标注<strong>行（出发状态）</strong>，下方标注<strong>列（到达状态）</strong>；例如 $p_{SR} = 0.1$ 表示"今天晴天→明天雨天"的概率为 $10\%$。</p>
 
 <div class="svg-box">
 <svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
-<defs><marker id="mk2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker></defs>
-<circle cx="200" cy="80" r="40" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
-<text x="180" y="75" fill="#1e293b" font-size="14" font-weight="700">晴 S</text>
-<text x="170" y="95" fill="#64748b" font-size="11">0.7自环</text>
-<circle cx="600" cy="80" r="40" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
-<text x="582" y="75" fill="#1e293b" font-size="14" font-weight="700">阴 C</text>
-<text x="570" y="95" fill="#64748b" font-size="11">0.4自环</text>
-<circle cx="400" cy="260" r="40" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5"/>
-<text x="382" y="255" fill="#1e293b" font-size="14" font-weight="700">雨 R</text>
-<text x="372" y="275" fill="#64748b" font-size="11">0.5自环</text>
-<line x1="240" y1="68" x2="558" y2="68" stroke="#334155" stroke-width="2" marker-end="url(#mk2)"/>
-<text x="365" y="58" fill="#334155" font-size="12">0.2</text>
-<line x1="560" y1="92" x2="242" y2="92" stroke="#334155" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
-<text x="365" y="108" fill="#334155" font-size="12">0.3</text>
-<line x1="210" y1="120" x2="375" y2="225" stroke="#334155" stroke-width="2" marker-end="url(#mk2)"/>
-<text x="270" y="180" fill="#334155" font-size="12">0.1</text>
-<line x1="425" y1="225" x2="185" y2="120" stroke="#334155" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
-<text x="300" y="200" fill="#334155" font-size="12">0.2</text>
-<line x1="590" y1="120" x2="425" y2="225" stroke="#334155" stroke-width="2" marker-end="url(#mk2)"/>
-<text x="520" y="180" fill="#334155" font-size="12">0.3</text>
-<line x1="420" y1="225" x2="575" y2="118" stroke="#334155" stroke-width="2" marker-end="url(#mk2)" class="flow-line"/>
-<text x="490" y="200" fill="#334155" font-size="12">0.3</text>
+<defs>
+  <marker id="mkS2C" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#2563eb"/></marker>
+  <marker id="mkC2R" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#0d9488"/></marker>
+  <marker id="mkS2R" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#7c3aed"/></marker>
+</defs>
+<!-- 节点 -->
+<circle cx="200" cy="100" r="40" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+<text x="180" y="95" fill="#1e293b" font-size="14" font-weight="700">晴 S</text>
+<text x="170" y="115" fill="#64748b" font-size="11">0.7自环</text>
+<circle cx="600" cy="100" r="40" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+<text x="582" y="95" fill="#1e293b" font-size="14" font-weight="700">阴 C</text>
+<text x="570" y="115" fill="#64748b" font-size="11">0.4自环</text>
+<circle cx="400" cy="250" r="40" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.5"/>
+<text x="382" y="245" fill="#1e293b" font-size="14" font-weight="700">雨 R</text>
+<text x="372" y="265" fill="#64748b" font-size="11">0.5自环</text>
+<!-- S↔C 蓝色（双向平行） -->
+<line x1="248" y1="114" x2="552" y2="114" stroke="#2563eb" stroke-width="2" marker-end="url(#mkS2C)"/>
+<text x="400" y="134" fill="#2563eb" font-size="12">0.2</text>
+<line x1="552" y1="86" x2="248" y2="86" stroke="#2563eb" stroke-width="2" marker-end="url(#mkS2C)"/>
+<text x="400" y="78" fill="#2563eb" font-size="12">0.3</text>
+<!-- C↔R 绿色（双向平行） -->
+<line x1="553.2" y1="117.6" x2="430" y2="210" stroke="#0d9488" stroke-width="2" marker-end="url(#mkC2R)"/>
+<text x="540" y="150" fill="#0d9488" font-size="12">0.3</text>
+<line x1="446.8" y1="232.4" x2="570" y2="140" stroke="#0d9488" stroke-width="2" marker-end="url(#mkC2R)"/>
+<text x="500" y="205" fill="#0d9488" font-size="12">0.3</text>
+<!-- S↔R 紫色（双向平行） -->
+<line x1="230" y1="140" x2="353.2" y2="232.4" stroke="#7c3aed" stroke-width="2" marker-end="url(#mkS2R)"/>
+<text x="265" y="200" fill="#7c3aed" font-size="12">0.1</text>
+<line x1="370" y1="210" x2="246.8" y2="117.6" stroke="#7c3aed" stroke-width="2" marker-end="url(#mkS2R)"/>
+<text x="330" y="160" fill="#7c3aed" font-size="12">0.2</text>
 </svg>
 </div>
 
@@ -272,6 +285,18 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>这意味着：从 $i$ 经 $m+n$ 步到 $j$，可以分解为先经 $m$ 步到某个中间状态 $k$，再经 $n$ 步从 $k$ 到 $j$，对所有中间状态 $k$ 求和。用矩阵表示就是：</p>
 <div class="formula" data-eq="(6)">$$\mathbf{P}^{(n)} = \mathbf{P}^n$$</div>
 <p>即 $n$ 步转移矩阵等于一步转移矩阵的 $n$ 次幂。</p>
+
+<div class="callout">
+<div class="callout-title">C-K 方程算例：两天的天气</div>
+<p>沿用 2.3 节的天气模型，一步转移矩阵：</p>
+<div class="formula">$$\mathbf{P} = \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix}$$</div>
+<p>若今天晴天，问<strong>后天</strong>晴天/雨天的概率各是多少？C-K 方程 $p_{ij}^{(2)} = \sum_k p_{ik} p_{kj}$ 要求穷举"明天"这个中间状态 $k$：</p>
+<div class="formula">$$\begin{aligned} p_{SS}^{(2)} &= p_{SS} p_{SS} + p_{SC} p_{CS} + p_{SR} p_{RS} \\ &= 0.7 \times 0.7 + 0.2 \times 0.3 + 0.1 \times 0.2 = 0.49 + 0.06 + 0.02 = 0.57 \end{aligned}$$</div>
+<div class="formula">$$\begin{aligned} p_{SR}^{(2)} &= p_{SS} p_{SR} + p_{SC} p_{CR} + p_{SR} p_{RR} \\ &= 0.7 \times 0.1 + 0.2 \times 0.3 + 0.1 \times 0.5 = 0.07 + 0.06 + 0.05 = 0.18 \end{aligned}$$</div>
+<p>直观理解：今天晴→明天晴→后天晴（$0.7 \times 0.7$）、今天晴→明天阴→后天晴（$0.2 \times 0.3$）、今天晴→明天雨→后天晴（$0.1 \times 0.2$），三条"中转路径"互斥，概率相加得 $57\%$。类似地，$p_{SR}^{(2)} = 18\%$。写成矩阵就是 $\mathbf{P}^2$：</p>
+<div class="formula">$$\mathbf{P}^2 = \begin{pmatrix} 0.57 & 0.25 & 0.18 \\ 0.39 & 0.31 & 0.30 \\ 0.33 & 0.31 & 0.36 \end{pmatrix}$$</div>
+<p>这个结果与 3.3 节"天气示例续"中后天分布 $(0.57, 0.25, 0.18)$ 完全一致——那正是 $\boldsymbol{\pi}^{(0)} = (1,0,0)$ 取 $\mathbf{P}^2$ 的第一行。</p>
+</div>
 
 <h3>3.3 状态分布的演化</h3>
 <p>时刻 $t$ 的状态分布 $\boldsymbol{\pi}^{(t)}$ 通过转移矩阵递推：</p>
@@ -331,6 +356,25 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td>正常返</td><td>$\mu_i < \infty$</td><td>平均回访时间有限</td></tr>
 <tr><td>遍历</td><td>以上三条同时满足</td><td>有唯一极限分布</td></tr>
 </table>
+
+<div class="callout">
+<div class="callout-title">遍历态举例：天气模型是遍历链</div>
+<p>回到 2.3 节的天气模型 $\mathbf{P} = \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix}$，逐条检验遍历条件：</p>
+<ul>
+<li><strong>不可约</strong>：晴 $\to$ 阴 $\to$ 雨 两两互通，图 1 中三个状态由箭头连成一体，链无法分解；</li>
+<li><strong>非周期</strong>：每个状态都有自环（$p_{SS}=0.7 > 0$ 等），由 4.4 节"自环妙用"知 $d(i) = 1$；</li>
+<li><strong>正常返</strong>：有限状态链中所有状态都是正常返的（见 4.3 节）。</li>
+</ul>
+<p>三条同时满足，故三个状态都是遍历态，整个链是<strong>遍历链</strong>。由遍历定理，无论今天是什么天气，$n$ 步后的天气分布都收敛到同一极限。看 $\mathbf{P}^n$ 的行：</p>
+<div class="formula">$$\mathbf{P}^{10} \approx \begin{pmatrix} 0.457 & 0.283 & 0.261 \\ 0.456 & 0.283 & 0.261 \\ 0.456 & 0.283 & 0.261 \end{pmatrix}$$</div>
+<p>三行几乎相同——<strong>起点的影响消失了</strong>，每行都趋向平稳分布 $\boldsymbol{\pi}^* \approx (0.46, 0.28, 0.26)$，与 5.3 节解方程的结果一致。</p>
+</div>
+
+<div class="callout warn">
+<div class="callout-title">反例：周期链不遍历</div>
+<p>若把模型改成一个"晴雨交替"链：晴天必转雨天、雨天必转晴天，转移矩阵 $\mathbf{Q} = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$。该链不可约也正常返，但每个状态周期 $d = 2$：</p>
+<p>$\mathbf{Q}$ 的奇数次幂 $\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$，偶数次幂 $\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$，对角线永远在 0 与 1 之间振荡，<strong>不收敛</strong>。因此周期链没有唯一的极限分布——例如从晴天出发，奇数天后一定是雨天、偶数天后一定是晴天，长期行为取决于起点和时刻的奇偶，不满足遍历性。</p>
+</div>
 
 </section>
 
@@ -514,6 +558,45 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>9.3 Baum-Welch 算法</h3>
 <p>Baum-Welch 是 EM 算法在 HMM 上的特化：<strong>E 步</strong>用前向-后向算法计算期望 sufficient statistics，<strong>M 步</strong>更新参数。迭代直到对数似然收敛。</p>
+
+<div class="callout">
+<div class="callout-title">统一算例：天气-活动 HMM</div>
+<p>为了直观理解三大问题，先固定一个贯穿始终的小例子。每天的真实天气（晴 S / 雨 R）<strong>不可见</strong>，只能观测到当天的活动（散步 W / 购物 M / 清洁 C）。模型参数：</p>
+<div class="formula">$$\boldsymbol{\pi} = (0.6, 0.4), \quad \mathbf{A} = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}, \quad \mathbf{B} = \begin{pmatrix} 0.5 & 0.4 & 0.1 \\ 0.1 & 0.3 & 0.6 \end{pmatrix}$$</div>
+<p>观测序列 $O = (\text{散步}, \text{购物}, \text{清洁})$。三天的天气状态 $X_1, X_2, X_3$ 是我们想知道的隐藏变量。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">评估问题：这串活动有多"正常"？</div>
+<p>给定模型 $\lambda$，计算 $P(O \mid \lambda)$——这个概率是后续学习问题中对数似然的基础。</p>
+<p>用<strong>前向算法</strong>递推。定义 $\alpha_t(i)$，第一天：</p>
+<div class="formula">$$\alpha_1(S) = 0.6 \times 0.5 = 0.30, \quad \alpha_1(R) = 0.4 \times 0.1 = 0.04$$</div>
+<p>第二天（观测=购物，发射概率 $b_S(M)=0.4$，$b_R(M)=0.3$）：</p>
+<div class="formula">$$\begin{aligned} \alpha_2(S) &= [0.30 \times 0.7 + 0.04 \times 0.4] \times 0.4 = 0.226 \times 0.4 = 0.0904 \\ \alpha_2(R) &= [0.30 \times 0.3 + 0.04 \times 0.6] \times 0.3 = 0.114 \times 0.3 = 0.0342 \end{aligned}$$</div>
+<p>第三天（观测=清洁，$b_S(\text{清洁})=0.1$，$b_R(\text{清洁})=0.6$）：</p>
+<div class="formula">$$\begin{aligned} \alpha_3(S) &= [0.0904 \times 0.7 + 0.0342 \times 0.4] \times 0.1 = 0.007696 \\ \alpha_3(R) &= [0.0904 \times 0.3 + 0.0342 \times 0.6] \times 0.6 = 0.028584 \end{aligned}$$</div>
+<div class="formula">$$P(O \mid \lambda) = \alpha_3(S) + \alpha_3(R) = 0.007696 + 0.028584 = 0.03628$$</div>
+<p><strong>解读</strong>：$P(O|\lambda) \approx 3.6\%$ 表示"散步→购物→清洁"这串活动在此模型下出现的概率。它本身绝对值不大（因为连续三天特定活动的概率本就小），但可用于<strong>模型比较</strong>——两个候选模型谁的 $P(O|\lambda)$ 大，谁就更可能产生这串观测。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">解码问题：最可能的天气路径是什么？</div>
+<p>给定观测，求最可能的状态序列——即三天最可能的天气。用 <strong>Viterbi 算法</strong>维护"到当前为止、以状态 $i$ 结尾的最优路径概率" $\delta_t(i)$ 和回溯指针 $\psi_t(i)$。</p>
+<p>第一天（同前向）：$\delta_1(S) = 0.30$，$\delta_1(R) = 0.04$。</p>
+<div class="formula">$$\begin{aligned} \delta_2(S) &= \max(0.30 \times 0.7, \; 0.04 \times 0.4) \times 0.4 = 0.21 \times 0.4 = 0.084, \quad \psi_2(S) = S \\ \delta_2(R) &= \max(0.30 \times 0.3, \; 0.04 \times 0.6) \times 0.3 = 0.09 \times 0.3 = 0.027, \quad \psi_2(R) = S \end{aligned}$$</div>
+<div class="formula">$$\begin{aligned} \delta_3(S) &= \max(0.084 \times 0.7, \; 0.027 \times 0.4) \times 0.1 = 0.0588 \times 0.1 = 0.00588, \quad \psi_3(S) = S \\ \delta_3(R) &= \max(0.084 \times 0.3, \; 0.027 \times 0.6) \times 0.6 = 0.0252 \times 0.6 = 0.01512, \quad \psi_3(R) = S \end{aligned}$$</div>
+<p>最终取 $\max(\delta_3(S), \delta_3(R)) = \delta_3(R)$，沿 $\psi$ 回溯得到最优状态序列 <strong>S → S → R</strong>（晴晴雨），最优路径概率 $0.01512$。</p>
+<p><strong>解读</strong>：虽然最后一天观测是"清洁"（雨天更常清洁），但 $O_2$ 购物 + $O_3$ 清洁的组合，让 Viterbi 判定前两天晴天、最后一天雨天的整体路径概率最高。注意解码结果与前向算法算出的 $P(O|\lambda)=0.03628$ 不同——前向是对所有路径求和，Viterbi 是取最大路径，两者用途不同。</p>
+</div>
+
+<div class="callout">
+<div class="callout-title">学习问题：无监督地重估参数</div>
+<p>给定观测序列（无标签），估计模型参数。用 <strong>Baum-Welch 算法</strong>（EM 特化）迭代：E 步用前向-后向计算后验统计量，M 步更新 $A,B,\pi$，对数似然单调上升。</p>
+<p>对上述观测序列跑几次迭代（示意）：</p>
+<div class="formula">$$\begin{array}{c|c} \text{迭代} & \log P(O \mid \lambda) \\ \hline 0 & -3.32 \\ 1 & -2.71 \\ 2 & -2.18 \end{array}$$</div>
+<p>参数也随之更新，例如 $\mathbf{A}$ 从 $\begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}$ 演化为 $\begin{pmatrix} 0.50 & 0.50 \\ 0.16 & 0.84 \end{pmatrix}$（第 1 次迭代后）——模型发现"雨天更容易维持雨天"的规律。这个过程不需要任何人工标注，完全从观测中"自学"。</p>
+<p><strong>三大问题合起来构成完整闭环</strong>：学习问题从数据中学出模型参数；评估问题在已知模型下打分（如语音识别中比较哪个词模型更匹配声学特征）；解码问题在已知模型下还原隐藏状态（如词性标注、基因注释）。</p>
+</div>
 
 </section>
 
@@ -968,18 +1051,18 @@ pr = <span class="fn">pagerank</span>(A)
 (function() {
   var savedFormulas = [];
   document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
-    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    savedFormulas.push({ el: f, text: f.textContent, eq: f.getAttribute('data-eq') });
     f.innerHTML = '';
   });
   function renderAll() {
     if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
-    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
     savedFormulas.forEach(function(item) {
-      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var f = item.el; var rawText = item.text; f.setAttribute('data-eq', item.eq);
       var body = document.createElement('div'); body.className = 'formula-body';
       body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
       f.appendChild(body);
-      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      var parts = rawText.split(/\$\$(.*?)\$\$/s); var isFormula = false;
       for (var i = 0; i < parts.length; i++) {
         if (isFormula && parts[i].trim()) {
           var eqDiv = document.createElement('div'); body.appendChild(eqDiv);

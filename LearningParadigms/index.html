@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>机器学习范式综述 — Supervised, Unsupervised, Semi-Supervised & Self-Supervised Learning</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -314,7 +315,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>近年代表性进展：<strong>Stable Diffusion 3</strong>（改进的 Rectified Flow 采样）、<strong>Sora</strong>（视频扩散）、<strong>DiT</strong>（Diffusion Transformer 架构）。扩散模型本质上是无监督学习，从数据分布中学习生成能力。</p>
 
 <h4>大模型时代的无监督聚类</h4>
-<p>传统 K-Means 在高维嵌入空间中效果有限。2024 年出现了基于<strong>大模型嵌入 + 屌次聚类</strong>的新方法，如利用 BERT/CLIP 嵌入做语义聚类（SE-Clustering），在无标注场景下实现了接近有监督方法的聚类精度。</p>
+<p>传统 K-Means 在高维嵌入空间中效果有限。2024 年出现了基于<strong>大模型嵌入 + 层次聚类</strong>的新方法，如利用 BERT/CLIP 嵌入做语义聚类（SE-Clustering），在无标注场景下实现了接近有监督方法的聚类精度。</p>
 
 <h4>无监督表示学习新范式</h4>
 <p>如今，<strong>掩码图像建模</strong>（MIM）和<strong>掩码语言建模</strong>（MLM）已成为无监督表示学习的主流方向。MAE 在视觉领域、BERT 在语言领域证明了：通过重建被遮盖的部分，模型能学到高质量的通用表示。</p>

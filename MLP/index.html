@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MLP 模型详解 — 多层感知机完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -331,31 +332,61 @@ tr:hover td { background: var(--c-primary-ghost); }
   <circle cx="640" cy="115" r="12" fill="url(#lggreen)" stroke="#059669" stroke-width="1.5"/>
   <circle cx="640" cy="145" r="12" fill="url(#lggreen)" stroke="#059669" stroke-width="1.5"/>
   <text x="640" cy="205" text-anchor="middle" font-size="11" fill="#64748b">ŷ = Softmax(z⁽³⁾)</text>
-  <!-- Connections L0->L1 -->
+  <!-- Connections L0->L1（全连接 4×5） -->
   <line x1="112" y1="80" x2="268" y2="65" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="80" x2="268" y2="95" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="80" x2="268" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="80" x2="268" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="80" x2="268" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="110" x2="268" y2="65" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="110" x2="268" y2="95" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="110" x2="268" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="110" x2="268" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="110" x2="268" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="140" x2="268" y2="65" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="140" x2="268" y2="95" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="140" x2="268" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="140" x2="268" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="140" x2="268" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="170" x2="268" y2="65" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="170" x2="268" y2="95" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="112" y1="170" x2="268" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="170" x2="268" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="112" y1="170" x2="268" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
-  <!-- Connections L1->L2 -->
+  <!-- Connections L1->L2（全连接 5×4） -->
   <line x1="292" y1="65" x2="448" y2="75" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="65" x2="448" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="65" x2="448" y2="135" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="65" x2="448" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="95" x2="448" y2="75" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="292" y1="95" x2="448" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="95" x2="448" y2="135" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="95" x2="448" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="125" x2="448" y2="75" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="125" x2="448" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="292" y1="125" x2="448" y2="135" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="125" x2="448" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="155" x2="448" y2="75" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="155" x2="448" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="155" x2="448" y2="135" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="292" y1="155" x2="448" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="292" y1="185" x2="448" y2="75" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="292" y1="185" x2="448" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
-  <line x1="292" y1="65" x2="448" y2="135" stroke="#cbd5e1" stroke-width="0.5"/>
-  <!-- Connections L2->L3 -->
+  <line x1="292" y1="185" x2="448" y2="135" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="292" y1="185" x2="448" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
+  <!-- Connections L2->L3（全连接 4×3） -->
   <line x1="472" y1="75" x2="628" y2="85" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="75" x2="628" y2="115" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="75" x2="628" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="105" x2="628" y2="85" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="472" y1="105" x2="628" y2="115" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="105" x2="628" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="135" x2="628" y2="85" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="135" x2="628" y2="115" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="472" y1="135" x2="628" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
   <line x1="472" y1="165" x2="628" y2="85" stroke="#cbd5e1" stroke-width="0.5"/>
-  <line x1="472" y1="75" x2="628" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="165" x2="628" y2="115" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="472" y1="165" x2="628" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
   <!-- Operation labels -->
   <rect x="175" y="225" width="30" height="20" rx="4" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
   <text x="190" y="239" text-anchor="middle" font-size="9" fill="#2563eb">W¹,b¹</text>
@@ -528,12 +559,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>4.1 均方误差（MSE）</h3>
 <p>回归任务中最基本的损失函数，对预测值与真实值之差的平方取平均：</p>
-<div class="formula" data-eq="12">$$L_{\text{MSE}} = \frac{1}{N} \sum_{i=1}^{N} \|\hat{\mathbf{y}}_i - \mathbf{y}_i\|^2 = \frac{1}{N} \sum_{i=1}^{N} \sum_{j=1}^{C} (\hat{y}_{ij} - y_{ij})^2$$</div>
+<div class="formula" data-eq="(12)">$$L_{\text{MSE}} = \frac{1}{N} \sum_{i=1}^{N} \|\hat{\mathbf{y}}_i - \mathbf{y}_i\|^2 = \frac{1}{N} \sum_{i=1}^{N} \sum_{j=1}^{C} (\hat{y}_{ij} - y_{ij})^2$$</div>
 <p>MSE 对大误差敏感（平方惩罚），梯度为 $\nabla_{\hat{\mathbf{y}}} L = \frac{2}{N}(\hat{\mathbf{y}} - \mathbf{y})$。</p>
 
 <h3>4.2 交叉熵损失</h3>
 <p>分类任务的标准损失函数。对于 $K$ 类分类，真实标签用 one-hot 编码 $\mathbf{y} \in \{0,1\}^K$，模型输出为 Softmax 概率 $\hat{\mathbf{y}}$：</p>
-<div class="formula" data-eq="13">$$L_{\text{CE}} = -\sum_{j=1}^{K} y_j \log \hat{y}_j$$</div>
+<div class="formula" data-eq="(13)">$$L_{\text{CE}} = -\sum_{j=1}^{K} y_j \log \hat{y}_j$$</div>
 <p>配合 Softmax 输出层，交叉熵的梯度有一个优美的性质：误差信号恰好等于 $\hat{\mathbf{y}} - \mathbf{y}$——预测值与真实值之差。这使得梯度计算极为简洁，也使训练更加稳定。</p>
 
 <div class="callout success">
@@ -543,11 +574,11 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>4.3 二元交叉熵</h3>
 <p>二分类任务的特例，模型输出单个 sigmoid 概率 $\hat{y} \in (0,1)$，真实标签 $y \in \{0,1\}$：</p>
-<div class="formula" data-eq="14">$$L_{\text{BCE}} = -[y \log \hat{y} + (1 - y) \log(1 - \hat{y})]$$</div>
+<div class="formula" data-eq="(14)">$$L_{\text{BCE}} = -[y \log \hat{y} + (1 - y) \log(1 - \hat{y})]$$</div>
 
 <h3>4.4 Huber 损失</h3>
 <p>Huber 损失结合了 MSE（小误差时平滑）和 MAE（大误差时鲁棒）的优点，对异常值更鲁棒：</p>
-<div class="formula" data-eq="15">$$L_{\text{Huber}} = \begin{cases} \frac{1}{2}(y - \hat{y})^2, & |y - \hat{y}| \leq \delta \\ \delta\left(|y - \hat{y}| - \frac{1}{2}\delta\right), & |y - \hat{y}| > \delta \end{cases}$$</div>
+<div class="formula" data-eq="(15)">$$L_{\text{Huber}} = \begin{cases} \frac{1}{2}(y - \hat{y})^2, & |y - \hat{y}| \leq \delta \\ \delta\left(|y - \hat{y}| - \frac{1}{2}\delta\right), & |y - \hat{y}| > \delta \end{cases}$$</div>
 <p>其中 $\delta$ 为控制切换阈值的超参数。当误差小于 $\delta$ 时等价于 MSE，大于 $\delta$ 时退化为 MAE（线性惩罚，梯度恒定）。</p>
 
 <h3>4.5 损失函数选择指南</h3>
@@ -573,25 +604,25 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>5.1 随机梯度下降（SGD）</h3>
 <p>SGD 每次从训练集中采样一个小批量（mini-batch），计算梯度并更新参数：</p>
-<div class="formula" data-eq="16">$$\theta_{t+1} = \theta_t - \eta \cdot \frac{1}{B} \sum_{i=1}^{B} \nabla_\theta L(\theta_t; \mathbf{x}_i, \mathbf{y}_i)$$</div>
+<div class="formula" data-eq="(16)">$$\theta_{t+1} = \theta_t - \eta \cdot \frac{1}{B} \sum_{i=1}^{B} \nabla_\theta L(\theta_t; \mathbf{x}_i, \mathbf{y}_i)$$</div>
 <p>其中 $B$ 为批量大小，$\eta$ 为学习率。SGD 的优势是简单、收敛轨迹有噪声（有助于逃离局部最优），缺点是收敛慢、对学习率敏感。</p>
 
 <h3>5.2 Momentum</h3>
 <p>Momentum 在梯度更新中引入历史梯度的指数加权移动平均，模拟物理动量——累计一致的梯度方向，抑制震荡方向：</p>
-<div class="formula" data-eq="17">$$\mathbf{v}_{t+1} = \beta \mathbf{v}_t + \nabla_\theta L, \quad \theta_{t+1} = \theta_t - \eta \cdot \mathbf{v}_{t+1}$$</div>
+<div class="formula" data-eq="(17)">$$\mathbf{v}_{t+1} = \beta \mathbf{v}_t + \nabla_\theta L, \quad \theta_{t+1} = \theta_t - \eta \cdot \mathbf{v}_{t+1}$$</div>
 <p>其中 $\beta$ 通常取 $0.9$。Momentum 在损失曲面狭长、梯度方向交替切变时特别有效。</p>
 
 <h3>5.3 RMSProp</h3>
 <p>RMSProp 为每个参数维护一个平方梯度的滑动平均，自适应调整学习率——梯度大的参数学习率小，梯度小的参数学习率大：</p>
-<div class="formula" data-eq="18">$$\mathbf{s}_{t+1} = \beta \mathbf{s}_t + (1-\beta)(\nabla_\theta L)^2, \quad \theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\mathbf{s}_{t+1}} + \epsilon} \odot \nabla_\theta L$$</div>
+<div class="formula" data-eq="(18)">$$\mathbf{s}_{t+1} = \beta \mathbf{s}_t + (1-\beta)(\nabla_\theta L)^2, \quad \theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\mathbf{s}_{t+1}} + \epsilon} \odot \nabla_\theta L$$</div>
 <p>其中 $\epsilon$ 为防除零的小常数（如 $10^{-8}$），$\beta$ 通常取 $0.9$。RMSProp 是自适应学习率方法的里程碑。</p>
 
 <h3>5.4 Adam</h3>
 <p>Adam（Adaptive Moment Estimation）结合了 Momentum（一阶矩估计）和 RMSProp（二阶矩估计），是当前最广泛使用的优化器：</p>
-<div class="formula" data-eq="19">$$\mathbf{m}_{t+1} = \beta_1 \mathbf{m}_t + (1-\beta_1) \nabla_\theta L$$</div>
-<div class="formula" data-eq="20">$$\mathbf{v}_{t+1} = \beta_2 \mathbf{v}_t + (1-\beta_2) (\nabla_\theta L)^2$$</div>
-<div class="formula" data-eq="21">$$\hat{\mathbf{m}} = \frac{\mathbf{m}_{t+1}}{1 - \beta_1^{t+1}}, \quad \hat{\mathbf{v}} = \frac{\mathbf{v}_{t+1}}{1 - \beta_2^{t+1}}$$</div>
-<div class="formula" data-eq="22">$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{\mathbf{v}}} + \epsilon} \odot \hat{\mathbf{m}}$$</div>
+<div class="formula" data-eq="(19)">$$\mathbf{m}_{t+1} = \beta_1 \mathbf{m}_t + (1-\beta_1) \nabla_\theta L$$</div>
+<div class="formula" data-eq="(20)">$$\mathbf{v}_{t+1} = \beta_2 \mathbf{v}_t + (1-\beta_2) (\nabla_\theta L)^2$$</div>
+<div class="formula" data-eq="(21)">$$\hat{\mathbf{m}} = \frac{\mathbf{m}_{t+1}}{1 - \beta_1^{t+1}}, \quad \hat{\mathbf{v}} = \frac{\mathbf{v}_{t+1}}{1 - \beta_2^{t+1}}$$</div>
+<div class="formula" data-eq="(22)">$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{\mathbf{v}}} + \epsilon} \odot \hat{\mathbf{m}}$$</div>
 <p>其中 $\beta_1 = 0.9$，$\beta_2 = 0.999$，$\epsilon = 10^{-8}$。偏差校正 $\hat{\mathbf{m}}, \hat{\mathbf{v}}$ 补偿了初始阶段矩估计偏向 $0$ 的问题。</p>
 
 <h3>5.5 优化器对比</h3>
@@ -622,30 +653,30 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>6.1 计算图与链式法则</h3>
 <p>MLP 的前向传播可以展开为一个有向无环计算图。反向传播利用链式法则在此图上反向传播误差梯度。对于复合函数 $L(f(g(x)))$，链式法则为：</p>
-<div class="formula" data-eq="23">$$\frac{\partial L}{\partial x} = \frac{\partial L}{\partial f} \cdot \frac{\partial f}{\partial g} \cdot \frac{\partial g}{\partial x}$$</div>
+<div class="formula" data-eq="(23)">$$\frac{\partial L}{\partial x} = \frac{\partial L}{\partial f} \cdot \frac{\partial f}{\partial g} \cdot \frac{\partial g}{\partial x}$$</div>
 
 <h3>6.2 输出层梯度</h3>
 <p>给定损失函数 $L(\hat{\mathbf{y}}, \mathbf{y})$，输出层的误差信号（误差对预激活值的梯度）为：</p>
-<div class="formula" data-eq="24">$$\boldsymbol{\delta}^{(L)} = \frac{\partial L}{\partial \mathbf{z}^{(L)}} = \frac{\partial L}{\partial \mathbf{a}^{(L)}} \odot f'^{(L)}(\mathbf{z}^{(L)})$$</div>
+<div class="formula" data-eq="(24)">$$\boldsymbol{\delta}^{(L)} = \frac{\partial L}{\partial \mathbf{z}^{(L)}} = \frac{\partial L}{\partial \mathbf{a}^{(L)}} \odot f'^{(L)}(\mathbf{z}^{(L)})$$</div>
 <p>其中 $\odot$ 表示逐元素乘积（Hadamard 积），$f'^{(L)}$ 为激活函数的导数。</p>
 
 <div class="callout">
 <div class="callout-title">什么是 Hadamard 积？</div>
 <p><strong>Hadamard 积</strong>（又称逐元素乘积、element-wise product）是两个<strong>相同维度</strong>的矩阵/向量对应位置元素相乘，结果维度不变。记作 $\mathbf{A} \odot \mathbf{B}$ 或 $\mathbf{A} \circ \mathbf{B}$。</p>
-<div class="formula" data-eq="24a">$$\mathbf{A} \odot \mathbf{B} = \begin{pmatrix} a_{11} b_{11} & a_{12} b_{12} \\ a_{21} b_{21} & a_{22} b_{22} \end{pmatrix}$$</div>
+<div class="formula" data-eq="(24a)">$$\mathbf{A} \odot \mathbf{B} = \begin{pmatrix} a_{11} b_{11} & a_{12} b_{12} \\ a_{21} b_{21} & a_{22} b_{22} \end{pmatrix}$$</div>
 <p><strong>示例</strong>：$\begin{pmatrix} 1 \\ 2 \end{pmatrix} \odot \begin{pmatrix} 3 \\ 4 \end{pmatrix} = \begin{pmatrix} 3 \\ 8 \end{pmatrix}$，即 $1\times3=3$，$2\times4=8$。注意它与矩阵乘法 $\mathbf{AB}$ 完全不同——Hadamard 积不涉及行列内积，只是简单逐位相乘。</p>
 <p>在反向传播中，$\boldsymbol{\delta}^{(l)} \odot f'^{(l)}(\mathbf{z}^{(l)})$ 的含义是：将传回来的误差信号 $\boldsymbol{\delta}^{(l)}$ 的<strong>每个分量</strong>分别乘以对应神经元的激活导数 $f'^{(l)}(z_j^{(l)})$，从而得到当前层每个神经元对预激活值 $z_j^{(l)}$ 的误差梯度。这种逐元素操作使得不同神经元可以拥有不同的梯度缩放因子。</p>
 </div>
 
 <h3>6.3 隐藏层梯度</h3>
 <p>隐藏层的误差信号通过下一层的误差信号反向传播得到：</p>
-<div class="formula" data-eq="25">$$\boldsymbol{\delta}^{(l)} = \left(\mathbf{W}^{(l+1)}\right)^\top \boldsymbol{\delta}^{(l+1)} \odot f'^{(l)}(\mathbf{z}^{(l)})$$</div>
+<div class="formula" data-eq="(25)">$$\boldsymbol{\delta}^{(l)} = \left(\mathbf{W}^{(l+1)}\right)^\top \boldsymbol{\delta}^{(l+1)} \odot f'^{(l)}(\mathbf{z}^{(l)})$$</div>
 <p>这是反向传播的核心公式——它将第 $l+1$ 层的误差信号通过权重矩阵的转置传回第 $l$ 层，再乘以激活函数的导数得到本层的误差信号。</p>
 
 <h3>6.4 参数梯度</h3>
 <p>有了误差信号后，参数的梯度可以直接计算：</p>
-<div class="formula" data-eq="26">$$\frac{\partial L}{\partial \mathbf{W}^{(l)}} = \boldsymbol{\delta}^{(l)} \left(\mathbf{a}^{(l-1)}\right)^\top$$</div>
-<div class="formula" data-eq="27">$$\frac{\partial L}{\partial \mathbf{b}^{(l)}} = \boldsymbol{\delta}^{(l)}$$</div>
+<div class="formula" data-eq="(26)">$$\frac{\partial L}{\partial \mathbf{W}^{(l)}} = \boldsymbol{\delta}^{(l)} \left(\mathbf{a}^{(l-1)}\right)^\top$$</div>
+<div class="formula" data-eq="(27)">$$\frac{\partial L}{\partial \mathbf{b}^{(l)}} = \boldsymbol{\delta}^{(l)}$$</div>
 
 <div class="callout">
 <div class="callout-title">梯度维度检查</div>
@@ -673,52 +704,52 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout-title">网络结构与初始值</div>
 <p>输入 $\mathbf{x} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$，真实标签 $y = 1$。</p>
 <p><strong>第 1 层权重与偏置</strong>（输入 → 隐藏，Sigmoid 激活）：</p>
-<div class="formula" data-eq="27a">$$\mathbf{W}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix}, \quad \mathbf{b}^{(1)} = \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27a)">$$\mathbf{W}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix}, \quad \mathbf{b}^{(1)} = \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix}$$</div>
 <p><strong>第 2 层权重与偏置</strong>（隐藏 → 输出，Sigmoid 激活）：</p>
-<div class="formula" data-eq="27b">$$\mathbf{W}^{(2)} = \begin{pmatrix} 0.8 & 0.2 \end{pmatrix}, \quad b^{(2)} = 0.05$$</div>
+<div class="formula" data-eq="(27b)">$$\mathbf{W}^{(2)} = \begin{pmatrix} 0.8 & 0.2 \end{pmatrix}, \quad b^{(2)} = 0.05$$</div>
 <p>学习率 $\eta = 0.1$。</p>
 </div>
 
 <h4>第 1 步：前向传播</h4>
 <p><strong>隐藏层预激活</strong>：</p>
-<div class="formula" data-eq="27c">$$\mathbf{z}^{(1)} = \mathbf{W}^{(1)} \mathbf{x} + \mathbf{b}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \end{pmatrix} + \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix} = \begin{pmatrix} 0.6 \\ -0.1 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27c)">$$\mathbf{z}^{(1)} = \mathbf{W}^{(1)} \mathbf{x} + \mathbf{b}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \end{pmatrix} + \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix} = \begin{pmatrix} 0.6 \\ -0.1 \end{pmatrix}$$</div>
 <p><strong>隐藏层激活值</strong>（$\sigma(0.6) = 0.6457$，$\sigma(-0.1) = 0.4750$）：</p>
-<div class="formula" data-eq="27d">$$\mathbf{a}^{(1)} = \sigma(\mathbf{z}^{(1)}) = \begin{pmatrix} 0.6457 \\ 0.4750 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27d)">$$\mathbf{a}^{(1)} = \sigma(\mathbf{z}^{(1)}) = \begin{pmatrix} 0.6457 \\ 0.4750 \end{pmatrix}$$</div>
 <p><strong>输出层预激活与激活值</strong>（$\sigma(0.6166) = 0.6499$）：</p>
-<div class="formula" data-eq="27e">$$z^{(2)} = \mathbf{W}^{(2)} \mathbf{a}^{(1)} + b^{(2)} = 0.8 \times 0.6457 + 0.2 \times 0.4750 + 0.05 = 0.6166$$</div>
-<div class="formula" data-eq="27f">$$\hat{y} = \sigma(z^{(2)}) = 0.6499$$</div>
+<div class="formula" data-eq="(27e)">$$z^{(2)} = \mathbf{W}^{(2)} \mathbf{a}^{(1)} + b^{(2)} = 0.8 \times 0.6457 + 0.2 \times 0.4750 + 0.05 = 0.6166$$</div>
+<div class="formula" data-eq="(27f)">$$\hat{y} = \sigma(z^{(2)}) = 0.6499$$</div>
 <p><strong>损失</strong>（MSE，单样本 $L = \frac{1}{2}(\hat{y} - y)^2$）：</p>
-<div class="formula" data-eq="27g">$$L = \frac{1}{2}(0.6499 - 1)^2 = \frac{1}{2}(0.3501)^2 = 0.0613$$</div>
+<div class="formula" data-eq="(27g)">$$L = \frac{1}{2}(0.6499 - 1)^2 = \frac{1}{2}(0.3501)^2 = 0.0613$$</div>
 
 <h4>第 2 步：输出层误差信号</h4>
 <p>Sigmoid 的导数 $\sigma'(z) = \sigma(z)(1 - \sigma(z))$。先计算损失对输出的梯度，再乘以激活导数：</p>
-<div class="formula" data-eq="27h">$$\frac{\partial L}{\partial \hat{y}} = \hat{y} - y = 0.6499 - 1 = -0.3501$$</div>
-<div class="formula" data-eq="27i">$$\delta^{(2)} = \frac{\partial L}{\partial z^{(2)}} = \frac{\partial L}{\partial \hat{y}} \cdot \sigma'(z^{(2)}) = -0.3501 \times 0.6499 \times (1 - 0.6499) = -0.3501 \times 0.2275 = -0.0796$$</div>
+<div class="formula" data-eq="(27h)">$$\frac{\partial L}{\partial \hat{y}} = \hat{y} - y = 0.6499 - 1 = -0.3501$$</div>
+<div class="formula" data-eq="(27i)">$$\delta^{(2)} = \frac{\partial L}{\partial z^{(2)}} = \frac{\partial L}{\partial \hat{y}} \cdot \sigma'(z^{(2)}) = -0.3501 \times 0.6499 \times (1 - 0.6499) = -0.3501 \times 0.2275 = -0.0796$$</div>
 
 <h4>第 3 步：隐藏层误差信号（反向传播）</h4>
 <p>利用公式 $\boldsymbol{\delta}^{(1)} = (\mathbf{W}^{(2)})^\top \delta^{(2)} \odot \sigma'(\mathbf{z}^{(1)})$，分两步计算。</p>
 <p><strong>3a.</strong> 将输出层误差通过权重转置传回隐藏层（矩阵乘法，$2 \times 1$ 结果）：</p>
-<div class="formula" data-eq="27j">$$(\mathbf{W}^{(2)})^\top \delta^{(2)} = \begin{pmatrix} 0.8 \\ 0.2 \end{pmatrix} \times (-0.0796) = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27j)">$$(\mathbf{W}^{(2)})^\top \delta^{(2)} = \begin{pmatrix} 0.8 \\ 0.2 \end{pmatrix} \times (-0.0796) = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix}$$</div>
 <p><strong>3b.</strong> 计算隐藏层各神经元的 Sigmoid 导数：</p>
-<div class="formula" data-eq="27k">$$\sigma'(0.6) = 0.6457 \times 0.3543 = 0.2288$$</div>
-<div class="formula" data-eq="27l">$$\sigma'(-0.1) = 0.4750 \times 0.5250 = 0.2494$$</div>
+<div class="formula" data-eq="(27k)">$$\sigma'(0.6) = 0.6457 \times 0.3543 = 0.2288$$</div>
+<div class="formula" data-eq="(27l)">$$\sigma'(-0.1) = 0.4750 \times 0.5250 = 0.2494$$</div>
 <p><strong>3c.</strong> Hadamard 积逐元素相乘，得到隐藏层误差信号：</p>
-<div class="formula" data-eq="27m">$$\boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix} \odot \begin{pmatrix} 0.2288 \\ 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0637 \times 0.2288 \\ -0.0159 \times 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27m)">$$\boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix} \odot \begin{pmatrix} 0.2288 \\ 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0637 \times 0.2288 \\ -0.0159 \times 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
 <p>观察：第 1 个隐藏神经元收到的误差 $(-0.0146)$ 比第 2 个 $(-0.0040)$ 大，因为它在输出层权重更大（$0.8$ vs $0.2$），对输出的影响更大。</p>
 
 <h4>第 4 步：计算参数梯度</h4>
 <p><strong>第 2 层（输出层）参数梯度</strong>：</p>
-<div class="formula" data-eq="27n">$$\frac{\partial L}{\partial \mathbf{W}^{(2)}} = \delta^{(2)} (\mathbf{a}^{(1)})^\top = -0.0796 \times \begin{pmatrix} 0.6457 & 0.4750 \end{pmatrix} = \begin{pmatrix} -0.0514 & -0.0378 \end{pmatrix}$$</div>
-<div class="formula" data-eq="27o">$$\frac{\partial L}{\partial b^{(2)}} = \delta^{(2)} = -0.0796$$</div>
+<div class="formula" data-eq="(27n)">$$\frac{\partial L}{\partial \mathbf{W}^{(2)}} = \delta^{(2)} (\mathbf{a}^{(1)})^\top = -0.0796 \times \begin{pmatrix} 0.6457 & 0.4750 \end{pmatrix} = \begin{pmatrix} -0.0514 & -0.0378 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27o)">$$\frac{\partial L}{\partial b^{(2)}} = \delta^{(2)} = -0.0796$$</div>
 <p><strong>第 1 层（隐藏层）参数梯度</strong>（$\mathbf{x} = (1, 0)^\top$）：</p>
-<div class="formula" data-eq="27p">$$\frac{\partial L}{\partial \mathbf{W}^{(1)}} = \boldsymbol{\delta}^{(1)} \mathbf{x}^\top = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix} \begin{pmatrix} 1 & 0 \end{pmatrix} = \begin{pmatrix} -0.0146 & 0 \\ -0.0040 & 0 \end{pmatrix}$$</div>
-<div class="formula" data-eq="27q">$$\frac{\partial L}{\partial \mathbf{b}^{(1)}} = \boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27p)">$$\frac{\partial L}{\partial \mathbf{W}^{(1)}} = \boldsymbol{\delta}^{(1)} \mathbf{x}^\top = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix} \begin{pmatrix} 1 & 0 \end{pmatrix} = \begin{pmatrix} -0.0146 & 0 \\ -0.0040 & 0 \end{pmatrix}$$</div>
+<div class="formula" data-eq="(27q)">$$\frac{\partial L}{\partial \mathbf{b}^{(1)}} = \boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
 <p>注意 $\frac{\partial L}{\partial W^{(1)}_{12}} = \delta^{(1)}_1 \times x_2 = -0.0146 \times 0 = 0$，因为输入 $x_2 = 0$，该权重梯度为零，本轮不会被更新。</p>
 
 <h4>第 5 步：梯度下降更新参数</h4>
 <p>以 $\eta = 0.1$ 更新第 2 层权重为例：</p>
-<div class="formula" data-eq="27r">$$W^{(2)}_1 \leftarrow 0.8 - 0.1 \times (-0.0514) = 0.8 + 0.00514 = 0.80514$$</div>
-<div class="formula" data-eq="27s">$$W^{(2)}_2 \leftarrow 0.2 - 0.1 \times (-0.0378) = 0.2 + 0.00378 = 0.20378$$</div>
+<div class="formula" data-eq="(27r)">$$W^{(2)}_1 \leftarrow 0.8 - 0.1 \times (-0.0514) = 0.8 + 0.00514 = 0.80514$$</div>
+<div class="formula" data-eq="(27s)">$$W^{(2)}_2 \leftarrow 0.2 - 0.1 \times (-0.0378) = 0.2 + 0.00378 = 0.20378$$</div>
 <p>损失 $L = 0.0613$，梯度为负表示应<strong>增大</strong>权重以降低损失——直觉正确，因为预测值 $\hat{y} = 0.6499 < 1 = y$，我们需要更大的权重让预测值更接近 1。</p>
 
 <div class="callout success">
@@ -806,129 +837,135 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <div class="svg-box">
 <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
-  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Dropout 工作原理</text>
-  <!-- 训练时 -->
-  <rect x="40" y="50" width="340" height="230" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
-  <text x="210" y="75" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">训练时 (Dropout p=0.5)</text>
-  <circle cx="100" cy="110" r="14" fill="#fff" stroke="#2563eb" stroke-width="2" class="pulse-node"/><text x="100" y="115" text-anchor="middle" font-size="9" fill="#2563eb">x₁</text>
-  <circle cx="100" cy="150" r="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 2"/><text x="100" y="155" text-anchor="middle" font-size="9" fill="#94a3b8">x₂</text>
-  <circle cx="100" cy="190" r="14" fill="#fff" stroke="#2563eb" stroke-width="2"/><text x="100" y="195" text-anchor="middle" font-size="9" fill="#2563eb">x₃</text>
-  <text x="80" y="225" font-size="10" fill="#dc2626">✗ 丢弃</text>
-  <circle cx="230" cy="120" r="14" fill="#fff" stroke="#7c3aed" stroke-width="2" class="pulse-node"/><text x="230" y="125" text-anchor="middle" font-size="9" fill="#7c3aed">h₁</text>
-  <circle cx="230" cy="160" r="14" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 2"/><text x="230" y="165" text-anchor="middle" font-size="9" fill="#94a3b8">h₂</text>
-  <circle cx="230" cy="200" r="14" fill="#fff" stroke="#7c3aed" stroke-width="2"/><text x="230" y="205" text-anchor="middle" font-size="9" fill="#7c3aed">h₃</text>
-  <text x="290" y="125" font-size="10" fill="#dc2626">✗ 丢弃</text>
-  <circle cx="330" cy="160" r="14" fill="#fff" stroke="#059669" stroke-width="2" class="glow-ring"/><text x="330" y="165" text-anchor="middle" font-size="9" fill="#059669">y</text>
-  <line x1="114" y1="110" x2="216" y2="120" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="114" y1="190" x2="216" y2="200" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="114" y1="110" x2="216" y2="200" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="244" y1="120" x2="316" y2="160" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="244" y1="200" x2="316" y2="160" stroke="#cbd5e1" stroke-width="1"/>
-  <text x="210" y="265" text-anchor="middle" font-size="10" fill="#92400e">灰色节点随机丢弃，剩余节点除以 p 保持期望</text>
-  <!-- 测试时 -->
-  <rect x="420" y="50" width="340" height="230" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-  <text x="590" y="75" text-anchor="middle" font-size="14" font-weight="700" fill="#065f46">推理时 (全部使用)</text>
-  <circle cx="480" cy="110" r="14" fill="#fff" stroke="#2563eb" stroke-width="2" class="pulse-node"/><text x="480" y="115" text-anchor="middle" font-size="9" fill="#2563eb">x₁</text>
-  <circle cx="480" cy="150" r="14" fill="#fff" stroke="#2563eb" stroke-width="2"/><text x="480" y="155" text-anchor="middle" font-size="9" fill="#2563eb">x₂</text>
-  <circle cx="480" cy="190" r="14" fill="#fff" stroke="#2563eb" stroke-width="2"/><text x="480" y="195" text-anchor="middle" font-size="9" fill="#2563eb">x₃</text>
-  <circle cx="610" cy="120" r="14" fill="#fff" stroke="#7c3aed" stroke-width="2" class="pulse-node"/><text x="610" y="125" text-anchor="middle" font-size="9" fill="#7c3aed">h₁</text>
-  <circle cx="610" cy="160" r="14" fill="#fff" stroke="#7c3aed" stroke-width="2"/><text x="610" y="165" text-anchor="middle" font-size="9" fill="#7c3aed">h₂</text>
-  <circle cx="610" cy="200" r="14" fill="#fff" stroke="#7c3aed" stroke-width="2"/><text x="610" y="205" text-anchor="middle" font-size="9" fill="#7c3aed">h₃</text>
-  <circle cx="710" cy="160" r="14" fill="#fff" stroke="#059669" stroke-width="2" class="glow-ring"/><text x="710" y="165" text-anchor="middle" font-size="9" fill="#059669">y</text>
-  <line x1="494" y1="110" x2="596" y2="120" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="494" y1="150" x2="596" y2="160" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="494" y1="190" x2="596" y2="200" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="494" y1="110" x2="596" y2="200" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="494" y1="150" x2="596" y2="120" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="494" y1="190" x2="596" y2="160" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="624" y1="120" x2="696" y2="160" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="624" y1="160" x2="696" y2="160" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="624" y1="200" x2="696" y2="160" stroke="#cbd5e1" stroke-width="1"/>
-  <text x="590" y="265" text-anchor="middle" font-size="10" fill="#065f46">所有节点参与计算，无需缩放（inverted dropout）</text>
-</svg>
-<div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 5：Dropout 正则化 — 训练时随机丢弃神经元防止共适应，推理时全部使用</div>
-</div>
-</section>
-
-<!-- ========== 第八章 ========== -->
-<section id="ch8">
-<h2><span class="num">8</span>参数初始化</h2>
-
-<p>参数初始化对 MLP 的训练至关重要——不好的初始化会导致梯度消失、梯度爆炸或神经元死亡。现代深度学习的初始化策略都基于方差分析。</p>
-
-<h3>8.1 为什么初始化很重要</h3>
-<p>前向传播时，激活值的方差随层数增加而变化。如果每层将方差放大 $c$ 倍，$L$ 层后方差变为 $c^L$——若 $c > 1$ 则梯度爆炸，若 $c < 1$ 则梯度消失。理想初始化应使前向和反向传播中<em>方差保持不变</em>。</p>
-
-<h3>8.2 Xavier / Glorot 初始化</h3>
-<p>Glorot & Bengio (2010) 提出的 Xavier 初始化适用于 tanh/sigmoid 等饱和激活函数。它使前向和反向传播的方差均保持不变：</p>
-<div class="formula" data-eq="(32)">$$W_{ij} \sim \mathcal{U}\left[-\sqrt{\frac{6}{n_{in} + n_{out}}}, \sqrt{\frac{6}{n_{in} + n_{out}}}\right]$$</div>
-<p>正态分布版本为 $W_{ij} \sim \mathcal{N}\left(0, \frac{2}{n_{in} + n_{out}}\right)$。Xavier 初始化在 tanh 网络中表现优异，但在 ReLU 网络中不理想。</p>
-
-<h3>8.3 He / Kaiming 初始化</h3>
-<p>He et al. (2015) 针对 ReLU 推导了 He 初始化（也称 Kaiming 初始化）。由于 ReLU 将一半输入置零，方差减半，因此需要两倍的初始化方差来补偿：</p>
-<div class="formula" data-eq="(33)">$$W_{ij} \sim \mathcal{N}\left(0, \frac{2}{n_{in}}\right)$$</div>
-<p>He 初始化是 ReLU 网络的标准初始化方案，使深层 ReLU MLP 的前向传播方差保持稳定。对于 Leaky ReLU，系数改为 $\frac{2}{n_{in}(1 + \alpha^2)}$。</p>
-
-<h3>8.4 初始化策略对比</h3>
-<div class="table-wrap">
-<table>
-<thead><tr><th>方法</th><th>分布</th><th>方差</th><th>适用激活</th><th>PyTorch</th></tr></thead>
-<tbody>
-<tr><td>Xavier (Glorot)</td><td>均匀 / 正态</td><td>$\frac{2}{n_{in} + n_{out}}$</td><td>Tanh、Sigmoid</td><td><code>nn.init.xavier_normal_</code></td></tr>
-<tr><td>He (Kaiming)</td><td>正态</td><td>$\frac{2}{n_{in}}$</td><td>ReLU、Leaky ReLU</td><td><code>nn.init.kaiming_normal_</code></td></tr>
-<tr><td>He 均匀</td><td>均匀</td><td>$\frac{6}{n_{in}}$</td><td>ReLU</td><td><code>nn.init.kaiming_uniform_</code></td></tr>
-<tr><td>正交初始化</td><td>正交矩阵</td><td>$1$</td><td>深层网络</td><td><code>nn.init.orthogonal_</code></td></tr>
-</tbody>
-</table>
-</div>
-</section>
-
-<!-- ========== 第九章 ========== -->
-<section id="ch9">
-<h2><span class="num">9</span>通用近似与表示能力</h2>
-
-<h3>9.1 通用近似定理</h3>
-<p>Universal Approximation Theorem（Hornik et al., 1989）是 MLP 理论的基石：一个包含<em>足够多</em>隐藏神经元的单隐藏层 MLP，可以以任意精度逼近任意连续函数。</p>
-<div class="formula" data-eq="(34)">$$\forall f \in C(\mathbb{R}^n), \forall \epsilon > 0, \exists m, \mathbf{W}, \mathbf{b}: \quad \left|f(\mathbf{x}) - \sum_{j=1}^{m} \alpha_j \sigma(\mathbf{w}_j^\top \mathbf{x} + b_j)\right| < \epsilon, \quad \forall \mathbf{x} \in K$$</div>
-<p>其中 $K$ 为 $\mathbb{R}^n$ 中的紧集，$\sigma$ 为非常数有界单调递增激活函数。</p>
-
-<div class="callout warn">
-<div class="callout-title">理论 ≠ 实践</div>
-<p>通用近似定理保证了<em>存在性</em>，但没有说明如何找到这些权重，也没有保证所需的隐藏神经元数量。单隐藏层逼近高维函数可能需要指数级多的神经元，而深层网络可以用指数级更少的参数实现同样的功能——这就是深度学习的核心优势。</p>
-</div>
-
-<h3>9.2 深度的力量</h3>
-<p> Telgarsky (2016) 严格证明了深度网络的表达能力优势：存在一类函数，深度为 $k$ 的网络可以用 $O(k)$ 个神经元表示，但任何深度为 $k-1$ 的网络需要 $O(2^k)$ 个神经元才能近似。</p>
-<p>直觉上，每增加一层网络可以将表示能力指数级提升——<em>深度 = 指数级表示红利</em>。这从理论上解释了为什么深层窄网络比浅层宽网络更高效。</p>
-
-<div class="svg-box">
-<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
   <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">深度 vs 宽度：表示能力对比</text>
-  <!-- 浅宽网络 -->
+  <!-- 浅层宽网络 -->
   <rect x="30" y="50" width="350" height="220" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
-  <text x="205" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">浅层宽网络 (1 层 × 256 神经元)</text>
-  <circle cx="80" cy="105" r="10" fill="#dbeafe" stroke="#2563eb"/><circle cx="80" cy="135" r="10" fill="#dbeafe" stroke="#2563eb"/><circle cx="80" cy="165" r="10" fill="#dbeafe" stroke="#2563eb"/>
-  <circle cx="200" cy="90" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="200" cy="110" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="200" cy="130" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="200" cy="150" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="200" cy="170" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="200" cy="190" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="200" cy="210" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="200" cy="230" r="8" fill="#ede9fe" stroke="#7c3aed"/>
-  <text x="240" y="165" font-size="11" fill="#94a3b8">...</text>
-  <circle cx="320" cy="160" r="10" fill="#d1fae5" stroke="#059669" class="glow-ring"/>
-  <text x="205" y="255" text-anchor="middle" font-size="11" fill="#dc2626">参数多 · 难训练 · 易过拟合</text>
-  <!-- 深窄网络 -->
+  <text x="205" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">浅层宽网络 (1 层 × 256 神经元)</text>
+  <!-- 连接线 -->
+  <line x1="88" y1="110" x2="192" y2="85" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="110" x2="192" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="110" x2="192" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="110" x2="192" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="110" x2="192" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="110" x2="192" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="110" x2="192" y2="205" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="110" x2="192" y2="225" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="85" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="205" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="145" x2="192" y2="225" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="85" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="105" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="145" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="165" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="205" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="88" y1="180" x2="192" y2="225" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="85" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="105" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="125" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="145" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="165" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="185" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="205" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="208" y1="225" x2="312" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <!-- 输入层 -->
+  <circle cx="80" cy="110" r="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="80" y="113" text-anchor="middle" font-size="8" fill="#2563eb">x₁</text>
+  <circle cx="80" cy="145" r="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="80" y="148" text-anchor="middle" font-size="8" fill="#2563eb">x₂</text>
+  <circle cx="80" cy="180" r="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="80" y="183" text-anchor="middle" font-size="8" fill="#2563eb">x₃</text>
+  <!-- 隐藏层 (8个可见 + 省略号) -->
+  <circle cx="200" cy="85" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="200" cy="105" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="200" cy="125" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="200" cy="145" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="200" cy="165" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="200" cy="185" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="200" cy="205" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="200" cy="225" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="200" y="248" text-anchor="middle" font-size="11" fill="#94a3b8">⋮ (256)</text>
+  <!-- 输出 -->
+  <circle cx="320" cy="155" r="10" fill="#d1fae5" stroke="#059669" stroke-width="2" class="glow-ring"/><text x="320" y="158" text-anchor="middle" font-size="8" fill="#059669">y</text>
+  <text x="205" y="262" text-anchor="middle" font-size="11" fill="#dc2626">参数多 · 难训练 · 易过拟合</text>
+  <!-- 深层窄网络 -->
   <rect x="420" y="50" width="350" height="220" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-  <text x="595" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">深层窄网络 (8 层 × 32 神经元)</text>
-  <circle cx="470" cy="120" r="8" fill="#dbeafe" stroke="#2563eb"/><circle cx="470" cy="145" r="8" fill="#dbeafe" stroke="#2563eb"/><circle cx="470" cy="170" r="8" fill="#dbeafe" stroke="#2563eb"/><circle cx="470" cy="195" r="8" fill="#dbeafe" stroke="#2563eb"/>
-  <circle cx="530" cy="120" r="8" fill="#ede9fe" stroke="#7c3aed" class="pulse-node"/><circle cx="530" cy="145" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="530" cy="170" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="530" cy="195" r="8" fill="#ede9fe" stroke="#7c3aed"/>
-  <circle cx="590" cy="120" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="590" cy="145" r="8" fill="#ede9fe" stroke="#7c3aed" class="pulse-node"/><circle cx="590" cy="170" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="590" cy="195" r="8" fill="#ede9fe" stroke="#7c3aed"/>
-  <circle cx="650" cy="120" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="650" cy="145" r="8" fill="#ede9fe" stroke="#7c3aed"/><circle cx="650" cy="170" r="8" fill="#ede9fe" stroke="#7c3aed" class="pulse-node"/><circle cx="650" cy="195" r="8" fill="#ede9fe" stroke="#7c3aed"/>
-  <text x="685" y="165" font-size="11" fill="#94a3b8">...</text>
-  <circle cx="730" cy="160" r="10" fill="#d1fae5" stroke="#059669" class="glow-ring"/>
-  <text x="595" y="255" text-anchor="middle" font-size="11" fill="#059669">参数少 · 表达力强 · 梯度传播好</text>
+  <text x="595" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">深层窄网络 (8 层 × 32 神经元)</text>
+  <!-- 连接线 -->
+  <line x1="468" y1="125" x2="502" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="125" x2="502" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="125" x2="502" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="155" x2="502" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="155" x2="502" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="155" x2="502" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="185" x2="502" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="185" x2="502" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="468" y1="185" x2="502" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="125" x2="552" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="125" x2="552" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="125" x2="552" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="155" x2="552" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="155" x2="552" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="155" x2="552" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="185" x2="552" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="185" x2="552" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="518" y1="185" x2="552" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="125" x2="602" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="125" x2="602" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="125" x2="602" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="155" x2="602" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="155" x2="602" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="155" x2="602" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="185" x2="602" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="185" x2="602" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="568" y1="185" x2="602" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="125" x2="672" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="125" x2="672" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="125" x2="672" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="155" x2="672" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="155" x2="672" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="155" x2="672" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="185" x2="672" y2="125" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="185" x2="672" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="618" y1="185" x2="672" y2="185" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="688" y1="125" x2="722" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="688" y1="155" x2="722" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <line x1="688" y1="185" x2="722" y2="155" stroke="#cbd5e1" stroke-width="0.5"/>
+  <!-- 输入层 -->
+  <circle cx="460" cy="125" r="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="460" y="128" text-anchor="middle" font-size="7" fill="#2563eb">x₁</text>
+  <circle cx="460" cy="155" r="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="460" y="158" text-anchor="middle" font-size="7" fill="#2563eb">x₂</text>
+  <circle cx="460" cy="185" r="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="460" y="188" text-anchor="middle" font-size="7" fill="#2563eb">x₃</text>
+  <!-- 隐藏层 1 -->
+  <circle cx="510" cy="125" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" class="pulse-node"/>
+  <circle cx="510" cy="155" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="510" cy="185" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <!-- 隐藏层 2 -->
+  <circle cx="560" cy="125" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="560" cy="155" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" class="pulse-node"/>
+  <circle cx="560" cy="185" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <!-- 隐藏层 3 -->
+  <circle cx="610" cy="125" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="610" cy="155" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="610" cy="185" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" class="pulse-node"/>
+  <!-- 省略号 (层4-6) -->
+  <text x="645" y="162" text-anchor="middle" font-size="14" fill="#94a3b8">⋯</text>
+  <!-- 隐藏层 4 (代表第7层) -->
+  <circle cx="680" cy="125" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <circle cx="680" cy="155" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" class="pulse-node"/>
+  <circle cx="680" cy="185" r="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <!-- 输出 -->
+  <circle cx="730" cy="155" r="10" fill="#d1fae5" stroke="#059669" stroke-width="2" class="glow-ring"/><text x="730" y="158" text-anchor="middle" font-size="8" fill="#059669">y</text>
+  <text x="595" y="262" text-anchor="middle" font-size="11" fill="#059669">参数少 · 表达力强 · 梯度传播好</text>
 </svg>
 <div style="font-size:13px;color:var(--c-text-soft);margin-top:8px;">图 6：深度 vs 宽度 — 深层窄网络以指数级更少的参数实现相同的表示能力</div>
 </div>
 
 <h3>9.3 偏差-方差权衡</h3>
 <p>MLP 的泛化能力受<em>偏差</em>（模型表达能力不足导致的系统性误差）和<em>方差</em>（模型对训练数据过于敏感导致的波动）的权衡：</p>
-<div class="formula" data-eq="(35)">$$\text{Error} = \underbrace{\text{Bias}^2}_{\text{欠拟合}} + \underbrace{\text{Variance}}_{\text{过拟合}} + \underbrace{\text{Noise}}_{\text{不可约}}$$</div>
+<div class="formula" data-eq="(32)">$$\text{Error} = \underbrace{\text{Bias}^2}_{\text{欠拟合}} + \underbrace{\text{Variance}}_{\text{过拟合}} + \underbrace{\text{Noise}}_{\text{不可约}}$$</div>
 <ul>
   <li><strong>高偏差</strong>（欠拟合）：网络太浅/太窄 → 增加深度或宽度</li>
   <li><strong>高方差</strong>（过拟合）：网络太深/太宽 → 增加正则化（Dropout、L2、Early Stopping）</li>

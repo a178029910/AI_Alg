@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAE 模型详解 — Masked Autoencoder 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -173,7 +174,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>1.2 MAE 的诞生</h3>
 <p>2021 年 11 月，何恺明团队在论文 <em>"Masked Autoencoders Are Scalable Vision Learners"</em> 中提出了 MAE。MAE 的设计哲学极其简洁：<strong>遮蔽图像中大部分图块，训练一个自编码器重建缺失部分</strong>。这一看似简单的方案在 ImageNet 上取得了突破性效果：</p>
 <ul>
-  <li>ViT-Base/16 在 ImageNet-1K 上微调达到 $83.6$% top-1（有监督预训练仅 $81.8$%）</li>
+  <li>ViT-Base/16 在 ImageNet-1K 上微调达到 $83.6$% top-1（有监督预训练仅 $82.3$%）</li>
   <li>ViT-Huge/14 达到 $86.9$% top-1（当时最优），仅用 ImageNet-1K 数据</li>
   <li>超越此前所有自监督方法（DINO、MoCo v3、BEiT），且训练更简单</li>
 </ul>
@@ -532,24 +533,24 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 <h3>5.3 解码器的可丢弃性</h3>
-<p>解码器仅在预训练时使用。微调阶段，解码器被完全丢弃，编码器直接接分类头。这意味着解码器的容量不会影响下游性能——它只需要足够好以产生有效的学习信号即可。实验表明，解码器深度在 $1$–$8$ 层之间时性能变化不大，$4$ 层即可达到最优。</p>
+<p>解码器仅在预训练时使用。微调阶段，解码器被完全丢弃，编码器直接接分类头。这意味着解码器的容量不会影响下游性能——它只需要足够好以产生有效的学习信号即可。论文消融（ViT-Large，表 1a）表明，解码器深度在 $1$–$12$ 层之间时微调性能几乎不变，$8$ 层即可达到最优。</p>
 
 <div class="table-wrap">
 <table>
 <thead><tr><th>解码器深度</th><th>线性探针 (%)</th><th>微调 (%)</th></tr></thead>
 <tbody>
-<tr><td>$0$（恒等映射）</td><td>$43.2$</td><td>$80.7$</td></tr>
-<tr><td>$1$</td><td>$53.8$</td><td>$82.6$</td></tr>
-<tr><td>$2$</td><td>$55.4$</td><td>$83.1$</td></tr>
-<tr style="font-weight:700;"><td>$4$</td><td>$56.8$</td><td>$83.6$</td></tr>
-<tr><td>$8$</td><td>$57.1$</td><td>$83.5$</td></tr>
+<tr><td>$1$</td><td>$65.5$</td><td>$84.8$</td></tr>
+<tr><td>$2$</td><td>$70.0$</td><td>$84.9$</td></tr>
+<tr><td>$4$</td><td>$71.9$</td><td>$84.9$</td></tr>
+<tr style="font-weight:700;"><td>$8$</td><td>$73.5$</td><td>$84.9$</td></tr>
+<tr><td>$12$</td><td>$73.3$</td><td>$84.4$</td></tr>
 </tbody>
 </table>
 </div>
 
 <div class="callout">
 <div class="callout-title">解码器深度的启示</div>
-<p>解码器越深，线性探针越好但微调提升不大。这说明解码器的作用主要是提取更丰富的语义特征用于重建——但对于微调来说，编码器的表示已经足够好。$0$ 层（直接用编码器输出重建）性能大幅下降，说明解码器的非线性变换对于从语义表示到像素重建的跨越是必要的。</p>
+<p>解码器越深，线性探针越好但微调提升不大（线性探针从 65.5% 提升到 73.5%，微调始终在 84.8%–84.9% 之间）。这说明解码器的作用主要是提取更丰富的语义特征用于重建——但对于微调来说，编码器的表示已经足够好。</p>
 </div>
 </section>
 
@@ -657,9 +658,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>低比例掩码（如 15-40%）下，模型只需做局部插值即可完成重建，无需理解图像语义。75% 的高比例掩码将局部信息几乎全部抹去，迫使模型利用全局上下文和语义理解来重建。</p>
 
 <h3>8.2 信息论视角</h3>
-<p>从信息论角度，掩码比例 $ 与任务的信息量 (r)$ 的关系可近似为：</p>
-<div class="formula" data-eq="(13)">I(r) \approx H(\mathbf{x}_{\mathcal{M}} \mid \mathbf{x}_{\mathcal{V}}) = H(\mathbf{x}_{\mathcal{M}}) - I(\mathbf{x}_{\mathcal{M}}; \mathbf{x}_{\mathcal{V}})</div>
-<p>其中 (\mathbf{x}_{\mathcal{M}} \mid \mathbf{x}_{\mathcal{V}})$ 为给定可见图块后遮蔽图块的条件熵（不确定度）。当 $ 较小时，(\mathbf{x}_{\mathcal{M}}; \mathbf{x}_{\mathcal{V}})$ 很大（可见图块几乎完全确定遮蔽图块），任务信息量趋近于 0。当 $ 增大到 75% 时，可见信息不足以确定遮蔽内容，条件熵显著增大，任务才开始有学习信号。</p>
+<p>从信息论角度，掩码比例 $r$ 与任务的信息量 $I(r)$ 的关系可近似为：</p>
+<div class="formula" data-eq="(13)">$$I(r) \approx H(\mathbf{x}_{\mathcal{M}} \mid \mathbf{x}_{\mathcal{V}}) = H(\mathbf{x}_{\mathcal{M}}) - I(\mathbf{x}_{\mathcal{M}}; \mathbf{x}_{\mathcal{V}})$$</div>
+<p>其中 $H(\mathbf{x}_{\mathcal{M}} \mid \mathbf{x}_{\mathcal{V}})$ 为给定可见图块后遮蔽图块的条件熵（不确定度）。当 $r$ 较小时，$I(\mathbf{x}_{\mathcal{M}}; \mathbf{x}_{\mathcal{V}})$ 很大（可见图块几乎完全确定遮蔽图块），任务信息量趋近于 0。当 $r$ 增大到 75% 时，可见信息不足以确定遮蔽内容，条件熵显著增大，任务才开始有学习信号。</p>
 
 <div class="svg-box">
 <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
@@ -692,19 +693,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 <h3>8.3 75% 的实践验证</h3>
-<p>消融实验进一步验证了 75% 的最优性。在不同下游任务上：</p>
+<p>消融实验进一步验证了 75% 的最优性。下表为论文图 5 的 ViT-Base 消融结果：</p>
 <div class="table-wrap">
 <table>
-<thead><tr><th>掩码比例</th><th>分类 (%)</th><th>检测 (%)</th><th>分割 (%)</th></tr></thead>
+<thead><tr><th>掩码比例</th><th>微调 top-1 (%)</th><th>线性探针 (%)</th></tr></thead>
 <tbody>
-<tr><td>.50$</td><td>.5$</td><td>.8$</td><td>.5$</td></tr>
-<tr><td>.65$</td><td>.5$</td><td>.7$</td><td>.8$</td></tr>
-<tr style="font-weight:700;"><td>.75$</td><td>.6$</td><td>.6$</td><td>.2$</td></tr>
-<tr><td>.85$</td><td>.3$</td><td>.3$</td><td>.9$</td></tr>
+<tr><td>$0.50$</td><td>$81.5$</td><td>$47.6$</td></tr>
+<tr><td>$0.65$</td><td>$82.5$</td><td>$53.6$</td></tr>
+<tr style="font-weight:700;"><td>$0.75$</td><td>$83.6$</td><td>$56.8$</td></tr>
+<tr><td>$0.85$</td><td>$81.3$</td><td>$48.0$</td></tr>
 </tbody>
 </table>
 </div>
-<p>75% 在所有下游任务上均取得最优，且优势在密集预测任务（检测、分割）上更为明显——这进一步说明高比例掩码促进了全局语义理解，对需要全局信息的任务更有利。</p>
+<p>75% 在微调与线性探针两项评估上均取得最优——这说明高比例掩码迫使模型超越局部插值、促进全局语义理解，同时训练效率更高（编码器仅需处理 25% 的图块）。</p>
 
 <div class="callout">
 <div class="callout-title">与 BERT 的对比</div>
@@ -717,38 +718,38 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h2><span class="num">9</span>自监督 vs 有监督预训练</h2>
 
 <h3>9.1 性能对比</h3>
-<p>MAE 自监督预训练与有监督预训练的对比（均在 ImageNet-1K 上预训练，微调后评估）：</p>
+<p>MAE 自监督预训练与有监督预训练的对比（均在 ImageNet-1K 上预训练，微调后评估；ViT-B/16、L/16、H/14）：</p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>方法</th><th>预训练方式</th><th>ViT-Base (%)</th><th>ViT-Large (%)</th><th>ViT-Huge (%)</th></tr></thead>
 <tbody>
-<tr><td>有监督预训练</td><td>分类标签</td><td>.8$</td><td>.1$</td><td>.3$</td></tr>
-<tr><td>DINO</td><td>自监督</td><td>.5$</td><td>.5$</td><td>—</td></tr>
-<tr><td>MoCo v3</td><td>对比学习</td><td>.7$</td><td>.2$</td><td>—</td></tr>
-<tr><td>BEiT</td><td>掩码预测</td><td>.2$</td><td>.2$</td><td>—</td></tr>
-<tr style="font-weight:700;"><td>MAE</td><td>掩码重建</td><td><strong>.6$</strong></td><td><strong>.1$</strong></td><td><strong>.9$</strong></td></tr>
+<tr><td>有监督预训练</td><td>分类标签</td><td>$82.3$</td><td>$82.6$</td><td>$83.1$</td></tr>
+<tr><td>DINO</td><td>自监督</td><td>$82.8$</td><td>—</td><td>—</td></tr>
+<tr><td>MoCo v3</td><td>对比学习</td><td>$83.2$</td><td>$84.1$</td><td>—</td></tr>
+<tr><td>BEiT</td><td>掩码预测</td><td>$83.2$</td><td>$85.2$</td><td>—</td></tr>
+<tr style="font-weight:700;"><td>MAE</td><td>掩码重建</td><td><strong>$83.6$</strong></td><td><strong>$85.9$</strong></td><td><strong>$86.9$</strong></td></tr>
 </tbody>
 </table>
 </div>
 
 <h3>9.2 Scaling 行为</h3>
 <p>MAE 的核心优势在于<strong>模型越大收益越大</strong>。有监督预训练在 ViT-Large/Huge 上容易出现过拟合（标签信息有限），而 MAE 不受标签限制，可以从无限数据中学习：</p>
-<div class="formula" data-eq="(14)">\Delta_{\text{MAE-Sup}} = \text{Acc}_{\text{MAE}} - \text{Acc}_{\text{Sup}} \approx +1.8\% \text{ (Base)}, \quad +2.0\% \text{ (Large)}, \quad +2.6\% \text{ (Huge)}</div>
+<div class="formula" data-eq="(14)">$$\Delta_{\text{MAE-Sup}} = \text{Acc}_{\text{MAE}} - \text{Acc}_{\text{Sup}} \approx +1.3\% \text{ (Base)}, \quad +3.3\% \text{ (Large)}, \quad +3.8\% \text{ (Huge)}$$</div>
 
 <div class="callout success">
 <div class="callout-title">Scaling Law 的视觉验证</div>
-<p>MAE 首次在视觉领域清晰验证了"模型越大、自监督收益越大"的 Scaling Law。ViT-Huge 从有监督的 84.3% 提升到 MAE 的 86.9%，提升 2.6 个百分点。这为后续视觉基础模型（如 DINOv2、SAM）的训练策略奠定了基础。</p>
+<p>MAE 首次在视觉领域清晰验证了"模型越大、自监督收益越大"的 Scaling Law。ViT-Huge 从有监督的 83.1% 提升到 MAE 的 86.9%，提升 3.8 个百分点。这为后续视觉基础模型（如 DINOv2、SAM）的训练策略奠定了基础。</p>
 </div>
 
 <h3>9.3 线性探针 vs 微调</h3>
-<p>线性探针（冻结编码器，只训练线性分类头）评估的是表示质量；微调评估的是最终性能。MAE 在两种评估下的表现：</p>
+<p>线性探针（冻结编码器，只训练线性分类头）评估的是表示质量；微调评估的是最终性能。MAE 与 DINO 在两种评估下的对比（ViT-Base）：</p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>方法</th><th>线性探针 (%)</th><th>微调 (%)</th><th>差距</th></tr></thead>
 <tbody>
-<tr><td>有监督</td><td>.5$</td><td>.8$</td><td>.3$</td></tr>
-<tr><td>DINO</td><td>.0$</td><td>.5$</td><td>.5$</td></tr>
-<tr style="font-weight:700;"><td>MAE</td><td>.8$</td><td>.6$</td><td>.8$</td></tr>
+<tr><td>有监督</td><td>—</td><td>$82.3$</td><td>—</td></tr>
+<tr><td>DINO</td><td>$71.0$</td><td>$82.8$</td><td>$11.8$</td></tr>
+<tr style="font-weight:700;"><td>MAE</td><td>$56.8$</td><td>$83.6$</td><td>$26.8$</td></tr>
 </tbody>
 </table>
 </div>
@@ -759,21 +760,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 <h3>9.4 部分微调实验</h3>
-<p>逐步解冻编码器层数的实验揭示了 MAE 表示的层级结构：</p>
+<p>逐步解冻编码器层数的实验揭示了 MAE 表示的层级结构（ViT-Large，论文图 9）：</p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>微调层数</th><th>冻结层数</th><th>top-1 (%)</th></tr></thead>
 <tbody>
-<tr><td>$（线性探针）</td><td>$</td><td>.8$</td></tr>
-<tr><td>$</td><td>$</td><td>.3$</td></tr>
-<tr><td>$</td><td>$</td><td>.3$</td></tr>
-<tr><td>$</td><td>$</td><td>.6$</td></tr>
-<tr><td>$</td><td>$</td><td>.0$</td></tr>
-<tr><td>$（全部微调）</td><td>$</td><td>.6$</td></tr>
+<tr><td>$0$（线性探针）</td><td>$24$</td><td>$73.5$</td></tr>
+<tr><td>$1$</td><td>$23$</td><td>$81.0$</td></tr>
+<tr><td>$4$</td><td>$20$</td><td>约 $82.5$</td></tr>
+<tr><td>$24$（全部微调）</td><td>$0$</td><td>$84.9$</td></tr>
 </tbody>
 </table>
 </div>
-<p>仅微调最后 1 层就达到 76.3%，微调 4 层达到 81.6%。这说明 MAE 的语义信息集中在最后几层，与有监督预训练的表示结构相似。</p>
+<p>仅微调最后 1 层就达到 81.0%（较线性探针提升 7.5 个百分点），微调 4 层即可接近全量微调水平。这说明 MAE 的语义信息集中在最后几层，一旦引入非线性分类头即可充分释放，与有监督预训练的表示结构相似。</p>
 </section>
 
 <!-- ========== 第十章 ========== -->
@@ -781,32 +780,32 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h2><span class="num">10</span>应用场景与下游任务</h2>
 
 <h3>10.1 图像分类</h3>
-<p>MAE 最直接的应用是图像分类。预训练的编码器在 ImageNet-1K 上微调后达到 .6$%（ViT-Base）至 .9$%（ViT-Huge）。在更大规模的迁移场景中，MAE 在 iNaturalist、Places365 等细粒度数据集上也显著优于有监督预训练。</p>
+<p>MAE 最直接的应用是图像分类。预训练的编码器在 ImageNet-1K 上微调后达到 $83.6$%（ViT-Base）至 $86.9$%（ViT-Huge）。在更大规模的迁移场景中，MAE 在 iNaturalist、Places365 等细粒度数据集上也显著优于有监督预训练。</p>
 
 <h3>10.2 目标检测与实例分割</h3>
-<p>将 MAE 预训练的 ViT 作为检测器骨干，在 COCO 数据集上：</p>
+<p>将 MAE 预训练的 ViT 作为检测器骨干（Mask R-CNN + FPN），在 COCO 数据集上：</p>
 <div class="table-wrap">
 <table>
-<thead><tr><th>骨干网络</th><th>预训练</th><th>AP{box}$</th><th>AP{mask}$</th></tr></thead>
+<thead><tr><th>骨干网络</th><th>预训练</th><th>$AP^{box}$</th><th>$AP^{mask}$</th></tr></thead>
 <tbody>
-<tr><td>ResNet-50</td><td>有监督</td><td>.0$</td><td>.8$</td></tr>
-<tr><td>ViT-Base</td><td>有监督</td><td>.1$</td><td>.8$</td></tr>
-<tr style="font-weight:700;"><td>ViT-Base</td><td>MAE</td><td><strong>.6$</strong></td><td><strong>.2$</strong></td></tr>
-<tr><td>ViT-Large</td><td>MAE</td><td><strong>.3$</strong></td><td><strong>.7$</strong></td></tr>
+<tr><td>ViT-Base</td><td>有监督</td><td>$47.9$</td><td>$42.9$</td></tr>
+<tr style="font-weight:700;"><td>ViT-Base</td><td>MAE</td><td><strong>$50.3$</strong></td><td><strong>$44.9$</strong></td></tr>
+<tr><td>ViT-Large</td><td>有监督</td><td>$49.3$</td><td>$43.9$</td></tr>
+<tr style="font-weight:700;"><td>ViT-Large</td><td>MAE</td><td><strong>$53.3$</strong></td><td><strong>$47.2$</strong></td></tr>
 </tbody>
 </table>
 </div>
 
 <h3>10.3 语义分割</h3>
-<p>在 ADE20K 语义分割任务上，MAE 预训练的 ViT 同样优于有监督预训练：</p>
+<p>在 ADE20K 语义分割任务上（UperNet），MAE 预训练的 ViT 同样优于有监督预训练：</p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>骨干网络</th><th>预训练</th><th>mIoU (%)</th></tr></thead>
 <tbody>
-<tr><td>ResNet-50</td><td>有监督</td><td>.7$</td></tr>
-<tr><td>ViT-Base</td><td>有监督</td><td>.2$</td></tr>
-<tr style="font-weight:700;"><td>ViT-Base</td><td>MAE</td><td><strong>.2$</strong></td></tr>
-<tr><td>ViT-Large</td><td>MAE</td><td><strong>.2$</strong></td></tr>
+<tr><td>ViT-Base</td><td>有监督</td><td>$47.4$</td></tr>
+<tr style="font-weight:700;"><td>ViT-Base</td><td>MAE</td><td><strong>$48.1$</strong></td></tr>
+<tr><td>ViT-Large</td><td>有监督</td><td>$49.9$</td></tr>
+<tr style="font-weight:700;"><td>ViT-Large</td><td>MAE</td><td><strong>$53.6$</strong></td></tr>
 </tbody>
 </table>
 </div>
@@ -831,10 +830,10 @@ tr:hover td { background: var(--c-primary-ghost); }
   <text x="150" y="193" text-anchor="middle" font-size="10" fill="#64748b">83.6% → 86.9%</text>
   <rect x="280" y="155" width="140" height="50" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
   <text x="350" y="175" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="600">目标检测</text>
-  <text x="350" y="193" text-anchor="middle" font-size="10" fill="#64748b">AP 51.6 → 53.3</text>
+  <text x="350" y="193" text-anchor="middle" font-size="10" fill="#64748b">AP 50.3 → 53.3</text>
   <rect x="480" y="155" width="140" height="50" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
   <text x="550" y="175" text-anchor="middle" font-size="12" fill="#047857" font-weight="600">语义分割</text>
-  <text x="550" y="193" text-anchor="middle" font-size="10" fill="#64748b">mIoU 45.2 → 47.2</text>
+  <text x="550" y="193" text-anchor="middle" font-size="10" fill="#64748b">mIoU 48.1 → 53.6</text>
   <rect x="680" y="155" width="140" height="50" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
   <text x="750" y="175" text-anchor="middle" font-size="12" fill="#92400e" font-weight="600">视频理解</text>
   <text x="750" y="193" text-anchor="middle" font-size="10" fill="#64748b">时序扩展</text>
@@ -1135,10 +1134,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 <h3>12.2 VideoMAE</h3>
-<p>视频的冗余度比图像更高（时序冗余 + 空间冗余），因此 VideoMAE 将掩码比例提高到 $%。它将视频分解为时空图块（tubelet），随机遮蔽 90% 后训练自编码器重建。VideoMAE 在 Kinetics-400 上达到 .4$% top-1，大幅超越此前方法。</p>
+<p>视频的冗余度比图像更高（时序冗余 + 空间冗余），因此 VideoMAE 将掩码比例提高到 $90$%。它将视频分解为时空图块（tubelet），随机遮蔽 $90$% 后训练自编码器重建。VideoMAE-Base 在 Kinetics-400 上达到 $81.4$% top-1，大幅超越此前方法。</p>
 
-<div class="formula" data-eq="(15)">r_{\text{video}} = 0.90, \quad N_{\text{vis}} = N_t \times N_s \times (1 - 0.90) = 0.10 \times N_t \times N_s</div>
-<p>其中 $ 为时间维图块数，$ 为空间维图块数。</p>
+<div class="formula" data-eq="(15)">$$r_{\text{video}} = 0.90, \quad N_{\text{vis}} = N_t \times N_s \times (1 - 0.90) = 0.10 \times N_t \times N_s$$</div>
+<p>其中 $N_t$ 为时间维图块数，$N_s$ 为空间维图块数。</p>
 
 <h3>12.3 MAE vs 其他自监督方法</h3>
 <div class="svg-box">
