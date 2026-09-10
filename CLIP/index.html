@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CLIP 模型详解 — Contrastive Language-Image Pre-training 完整技术指南</title>
+<title>多模态对比学习与表征对齐 — CLIP · SigLIP · BLIP 完整技术指南</title>
 <link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -110,6 +110,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 @media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
 @media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
 @media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+.fig-cap { text-align: center; color: var(--c-text-soft); font-size: 13px; line-height: 1.75; margin: -16px auto 34px; max-width: 780px; }
 </style>
 </head>
 
@@ -117,1004 +118,757 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div id="progress-bar"></div>
 <div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
 <aside id="sidebar">
-  <h2>CLIP 模型详解</h2>
-  <nav>
+  <h2>多模态表征对齐</h2>
+<nav>
     <a href="#hero">封面</a>
-    <a href="#ch1">一、CLIP 的诞生与动机</a>
-    <a href="#ch2">二、整体架构：双塔编码器</a>
-    <a href="#ch3">三、图像编码器：ViT 与 ResNet</a>
-    <a href="#ch4">四、文本编码器：Transformer</a>
-    <a href="#ch5">五、对比学习核心：InfoNCE 损失</a>
-    <a href="#ch6">六、温度参数与相似度矩阵</a>
-    <a href="#ch7">七、CLIP 的数学描述</a>
-    <a href="#ch8">八、Zero-shot 推理与 Prompt Engineering</a>
-    <a href="#ch9">九、训练细节与数据规模</a>
-    <a href="#ch10">十、PyTorch 代码实现</a>
-    <a href="#ch11">十一、应用场景与下游任务</a>
-    <a href="#ch12">十二、CLIP 的扩展与变体</a>
-    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#ch1">一、为什么需要图文对齐</a>
+    <a href="#ch2">二、CLIP：双塔与 InfoNCE</a>
+    <a href="#ch3">三、SigLIP：sigmoid 损失</a>
+    <a href="#ch4">四、BLIP：理解与生成</a>
+    <a href="#ch5">五、三者对比与演进</a>
+    <a href="#ch6">六、工程实现</a>
+    <a href="#ch7">七、知识体系总结</a>
     <a href="#refs">参考文献</a>
   </nav>
-  <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+<a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
 </aside>
 <main id="main">
 
-<!-- 封面 -->
 <section id="hero" class="hero">
-  <h1>CLIP 模型详解</h1>
-  <div class="subtitle">Contrastive Language-Image Pre-training</div>
-  <div class="tagline">跨模态对比学习的里程碑 · 2021 — 2024</div>
+  <h1>多模态对比学习与表征对齐</h1>
+  <div class="subtitle">CLIP · SigLIP · BLIP · 把图像和语言放进同一个空间</div>
+  <div class="tagline">双塔架构 · InfoNCE · 温度参数 · Zero-shot · Sigmoid 损失 · MED · CapFilt · Q-Former</div>
   <div class="badges">
-    <span class="badge">13 个章节</span>
-    <span class="badge">5 张 SVG 结构图</span>
-    <span class="badge">6 段 PyTorch 代码</span>
-    <span class="badge">15 篇参考文献</span>
+    <span class="badge">7 个章节</span>
+    <span class="badge">4 张 SVG 结构图</span>
+    <span class="badge">12 个公式</span>
+    <span class="badge">4 段 PyTorch 代码</span>
+    <span class="badge">16 篇参考文献</span>
   </div>
 </section>
 
-<!-- ========== 第一章 ========== -->
-<section id="ch1">
-<h2><span class="num">1</span>CLIP 的诞生与动机</h2>
+<section id="ch1"><h2><span class="num">1</span>为什么需要图文对齐</h2>
 
-<h3>1.1 视觉学习的困境</h3>
-<p>2021 年之前，计算机视觉的标志性范式是<strong>固定类别分类</strong>：ImageNet 数据集定义了 $1{,}000$ 个类别，模型在这些类别上训练并评估。这一范式带来了一个根本性限制——模型只能识别训练时见过的类别，无法泛化到新概念。</p>
-<p>更深层的问题是：<strong>视觉概念的定义依赖于语言</strong>。人类通过语言来描述和理解视觉世界，而传统视觉模型完全脱离了语言，只学习从像素到类别标签的映射。这导致模型缺乏对视觉概念的语义理解。</p>
+<h3>1.1 监督信号的瓶颈</h3>
+<p>图像分类的经典范式是"固定类别 + 人工标注"：ImageNet 的 1000 个类别由人定义，每张图由人打标签。这套范式有两个天花板——<strong>类别是封闭的</strong>（模型永远学不会训练集里没有的概念），<strong>标注是昂贵的</strong>（百万级标注需要数千小时人力）。</p>
+<p>互联网上天然存在另一类监督信号：网页里图片旁边的<strong>替代文本（alt text）、标题、描述</strong>。这类文本数量以十亿计、覆盖概念极其开放，唯一的缺点是<strong>噪声大</strong>——很多图文对根本对不上。图文对齐要解决的问题就是：<strong>能否用这种廉价、开放但有噪声的信号，学到一个通用的视觉表征空间？</strong></p>
 
+<h3>1.2 "对齐"的含义</h3>
+<p>设图像编码器为 $f_I$、文本编码器为 $f_T$。对齐的目标是让它们在<strong>同一个 $d$ 维空间</strong>里输出可比较的向量：</p>
+<div class="formula" data-eq="(1)">$$\mathbf{i} = \frac{f_I(\text{image})}{\|f_I(\text{image})\|_2}, \qquad \mathbf{t} = \frac{f_T(\text{text})}{\|f_T(\text{text})\|_2}$$</div>
+<p>两个向量都做 L2 归一化后落在单位超球面上，此时内积就等于余弦相似度，取值范围 $[-1, 1]$。对齐的判据是：<strong>语义匹配的图文对相似度高，不匹配的相似度低</strong>。</p>
+<div class="callout"><div class="callout-title">对齐空间能直接支持零样本推理</div>
+<p>一旦图文对齐，"分类"就可以改写成"检索"：把类别名（"猫""狗"）写成文本，找出与图像最相似的那个。这就是 Zero-shot 分类的原理——<strong>分类器不再是训练时固定的权重，而是在推理时由文本现场生成的</strong>。</p></div>
+
+<h3>1.3 相似度矩阵：对比对齐的核心数据流</h3>
+<p>取一个 batch 的 $N$ 条图文对，得到图像矩阵 $\mathbf{I} \in \mathbb{R}^{N \times d}$ 与文本矩阵 $\mathbf{T} \in \mathbb{R}^{N \times d}$。全部两两相似度构成一个 $N \times N$ 的矩阵：</p>
+<div class="formula" data-eq="(2)">$$\mathbf{S} = \frac{1}{\tau}\, \mathbf{I}\, \mathbf{T}^{\top} \in \mathbb{R}^{N \times N}, \qquad S_{ij} = \frac{\mathbf{i}_i \cdot \mathbf{t}_j}{\tau}$$</div>
+<p>其中 $\tau$ 是可学习的<strong>温度参数</strong>。<strong>对角线 $S_{ii}$ 是配对的图文对（正样本），其余 $N^2 - N$ 个格子全部是批内构造出的负样本</strong>。CLIP、SigLIP 的差别，本质上就是"如何处理这张矩阵"。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 880 500" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="m1-a" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#94a3b8"/></marker>
+<marker id="m1-v" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0,0 11,4 0,8" fill="#7c3aed"/></marker>
+</defs>
+<text x="440" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">对齐的本质：把 N 个图文对拼成 N×N 相似度矩阵</text>
+
+<text x="125" y="52" text-anchor="middle" font-size="11.5" fill="#64748b">N 张图像</text>
+<rect x="60" y="60" width="130" height="42" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+<text x="125" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">图像编码器</text>
+<text x="125" y="124" text-anchor="middle" font-size="11.5" fill="#64748b">N 条文本</text>
+<rect x="60" y="132" width="130" height="42" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.6"/>
+<text x="125" y="158" text-anchor="middle" font-size="13" font-weight="700" fill="#047857">文本编码器</text>
+
+<line x1="192" y1="81" x2="222" y2="81" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#m1-a)"/>
+<line x1="192" y1="153" x2="222" y2="153" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#m1-a)"/>
+<circle cx="240" cy="81" r="8" fill="#2563eb"/><circle cx="264" cy="81" r="8" fill="#2563eb"/><circle cx="288" cy="81" r="8" fill="#2563eb"/>
+<circle cx="240" cy="153" r="8" fill="#059669"/><circle cx="264" cy="153" r="8" fill="#059669"/><circle cx="288" cy="153" r="8" fill="#059669"/>
+<text x="308" y="86" font-size="12" fill="#1d4ed8">Î  (N×d)</text>
+<text x="308" y="158" font-size="12" fill="#047857">T̂  (N×d)</text>
+<text x="240" y="196" text-anchor="middle" font-size="10.5" fill="#94a3b8">L2 归一化后，全部落在单位球面上</text>
+
+<line x1="280" y1="206" x2="280" y2="232" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#m1-v)"/>
+<text x="298" y="226" font-size="12.5" font-weight="700" fill="#7c3aed">S = Î T̂ᵀ / τ</text>
+
+<g>
+<rect x="180" y="240" width="44" height="44" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="224" y="240" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="268" y="240" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="312" y="240" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="356" y="240" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="180" y="284" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="224" y="284" width="44" height="44" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="268" y="284" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="312" y="284" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="356" y="284" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="180" y="328" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="224" y="328" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="268" y="328" width="44" height="44" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="312" y="328" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="356" y="328" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="180" y="372" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="224" y="372" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="268" y="372" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="312" y="372" width="44" height="44" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="356" y="372" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="180" y="416" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="224" y="416" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="268" y="416" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="312" y="416" width="44" height="44" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="356" y="416" width="44" height="44" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+</g>
+<text x="463" y="228" text-anchor="middle" font-size="11" fill="#1d4ed8">î₁</text>
+<text x="509" y="228" text-anchor="middle" font-size="11" fill="#1d4ed8">î₂</text>
+<text x="555" y="228" text-anchor="middle" font-size="11" fill="#1d4ed8">î₃</text>
+<text x="601" y="228" text-anchor="middle" font-size="11" fill="#1d4ed8">î₄</text>
+<text x="647" y="228" text-anchor="middle" font-size="11" fill="#1d4ed8">î₅</text>
+<text x="168" y="267" text-anchor="end" font-size="11" fill="#047857">t̂₁</text>
+<text x="168" y="311" text-anchor="end" font-size="11" fill="#047857">t̂₂</text>
+<text x="168" y="355" text-anchor="end" font-size="11" fill="#047857">t̂₃</text>
+<text x="168" y="399" text-anchor="end" font-size="11" fill="#047857">t̂₄</text>
+<text x="168" y="443" text-anchor="end" font-size="11" fill="#047857">t̂₅</text>
+
+<rect x="400" y="246" width="450" height="176" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<circle cx="426" cy="278" r="5" fill="#2563eb"/>
+<text x="440" y="283" font-size="12" fill="#1d4ed8">对角线 = 正样本（第 i 对图文自己）</text>
+<circle cx="426" cy="306" r="5" fill="#cbd5e1"/>
+<text x="440" y="311" font-size="12" fill="#64748b">其余 = 负样本（批内其他图文对，免费获得）</text>
+<line x1="424" y1="328" x2="826" y2="328" stroke="#e2e8f0" stroke-width="1.2"/>
+<text x="424" y="356" font-size="11.5" fill="#475569">InfoNCE：按行/列整体归一化 → 依赖整批</text>
+<text x="424" y="382" font-size="11.5" fill="#475569">SigLIP：每个格子独立判定 → 与批量解耦</text>
+
+<text x="440" y="482" text-anchor="middle" font-size="11.5" fill="#94a3b8">这张矩阵是对齐训练的全部信息源：一个 batch 越大，负样本越多，对比信号越强</text>
+</svg>
+</div>
+<p class="fig-cap">对比对齐没有"标签"，监督信号完全来自这张矩阵的结构——对角线应该被拉近，其余应该被推远。第 3 章会看到，CLIP 与 SigLIP 的全部差异就是"如何处理这张矩阵"。</p>
+
+<h3>1.4 三条改进路径</h3>
+<p>围绕这张矩阵，后续工作分成三条路线，本章后续三节依次展开：</p>
+<div class="table-wrap">
 <table>
-<thead><tr><th>范式</th><th>训练方式</th><th>输出空间</th><th>局限性</th></tr></thead>
-<tbody>
-<tr><td>传统分类</td><td>固定类别交叉熵</td><td>$1{,}000$ 类</td><td>无法识别新类别</td></tr>
-<tr><td>目标检测</td><td>边界框回归</td><td>~$80$ 类</td><td>类别受限于标注</td></tr>
-<tr><td>自监督学习</td><td>对比/掩码预训练</td><td>特征空间</td><td>需有监督微调</td></tr>
-<tr><td><strong>CLIP</strong></td><td><strong>图文对比学习</strong></td><td><strong>开放词表</strong></td><td><strong>Zero-shot 可用</strong></td></tr>
-</tbody>
+<tr><th>路径</th><th>要解决的问题</th><th>代表工作</th></tr>
+<tr><td><strong>改损失函数</strong></td><td>InfoNCE 的全局归一化把批量大小和任务定义绑在一起，小批量下效果差</td><td>SigLIP：sigmoid 损失</td></tr>
+<tr><td><strong>改数据质量</strong></td><td>网络图文对噪声大，"对齐"可能在学习错误配对</td><td>BLIP：CapFilt 自举清洗</td></tr>
+<tr><td><strong>扩模型能力</strong></td><td>双塔只输出一个全局向量，无法做定位、生成、细粒度推理</td><td>BLIP / BLIP-2：多目标 + Q-Former</td></tr>
 </table>
-
-<div class="callout">
-<div class="callout-title">核心动机</div>
-<p>CLIP 的核心动机是：<strong>用自然语言作为视觉概念的描述空间</strong>。与其让模型学习从图像到固定类别的映射，不如让模型学习图像和文本之间的语义对齐。这样，任何能用语言描述的概念都可以被模型识别——这就是 Zero-shot 分类的基础。</p>
 </div>
 
-<h3>1.2 CLIP 的诞生</h3>
-<p>2021 年 1 月，OpenAI 在论文 <em>"Learning Transferable Visual Models From Natural Language Supervision"</em> 中提出了 CLIP。CLIP 利用 $4$ 亿对图文对进行对比学习预训练，在 ImageNet Zero-shot 分类上达到 $76.2$% 的 Top-1 准确率——<strong>无需任何 ImageNet 训练数据</strong>，匹配了 ResNet-50 的有监督性能。</p>
-
-<div class="svg-box">
-<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="c1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
-  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">CLIP 核心思想：图文对比学习</text>
-  <!-- 图像编码器 -->
-  <rect x="40" y="60" width="180" height="100" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
-  <text x="130" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">图像编码器</text>
-  <text x="130" y="108" text-anchor="middle" font-size="12" fill="#334155">ViT 或 ResNet</text>
-  <text x="130" y="128" text-anchor="middle" font-size="12" fill="#334155">输入：图像</text>
-  <text x="130" y="146" text-anchor="middle" font-size="12" fill="#334155">输出：Iv ∈ R^d</text>
-  <!-- 文本编码器 -->
-  <rect x="580" y="60" width="180" height="100" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-  <text x="670" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#6d28d9">文本编码器</text>
-  <text x="670" y="108" text-anchor="middle" font-size="12" fill="#334155">Transformer</text>
-  <text x="670" y="128" text-anchor="middle" font-size="12" fill="#334155">输入：文本描述</text>
-  <text x="670" y="146" text-anchor="middle" font-size="12" fill="#334155">输出：Tv ∈ R^d</text>
-  <!-- 投影 -->
-  <line x1="220" y1="110" x2="290" y2="110" stroke="#94a3b8" stroke-width="2" marker-end="url(#c1)" class="flow-line"/>
-  <line x1="580" y1="110" x2="510" y2="110" stroke="#94a3b8" stroke-width="2" marker-end="url(#c1)" class="flow-line"/>
-  <!-- 投影层 -->
-  <rect x="290" y="85" width="80" height="50" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-  <text x="330" y="108" text-anchor="middle" font-size="11" fill="#047857" font-weight="600">W_i</text>
-  <text x="330" y="124" text-anchor="middle" font-size="10" fill="#047857">投影</text>
-  <rect x="430" y="85" width="80" height="50" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-  <text x="470" y="108" text-anchor="middle" font-size="11" fill="#047857" font-weight="600">W_t</text>
-  <text x="470" y="124" text-anchor="middle" font-size="10" fill="#047857">投影</text>
-  <line x1="370" y1="110" x2="430" y2="110" stroke="#94a3b8" stroke-width="2"/>
-  <!-- 相似度矩阵 -->
-  <rect x="260" y="190" width="280" height="80" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
-  <text x="400" y="215" text-anchor="middle" font-size="14" font-weight="700" fill="#c2410c">对比相似度矩阵</text>
-  <text x="400" y="235" text-anchor="middle" font-size="12" fill="#334155">N×N: 匹配的图文对得分最高</text>
-  <text x="400" y="255" text-anchor="middle" font-size="12" fill="#334155">InfoNCE 损失（对称交叉熵）</text>
-  <line x1="330" y1="135" x2="370" y2="190" stroke="#94a3b8" stroke-width="2" marker-end="url(#c1)" class="flow-line"/>
-  <line x1="470" y1="135" x2="430" y2="190" stroke="#94a3b8" stroke-width="2" marker-end="url(#c1)" class="flow-line"/>
-  <!-- 说明 -->
-  <text x="400" y="305" text-anchor="middle" font-size="12" fill="#64748b">蓝色=图像塔 · 紫色=文本塔 · 绿色=投影 · 橙色=对齐目标</text>
-  <text x="400" y="325" text-anchor="middle" font-size="12" fill="#64748b">预训练后可 Zero-shot 分类：将类别名作为文本输入，与图像相似度最高的即为预测</text>
-</svg>
+<div class="callout success"><div class="callout-title">本章要记住的一件事</div>
+<p>对齐（alignment）与融合（fusion）是两件事。<strong>对齐只要求两个模态的向量可比较</strong>，因此可以用双塔、可以各自独立编码、可以在推理前把文本塔的输出全部缓存下来；<strong>融合要求两个模态互相"看见"</strong>，必须做交叉注意力，代价高得多。CLIP 用对齐换来了速度，BLIP 用融合换来了能力，这个取舍贯穿全章。</p></div>
 </section>
 
-<h3>1.3 CLIP 的核心创新</h3>
-<p>CLIP 与传统视觉模型相比，有三个关键创新：</p>
+<section id="ch2"><h2><span class="num">2</span>CLIP：把对比学习搬到图文域</h2>
+
+<h3>2.1 双塔架构与信息瓶颈</h3>
+<p>CLIP（Contrastive Language-Image Pre-training，Radford et al., 2021）的架构是两个互相独立的编码器：</p>
+<ul>
+<li><strong>图像塔</strong>：ViT 或 ResNet，输出一个图像向量。ViT 版本额外在序列首位加一个可学习的 <code>[CLS]</code> token，用它的输出作为图像表征；最后接一层 LayerNorm + 线性投影到 $d$ 维。</li>
+<li><strong>文本塔</strong>：Transformer 编码器，取序列末尾 <code>[EOS]</code> token 的输出（因为它能"看到"全句），再投影到同样的 $d$ 维。</li>
+</ul>
+<p>关键设计是<strong>两塔之间没有任何交互</strong>——直到最后算相似度时才发生接触。这在结构上做了一个强假设：</p>
+<div class="callout warn"><div class="callout-title">信息瓶颈：图文交互被压缩进 $d$ 维向量</div>
+<p>双塔意味着 $N$ 条文本可以<strong>预先编码并缓存</strong>（推理时只需编码一次图像，然后和缓存好的文本向量做矩阵乘法）——这是 CLIP 能做百万级检索的根本原因。代价是图文之间所有的细粒度交互（哪个词对应哪个区域）都被强行压进一个 $d$ 维向量里。CLIP 的 $d$ 通常只有 512 或 768，这对"描述复杂场景"来说非常紧。</p></div>
+
+<h3>2.2 对称 InfoNCE 损失</h3>
+<p>CLIP 用的损失是 InfoNCE，但要注意它是<strong>对称</strong>的——图像→文本和文本→图像两个方向各算一次交叉熵，再取平均：</p>
+<div class="formula multi" data-eq="(3)">$$\begin{aligned}\mathcal{L}_{\text{InfoNCE}} = -\frac{1}{2N}\sum_{i=1}^{N}\Bigg[ &\underbrace{\log \frac{\exp(S_{ii})}{\sum_{j=1}^{N}\exp(S_{ij})}}_{\text{图像 } i \text{ 找到自己的文本}} + \underbrace{\log \frac{\exp(S_{ii})}{\sum_{j=1}^{N}\exp(S_{ji})}}_{\text{文本 } i \text{ 找到自己的图像}} \Bigg]\end{aligned}$$</div>
+<p>第一项对相似度矩阵的<strong>每一行</strong>做 softmax，第二项对<strong>每一列</strong>做 softmax。为什么必须对称？因为 softmax 的归一化是<strong>有方向的</strong>：按行归一化要求"每条文本在所有图像中脱颖而出"，按列归一化要求"每张图像在所有文本中脱颖而出"。只做一侧会让另一侧的语义被忽略。</p>
+
+<h3>2.3 温度参数 $\tau$</h3>
+<p>公式 (2) 中的 $\tau$ 不是常数，而是一个<strong>可学习参数</strong>，且以对数参数化的形式参与优化（$\tau = \exp(\tau')$，$\tau'$ 是被优化的变量）。它的作用是控制 softmax 的"软硬程度"：</p>
+<div class="formula" data-eq="(4)">$$p_{i\to j} = \frac{\exp(\mathbf{i}_i \cdot \mathbf{t}_j / \tau)}{\sum_{k=1}^{N}\exp(\mathbf{i}_i \cdot \mathbf{t}_k / \tau)}$$</div>
+<div class="table-wrap">
 <table>
-<thead><tr><th>创新点</th><th>传统视觉模型</th><th>CLIP</th></tr></thead>
-<tbody>
-<tr><td>监督信号</td><td>固定类别 one-hot 标签</td><td><strong>自然语言描述</strong></td></tr>
-<tr><td>输出空间</td><td>闭集（$1{,}000$ 类）</td><td><strong>开集（任意文本）</strong></td></tr>
-<tr><td>推理方式</td><td>必须微调</td><td><strong>Zero-shot 可用</strong></td></tr>
-<tr><td>训练数据</td><td>ImageNet（$1.2$M 图）</td><td><strong>$400$M 图文对</strong></td></tr>
-<tr><td>概念理解</td><td>类别 ID 无语义</td><td><strong>文本蕴含语义</strong></td></tr>
-</tbody>
+<tr><th>$\tau$ 的取值</th><th>softmax 行为</th><th>对训练的后果</th></tr>
+<tr><td>过大</td><td>接近均匀分布，所有相似度被"抹平"</td><td>梯度极小，学不到判别性</td></tr>
+<tr><td>过小</td><td>接近 one-hot，只对最像的那个有梯度</td><td>梯度爆炸、训练不稳定</td></tr>
+<tr><td>可学习（CLIP 选择）</td><td>由优化自动找到平衡点</td><td>实践中 $\tau$ 会收敛到约 0.01 量级</td></tr>
 </table>
-
-<!-- ========== 第二章 ========== -->
-<section id="ch2">
-<h2><span class="num">2</span>整体架构：双塔编码器</h2>
-
-<h3>2.1 双塔架构概述</h3>
-<p>CLIP 采用<strong>双塔架构</strong>（Dual-Encoder）：图像和文本分别通过各自独立的编码器，映射到共享的嵌入空间。两个编码器之间没有交叉注意力——它们仅在最终嵌入空间通过对比损失产生联系。</p>
-<div class="formula" data-eq="(1)">$$\mathbf{I}_v = W_i \cdot \text{ImageEncoder}(\text{image}), \quad \mathbf{T}_v = W_t \cdot \text{TextEncoder}(\text{text})$$</div>
-<p>其中 $W_i \in \mathbb{R}^{d \times d_i}$ 和 $W_t \in \mathbb{R}^{d \times d_t}$ 为可学习的投影矩阵，将各自的表示投影到 $d$ 维共享空间。CLIP 使用 $d = 512$（Base）或 $d = 768$（Large）。</p>
-
-<h3>2.2 为什么选择双塔而非交叉注意力</h3>
-<p>双塔架构的关键优势是<strong>推理效率</strong>：文本嵌入可以预计算并缓存，推理时只需一次图像前向传播和一次点积运算。这使得 CLIP 可以在毫秒级完成 Zero-shot 分类。</p>
-<table>
-<thead><tr><th>维度</th><th>双塔架构（CLIP）</th><th>交叉注意力（如 ViLBERT）</th></tr></thead>
-<tbody>
-<tr><td>编码器交互</td><td>各自独立编码</td><td>图文 Token 交叉注意力</td></tr>
-<tr><td>推理效率</td><td>高（可缓存文本嵌入）</td><td>低（每对需联合编码）</td></tr>
-<tr><td>检索能力</td><td>强（向量检索）</td><td>弱（需逐对比对）</td></tr>
-<tr><td>表示精度</td><td>中等（信息瓶颈）</td><td>高（细粒度交互）</td></tr>
-<tr><td>适合任务</td><td>检索、Zero-shot 分类</td><td>VQA、图文匹配</td></tr>
-</tbody>
-</table>
-
-<div class="svg-box">
-<svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="c2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
-  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">CLIP 双塔架构：训练与推理</text>
-  <!-- ===== 训练阶段 ===== -->
-  <text x="400" y="50" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">训练阶段：对比学习</text>
-  <!-- 图像塔 -->
-  <rect x="30" y="65" width="160" height="130" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-  <text x="110" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">图像塔</text>
-  <rect x="50" y="100" width="120" height="24" rx="6" fill="#2563eb"/>
-  <text x="110" y="116" text-anchor="middle" font-size="11" fill="#fff">Image</text>
-  <rect x="50" y="130" width="120" height="24" rx="6" fill="#7c3aed"/>
-  <text x="110" y="146" text-anchor="middle" font-size="11" fill="#fff">ViT / ResNet</text>
-  <rect x="50" y="160" width="120" height="24" rx="6" fill="#059669"/>
-  <text x="110" y="176" text-anchor="middle" font-size="11" fill="#fff">Linear proj → Iv</text>
-  <!-- 文本塔 -->
-  <rect x="610" y="65" width="160" height="130" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
-  <text x="690" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">文本塔</text>
-  <rect x="630" y="100" width="120" height="24" rx="6" fill="#7c3aed"/>
-  <text x="690" y="116" text-anchor="middle" font-size="11" fill="#fff">Text</text>
-  <rect x="630" y="130" width="120" height="24" rx="6" fill="#7c3aed"/>
-  <text x="690" y="146" text-anchor="middle" font-size="11" fill="#fff">Transformer</text>
-  <rect x="630" y="160" width="120" height="24" rx="6" fill="#059669"/>
-  <text x="690" y="176" text-anchor="middle" font-size="11" fill="#fff">Linear proj → Tv</text>
-  <!-- 相似度矩阵 -->
-  <rect x="280" y="90" width="240" height="80" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
-  <text x="400" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#c2410c">N×N 相似度矩阵</text>
-  <text x="400" y="138" text-anchor="middle" font-size="11" fill="#334155">对角线=正样本</text>
-  <text x="400" y="156" text-anchor="middle" font-size="11" fill="#334155">非对角=负样本</text>
-  <line x1="190" y1="172" x2="280" y2="140" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#c2)" class="flow-line"/>
-  <line x1="610" y1="172" x2="520" y2="140" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#c2)" class="flow-line"/>
-  <!-- ===== 推理阶段 ===== -->
-  <text x="400" y="225" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">推理阶段：Zero-shot 分类</text>
-  <rect x="30" y="240" width="140" height="34" rx="8" fill="#2563eb"/>
-  <text x="100" y="262" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">Query 图像 → Iv</text>
-  <rect x="610" y="240" width="160" height="34" rx="8" fill="#7c3aed"/>
-  <text x="690" y="262" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">N 个类别文本 → Tv</text>
-  <!-- 点积 -->
-  <rect x="280" y="235" width="240" height="50" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
-  <text x="400" y="258" text-anchor="middle" font-size="13" font-weight="700" fill="#047857">cos(Iv, Tv) 对比</text>
-  <text x="400" y="275" text-anchor="middle" font-size="11" fill="#334155">argmax → 预测类别</text>
-  <line x1="170" y1="257" x2="280" y2="260" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#c2)" class="flow-line"/>
-  <line x1="610" y1="257" x2="520" y2="260" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#c2)" class="flow-line"/>
-  <!-- 说明 -->
-  <text x="400" y="320" text-anchor="middle" font-size="12" fill="#64748b">训练：N 个图文对 → 双塔编码 → N×N 对比 · 推理：1 图 × N 文本 → 取最大相似度</text>
-  <text x="400" y="340" text-anchor="middle" font-size="12" fill="#64748b">文本嵌入可预计算缓存，推理只需 1 次图像前向 + N 次点积</text>
-  <text x="400" y="360" text-anchor="middle" font-size="12" fill="#64748b">蓝=图像塔 · 紫=文本塔 · 绿=计算 · 橙=训练目标</text>
-</svg>
-</section>
-
-<h3>2.3 模型规格</h3>
-<p>CLIP 发布了多个模型规格，覆盖不同的效率和精度权衡：</p>
-<table>
-<thead><tr><th>模型</th><th>图像编码器</th><th>文本编码器</th><th>嵌入维度 $d$</th><th>参数量</th><th>ImageNet ZS (%)</th></tr></thead>
-<tbody>
-<tr><td>CLIP-RN50</td><td>ResNet-50</td><td>Transformer (63M)</td><td>$1024$</td><td>$76$M</td><td>$59.8$</td></tr>
-<tr><td>CLIP-RN101</td><td>ResNet-101</td><td>Transformer (63M)</td><td>$512$</td><td>$110$M</td><td>$63.3$</td></tr>
-<tr><td>CLIP-RN50x4</td><td>ResNet-50（4x 宽）</td><td>Transformer (95M)</td><td>$640$</td><td>$167$M</td><td>$67.4$</td></tr>
-<tr><td>CLIP-ViT-B/32</td><td>ViT-B/32</td><td>Transformer (63M)</td><td>$512$</td><td>$151$M</td><td>$63.2$</td></tr>
-<tr><td>CLIP-ViT-B/16</td><td>ViT-B/16</td><td>Transformer (63M)</td><td>$512$</td><td>$150$M</td><td>$68.7$</td></tr>
-<tr><td><strong>CLIP-ViT-L/14</strong></td><td><strong>ViT-L/14</strong></td><td><strong>Transformer (123M)</strong></td><td><strong>$768$</strong></td><td><strong>$428$M</strong></td><td><strong>$75.5$</strong></td></tr>
-<tr><td>CLIP-ViT-L/14@336</td><td>ViT-L/14（336px）</td><td>Transformer (123M)</td><td>$768$</td><td>$428$M</td><td>$76.2$</td></tr>
-</tbody>
-</table>
-
-<!-- ========== 第三章 ========== -->
-<section id="ch3">
-<h2><span class="num">3</span>图像编码器：ViT 与 ResNet</h2>
-
-<h3>3.1 两种图像编码器</h3>
-<p>CLIP 同时实验了 ResNet 和 ViT 两种图像编码器架构：</p>
-<table>
-<thead><tr><th>维度</th><th>ResNet（CNN）</th><th>ViT（Transformer）</th></tr></thead>
-<tbody>
-<tr><td>架构</td><td>残差卷积网络</td><td>视觉 Transformer</td></tr>
-<tr><td>归纳偏置</td><td>平移不变性、局部性</td><td>弱归纳偏置</td></tr>
-<tr><td>效率（小数据）</td><td>更好</td><td>较差</td></tr>
-<tr><td>效率（大数据）</td><td>饱和</td><td>持续提升</td></tr>
-<tr><td>CLIP 中的表现</td><td>RN50: $59.8$%</td><td>ViT-L/14: $75.5$%</td></tr>
-</tbody>
-</table>
-
-<h3>3.2 ViT 图像编码器</h3>
-<p>对于 ViT 变体，CLIP 使用标准的 Vision Transformer。图像被切分为 $P \times P$ 的图块，线性投影为 Token 序列，加上 <code>[CLS]</code> Token 和位置编码后输入 Transformer 编码器。<code>[CLS]</code> Token 的最终隐藏状态作为图像表示：</p>
-<div class="formula" data-eq="(2)">$$\mathbf{h}_I = \text{ViT}(\text{image})[\text{CLS}] \in \mathbb{R}^{d_i}$$</div>
-
-<h3>3.3 ResNet 图像编码器</h3>
-<p>对于 ResNet 变体，CLIP 对标准 ResNet 做了修改：将全局平均池化替换为<strong>注意力池化</strong>（Attention Pooling）。具体地，在最后一层特征图上应用一个单头注意力机制，将空间维度压缩为单一向量：</p>
-<div class="formula" data-eq="(3)">$$\mathbf{h}_I = \text{AttnPool}(\text{ResNet}(\text{image})) \in \mathbb{R}^{d_i}$$</div>
-<p>注意力池化比全局平均池化更灵活——它可以学习关注图像中与文本最相关的区域，而非简单平均所有位置。</p>
-
-<div class="callout">
-<div class="callout-title">ViT vs ResNet 的选择</div>
-<p>CLIP 的实验表明，在大规模数据（$400$M 图文对）下，ViT 的性能全面超过 ResNet。ViT-L/14 达到 $75.5$%，而 RN50x64（参数量相当）仅 $68.5$%。这验证了 Transformer 架构在大数据下的 Scaling 优势。后续的 OpenCLIP 等工作均以 ViT 为主。</p>
 </div>
+<p>值得注意的是，$\tau$ 也是 CLIP 的一个<strong>隐患</strong>：它把"相似度尺度"和"分布锐度"耦合在一起。第 3 章会看到 SigLIP 在这个点上做了补救——它额外引入一个偏置项，把"中心位置"和"陡峭程度"分开控制。</p>
 
-<!-- ========== 第四章 ========== -->
-<section id="ch4">
-<h2><span class="num">4</span>文本编码器：Transformer</h2>
+<h3>2.4 Zero-shot 推理</h3>
+<p>训练完成后，文本塔可以被用来"现场造分类器"。给定 $K$ 个类别，把每个类别名填进提示词模板，编码成 $K$ 个文本向量，然后取相似度最大的那个：</p>
+<div class="formula" data-eq="(5)">$$\hat{y} = \arg\max_{k \in \{1,\dots,K\}} \; \mathbf{i}_{\text{query}} \cdot \mathbf{t}_k, \qquad \mathbf{t}_k = f_T\big(\text{"a photo of a \{class}_k\text{"}\big)$$</div>
+<div class="callout"><div class="callout-title">提示词工程（Prompt Engineering）不是玄学</div>
+<p>直接把类别名（"cat"）当文本，效果并不好，因为训练时的文本是完整的自然语言句子。CLIP 论文发现补上模板 "a photo of a {}" 能显著提升准确率——本质是在<strong>弥补训练分布与推理分布的不一致</strong>。进一步的做法是集成多个模板（"a photo of a {}"、"a photo of the {}"、"a bad photo of a {}"…），把它们的文本向量平均后再比较，又能再涨一截。</p></div>
 
-<h3>4.1 文本编码器架构</h3>
-<p>CLIP 的文本编码器是一个<strong>Transformer 编码器</strong>，采用与 GPT-2 类似的架构。输入文本通过 BPE（Byte Pair Encoding）分词为 Token 序列，加上 <code>[BOS]</code>（起始）和 <code>[EOS]</code>（结束）标记。编码器的 <code>[EOS]</code> Token 的最终隐藏状态作为文本的全局表示。</p>
-<div class="formula" data-eq="(4)">$$\mathbf{h}_T = \text{TextEncoder}(\text{tokens})[\text{EOS}] \in \mathbb{R}^{d_t}$$</div>
+<div class="svg-box">
+<svg viewBox="0 0 880 430" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="m2-a" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#94a3b8"/></marker>
+<marker id="m2-b" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#2563eb"/></marker>
+<marker id="m2-g" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#059669"/></marker>
+<marker id="m2-p" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#7c3aed"/></marker>
+</defs>
+<text x="440" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">CLIP 的两个阶段：训练时对齐，推理时把类别名变成分类器</text>
 
-<h3>4.2 文本编码器规格</h3>
-<table>
-<thead><tr><th>配置</th><th>Base</th><th>Large</th></tr></thead>
-<tbody>
-<tr><td>层数</td><td>$12$</td><td>$12$</td></tr>
-<tr><td>隐藏维度</td><td>$512$</td><td>$768$</td></tr>
-<tr><td>注意力头数</td><td>$8$</td><td>$12$</td></tr>
-<tr><td>FFN 中间维度</td><td>$2048$</td><td>$3072$</td></tr>
-<tr><td>最大序列长度</td><td>$77$</td><td>$77$</td></tr>
-<tr><td>词表大小</td><td>$49{,}408$ (BPE)</td><td>$49{,}408$</td></tr>
-<tr><td>参数量</td><td>$63$M</td><td>$123$M</td></tr>
-</tbody>
-</table>
+<text x="240" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">训练阶段：批内互为负样本</text>
+<rect x="40" y="68" width="400" height="150" rx="10" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.4"/>
 
-<h3>4.3 为什么最大序列长度只有 77</h3>
-<p>CLIP 将文本的最大序列长度限制为 $77$ 个 Token。这一选择基于两点考虑：(1) CLIP 的文本输入多为简短描述（"a photo of a cat"），$77$ Token 足以覆盖大多数情况；(2) 较短的序列长度减少了 Transformer 的计算开销（注意力复杂度 $O(N^2)$），利于大规模训练。</p>
+<text x="70" y="122" text-anchor="middle" font-size="11.5" fill="#64748b">图像</text>
+<rect x="96" y="104" width="116" height="36" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="154" y="127" text-anchor="middle" font-size="12" font-weight="600" fill="#1d4ed8">图像编码器</text>
+<line x1="214" y1="122" x2="240" y2="122" stroke="#2563eb" stroke-width="1.8" marker-end="url(#m2-b)"/>
+<circle cx="254" cy="122" r="7" fill="#2563eb"/>
+<text x="268" y="127" font-size="11.5" fill="#1d4ed8">î</text>
 
-<div class="callout warn">
-<div class="callout-title">长文本的局限</div>
-<p>$77$ Token 的限制是 CLIP 的一个已知局限。复杂描述或长句可能被截断，丢失语义信息。后续的 EVA-CLIP 和 LongCLIP 对此进行了改进，将序列长度扩展到 $256$ 或更长。</p>
+<text x="70" y="192" text-anchor="middle" font-size="11.5" fill="#64748b">文本</text>
+<rect x="96" y="174" width="116" height="36" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="154" y="197" text-anchor="middle" font-size="12" font-weight="600" fill="#047857">文本编码器</text>
+<line x1="214" y1="192" x2="240" y2="192" stroke="#059669" stroke-width="1.8" marker-end="url(#m2-g)"/>
+<circle cx="254" cy="192" r="7" fill="#059669"/>
+<text x="268" y="197" font-size="11.5" fill="#047857">t̂</text>
+
+<line x1="264" y1="126" x2="300" y2="140" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#m2-p)"/>
+<line x1="264" y1="188" x2="300" y2="174" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#m2-p)"/>
+<rect x="306" y="128" width="122" height="58" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="367" y="152" text-anchor="middle" font-size="12.5" font-weight="700" fill="#6d28d9">InfoNCE</text>
+<text x="367" y="171" text-anchor="middle" font-size="10" fill="#7c3aed">对称 · 行与列各一次</text>
+
+<text x="660" y="58" text-anchor="middle" font-size="13" font-weight="700" fill="#047857">推理阶段：Zero-shot 分类</text>
+<rect x="470" y="68" width="380" height="150" rx="10" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.4"/>
+<text x="496" y="92" font-size="10.5" fill="#64748b">待分类图像 ↓</text>
+<rect x="496" y="100" width="116" height="36" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="554" y="123" text-anchor="middle" font-size="12" font-weight="600" fill="#1d4ed8">图像编码器</text>
+<line x1="614" y1="118" x2="638" y2="118" stroke="#2563eb" stroke-width="1.8" marker-end="url(#m2-b)"/>
+<circle cx="652" cy="118" r="7" fill="#2563eb"/>
+<text x="666" y="123" font-size="11.5" fill="#1d4ed8">î</text>
+<line x1="652" y1="128" x2="652" y2="160" stroke="#94a3b8" stroke-width="1.6"/>
+<line x1="652" y1="160" x2="700" y2="160" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#m2-a)"/>
+<rect x="706" y="142" width="84" height="36" rx="7" fill="#f5f3ff" stroke="#a78bfa" stroke-width="1.4"/>
+<text x="748" y="165" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">argmax</text>
+<text x="800" y="165" font-size="11.5" font-weight="600" fill="#047857">类别</text>
+<text x="652" y="200" text-anchor="middle" font-size="10.5" fill="#94a3b8">与 K 个类别的文本向量比相似度</text>
+
+<text x="440" y="242" text-anchor="middle" font-size="12" fill="#475569">K 个类别名 → 填入模板 “a photo of a {}” → 文本编码器（只需算一次，可缓存）</text>
+
+<rect x="40" y="264" width="800" height="132" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<text x="60" y="290" font-size="12" font-weight="700" fill="#334155">双塔的工程含义</text>
+<text x="60" y="318" font-size="11.5" fill="#475569">✓ 文本塔可预计算：K 个类别的向量离线算好，推理只跑图像塔 + 一次向量点积</text>
+<text x="60" y="344" font-size="11.5" fill="#475569">✓ 可扩展到开放词表：类别不限于训练时的固定集合，换一批提示词就是换一个任务</text>
+<text x="60" y="370" font-size="11.5" fill="#475569">✗ 无法定位与生成：两塔只在最后一层交互，做不了“哪个词对应哪块区域”</text>
+
+<text x="440" y="420" text-anchor="middle" font-size="11.5" fill="#94a3b8">这就是 CLIP 的取舍：用推理速度换来能力的上限</text>
+</svg>
 </div>
+<p class="fig-cap">左侧是训练：两条图文流各自成塔，只在损失函数处相交。右侧是推理：分类器由文本现场生成，因此可以随时更换类别集合——这是 CLIP 与传统监督分类器最本质的区别。</p>
 
-<h3>4.4 BPE 分词</h3>
-<p>CLIP 使用 Byte Pair Encoding（BPE）分词器，词表大小为 $49{,}408$。BPE 以字节为基本单元，可以处理任何 Unicode 字符而不会出现未登录词。与 WordPiece 相比，BPE 更适合多语言场景——虽然 CLIP 主要在英文数据上训练，但 BPE 字节级分词使其具有一定的多语言能力。</p>
-
-<!-- ========== 第五章 ========== -->
-<section id="ch5">
-<h2><span class="num">5</span>对比学习核心：InfoNCE 损失</h2>
-
-<h3>5.1 对比学习的直觉</h3>
-<p>CLIP 的训练目标是<strong>拉近匹配的图文对，推远不匹配的图文对</strong>。在一个 batch 中，$N$ 个图像和 $N$ 个文本共构成 $N \times N$ 的配对矩阵，其中对角线上的 $N$ 对是正样本（真实匹配），其余 $N^2 - N$ 对是负样本。</p>
-
-<div class="svg-box">
-<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="c5" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
-  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">CLIP 对比学习：N×N 相似度矩阵</text>
-  <!-- N=4 的相似度矩阵 -->
-  <!-- 列标签 -->
-  <text x="245" y="75" text-anchor="middle" font-size="12" fill="#64748b">T1: "a cat"</text>
-  <text x="345" y="75" text-anchor="middle" font-size="12" fill="#64748b">T2: "a dog"</text>
-  <text x="445" y="75" text-anchor="middle" font-size="12" fill="#64748b">T3: "a car"</text>
-  <text x="545" y="75" text-anchor="middle" font-size="12" fill="#64748b">T4: "a bird"</text>
-  <!-- 行标签 -->
-  <text x="205" y="110" text-anchor="end" font-size="12" fill="#64748b">I1: 🐱</text>
-  <text x="205" y="160" text-anchor="end" font-size="12" fill="#64748b">I2: 🐶</text>
-  <text x="205" y="210" text-anchor="end" font-size="12" fill="#64748b">I3: 🚗</text>
-  <text x="205" y="260" text-anchor="end" font-size="12" fill="#64748b">I4: 🐦</text>
-  <!-- 矩阵格子 -->
-  <!-- Row 1 -->
-  <rect x="220" y="90" width="80" height="40" rx="6" fill="#059669" opacity="0.7" stroke="#047857" stroke-width="2" class="pulse-node"/>
-  <text x="260" y="115" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">0.95</text>
-  <rect x="300" y="90" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="340" y="115" text-anchor="middle" font-size="12" fill="#64748b">0.12</text>
-  <rect x="380" y="90" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="420" y="115" text-anchor="middle" font-size="12" fill="#64748b">0.08</text>
-  <rect x="460" y="90" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="500" y="115" text-anchor="middle" font-size="12" fill="#64748b">0.15</text>
-  <!-- Row 2 -->
-  <rect x="220" y="130" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="260" y="155" text-anchor="middle" font-size="12" fill="#64748b">0.10</text>
-  <rect x="300" y="130" width="80" height="40" rx="6" fill="#059669" opacity="0.7" stroke="#047857" stroke-width="2" class="pulse-node"/>
-  <text x="340" y="155" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">0.92</text>
-  <rect x="380" y="130" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="420" y="155" text-anchor="middle" font-size="12" fill="#64748b">0.06</text>
-  <rect x="460" y="130" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="500" y="155" text-anchor="middle" font-size="12" fill="#64748b">0.18</text>
-  <!-- Row 3 -->
-  <rect x="220" y="170" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="260" y="195" text-anchor="middle" font-size="12" fill="#64748b">0.05</text>
-  <rect x="300" y="170" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="340" y="195" text-anchor="middle" font-size="12" fill="#64748b">0.07</text>
-  <rect x="380" y="170" width="80" height="40" rx="6" fill="#059669" opacity="0.7" stroke="#047857" stroke-width="2" class="pulse-node"/>
-  <text x="420" y="195" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">0.97</text>
-  <rect x="460" y="170" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="500" y="195" text-anchor="middle" font-size="12" fill="#64748b">0.09</text>
-  <!-- Row 4 -->
-  <rect x="220" y="210" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="260" y="235" text-anchor="middle" font-size="12" fill="#64748b">0.14</text>
-  <rect x="300" y="210" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="340" y="235" text-anchor="middle" font-size="12" fill="#64748b">0.16</text>
-  <rect x="380" y="210" width="80" height="40" rx="6" fill="#e2e8f0" stroke="#cbd5e1"/>
-  <text x="420" y="235" text-anchor="middle" font-size="12" fill="#64748b">0.11</text>
-  <rect x="460" y="210" width="80" height="40" rx="6" fill="#059669" opacity="0.7" stroke="#047857" stroke-width="2" class="pulse-node"/>
-  <text x="500" y="235" text-anchor="middle" font-size="13" fill="#fff" font-weight="700">0.94</text>
-  <!-- 标签 -->
-  <text x="620" y="135" text-anchor="start" font-size="12" fill="#059669" font-weight="600">绿色 = 正样本</text>
-  <text x="620" y="155" text-anchor="start" font-size="12" fill="#94a3b8">灰色 = 负样本</text>
-  <text x="620" y="185" text-anchor="start" font-size="11" fill="#334155">训练目标：</text>
-  <text x="620" y="205" text-anchor="start" font-size="11" fill="#334155">最大化绿色格子</text>
-  <text x="620" y="225" text-anchor="start" font-size="11" fill="#334155">最小化灰色格子</text>
-  <!-- 说明 -->
-  <text x="400" y="290" text-anchor="middle" font-size="12" fill="#64748b">行=Image · 列=Text · 对角线=正样本（真实图文对） · 非对角=负样本</text>
-  <text x="400" y="310" text-anchor="middle" font-size="12" fill="#64748b">InfoNCE 损失使对角线得分远高于非对角，实现图文对齐</text>
-</svg>
+<h3>2.5 代价：批量与全局归一化的耦合</h3>
+<p>InfoNCE 的分母要遍历<strong>整批</strong>所有负样本。这在实现上意味着两件事：</p>
+<ul>
+<li><strong>批量必须很大</strong>。CLIP 用了 32 768 的超大 batch。负样本数量直接决定对比信号的质量，批量小的时候分母估计不准，表征质量明显下降。</li>
+<li><strong>必须做跨设备通信</strong>。32 768 的批量不可能放进单卡，必须把各卡上的相似度矩阵<strong>收集到一起（all-gather）</strong>再算 softmax，再分发回去算梯度。这在大规模分布式训练中是显著的系统开销。</li>
+</ul>
+<div class="callout danger"><div class="callout-title">更本质的问题：任务定义被批量绑住了</div>
+<p>由于分母是"这一批里的所有负样本"，<strong>同一条图文对在不同批量下对应的优化目标是不一样的</strong>——批量变了，任务就变了。这使得小规模复现（比如单机 8 卡、批量 1024）很难达到论文效果，也让超参数的迁移变得困难。SigLIP 正是冲着这一点去的。</p></div>
 </section>
 
-<h3>5.2 InfoNCE 损失定义</h3>
-<p>CLIP 使用<strong>对称的 InfoNCE 损失</strong>（也称为对称交叉熵）。对于 batch 中的 $N$ 对图文 $(I_i, T_i)$，图像到文本和文本到图像两个方向的损失分别为：</p>
-<div class="formula" data-eq="(5)">$$\mathcal{L}_{I \to T} = -\frac{1}{N}\sum_{i=1}^{N}\log\frac{\exp(\mathbf{I}_i \cdot \mathbf{T}_i / \tau)}{\sum_{j=1}^{N}\exp(\mathbf{I}_i \cdot \mathbf{T}_j / \tau)}$$</div>
-<div class="formula" data-eq="(6)">$$\mathcal{L}_{T \to I} = -\frac{1}{N}\sum_{i=1}^{N}\log\frac{\exp(\mathbf{I}_i \cdot \mathbf{T}_i / \tau)}{\sum_{j=1}^{N}\exp(\mathbf{I}_j \cdot \mathbf{T}_i / \tau)}$$</div>
-<p>总损失为两个方向的平均：</p>
-<div class="formula" data-eq="(7)">$$\mathcal{L}_{\text{CLIP}} = \frac{1}{2}(\mathcal{L}_{I \to T} + \mathcal{L}_{T \to I})$$</div>
-<p>其中 $\tau$ 是可学习的温度参数，$\mathbf{I}_i \cdot \mathbf{T}_j$ 是归一化后的余弦相似度。</p>
+<section id="ch3"><h2><span class="num">3</span>SigLIP：把 softmax 换成 sigmoid</h2>
 
-<h3>5.3 InfoNCE 与交叉熵的关系</h3>
-<p>InfoNCE 损失本质上是一个<strong>排到交叉熵</strong>问题：将图像 $I_i$ 与 batch 中所有 $N$ 个文本的相似度作为 logits，正样本 $T_i$ 作为目标类别。等价于 $N$ 类分类问题，其中类别数等于 batch size。</p>
-<div class="formula" data-eq="(8)">$$\mathcal{L}_{I \to T} = \text{CrossEntropy}(\text{logits} = \{\mathbf{I}_i \cdot \mathbf{T}_j / \tau\}_{j=1}^{N}, \text{label} = i)$$</div>
-
-<h3>5.4 负样本的作用</h3>
-<p>InfoNCE 的效果依赖于<strong>负样本的质量和数量</strong>。batch 中的 $N-1$ 个负样本提供了"什么不该匹配"的信号。更大的 batch 意味着更多负样本，更强的对比信号。CLIP 使用 $N = 32{,}768$ 的超大 batch——每一步训练有 $\sim 10^9$ 个负样本对参与对比。</p>
+<h3>3.1 动机：softmax 的三重耦合</h3>
+<p>回顾公式 (3)，InfoNCE 的分母需要遍历整批。这个看似无害的设计把三件事绑在了一起：</p>
+<div class="table-wrap">
 <table>
-<thead><tr><th>Batch Size $N$</th><th>正样本对</th><th>负样本对</th><th>ImageNet ZS (%)</th></tr></thead>
-<tbody>
-<tr><td>$256$</td><td>$256$</td><td>$65{,}280$</td><td>$\sim 60$</td></tr>
-<tr><td>$4{,}096$</td><td>$4{,}096$</td><td>$\sim 16.8$M</td><td>$\sim 70$</td></tr>
-<tr><td>$16{,}384$</td><td>$16{,}384$</td><td>$\sim 268$M</td><td>$\sim 74$</td></tr>
-<tr><td>$32{,}768$</td><td>$32{,}768$</td><td>$\sim 1.07$B</td><td>$\sim 76$</td></tr>
-</tbody>
+<tr><th>被绑住的量</th><th>表现</th></tr>
+<tr><td>优化目标 ↔ 批量大小</td><td>批量变了，分母变了，同一条样本的"任务"也就变了</td></tr>
+<tr><td>训练效率 ↔ 通信开销</td><td>必须 all-gather 出全局相似度矩阵，再算 softmax 再分发梯度</td></tr>
+<tr><td>内存 ↔ 批量平方</td><td>相似度矩阵是 $N \times N$，显存随批量二次增长</td></tr>
 </table>
-
-<!-- ========== 第六章 ========== -->
-<section id="ch6">
-<h2><span class="num">6</span>温度参数与相似度矩阵</h2>
-
-<h3>6.1 温度参数 $\tau$</h3>
-<p>CLIP 的温度参数 $\tau$ 控制着 softmax 分布的"锐度"。温度越低，正样本的概率越集中，梯度越大；温度越高，分布越平滑，对比信号越弱。CLIP 将 $\tau$ 设为<strong>可学习参数</strong>，初始值为 $0.07$，通过对数参数化保证正值。</p>
-<div class="formula" data-eq="(9)">$$P(T_j \mid I_i) = \frac{\exp(\mathbf{I}_i \cdot \mathbf{T}_j / \tau)}{\sum_{k=1}^{N}\exp(\mathbf{I}_i \cdot \mathbf{T}_k / \tau)}$$</div>
+</div>
+<p>SigLIP（Zhai et al., 2023）的出发点是：<strong>如果每个图文对都能独立判定"匹配 / 不匹配"，就不需要跨样本的归一化了</strong>。这正好是一个标准的二分类问题。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="c6" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
-  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">温度参数对相似度分布的影响</text>
-  <!-- 高温度 -->
-  <text x="175" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#ea580c">τ = 0.5（高温度）</text>
-  <rect x="100" y="70" width="150" height="30" rx="4" fill="#ffedd5" stroke="#ea580c"/>
-  <text x="175" y="90" text-anchor="middle" font-size="11" fill="#c2410c">正样本: 0.30</text>
-  <rect x="100" y="105" width="80" height="24" rx="4" fill="#fce7d6" stroke="#cbd5e1"/>
-  <text x="140" y="122" text-anchor="middle" font-size="10" fill="#64748b">0.15</text>
-  <rect x="185" y="105" width="60" height="24" rx="4" fill="#fce7d6" stroke="#cbd5e1"/>
-  <text x="215" y="122" text-anchor="middle" font-size="10" fill="#64748b">0.12</text>
-  <rect x="100" y="134" width="40" height="24" rx="4" fill="#fce7d6" stroke="#cbd5e1"/>
-  <text x="120" y="151" text-anchor="middle" font-size="10" fill="#64748b">0.10</text>
-  <rect x="145" y="134" width="40" height="24" rx="4" fill="#fce7d6" stroke="#cbd5e1"/>
-  <text x="165" y="151" text-anchor="middle" font-size="10" fill="#64748b">0.08</text>
-  <rect x="190" y="134" width="60" height="24" rx="4" fill="#fce7d6" stroke="#cbd5e1"/>
-  <text x="220" y="151" text-anchor="middle" font-size="10" fill="#64748b">0.07</text>
-  <text x="175" y="185" text-anchor="middle" font-size="11" fill="#64748b">分布平滑，对比信号弱</text>
-  <!-- 低温度 -->
-  <text x="475" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#2563eb">τ = 0.07（低温度）</text>
-  <rect x="360" y="70" width="230" height="30" rx="4" fill="#2563eb" opacity="0.8" stroke="#1d4ed8" stroke-width="2" class="pulse-node"/>
-  <text x="475" y="90" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">正样本: 0.85</text>
-  <rect x="360" y="105" width="30" height="24" rx="4" fill="#dbeafe" stroke="#cbd5e1"/>
-  <text x="375" y="122" text-anchor="middle" font-size="10" fill="#64748b">0.03</text>
-  <rect x="395" y="105" width="25" height="24" rx="4" fill="#dbeafe" stroke="#cbd5e1"/>
-  <text x="408" y="122" text-anchor="middle" font-size="10" fill="#64748b">0.02</text>
-  <rect x="425" y="105" width="20" height="24" rx="4" fill="#dbeafe" stroke="#cbd5e1"/>
-  <text x="435" y="122" text-anchor="middle" font-size="9" fill="#64748b">0.01</text>
-  <rect x="450" y="105" width="15" height="24" rx="4" fill="#dbeafe" stroke="#cbd5e1"/>
-  <text x="458" y="122" text-anchor="middle" font-size="9" fill="#64748b">0.01</text>
-  <rect x="360" y="134" width="15" height="24" rx="4" fill="#dbeafe" stroke="#cbd5e1"/>
-  <text x="368" y="151" text-anchor="middle" font-size="9" fill="#64748b">.01</text>
-  <rect x="380" y="134" width="10" height="24" rx="4" fill="#dbeafe" stroke="#cbd5e1"/>
-  <text x="385" y="151" text-anchor="middle" font-size="9" fill="#64748b">.</text>
-  <text x="475" y="185" text-anchor="middle" font-size="11" fill="#64748b">分布尖锐，对比信号强</text>
-  <!-- 可学习 -->
-  <rect x="620" y="70" width="160" height="100" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
-  <text x="700" y="95" text-anchor="middle" font-size="13" font-weight="700" fill="#047857">可学习 τ</text>
-  <text x="700" y="118" text-anchor="middle" font-size="11" fill="#334155">初始值: 0.07</text>
-  <text x="700" y="138" text-anchor="middle" font-size="11" fill="#334155">训练后: ~0.01</text>
-  <text x="700" y="158" text-anchor="middle" font-size="11" fill="#334155">自动找到最优锐度</text>
-  <!-- 说明 -->
-  <text x="400" y="230" text-anchor="middle" font-size="12" fill="#64748b">低温度使正样本概率集中，梯度大；高温度使分布平滑，信号弱</text>
-  <text x="400" y="250" text-anchor="middle" font-size="12" fill="#64748b">橙=高温度分布 · 蓝=低温度分布 · 绿=可学习温度参数</text>
+<svg viewBox="0 0 880 430" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="m3-a" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto"><polygon points="0,0 8,3 0,6" fill="#7c3aed"/></marker>
+</defs>
+<text x="440" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">两种损失的全部差别：归一化发生在"整行"还是"单个格子"</text>
+
+<text x="220" y="60" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1d4ed8">InfoNCE</text>
+<text x="220" y="80" text-anchor="middle" font-size="11.5" fill="#64748b">整行一起做 softmax</text>
+<g>
+<rect x="80" y="96" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="110" y="96" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="140" y="96" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="170" y="96" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="80" y="126" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="110" y="126" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="140" y="126" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="170" y="126" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="80" y="156" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="110" y="156" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="140" y="156" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="170" y="156" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="80" y="186" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="110" y="186" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="140" y="186" width="30" height="30" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3"/>
+<rect x="170" y="186" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+</g>
+<line x1="95" y1="111" x2="270" y2="150" stroke="#7c3aed" stroke-width="1.4" opacity="0.55"/>
+<line x1="125" y1="111" x2="270" y2="150" stroke="#7c3aed" stroke-width="1.4" opacity="0.55"/>
+<line x1="155" y1="111" x2="270" y2="150" stroke="#7c3aed" stroke-width="1.4" opacity="0.55"/>
+<line x1="185" y1="111" x2="270" y2="150" stroke="#7c3aed" stroke-width="1.4" opacity="0.55"/>
+<circle cx="288" cy="150" r="19" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="288" y="156" text-anchor="middle" font-size="14" font-weight="700" fill="#6d28d9">Σ</text>
+<text x="330" y="140" font-size="12" font-weight="600" fill="#6d28d9">分母 = 整行</text>
+<text x="330" y="160" font-size="12" font-weight="600" fill="#6d28d9">exp 之和</text>
+<text x="180" y="246" text-anchor="middle" font-size="11.5" fill="#dc2626">✗ 一条样本的损失依赖批内其他所有样本</text>
+<text x="180" y="268" text-anchor="middle" font-size="11.5" fill="#dc2626">✗ 必须跨卡 all-gather，显存随批量二次增长</text>
+
+<line x1="440" y1="52" x2="440" y2="290" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="7 6"/>
+
+<text x="660" y="60" text-anchor="middle" font-size="13.5" font-weight="700" fill="#047857">SigLIP</text>
+<text x="660" y="80" text-anchor="middle" font-size="11.5" fill="#64748b">每个格子独立做 sigmoid</text>
+<g>
+<rect x="520" y="96" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="550" y="96" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="580" y="96" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="610" y="96" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="520" y="126" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="550" y="126" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="580" y="126" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="610" y="126" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="520" y="156" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="550" y="156" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="580" y="156" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<rect x="610" y="156" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="520" y="186" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="550" y="186" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="580" y="186" width="30" height="30" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
+<rect x="610" y="186" width="30" height="30" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.8"/>
+<text x="535" y="116" text-anchor="middle" font-size="11" fill="#1d4ed8">σ</text>
+<text x="565" y="116" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="595" y="116" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="625" y="116" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="535" y="146" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="565" y="146" text-anchor="middle" font-size="11" fill="#1d4ed8">σ</text>
+<text x="595" y="146" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="625" y="146" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="535" y="176" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="565" y="176" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="595" y="176" text-anchor="middle" font-size="11" fill="#1d4ed8">σ</text>
+<text x="625" y="176" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="535" y="206" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="565" y="206" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="595" y="206" text-anchor="middle" font-size="11" fill="#047857">σ</text>
+<text x="625" y="206" text-anchor="middle" font-size="11" fill="#1d4ed8">σ</text>
+<text x="680" y="140" font-size="12" font-weight="600" fill="#047857">每个格子</text>
+<text x="680" y="160" font-size="12" font-weight="600" fill="#047857">单独判定</text>
+<text x="620" y="246" text-anchor="middle" font-size="11.5" fill="#047857">✓ 每个格子的损失只与它自己有关</text>
+<text x="620" y="268" text-anchor="middle" font-size="11.5" fill="#047857">✓ 无需 all-gather，显存随批量线性增长</text>
+
+<rect x="60" y="296" width="760" height="112" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<text x="80" y="322" font-size="12" font-weight="700" fill="#334155">直观类比</text>
+<text x="80" y="350" font-size="11.5" fill="#475569">InfoNCE 是"从整批中选出唯一正确答案"（N 选 1 的多分类）——必须知道同批有哪些干扰项；</text>
+<text x="80" y="376" font-size="11.5" fill="#475569">SigLIP 是"判断这对图文配不配"（是/否的二分类）——只看这一格，与其他格子无关。</text>
+<text x="440" y="424" text-anchor="middle" font-size="11.5" fill="#94a3b8">注意：SigLIP 仍然用了批内的所有格子，只是不再把它们放进同一个分母</text>
 </svg>
-</section>
+</div>
+<p class="fig-cap">左边所有格子共享一个分母，右边每个格子自成一体。这个差别看起来只是"归一化的范围"，却决定了批量大小能否从任务定义中解耦出来。</p>
 
-<h3>6.2 余弦相似度与 L2 归一化</h3>
-<p>CLIP 在计算相似度之前，对图像和文本嵌入进行 <strong>L2 归一化</strong>，使相似度等价于余弦相似度：</p>
-<div class="formula" data-eq="(10)">$$\text{sim}(\mathbf{I}_i, \mathbf{T}_j) = \frac{\mathbf{I}_i \cdot \mathbf{T}_j}{\|\mathbf{I}_i\| \cdot \|\mathbf{T}_j\|} = \hat{\mathbf{I}}_i \cdot \hat{\mathbf{T}}_j$$</div>
-<p>L2 归一化的作用：(1) 将嵌入约束在单位球面上，防止某些维度的值过大；(2) 使相似度范围限制在 $[-1, 1]$，数值稳定；(3) 余弦相似度比点积更适合衡量语义相关性，不受向量模长影响。</p>
+<h3>3.2 Sigmoid 损失的定义</h3>
+<p>把每个格子视为一个独立的二分类问题：匹配记 $y_{ij} = +1$，不匹配记 $y_{ij} = -1$。损失就是所有格子的 logistic 损失之和：</p>
+<div class="formula multi" data-eq="(6)">$$\mathcal{L}_{\text{sigmoid}} = -\frac{1}{N}\sum_{i=1}^{N}\sum_{j=1}^{N}\log \sigma\Big( y_{ij}\cdot\big(t \cdot \mathbf{i}_i \cdot \mathbf{t}_j + b\big) \Big), \qquad y_{ij} = \begin{cases} +1, & i = j \\ -1, & i \neq j \end{cases}$$</div>
+<p>其中 $\sigma(z) = 1/(1+e^{-z})$ 是 logistic 函数，$t = \exp(t')$ 是<strong>可学习温度</strong>，$b$ 是<strong>可学习偏置</strong>。</p>
 
-<h3>6.3 相似度矩阵的性质</h3>
-<p>训练良好的 CLIP 模型，其相似度矩阵具有理想的对角占优性质：</p>
-<div class="formula" data-eq="(11)">$$\text{sim}(\mathbf{I}_i, \mathbf{T}_i) \gg \text{sim}(\mathbf{I}_i, \mathbf{T}_j), \quad \forall j \neq i$$</div>
-<p>即匹配图文对的相似度远大于不匹配对。这种对齐质量直接决定了 CLIP 在下游任务上的 Zero-shot 性能。</p>
+<h3>3.3 为什么必须引入偏置项 $b$</h3>
+<p>这是整个方法里最容易被忽略、却最关键的一处细节。注意到矩阵中正负样本的比例是 $N : N(N-1)$——也就是 $1 : (N-1)$，<strong>极度不平衡</strong>。以 $N = 32768$ 为例，负样本是正样本的三万多倍。</p>
+<p>如果没有偏置项，模型会把所有 logits 往负方向推（因为这样能让绝大多数负样本的损失降到最低），导致正样本也被误判。偏置 $b$ 提供一个<strong>可学习的决策阈值</strong>：它把"相似度多大才算匹配"这个门槛从"必须以 0 为中心"中解放出来，让模型能自由地在不平衡的数据上寻找最优分界。</p>
+<div class="callout"><div class="callout-title">参数化细节</div>
+<p>论文的实现中，$t$ 与 $b$ 都以 log 空间参数化：$t = \exp(t')$，$b = \exp(b') \cdot (-1)$ 之类的形式被用来保证 $t \gt 0$。这与 CLIP 用 $\exp(\tau')$ 保证温度为正同源。<strong>把"尺度"和"偏移"分开控制</strong>，也是 SigLIP 比 CLIP 更稳定的原因之一。</p></div>
 
-<!-- ========== 第七章 ========== -->
-<section id="ch7">
-<h2><span class="num">7</span>CLIP 的数学描述</h2>
-
-<h3>7.1 完整前向传播</h3>
-<p>给定一个 batch 的 $N$ 对图文 $\{(I_i, T_i)\}_{i=1}^{N}$，CLIP 的完整前向传播如下：</p>
-<p><strong>步骤 1：图像编码。</strong>图像通过编码器得到特征向量，再投影到共享空间并归一化：</p>
-<div class="formula" data-eq="(12)">$$\mathbf{I}_i = \hat{W}_i \cdot \text{ImageEncoder}(I_i)[\text{CLS}], \quad \hat{\mathbf{I}}_i = \frac{\mathbf{I}_i}{\|\mathbf{I}_i\|}$$</div>
-<p><strong>步骤 2：文本编码。</strong>同理，文本通过编码器后投影并归一化：</p>
-<div class="formula" data-eq="(13)">$$\mathbf{T}_i = \hat{W}_t \cdot \text{TextEncoder}(T_i)[\text{EOS}], \quad \hat{\mathbf{T}}_i = \frac{\mathbf{T}_i}{\|\mathbf{T}_i\|}$$</div>
-<p><strong>步骤 3：计算相似度矩阵。</strong>归一化后的嵌入计算两两点积，得到 $N \times N$ 的相似度矩阵：</p>
-<div class="formula" data-eq="(14)">$$S_{ij} = \hat{\mathbf{I}}_i \cdot \hat{\mathbf{T}}_j / \tau$$</div>
-<p><strong>步骤 4：对称交叉熵损失。</strong></p>
-<div class="formula" data-eq="(15)">$$\mathcal{L} = \frac{1}{2N}\sum_{i=1}^{N}\left[-\log\frac{e^{S_{ii}}}{\sum_j e^{S_{ij}}} - \log\frac{e^{S_{ii}}}{\sum_j e^{S_{ji}}}\right]$$</div>
-
-<h3>7.2 参数量分析</h3>
-<p>以 CLIP-ViT-L/14 为例：</p>
-<table>
-<thead><tr><th>组件</th><th>参数量</th><th>占比</th></tr></thead>
-<tbody>
-<tr><td>ViT-L/14 图像编码器</td><td>$304$M</td><td>$71$%</td></tr>
-<tr><td>Transformer 文本编码器</td><td>$123$M</td><td>$29$%</td></tr>
-<tr><td>图像投影矩阵 $W_i$</td><td>$\sim 1$M</td><td>$0.2$%</td></tr>
-<tr><td>文本投影矩阵 $W_t$</td><td>$\sim 0.1$M</td><td>$0.02$%</td></tr>
-<tr><td>温度参数 $\tau$</td><td>$1$</td><td>$\approx 0$%</td></tr>
-<tr><td><strong>总计</strong></td><td><strong>$\sim 428$M</strong></td><td><strong>$100$%</strong></td></tr>
-</tbody>
-</table>
-
-<h3>7.3 计算复杂度</h3>
-<p>CLIP 的主要计算开销来自两个编码器的前向传播。对于 ViT-L/14，图像编码一次前向约 $162$ G FLOPs，文本编码器约 $6$ G FLOPs。对比损失的计算开销为 $O(N^2 d)$，在 $N = 32{,}768$ 时约为 $12.8$ T FLOPs——相对于编码器开销可忽略。</p>
-<div class="formula" data-eq="(16)">$$\text{FLOPs}_{\text{total}} \approx N \times (\text{FLOPs}_{\text{img}} + \text{FLOPs}_{\text{txt}}) + N^2 \times d$$</div>
-
-<h3>7.4 梯度流分析</h3>
-<p>InfoNCE 损失的梯度流向三个方向：图像编码器、文本编码器和温度参数。对于正样本对 $(I_i, T_i)$，梯度同时拉升 $\hat{\mathbf{I}}_i$ 和 $\hat{\mathbf{T}}_i$ 的相似度；对于负样本对 $(I_i, T_j)$，梯度推低它们的相似度。温度 $\tau$ 的梯度自适应调节分布锐度——当模型还区分困难时 $\tau$ 较大（分布平滑），随着训练逐渐减小（分布尖锐）。</p>
-
-<!-- ========== 第八章 ========== -->
-<section id="ch8">
-<h2><span class="num">8</span>Zero-shot 推理与 Prompt Engineering</h2>
-
-<h3>8.1 Zero-shot 分类流程</h3>
-<p>CLIP 的 Zero-shot 分类是其最具革命性的能力——无需任何标注数据，直接在新数据集上分类。步骤如下：</p>
+<h3>3.4 为什么这样就解耦了批量</h3>
+<p>看公式 (6)，$\mathcal{L}_{\text{sigmoid}}$ 是 $N^2$ 个独立项的<strong>平均</strong>。每项只涉及 $\mathbf{i}_i$ 和 $\mathbf{t}_j$ 两个向量，不涉及任何求和或归一化。</p>
+<p>由此带来三个直接后果：</p>
 <ol>
-  <li>将所有类别名转换为文本模板，如 "a photo of a {class}"</li>
-  <li>通过文本编码器计算所有类别文本的嵌入 $\{\hat{\mathbf{T}}_k\}_{k=1}^{K}$</li>
-  <li>通过图像编码器计算待分类图像的嵌入 $\hat{\mathbf{I}}$</li>
-  <li>计算图像与所有类别文本的余弦相似度 $\hat{\mathbf{I}} \cdot \hat{\mathbf{T}}_k$</li>
-  <li>取相似度最高的类别作为预测结果</li>
+<li><strong>批量可以自由变化</strong>。改变 $N$ 只是改变"取多少项来平均"，不改变任何一项的数学形式，任务定义本身不动。</li>
+<li><strong>不需要跨设备 all-gather 整块矩阵</strong>。分布式训练中可以把相似度矩阵<strong>分块（chunked）</strong>计算——每块只加载一部分图像向量与文本向量，算完就释放。这正是论文强调的"分块实现"：内存占用大幅下降，通信也简化了。</li>
+<li><strong>可以逐格加权</strong>。因为每格独立，天然支持对难负样本加权，或只对某些位置计算损失。</li>
 </ol>
-<div class="formula" data-eq="(17)">$$\hat{y} = \arg\max_{k} \frac{\exp(\hat{\mathbf{I}} \cdot \hat{\mathbf{T}}_k / \tau)}{\sum_{j=1}^{K}\exp(\hat{\mathbf{I}} \cdot \hat{\mathbf{T}}_j / \tau)}$$</div>
 
-<h3>8.2 Prompt Engineering</h3>
-<p>CLIP 的训练数据中，文本形式多样，并非总是简单的 "a photo of a cat"。为了让推理时的文本更接近训练分布，CLIP 使用了<strong>Prompt Engineering</strong>——通过精心设计的文本模板提升 Zero-shot 性能。</p>
+<h3>3.5 效果、代价与边界</h3>
+<div class="table-wrap">
 <table>
-<thead><tr><th>Prompt 模板</th><th>示例</th><th>效果</th></tr></thead>
-<tbody>
-<tr><td>无 Prompt</td><td>"cat"</td><td>基线</td></tr>
-<tr><td>"A photo of a {class}."</td><td>"A photo of a cat."</td><td>+1.3%</td></tr>
-<tr><td>多模板集成</td><td>80 个模板取平均</td><td>+3.5%</td></tr>
-<tr><td>任务特定模板</td><td>"A satellite photo of {class}."</td><td>+5.0%（卫星图）</td></tr>
-<tr><td>"A photo of a {class}, a type of pet."</td><td>细粒度分类</td><td>+2.0%</td></tr>
-</tbody>
+<tr><th>维度</th><th>结果</th></tr>
+<tr><td>小批量（$&lt;$ 16k）表现</td><td>sigmoid 损失<strong>显著优于</strong> softmax</td></tr>
+<tr><td>大批量</td><td>差距缩小，说明 softmax 在大批量下也够用</td></tr>
+<tr><td>饱和点</td><td>批量增大到约 32k 后收益饱和——这是很重要的实用结论：<strong>不需要无限堆批量</strong></td></tr>
+<tr><td>效率</td><td>SigLiT（冻结视觉塔）在 4 块 TPUv4 上训练 1 天即达 79.7% ImageNet 零样本；ViT-g/14 版本 2 天达 84.5%</td></tr>
+<tr><td>鲁棒性</td><td>对标签噪声更鲁棒（这一点对网络数据尤其重要）</td></tr>
 </table>
-
-<div class="callout success">
-<div class="callout-title">Prompt 的威力</div>
-<p>Prompt Engineering 将 ImageNet Zero-shot 准确率从 $\sim 60$% 提升到 $76.2$%——提升超过 $16$ 个百分点。这表明<strong>文本输入的形式对 CLIP 性能至关重要</strong>。后续的 CoOp（Context Optimization）工作将手工 Prompt 替换为可学习的连续 Prompt，进一步提升了性能。</p>
 </div>
-
-<h3>8.3 Zero-shot 在 30 个数据集上的表现</h3>
-<p>CLIP 在 $30$ 个不同视觉数据集上进行 Zero-shot 评估，涵盖了自然图像分类、OCR、卫星图、医学影像等多种领域：</p>
-<table>
-<thead><tr><th>数据集</th><th>任务</th><th>类别数</th><td>Zero-shot (%)</td><th>有监督 SOTA (%)</th></tr></thead>
-<tbody>
-<tr><td>ImageNet</td><td>自然分类</td><td>$1{,}000$</td><td>$76.2$</td><td>$89.0$ (有训练)</td></tr>
-<tr><td>CIFAR-10</td><td>自然分类</td><td>$10$</td><td>$91.7$</td><td>$99.5$</td></tr>
-<tr><td>CIFAR-100</td><td>自然分类</td><td>$100$</td><td>$68.4$</td><td>$88.5$</td></tr>
-<tr><td>Pets</td><td>细粒度分类</td><td>$37$</td><td>$88.0$</td><td>$90.0$</td></tr>
-<tr><td>Cars</td><td>细粒度分类</td><td>$196$</td><td>$65.3$</td><td>$91.7$</td></tr>
-<tr><td>Flowers102</td><td>细粒度分类</td><td>$102$</td><td>$67.0$</td><td>$97.4$</td></tr>
-<tr><td>RESISC45</td><td>卫星图分类</td><td>$45$</td><td>$63.0$</td><td>$95.8$</td></tr>
-<tr><td>SVHN</td><td>OCR</td><td>$10$</td><td>$31.4$</td><td>$97.1$</td></tr>
-</tbody>
-</table>
-
-<!-- ========== 第九章 ========== -->
-<section id="ch9">
-<h2><span class="num">9</span>训练细节与数据规模</h2>
-
-<h3>9.1 WIT 数据集</h3>
-<p>CLIP 使用了一个新的数据集——<strong>WebImageText (WIT)</strong>，从 $5$ 亿个网页中收集了 $4$ 亿对图文对。WIT 的关键特点：</p>
-<table>
-<thead><tr><th>维度</th><th>WIT</th><th>ImageNet（对比）</th></tr></thead>
-<tbody>
-<tr><td>规模</td><td>$400$M 图文对</td><td>$1.2$M 图</td></tr>
-<tr><td>标注方式</td><td>网页 alt 文本（自然语言）</td><td>人工标注（类别标签）</td></tr>
-<tr><td>文本长度</td><td>平均 $\sim 12$ 词</td><td>无文本</td></tr>
-<tr><td>数据来源</td><td>互联网公开网页</td><td>WordNet 层级</td></tr>
-<tr><td>多样性</td><td>极高（覆盖视觉概念极广）</td><td>$1{,}000$ 类</td></tr>
-<tr><td>数据质量</td><td>嘈杂（alt 文本可能有噪声）</td><td>高质量</td></tr>
-</tbody>
-</table>
-
-<div class="callout warn">
-<div class="callout-title">数据质量 vs 数据规模</div>
-<p>WIT 的 alt 文本质量参差不齐——有些是精确描述，有些是 SEO 关键词堆砌，有些甚至是空字符串。CLIP 的成功表明，<strong>在海量数据下，数据的多样性和规模比质量更重要</strong>。这一发现深刻影响了后续大模型的训练策略。</p>
-</div>
-
-<h3>9.2 训练超参数</h3>
-<table>
-<thead><tr><th>超参数</th><th>值</th><th>说明</th></tr></thead>
-<tbody>
-<tr><td>Batch size</td><td>$32{,}768$</td><td>超大 batch 提供足够负样本</td></tr>
-<tr><td>优化器</td><td>AdamW</td><td>$\beta_1=0.9, \beta_2=0.999$</td></tr>
-<tr><td>学习率</td><td>$5 \times 10^{-4}$</td><td>余弦退火 + warmup</td></tr>
-<tr><td>Warmup</td><td>$2{,}000$ 步</td><td>线性 warmup</td></tr>
-<tr><td>权重衰减</td><td>$0.1$</td><td>L2 正则化</td></tr>
-<tr><td>训练步数</td><td>$32$ epochs</td><td>约 $12$B 图文对见过</td></tr>
-<tr><td>温度初值 $\tau$</td><td>$0.07$（可学习）</td><td>对数参数化</td></tr>
-<tr><td>训练硬件</td><td>$256$ 个 V100 GPU</td><td>训练约 $12$ 天</td></tr>
-<tr><td>混合精度</td><td>FP16</td><td>加速训练</td></tr>
-</tbody>
-</table>
-
-<h3>9.3 数据增强</h3>
-<p>CLIP 对图像使用简单的数据增强：随机裁剪到 $224 \times 224$（ViT-B/32）或 $336 \times 336$（ViT-L/14@336），无颜色抖动、无 CutMix。文本不使用任何增强。这一极简的增强策略与训练数据的超大规模相匹配——当数据量足够大时，强增强反而可能引入噪声。</p>
-
-<h3>9.4 超大 batch 的工程挑战</h3>
-<p>$32{,}768$ 的 batch size 带来了巨大的工程挑战：单张 GPU 无法容纳如此大的 batch，必须使用<strong>梯度累积 + 多 GPU 并行</strong>策略。CLIP 使用了 $256$ 个 V100 GPU，每个 GPU 处理 $128$ 个样本，通过 all-reduce 同步梯度。这确保了所有 GPU 看到的是同一个 $32{,}768$ 的 batch，从而获得正确的 InfoNCE 对比信号。</p>
-
-<!-- ========== 第十章 ========== -->
-<section id="ch10">
-<h2><span class="num">10</span>PyTorch 代码实现</h2>
-
-<h3>10.1 CLIP 图像编码器</h3>
-<div class="code-block"><div class="code-header">clip_image_encoder.py</div><pre>
-<span class="kw">import</span> <span class="cls">torch</span>
-<span class="kw">import</span> <span class="cls">torch</span>.nn <span class="kw">as</span> <span class="cls">nn</span>
-
-<span class="kw">class</span> <span class="cls">CLIPImageEncoder</span>(<span class="cls">nn</span>.Module):
-    <span class="str">"""CLIP 图像编码器（基于 ViT）"""</span>
-    <span class="kw">def</span> __init__(<span class="kw">self</span>, embed_dim=<span class="num">512</span>, image_size=<span class="num">224</span>, patch_size=<span class="num">32</span>,
-                 vision_width=<span class="num">768</span>, vision_layers=<span class="num">12</span>, vision_heads=<span class="num">12</span>):
-        <span class="kw">super</span>().__init__()
-        <span class="kw">self</span>.conv1 = <span class="cls">nn</span>.Conv2d(<span class="num">3</span>, vision_width,
-            kernel_size=patch_size, stride=patch_size, bias=<span class="kw">False</span>)
-        num_patches = (image_size // patch_size) ** <span class="num">2</span>
-        <span class="kw">self</span>.class_embedding = <span class="cls">nn</span>.Parameter(<span class="cls">torch</span>.<span class="fn">zeros</span>(<span class="num">1</span>, <span class="num">1</span>, vision_width))
-        <span class="kw">self</span>.positional_embedding = <span class="cls">nn</span>.Parameter(
-            <span class="cls">torch</span>.<span class="fn">zeros</span>(<span class="num">1</span>, num_patches + <span class="num">1</span>, vision_width))
-        <span class="kw">self</span>.ln_pre = <span class="cls">nn</span>.LayerNorm(vision_width)
-        <span class="kw">self</span>.transformer = <span class="cls">nn</span>.ModuleList([
-            TransformerBlock(vision_width, vision_heads)
-            <span class="kw">for</span> _ <span class="kw">in</span> <span class="cls">range</span>(vision_layers)
-        ])
-        <span class="kw">self</span>.ln_post = <span class="cls">nn</span>.LayerNorm(vision_width)
-        <span class="kw">self</span>.proj = <span class="cls">nn</span>.Parameter(<span class="cls">torch</span>.empty(vision_width, embed_dim))
-
-    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x):
-        x = <span class="kw">self</span>.conv1(x)  <span class="com"># (B, C, H/P, W/P)</span>
-        x = x.<span class="fn">flatten</span>(<span class="num">2</span>).<span class="fn">transpose</span>(<span class="num">1</span>, <span class="num">2</span>)  <span class="com"># (B, N, C)</span>
-        cls = <span class="kw">self</span>.class_embedding.<span class="fn">expand</span>(x.<span class="fn">size</span>(<span class="num">0</span>), -<span class="num">1</span>, -<span class="num">1</span>)
-        x = <span class="cls">torch</span>.<span class="fn">cat</span>([cls, x], <span class="fn">dim</span>=<span class="num">1</span>)  <span class="com"># (B, N+1, C)</span>
-        x = x + <span class="kw">self</span>.positional_embedding
-        x = <span class="kw">self</span>.ln_pre(x)
-        x = x.<span class="fn">permute</span>(<span class="num">1</span>, <span class="num">0</span>, <span class="num">2</span>)  <span class="com"># (N+1, B, C) for transformer</span>
-        <span class="kw">for</span> blk <span class="kw">in</span> <span class="kw">self</span>.transformer:
-            x = blk(x)
-        x = x.<span class="fn">permute</span>(<span class="num">1</span>, <span class="num">0</span>, <span class="num">2</span>)  <span class="com"># (B, N+1, C)</span>
-        x = <span class="kw">self</span>.ln_post(x[:, <span class="num">0</span>, :])  <span class="com"># CLS token</span>
-        <span class="kw">return</span> x @ <span class="kw">self</span>.proj  <span class="com"># (B, embed_dim)</span>
-</pre></div>
-
-<h3>10.2 CLIP 文本编码器</h3>
-<div class="code-block"><div class="code-header">clip_text_encoder.py</div><pre>
-<span class="kw">class</span> <span class="cls">CLIPTextEncoder</span>(<span class="cls">nn</span>.Module):
-    <span class="str">"""CLIP 文本编码器（Transformer）"""</span>
-    <span class="kw">def</span> __init__(<span class="kw">self</span>, embed_dim=<span class="num">512</span>, context_length=<span class="num">77</span>, vocab_size=<span class="num">49408</span>,
-                 transformer_width=<span class="num">512</span>, transformer_layers=<span class="num">12</span>, transformer_heads=<span class="num">8</span>):
-        <span class="kw">super</span>().__init__()
-        <span class="kw">self</span>.token_embedding = <span class="cls">nn</span>.Embedding(vocab_size, transformer_width)
-        <span class="kw">self</span>.positional_embedding = <span class="cls">nn</span>.Parameter(
-            <span class="cls">torch</span>.<span class="fn">zeros</span>(<span class="num">1</span>, context_length, transformer_width))
-        <span class="kw">self</span>.transformer = <span class="cls">nn</span>.ModuleList([
-            TransformerBlock(transformer_width, transformer_heads)
-            <span class="kw">for</span> _ <span class="kw">in</span> <span class="cls">range</span>(transformer_layers)
-        ])
-        <span class="kw">self</span>.ln_final = <span class="cls">nn</span>.LayerNorm(transformer_width)
-        <span class="kw">self</span>.proj = <span class="cls">nn</span>.Parameter(
-            <span class="cls">torch</span>.empty(transformer_width, embed_dim))
-
-    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, text):
-        x = <span class="kw">self</span>.token_embedding(text)  <span class="com"># (B, L, D)</span>
-        x = x + <span class="kw">self</span>.positional_embedding
-        x = x.<span class="fn">permute</span>(<span class="num">1</span>, <span class="num">0</span>, <span class="num">2</span>)  <span class="com"># (L, B, D)</span>
-        <span class="kw">for</span> blk <span class="kw">in</span> <span class="kw">self</span>.transformer:
-            x = blk(x)
-        x = x.<span class="fn">permute</span>(<span class="num">1</span>, <span class="num">0</span>, <span class="num">2</span>)  <span class="com"># (B, L, D)</span>
-        x = <span class="kw">self</span>.ln_final(x)
-        <span class="com"># 取 [EOS] token 的表示（由 text argmax 确定）</span>
-        eos_idx = text.<span class="fn">argmax</span>(<span class="fn">dim</span>=-<span class="num">1</span>)
-        x = x[<span class="cls">torch</span>.<span class="fn">arange</span>(x.<span class="fn">size</span>(<span class="num">0</span>)), eos_idx]
-        <span class="kw">return</span> x @ <span class="kw">self</span>.proj  <span class="com"># (B, embed_dim)</span>
-</pre></div>
-
-<h3>10.3 对比损失</h3>
-<div class="code-block"><div class="code-header">contrastive_loss.py</div><pre>
-<span class="kw">class</span> <span class="cls">ClipLoss</span>(<span class="cls">nn</span>.Module):
-    <span class="str">"""CLIP 对比损失（对称 InfoNCE）"""</span>
-    <span class="kw">def</span> __init__(<span class="kw">self</span>):
-        <span class="kw">super</span>().__init__()
-        <span class="kw">self</span>.<span class="fn">logit_scale</span> = <span class="cls">nn</span>.Parameter(
-            <span class="cls">torch</span>.<span class="fn">ones</span>([]) * np.log(<span class="num">1</span> / <span class="num">0.07</span>)
-        )
-        <span class="kw">self</span>.logit_scale_max = np.log(<span class="num">100.0</span>)
-
-    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, image_features, text_features):
-        <span class="com"># L2 归一化</span>
-        image_features = image_features / image_features.<span class="fn">norm</span>(
-            <span class="fn">dim</span>=-<span class="num">1</span>, keepdim=<span class="kw">True</span>)
-        text_features = text_features / text_features.<span class="fn">norm</span>(
-            <span class="fn">dim</span>=-<span class="num">1</span>, keepdim=<span class="kw">True</span>)
-
-        <span class="com"># 可学习温度: clamp 防止过大</span>
-        <span class="fn">logit_scale</span> = <span class="kw">self</span>.<span class="fn">logit_scale</span>.exp()
-        <span class="fn">logit_scale</span> = <span class="cls">torch</span>.<span class="fn">clamp</span>(
-            <span class="fn">logit_scale</span>, <span class="fn">max</span>=<span class="kw">self</span>.logit_scale_max)
-
-        <span class="com"># 相似度矩阵: (B, B)</span>
-        logits = <span class="fn">logit_scale</span> * image_features @ text_features.<span class="fn">t</span>()
-        labels = <span class="cls">torch</span>.<span class="fn">arange</span>(logits.<span class="fn">size</span>(<span class="num">0</span>)).<span class="fn">to</span>(logits.device)
-
-        <span class="com"># 对称交叉熵</span>
-        loss_i2t = <span class="cls">F</span>.<span class="fn">cross_entropy</span>(logits, labels)
-        loss_t2i = <span class="cls">F</span>.<span class="fn">cross_entropy</span>(logits.<span class="fn">t</span>(), labels)
-        loss = (loss_i2t + loss_t2i) / <span class="num">2.0</span>
-        <span class="kw">return</span> loss
-</pre></div>
-
-<h3>10.4 完整 CLIP 模型</h3>
-<div class="code-block"><div class="code-header">clip_model.py</div><pre>
-<span class="kw">class</span> <span class="cls">CLIP</span>(<span class="cls">nn</span>.Module):
-    <span class="str">"""完整 CLIP 模型"""</span>
-    <span class="kw">def</span> __init__(<span class="kw">self</span>, embed_dim=<span class="num">512</span>, image_size=<span class="num">224</span>, patch_size=<span class="num">32</span>,
-                 vision_width=<span class="num">768</span>, vision_layers=<span class="num">12</span>, vision_heads=<span class="num">12</span>,
-                 context_length=<span class="num">77</span>, vocab_size=<span class="num">49408</span>,
-                 text_width=<span class="num">512</span>, text_layers=<span class="num">12</span>, text_heads=<span class="num">8</span>):
-        <span class="kw">super</span>().__init__()
-        <span class="kw">self</span>.<span class="fn">image_encoder</span> = <span class="cls">CLIPImageEncoder</span>(
-            embed_dim, image_size, patch_size,
-            vision_width, vision_layers, vision_heads
-        )
-        <span class="kw">self</span>.<span class="fn">text_encoder</span> = <span class="cls">CLIPTextEncoder</span>(
-            embed_dim, context_length, vocab_size,
-            text_width, text_layers, text_heads
-        )
-        <span class="kw">self</span>.<span class="fn">logit_scale</span> = <span class="cls">nn</span>.Parameter(
-            <span class="cls">torch</span>.<span class="fn">ones</span>([]) * np.log(<span class="num">1</span> / <span class="num">0.07</span>)
-        )
-
-    <span class="kw">def</span> <span class="fn">encode_image</span>(<span class="kw">self</span>, image):
-        <span class="kw">return</span> <span class="kw">self</span>.<span class="fn">image_encoder</span>(image)
-
-    <span class="kw">def</span> <span class="fn">encode_text</span>(<span class="kw">self</span>, text):
-        <span class="kw">return</span> <span class="kw">self</span>.<span class="fn">text_encoder</span>(text)
-
-    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, image, text):
-        image_features = <span class="kw">self</span>.<span class="fn">encode_image</span>(image)
-        text_features = <span class="kw">self</span>.<span class="fn">encode_text</span>(text)
-        <span class="kw">return</span> image_features, text_features, <span class="kw">self</span>.<span class="fn">logit_scale</span>.exp()
-</pre></div>
-
-<h3>10.5 Zero-shot 分类</h3>
-<div class="code-block"><div class="code-header">zero_shot.py</div><pre>
-<span class="kw">def</span> <span class="fn">zero_shot_classify</span>(model, image, class_names, tokenizer, <span class="cls">device</span>):
-    <span class="str">"""CLIP Zero-shot 分类"""</span>
-    model.eval()
-
-    <span class="com"># 预计算所有类别的文本嵌入</span>
-    templates = [
-        <span class="str">"a photo of a {}."</span>,
-        <span class="str">"a photo of a {}, a type of pet."</span>,
-        <span class="str">"a photo of the {}."</span>,
-    ]
-
-    <span class="kw">with</span> <span class="cls">torch</span>.no_grad():
-        <span class="com"># 图像嵌入</span>
-        image_features = model.<span class="fn">encode_image</span>(image.<span class="fn">to</span>(<span class="cls">device</span>))
-        image_features = image_features / image_features.<span class="fn">norm</span>(
-            <span class="fn">dim</span>=-<span class="num">1</span>, keepdim=<span class="kw">True</span>)
-
-        <span class="com"># 多模板集成</span>
-        text_features_list = []
-        <span class="kw">for</span> template <span class="kw">in</span> templates:
-            texts = [template.<span class="fn">format</span>(c) <span class="kw">for</span> c <span class="kw">in</span> class_names]
-            tokens = tokenizer(texts).<span class="fn">to</span>(<span class="cls">device</span>)
-            tf = model.<span class="fn">encode_text</span>(tokens)
-            tf = tf / tf.<span class="fn">norm</span>(<span class="fn">dim</span>=-<span class="num">1</span>, keepdim=<span class="kw">True</span>)
-            text_features_list.append(tf)
-
-        <span class="com"># 平均所有模板的文本嵌入</span>
-        text_features = <span class="cls">torch</span>.<span class="fn">stack</span>(text_features_list).mean(<span class="fn">dim</span>=<span class="num">0</span>)
-        text_features = text_features / text_features.<span class="fn">norm</span>(
-            <span class="fn">dim</span>=-<span class="num">1</span>, keepdim=<span class="kw">True</span>)
-
-        <span class="com"># 计算相似度并取 argmax</span>
-        logits = model.<span class="fn">logit_scale</span>.exp() * image_features @ text_features.<span class="fn">t</span>()
-        probs = logits.<span class="fn">softmax</span>(<span class="fn">dim</span>=-<span class="num">1</span>)
-
-    <span class="kw">return</span> probs
-</pre></div>
-
-<h3>10.6 训练循环</h3>
-<div class="code-block"><div class="code-header">train_clip.py</div><pre>
-<span class="kw">def</span> <span class="fn">train_clip</span>(model, dataloader, epochs=<span class="num">32</span>, lr=<span class="num">5e-4</span>, <span class="cls">device</span>=<span class="str">"cuda"</span>):
-    <span class="str">"""CLIP 训练循环"""</span>
-    model = model.<span class="fn">to</span>(<span class="cls">device</span>)
-    loss_fn = <span class="cls">ClipLoss</span>().<span class="fn">to</span>(<span class="cls">device</span>)
-    params = <span class="fn">list</span>(model.<span class="fn">parameters</span>()) + <span class="fn">list</span>(loss_fn.<span class="fn">parameters</span>())
-    optimizer = <span class="cls">torch</span>.optim.AdamW(params, lr=lr, weight_decay=<span class="num">0.1</span>)
-    scheduler = <span class="cls">torch</span>.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=epochs * <span class="cls">len</span>(dataloader))
-    scaler = <span class="cls">torch</span>.cuda.amp.GradScaler()
-
-    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="cls">range</span>(epochs):
-        model.train()
-        total_loss = <span class="num">0</span>
-        <span class="kw">for</span> batch <span class="kw">in</span> dataloader:
-            images, texts = batch
-            images = images.<span class="fn">to</span>(<span class="cls">device</span>)
-            texts = texts.<span class="fn">to</span>(<span class="cls">device</span>)
-
-            <span class="kw">with</span> <span class="cls">torch</span>.cuda.amp.autocast():
-                img_feats, txt_feats, scale = model(images, texts)
-                loss = loss_fn(img_feats, txt_feats)
-
-            optimizer.zero_grad()
-            scaler.scale(loss).<span class="fn">backward</span>()
-            scaler.unscale_(optimizer)
-            <span class="cls">torch</span>.nn.utils.clip_grad_norm_(
-                model.<span class="fn">parameters</span>(), max_norm=<span class="num">1.0</span>)
-            scaler.<span class="fn">step</span>(optimizer)
-            scaler.update()
-            scheduler.<span class="fn">step</span>()
-            total_loss += loss.<span class="fn">item</span>()
-
-        avg_loss = total_loss / <span class="cls">len</span>(dataloader)
-        <span class="cls">print</span>(f<span class="str">"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}, "</span>
-              f<span class="str">"LR: {scheduler.get_last_lr()[0]:.2e}"</span>)
-</pre></div>
-
-<!-- ========== 第十一章 ========== -->
-<section id="ch11">
-<h2><span class="num">11</span>应用场景与下游任务</h2>
-
-<h3>11.1 Zero-shot 图像分类</h3>
-<p>CLIP 最直接的应用是 Zero-shot 分类——无需任何训练数据，直接对新数据集进行分类。这使得 CLIP 可以快速适配任何视觉分类任务，极大地降低了视觉应用的部署成本。</p>
-
-<h3>11.2 图文检索</h3>
-<p>CLIP 的双塔架构天然适合图文检索：将图像和文本映射到同一嵌入空间后，可以用向量检索（如 FAISS）实现大规模图文互检。</p>
-<table>
-<thead><tr><th>检索类型</th><th>查询</th><th>候选</th><th>应用</th></tr></thead>
-<tbody>
-<tr><td>文本→图像</td><td>文本描述</td><td>图像库</td><td>图像搜索引擎</td></tr>
-<tr><td>图像→文本</td><td>图像</td><td>文本库</td><td>自动标注</td></tr>
-<tr><td>图像→图像</td><td>图像（用文本嵌入辅助）</td><td>图像库</td><td>视觉相似搜索</td></tr>
-<tr><td>文本→文本</td><td>文本（用图像嵌入辅助）</td><td>文本库</td><td>语义搜索增强</td></tr>
-</tbody>
-</table>
-
-<h3>11.3 作为下游任务的视觉骨干</h3>
-<p>CLIP 图像编码器可以作为强大的视觉骨干，迁移到各种下游任务：</p>
-<table>
-<thead><tr><th>下游任务</th><th>迁移方式</th><th>典型性能</th></tr></thead>
-<tbody>
-<tr><td>图像分类（Linear Probe）</td><td>冻结编码器 + 线性分类头</td><td>ImageNet: $83.3$%</td></tr>
-<tr><td>目标检测</td><td>编码器 + Det Head</td><td>COCO: $47.5$ AP</td></tr>
-<tr><td>语义分割</td><td>编码器 + Seg Head</td><td>ADE20K: $36.0$ mIoU</td></tr>
-<tr><td>CLIPstyler（风格迁移）</td><td>文本引导的图像风格化</td><td>文本驱动风格</td></tr>
-<tr><td>VQA</td><td>CLIP + LLM 联合</td><td>视觉问答</td></tr>
-<tr><td>文本到图像生成</td><td>CLIP 作为引导信号</td><td>DALL-E、Stable Diffusion</td></tr>
-</tbody>
-</table>
-
-<div class="callout success">
-<div class="callout-title">CLIP 生成模型的基石</div>
-<p>CLIP 不仅是视觉理解模型，更是文本到图像生成模型的基石。DALL-E 2、Stable Diffusion 等扩散模型使用 CLIP 的文本嵌入作为条件信号，实现了高质量的文本到图像生成。CLIP 的语义对齐能力是这些生成模型理解用户文本指令的关键。</p>
-</div>
-
-<h3>11.4 视觉-语言模型（VLM）</h3>
-<p>CLIP 的视觉编码器被广泛用于构建视觉-语言模型（VLM）。LLaVA、BLIP-2 等模型将 CLIP 视觉编码器与大语言模型（LLM）连接，实现了图像理解与文本生成的统一。CLIP 提供的视觉表示质量直接决定了 VLM 的视觉理解能力。</p>
-
-<!-- ========== 第十二章 ========== -->
-<section id="ch12">
-<h2><span class="num">12</span>CLIP 的扩展与变体</h2>
-
-<h3>12.1 CLIP 家族</h3>
-<table>
-<thead><tr><th>模型</th><th>年份</th><th>核心改进</th><th>解决的问题</th></tr></thead>
-<tbody>
-<tr><td><strong>CLIP</strong></td><td>2021</td><td>图文对比学习</td><td>跨模态预训练</td></tr>
-<tr><td><strong>ALIGN</strong></td><td>2021</td><td>十亿级噪声图文对训练</td><td>数据规模限制</td></tr>
-<tr><td><strong>Florence</strong></td><td>2021</td><td>统一视觉基础模型</td><td>多任务适配</td></tr>
-<tr><td><strong>BLIP</strong></td><td>2022</td><td>图文对比 + 图文匹配 + LM</td><td>噪声数据 + 多任务</td></tr>
-<tr><td><strong>EVA-CLIP</strong></td><td>2022</td><td>更大 ViT + 更多数据</td><td>Scaling 极限</td></tr>
-<tr><td><strong>OpenCLIP</strong></td><td>2022</td><td>开源复现 + 多数据集</td><td>CLIP 不开源</td></tr>
-<tr><td><strong>SigLIP</strong></td><td>2023</td><td>Sigmoid 损失替代 Softmax</td><td>Batch 大小限制</td></tr>
-<tr><td><strong>LongCLIP</strong></td><td>2024</td><td>扩展文本长度到 248</td><td>77 Token 限制</td></tr>
-</tbody>
-</table>
-
-<h3>12.2 OpenCLIP：开源复现</h3>
-<p>OpenAI 的 CLIP 仅开源了模型权重，未开源训练数据和完整训练代码。OpenCLIP 社区项目成功复现了 CLIP 的训练流程，并使用公开数据集（LAION-400M、LAION-2B）训练了一系列开源 CLIP 模型。OpenCLIP 的关键贡献：</p>
-<ul>
-  <li>使用 LAION-400M（$400$M 图文对）成功复现 CLIP 性能</li>
-  <li>提供了 ViT-H/14、ViT-G/14 等更大模型</li>
-  <li>验证了公开数据可以达到与 WIT 相当的效果</li>
-</ul>
-
-<h3>12.3 SigLIP：Sigmoid 损失</h3>
-<p>SigLIP 将 InfoNCE 的 softmax 交叉熵替换为<strong>逐对的 sigmoid 损失</strong>。InfoNCE 需要 batch 中所有样本的 logits 做 softmax 归一化，因此 batch size 受限于 GPU 内存。SigLIP 对每个图文对独立计算 sigmoid 二分类损失，不受 batch 大小限制：</p>
-<div class="formula" data-eq="(18)">$$\mathcal{L}_{\text{SigLIP}} = -\frac{1}{N^2}\sum_{i=1}^{N}\sum_{j=1}^{N}\log\sigma\!\left(z_{ij} \cdot (2 \cdot \mathbb{1}[i=j] - 1)\right)$$</div>
-<p>其中 $z_{ij} = \hat{\mathbf{I}}_i \cdot \hat{\mathbf{T}}_j / \tau + b$，$b$ 为可学习偏置。SigLIP 在小 batch 下也能有效训练，且性能超过 CLIP。</p>
-
-<div class="svg-box">
-<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="c12" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#94a3b8"/></marker></defs>
-  <text x="400" y="24" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">CLIP vs SigLIP：损失函数对比</text>
-  <!-- CLIP (Softmax) -->
-  <text x="200" y="60" text-anchor="middle" font-size="14" font-weight="700" fill="#2563eb">CLIP（Softmax InfoNCE）</text>
-  <rect x="80" y="75" width="240" height="90" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-  <text x="200" y="100" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="600">每行 softmax 归一化</text>
-  <text x="200" y="120" text-anchor="middle" font-size="11" fill="#334155">需要全 batch 的 logits</text>
-  <text x="200" y="140" text-anchor="middle" font-size="11" fill="#334155">batch 越大效果越好</text>
-  <text x="200" y="158" text-anchor="middle" font-size="11" fill="#ea580c">受限于 GPU 内存</text>
-  <!-- SigLIP (Sigmoid) -->
-  <text x="600" y="60" text-anchor="middle" font-size="14" font-weight="700" fill="#059669">SigLIP（Sigmoid）</text>
-  <rect x="480" y="75" width="240" height="90" rx="12" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
-  <text x="600" y="100" text-anchor="middle" font-size="12" fill="#047857" font-weight="600">逐对 sigmoid 二分类</text>
-  <text x="600" y="120" text-anchor="middle" font-size="11" fill="#334155">每个对子独立计算</text>
-  <text x="600" y="140" text-anchor="middle" font-size="11" fill="#334155">小 batch 也能训练</text>
-  <text x="600" y="158" text-anchor="middle" font-size="11" fill="#059669">不受 GPU 内存限制</text>
-  <!-- 性能对比 -->
-  <rect x="200" y="190" width="400" height="80" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
-  <text x="400" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#c2410c">性能对比（ImageNet ZS）</text>
-  <text x="400" y="238" text-anchor="middle" font-size="12" fill="#334155">CLIP ViT-L/14: 75.5% (batch=32K, 4亿对)</text>
-  <text x="400" y="258" text-anchor="middle" font-size="12" fill="#334155">SigLIP ViT-L/16: 76.3% (batch=16K, 30亿对)</text>
-</svg>
+<div class="callout warn"><div class="callout-title">代价：温度变得更敏感了</div>
+<p>后续的理论分析（Lee et al., 2024）指出，SigLIP 的损失存在一族最优嵌入配置，其<strong>几何形态随温度 $t$ 连续变化</strong>：$t$ 较大时匹配对在球面上最大程度对齐（类似单纯形等角紧框架结构），$t$ 较小时匹配对趋于<strong>反极（antipodal）</strong>结构。这与 InfoNCE 不同——在 InfoNCE 里温度主要影响数值分布的陡峭程度，而在 SigLIP 里它<strong>改变了表征的定性结构</strong>。因此温度调参比 CLIP 更需要重视。</p></div>
+<p>此外，SigLIP 也并非在所有场景都更优：当训练资源充足、可以稳定使用超大批量时，InfoNCE 的表现与它接近；而在需要"明确地把某一批负样本作为硬负例"的设计中，逐格独立的损失反而不如全局归一化那样自然地表达"竞争关系"。</p>
 </section>
 
-<h3>12.4 BLIP：多任务统一</h3>
-<p>BLIP（Bootstrapping Language-Image Pre-training）将 CLIP 的单一对比损失扩展为<strong>三任务联合训练</strong>：</p>
-<ul>
-  <li><strong>图文对比（ITC）</strong>：与 CLIP 相同的 InfoNCE 损失</li>
-  <li><strong>图文匹配（ITM）</strong>：二分类判断图文是否匹配（交叉注意力）</li>
-  <li><strong>语言建模（LM）</strong>：给定图像生成描述文本</li>
-</ul>
-<p>BLIP 还引入了 <strong>Captioner</strong>（生成合成描述）和 <strong>Filter</strong>（过滤噪声数据）的两个模块，自动清洗网络收集的图文对数据。</p>
+<section id="ch4"><h2><span class="num">4</span>BLIP：从对齐走向理解与生成</h2>
 
-<!-- ========== 第十三章 ========== -->
-<section id="ch13">
-<h2><span class="num">13</span>演进时间线与总结</h2>
-
-<div class="timeline">
-  <div class="timeline-item">
-    <div class="year">2020.01</div>
-    <div class="event">Contrastive Predictive Coding (CPC)</div>
-    <div class="desc">InfoNCE 损失首次被提出，用于对比学习预训练，奠定 CLIP 的损失函数基础</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2020.08</div>
-    <div class="event">SimCLR / MoCo 兴起</div>
-    <div class="desc">视觉对比学习方法蓬勃发展，验证了对比学习在视觉预训练中的有效性</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2021.01</div>
-    <div class="event">CLIP 发布（OpenAI）</div>
-    <div class="desc">4 亿图文对 + 双塔对比学习，Zero-shot ImageNet 76.2%，开启跨模态预训练新范式</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2021.03</div>
-    <div class="event">ALIGN 发布（Google）</div>
-    <div class="desc">使用 10 亿噪声图文对训练，验证了更大规模数据的有效性</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2022.01</div>
-    <div class="event">BLIP 发布</div>
-    <div class="desc">三任务联合训练 + 数据清洗，统一理解和生成任务</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2022.08</div>
-    <div class="event">Stable Diffusion 发布</div>
-    <div class="desc">使用 OpenCLIP 的文本编码器引导扩散模型，CLIP 成为文生图的基础设施</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2022.12</div>
-    <div class="event">OpenCLIP 复现成功</div>
-    <div class="desc">使用 LAION-5B 公开数据成功复现并超越 CLIP 性能，模型完全开源</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2023.03</div>
-    <div class="event">SigLIP 发布</div>
-    <div class="desc">Sigmoid 损失替代 Softmax，解除 batch 大小限制，性能超过 CLIP</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2023.10</div>
-    <div class="event">LLaVA-1.5 发布</div>
-    <div class="desc">使用 CLIP-ViT-L 作为视觉编码器构建多模态 LLM，CLIP 成为 VLM 标准组件</div>
-  </div>
-  <div class="timeline-item">
-    <div class="year">2024+</div>
-    <div class="event">CLIP 范式持续演进</div>
-    <div class="desc">SigLIP-2、LongCLIP、EVA-CLIP-2 等持续改进，CLIP 范式成为跨模态学习标准</div>
-  </div>
+<h3>4.1 两个遗留问题</h3>
+<p>CLIP 和 SigLIP 都在"对齐"这一个目标上做到了极致，但 BLIP（Li et al., 2022）指出这条路有两个天花板：</p>
+<div class="table-wrap">
+<table>
+<tr><th>问题</th><th>表现</th></tr>
+<tr><td><strong>架构偏科</strong></td><td>编码器式模型擅长理解（检索、分类）但不擅长生成（描述）；编码器-解码器式模型擅长生成但理解能力弱。<strong>没有一个模型能同时干好两件事</strong></td></tr>
+<tr><td><strong>数据噪声</strong></td><td>网络图文对里大量文本与图像无关。<strong>在对齐任务里，噪声图文对会直接教模型"把错的配对当正样本"</strong>——这比分类任务里的标签噪声危害更大</td></tr>
+</table>
 </div>
+<p>BLIP 的答案分别是 <strong>MED</strong>（解决架构）与 <strong>CapFilt</strong>（解决数据）。</p>
 
-<div class="callout success">
-<div class="callout-title">总结</div>
-<p>CLIP 的核心贡献可以归纳为一句话：<strong>用自然语言作为视觉理解的监督信号</strong>。通过对比学习将图像和文本映射到共享语义空间，CLIP 实现了 Zero-shot 视觉分类——无需任何标注数据即可适配新任务。这一突破不仅改变了计算机视觉的研究范式，更成为文本到图像生成（DALL-E、Stable Diffusion）、视觉-语言模型（LLaVA、BLIP）等后续工作的基石。CLIP 证明了：<strong>语言的开放性是视觉理解的关键</strong>——当视觉模型学会理解语言描述的概念时，它就获得了泛化到任何视觉任务的能力。</p>
+<h3>4.2 MED：在一个模型里放三种注意力</h3>
+<p>MED（Multimodal Mixture of Encoder-Decoder）由三个功能体组成，它们<strong>共享除自注意力层以外的全部参数</strong>（嵌入层、交叉注意力层、前馈层都共享）：</p>
+<div class="table-wrap">
+<table>
+<tr><th>组件</th><th>注意力形式</th><th>特殊 token</th><th>对应目标</th></tr>
+<tr><td>单模态文本编码器</td><td>双向自注意力，<strong>无</strong>交叉注意力</td><td><code>[CLS]</code></td><td>ITC（图文对比）</td></tr>
+<tr><td>图像条件文本编码器</td><td>双向自注意力 + <strong>交叉注意力</strong></td><td><code>[Encode]</code></td><td>ITM（图文匹配）</td></tr>
+<tr><td>图像条件文本解码器</td><td><strong>因果</strong>自注意力 + 交叉注意力</td><td><code>[Decode]</code></td><td>ITG（图像条件生成）</td></tr>
+</table>
 </div>
-</section>
+<p>三种注意力在<strong>同一次前向</strong>中并行计算，三个损失一起回传。共享参数的设计很关键：如果三个组件完全独立，它们会各自学出一套视觉-语言对应关系，反而割裂；共享后，"理解"和"生成"被迫在同一个表征空间里谈判。</p>
 
-<!-- ========== 参考文献 ========== -->
-<section id="refs">
-<h2>参考文献</h2>
+<h3>4.3 三个训练目标</h3>
+<p><strong>ITC（Image-Text Contrastive）</strong>与 CLIP 的 InfoNCE 同构，但额外用了动量编码器与软标签（来自 ALBEF）：</p>
+<div class="formula" data-eq="(7)">$$\mathcal{L}_{\text{ITC}} = -\frac{1}{2N}\sum_{i=1}^{N}\left[\log\frac{\exp(s_{ii}/\tau)}{\sum_j \exp(s_{ij}/\tau)} + \log\frac{\exp(s_{ii}/\tau)}{\sum_j \exp(s_{ji}/\tau)}\right]$$</div>
+<p><strong>ITM（Image-Text Matching）</strong>是一个二分类任务，但关键在于<strong>硬负例挖掘</strong>：不是随机挑负样本，而是用 ITC 算出的相似度，找出"最像正样本的那些负样本"来训练：</p>
+<div class="formula" data-eq="(8)">$$\mathcal{L}_{\text{ITM}} = -\frac{1}{N}\sum_{i=1}^{N}\Big[\, y_i \log p_i + (1-y_i)\log(1-p_i) \,\Big], \qquad p_i = \sigma\big(\mathbf{w}^{\top} \mathbf{h}^{[\text{Encode}]}_i\big)$$</div>
+<p>为什么硬负例重要？因为随机负例（比如"猫的图"配"量子力学教材"）太容易区分，模型几乎学不到细粒度对应；而硬负例（"两只猫在沙发上"配"一只狗在沙发上"）迫使模型去关注<strong>词与区域的精确对应</strong>。这也是 ITM 与 ITC 的分工：ITC 负责粗粒度的全局对齐，ITM 负责细粒度的判别。</p>
+<p><strong>ITG（Image-grounded Text Generation）</strong>用因果语言建模损失，让模型根据图像生成描述：</p>
+<div class="formula" data-eq="(9)">$$\mathcal{L}_{\text{ITG}} = -\sum_{l=1}^{L} \log P\big(w_l \mid w_{1:l-1}, \text{image}\big)$$</div>
+<div class="callout warn"><div class="callout-title">ITG 的一个结构性限制</div>
+<p>因为用的是因果自注意力，文本 token 之间<strong>只能从左往右看</strong>。这意味着 ITG 无法像 ITM 那样"用整句去判断图文是否匹配"——它是为了生成而设计的。BLIP 让生成器和理解器共享交叉注意力与前馈层，某种程度上缓解了这种割裂，但两者的注意力结构差异是本质性的。</p></div>
+
+<h3>4.4 CapFilt：用生成洗数据</h3>
+<p>CapFilt = <strong>Cap</strong>tioner + <strong>Fil</strong>ter，是一个数据集自举（bootstrapping）流程：</p>
 <ol>
-  <li>Radford, A., Kim, J. W., Hallacy, C., et al. (2021). Learning transferable visual models from natural language supervision. <em>ICML 2021</em>. (CLIP)</li>
-  <li>Oord, A. v. d., Li, Y., &amp; Vinyals, O. (2018). Representation learning with contrastive predictive coding. <em>arXiv:1807.03748</em>. (InfoNCE)</li>
-  <li>Dosovitskiy, A., et al. (2021). An image is worth 16&times;16 words: Transformers for image recognition at scale. <em>ICLR 2021</em>. (ViT)</li>
-  <li>He, K., Zhang, X., Ren, S., &amp; Sun, J. (2016). Deep residual learning for image recognition. <em>CVPR 2016</em>. (ResNet)</li>
-  <li>Jia, C., et al. (2021). Scaling up visual and vision-language representation learning with noisy text supervision. <em>ICML 2021</em>. (ALIGN)</li>
-  <li>Li, J., et al. (2022). BLIP: Bootstrapping language-image pre-training for unified vision-language understanding and generation. <em>ICML 2022</em>.</li>
-  <li>Cherti, M., et al. (2023). Reproducible scaling laws for contrastive language-image learning. <em>CVPR 2023</em>. (OpenCLIP)</li>
-  <li>Zhai, X., et al. (2023). Sigmoid loss for language image pre-training. <em>ICCV 2023</em>. (SigLIP)</li>
-  <li>Fang, B., et al. (2024). Injecting task-specific awareness into CLIP for efficient fine-tuning. <em>arXiv:2403.17058</em>. (LongCLIP)</li>
-  <li>Sahn, W., et al. (2018). Byte pair encoding is sub-optimal for language model pretraining. <em>EMNLP 2019 Shared Task</em>. (BPE)</li>
-  <li>Krizhevsky, A. (2009). Learning multiple layers of features from tiny images. <em>Master's Thesis</em>. (CIFAR)</li>
-  <li>Rombach, R., et al. (2022). High-resolution image synthesis with latent diffusion models. <em>CVPR 2022</em>. (Stable Diffusion)</li>
-  <li>Liu, H., et al. (2023). Visual instruction tuning. <em>NeurIPS 2023</em>. (LLaVA)</li>
-  <li>Chen, T., et al. (2020). A simple framework for contrastive learning of visual representations. <em>ICML 2020</em>. (SimCLR)</li>
-  <li>He, K., et al. (2020). Momentum contrast for unsupervised visual representation learning. <em>CVPR 2020</em>. (MoCo)</li>
+<li><strong>初始化</strong>：用预训练好的 MED，分别取"图像条件文本解码器"作为 Captioner、取"图像条件文本编码器"作为 Filter，两者在高<strong>质量人工标注</strong>数据（如 COCO）上分别微调。</li>
+<li><strong>Captioner 生成</strong>：为每张网络图片生成一条合成描述 $T_S$。合成描述可能不如人工标注精确，但通常比原始网络文本更"贴题"。</li>
+<li><strong>Filter 筛选</strong>：用 ITM 头给两条候选文本分别打分——原始网络文本 $(I_W, T_W)$ 与合成文本 $(I_W, T_S)$，<strong>判为不匹配的直接丢弃</strong>。注意它同时筛掉了原始噪声和生成噪声。</li>
+<li><strong>重新预训练</strong>：把筛选后的数据与人工标注数据合并，<strong>从零训练一个新的 MED</strong>（而不是在旧模型上继续微调，避免继承旧模型的偏差）。</li>
+</ol>
+<div class="svg-box">
+<svg viewBox="0 0 880 560" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="m4-a" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#94a3b8"/></marker>
+<marker id="m4-p" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#7c3aed"/></marker>
+<marker id="m4-d" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#94a3b8"/></marker>
+</defs>
+<text x="440" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">BLIP 的两件事：一个模型干三种活（MED），一套流程洗一遍数据（CapFilt）</text>
+
+<text x="60" y="58" font-size="12.5" font-weight="700" fill="#1d4ed8">① MED：共享参数、三种注意力</text>
+<rect x="50" y="76" width="118" height="150" rx="9" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+<text x="109" y="140" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">图像</text>
+<text x="109" y="160" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">编码器</text>
+<text x="109" y="182" text-anchor="middle" font-size="10.5" fill="#3b82f6">ViT</text>
+
+<rect x="320" y="76" width="250" height="44" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+<text x="336" y="96" font-size="12" font-weight="600" fill="#1d4ed8">单模态文本编码器</text>
+<text x="336" y="112" font-size="10.5" fill="#64748b">双向自注意力，无交叉注意力</text>
+<rect x="586" y="82" width="96" height="32" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="634" y="103" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">ITC</text>
+<text x="698" y="103" font-size="11" fill="#64748b">粗细粒度对齐</text>
+
+<rect x="320" y="130" width="250" height="44" rx="8" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.4"/>
+<text x="336" y="150" font-size="12" font-weight="600" fill="#6d28d9">图像条件文本编码器</text>
+<text x="336" y="166" font-size="10.5" fill="#64748b">双向自注意力 + 交叉注意力</text>
+<rect x="586" y="136" width="96" height="32" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4"/>
+<text x="634" y="157" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">ITM</text>
+<text x="698" y="157" font-size="11" fill="#64748b">细粒度匹配 + 硬负例</text>
+
+<rect x="320" y="184" width="250" height="44" rx="8" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.4"/>
+<text x="336" y="204" font-size="12" font-weight="600" fill="#047857">图像条件文本解码器</text>
+<text x="336" y="220" font-size="10.5" fill="#64748b">因果自注意力 + 交叉注意力</text>
+<rect x="586" y="190" width="96" height="32" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="634" y="211" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">ITG</text>
+<text x="698" y="211" font-size="11" fill="#64748b">图像条件下的生成</text>
+
+<line x1="170" y1="151" x2="198" y2="151" stroke="#94a3b8" stroke-width="1.6"/>
+<line x1="198" y1="151" x2="198" y2="98" stroke="#94a3b8" stroke-width="1.6"/>
+<line x1="198" y1="98" x2="314" y2="98" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#m4-a)"/>
+<line x1="198" y1="151" x2="314" y2="152" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#m4-p)"/>
+<line x1="198" y1="151" x2="198" y2="206" stroke="#94a3b8" stroke-width="1.6"/>
+<line x1="198" y1="206" x2="314" y2="206" stroke="#059669" stroke-width="1.8" marker-end="url(#m4-a)"/>
+<text x="205" y="252" text-anchor="middle" font-size="11" fill="#94a3b8">交叉注意力把视觉信息注入后两个组件</text>
+<text x="205" y="270" text-anchor="middle" font-size="11" fill="#7c3aed">三个组件共享除自注意力层外的全部参数</text>
+
+<line x1="440" y1="274" x2="440" y2="296" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="7 6"/>
+
+<text x="60" y="322" font-size="12.5" font-weight="700" fill="#047857">② CapFilt：用生成补数据，用判别洗数据</text>
+<rect x="50" y="342" width="132" height="52" rx="9" fill="#eef2f7" stroke="#cbd5e1" stroke-width="1.3" stroke-width="1.5"/>
+<text x="116" y="364" text-anchor="middle" font-size="11.5" font-weight="600" fill="#475569">网络图文对</text>
+<text x="116" y="382" text-anchor="middle" font-size="10.5" fill="#94a3b8">含噪声</text>
+<line x1="186" y1="368" x2="212" y2="368" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#m4-a)"/>
+
+<rect x="216" y="342" width="132" height="52" rx="9" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="282" y="364" text-anchor="middle" font-size="11.5" font-weight="600" fill="#047857">Captioner</text>
+<text x="282" y="382" text-anchor="middle" font-size="10.5" fill="#059669">生成合成描述</text>
+<line x1="352" y1="368" x2="378" y2="368" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#m4-a)"/>
+
+<rect x="382" y="342" width="132" height="52" rx="9" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="448" y="364" text-anchor="middle" font-size="11.5" font-weight="600" fill="#6d28d9">Filter</text>
+<text x="448" y="382" text-anchor="middle" font-size="10.5" fill="#7c3aed">ITM 打分筛选</text>
+<line x1="518" y1="368" x2="544" y2="368" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#m4-a)"/>
+
+<rect x="548" y="342" width="150" height="52" rx="9" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="623" y="364" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1d4ed8">自举数据集</text>
+<text x="623" y="382" text-anchor="middle" font-size="10.5" fill="#3b82f6">只保留匹配对 + 人工标注</text>
+
+<path d="M 623 398 L 623 424 L 116 424 L 116 400" fill="none" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#m4-a)"/>
+<text x="370" y="442" text-anchor="middle" font-size="11" fill="#2563eb">用它从头训练一个新的 MED（不是继续微调）</text>
+
+<rect x="50" y="462" width="780" height="82" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<text x="70" y="488" font-size="11.5" fill="#475569">• Filter 同时筛掉两类噪声：原始网络文本里不相关的、以及 Captioner 生成失败的</text>
+<text x="70" y="512" font-size="11.5" fill="#475569">• 从零重训而非继续微调，是为了避免旧模型把自身的偏差带进新一轮数据筛选</text>
+<text x="70" y="536" font-size="11.5" fill="#475569">• 这个"生成—筛选—重训"的闭环可以迭代，但论文只做了一轮</text>
+</svg>
+</div>
+<p class="fig-cap">上半部分解决"能力和结构"，下半部分解决"数据质量"。这两者是 BLIP 与 CLIP 最根本的分野：CLIP 相信规模可以淹没噪声，BLIP 选择先把噪声洗掉。</p>
+
+<h3>4.5 BLIP-2 与 Q-Former：冻结大模型的起点</h3>
+<p>BLIP-2（Li et al., 2023）把思路推到了另一个方向。当时的现实是：视觉编码器和语言模型都越来越强、越来越大，<strong>每出一个新的单模态大模型就要重新端到端训一遍多模态模型，成本不可承受</strong>。BLIP-2 的方案是：把两边都冻住，只训练中间一个轻量桥接模块。</p>
+<p>这个桥接模块叫 <strong>Q-Former</strong>（Querying Transformer），结构上只有约 188M 参数：</p>
+<div class="formula" data-eq="(10)">$$\mathbf{Z} = \text{Q-Former}\big(\mathbf{Q},\, \text{FrozenEnc}(I)\big), \qquad \mathbf{Q} \in \mathbb{R}^{32 \times 768} \ \text{（可学习查询向量）}$$</div>
+<p>32 个可学习查询向量通过交叉注意力从冻结的图像编码器里"提取"信息，输出 32 个 768 维向量 $\mathbf{Z}$。这组向量就是所谓<strong>软视觉提示（soft visual prompt）</strong>——它充当一个<strong>信息瓶颈</strong>：LLM 从未见过图像，但它能读连续的向量前缀，$\mathbf{Z}$ 就是把图像翻译成"LLM 读得懂的一小段话"。</p>
+<div class="table-wrap">
+<table>
+<tr><th>阶段</th><th>参与训练的模块</th><th>目标</th></tr>
+<tr><td>第一阶段：视觉-语言表征学习</td><td>只有 Q-Former</td><td>ITC / ITM / ITG 三个目标，让查询向量学会提取与文本最相关的视觉信息</td></tr>
+<tr><td>第二阶段：视觉到语言的生成学习</td><td>Q-Former + 一个线性投影层</td><td>把 $\mathbf{Z}$ 接到冻结 LLM（OPT / FlanT5）的前面，用语言建模损失训练</td></tr>
+</table>
+</div>
+<p>效果上，BLIP-2 在零样本 VQAv2 上达到 65.0，超过参数量大 54 倍的 Flamingo-80B（56.3）——<strong>可训练参数量少了 54 倍，性能反而更高</strong>。代价是：它没有 Flamingo 那种交错图文预训练带来的上下文学习能力，同时也不可避免地继承了底层 LLM 的幻觉与偏见。</p>
+</section>
+
+<section id="ch5"><h2><span class="num">5</span>三者对比与技术演进</h2>
+
+<h3>5.1 横向对比</h3>
+<div class="table-wrap">
+<table>
+<tr><th>维度</th><th>CLIP</th><th>SigLIP</th><th>BLIP</th></tr>
+<tr><td>发表</td><td>2021，OpenAI</td><td>2023，Google</td><td>2022，Salesforce</td></tr>
+<tr><td>解决的痛点</td><td>用自然语言监督替代固定类别标注</td><td>InfoNCE 把批量大小与任务定义绑死</td><td>架构偏科 + 网络数据噪声</td></tr>
+<tr><td>核心损失</td><td>对称 InfoNCE（softmax）</td><td>逐对 Sigmoid</td><td>ITC + ITM + ITG 三目标</td></tr>
+<tr><td>图文交互</td><td>双塔，末端才相遇</td><td>双塔，末端才相遇</td><td>交叉注意力，中期就交互</td></tr>
+<tr><td>是否需要大批量</td><td>需要（32k 量级）</td><td><strong>不需要</strong>（8k 起就有优势）</td><td>需要（用于 ITC）</td></tr>
+<tr><td>能否生成文本</td><td>不能</td><td>不能</td><td><strong>能</strong>（ITG 头）</td></tr>
+<tr><td>数据策略</td><td>直接使用 4 亿网络图文对</td><td>同 CLIP 思路，规模约 40 亿</td><td><strong>CapFilt 自举清洗</strong></td></tr>
+<tr><td>典型下游</td><td>零样本分类、图文检索</td><td>同上，且更易在有限算力下复现</td><td>检索、描述生成、VQA、图文理解</td></tr>
+<tr><td>后续走向</td><td>OpenCLIP / EVA-CLIP / 各类 VLM 的视觉塔</td><td>SigLIP 2、多语言、被大量 VLM 采用</td><td>BLIP-2 / InstructBLIP，开启"冻结大模型"范式</td></tr>
+</table>
+</div>
+
+<h3>5.2 一条主线：对比信号到底"和谁比"</h3>
+<p>把三者放进同一个视角，会发现它们其实在回答同一个问题的不同侧面——<strong>负样本从哪里来、和谁竞争</strong>：</p>
+<div class="table-wrap">
+<table>
+<tr><th>方法</th><th>负样本来源</th><th>竞争范围</th><th>后果</th></tr>
+<tr><td>CLIP</td><td>同一批内的其他图文对</td><td>整行 / 整列（全局）</td><td>批量越大信号越强，但耦合了批量与任务</td></tr>
+<tr><td>SigLIP</td><td>同一批内的其他图文对</td><td>每个格子自身（局部）</td><td>批量解耦，可小批量、可分块、可加权</td></tr>
+<tr><td>BLIP</td><td>ITC 用批内；ITM 用<strong>挖出来的硬负例</strong></td><td>由"随机"变成"有针对性"</td><td>细粒度对齐更强，但多了一个 ITM 前向的开销</td></tr>
+</table>
+</div>
+<p>BLIP 对硬负例的做法值得单独写出。给定相似度矩阵 $\mathbf{S}$，对第 $i$ 张图，把对角线屏蔽后在负样本中取最大：</p>
+<div class="formula" data-eq="(11)">$$\hat{\jmath}(i) = \arg\max_{j \neq i} \; \mathbf{i}_i \cdot \mathbf{t}_j$$</div>
+<p>用这些 $\hat{\jmath}(i)$ 构造的图文对去训练 ITM。相比随机负例，硬负例把"判断题"的难度提到了模型的当前能力边界上——这与目标检测里的难例挖掘、度量学习里的三元组筛选是同一个思想。</p>
+
+<h3>5.3 多模板集成：一个几乎免费的性能提升</h3>
+<p>零样本分类中，把同一个类别的多个提示词模板的文本向量取平均，通常能稳定涨点：</p>
+<div class="formula" data-eq="(12)">$$\bar{\mathbf{t}}_k = \frac{1}{|\mathcal{T}|}\sum_{p \in \mathcal{T}} f_T\big(p(\text{class}_k)\big), \qquad \hat{y} = \arg\max_{k} \; \mathbf{i}_{\text{query}} \cdot \bar{\mathbf{t}}_k$$</div>
+<p>原理上，单个模板会引入模板特有的词汇偏差（"a photo of a" 里的冠词、介词都在影响相似度）；多模板平均相当于在这个方向上做了一次<strong>边缘化</strong>，把模板带来的方差压下去。成本只是文本塔多跑几次，且完全可以离线预计算。</p>
+
+<h3>5.4 后续影响</h3>
+<ul>
+<li><strong>OpenCLIP / EVA-CLIP</strong>：开源复现与放大版。EVA-CLIP 用已在图像上做过掩码预训练的 EVA 作为视觉塔，说明"视觉塔的质量"和"对齐目标"是两条可独立优化的轴。</li>
+<li><strong>ALIGN</strong>：把图文对规模推到 18 亿，证明了<strong>规模可以部分抵消数据噪声</strong>——与 BLIP 的选择形成有趣的对照。</li>
+<li><strong>SigLIP 2</strong>：在 Sigmoid 损失之上补齐多任务目标、多语言与密集特征输出，把"对齐"扩展为"对齐 + 定位 + 描述"。</li>
+<li><strong>作为 VLM 的视觉塔</strong>：LLaVA 用 CLIP 的 ViT 加一个线性投影接 LLM，是"冻结范式"最简化的实现；BLIP-2 的 Q-Former 则是同一思路的更精细版本。今天绝大多数视觉-语言模型，其视觉侧的能力都建立在这三者奠定的对齐基础之上。</li>
+</ul>
+</section>
+
+<section id="ch6"><h2><span class="num">6</span>工程实现</h2>
+
+<h3>6.1 CLIP 的对称 InfoNCE</h3>
+<div class="code-block"><div class="code-header">clip_loss.py — 对称 InfoNCE，行与列各算一次交叉熵</div><pre>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+
+<span class="kw">def</span> <span class="fn">clip_loss</span>(image_emb, text_emb, logit_scale):
+    <span class="str">"""image_emb / text_emb: (N, d)；logit_scale: 可学习的 1/tau（已取 exp）"""</span>
+    image_emb = F.<span class="fn">normalize</span>(image_emb, dim=-<span class="num">1</span>)          <span class="com"># L2 归一化，落到单位球面</span>
+    text_emb  = F.<span class="fn">normalize</span>(text_emb,  dim=-<span class="num">1</span>)
+
+    logits = logit_scale * image_emb @ text_emb.t()          <span class="com"># (N, N) 相似度矩阵 S</span>
+    labels = torch.<span class="fn">arange</span>(logits.size(<span class="num">0</span>))
+
+    loss_i = F.<span class="fn">cross_entropy</span>(logits,     labels)            <span class="com"># 按行：每张图找自己的文本</span>
+    loss_t = F.<span class="fn">cross_entropy</span>(logits.t(), labels)            <span class="com"># 按列：每条文本找自己的图像</span>
+    <span class="kw">return</span> (loss_i + loss_t) / <span class="num">2</span>                            <span class="com"># 对称，防止一侧语义被忽略</span>
+</pre></div>
+<div class="callout"><div class="callout-title">实现要点</div>
+<p><code>logit_scale</code> 必须是<strong>可学习参数</strong>，且通常以对数形式存放（初值 $\log(1/0.07) \approx 2.66$），前向时才取 exp——这样能保证温度恒为正，也便于优化。</p></div>
+
+<h3>6.2 SigLIP 的 Sigmoid 损失</h3>
+<div class="code-block"><div class="code-header">siglip_loss.py — 逐元素 logistic 损失，无 softmax、无跨样本归一化</div><pre>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+
+<span class="kw">def</span> <span class="fn">siglip_loss</span>(image_emb, text_emb, logit_scale, logit_bias):
+    <span class="str">"""每个格子是独立的二分类：对角线 +1，其余 -1"""</span>
+    image_emb = F.<span class="fn">normalize</span>(image_emb, dim=-<span class="num">1</span>)
+    text_emb  = F.<span class="fn">normalize</span>(text_emb,  dim=-<span class="num">1</span>)
+
+    logits = logit_scale * image_emb @ text_emb.t() + logit_bias   <span class="com"># 注意 +b，处理正负不平衡</span>
+    n = logits.size(<span class="num">0</span>)
+
+    labels = torch.<span class="fn">full</span>((n, n), -<span class="num">1.0</span>, device=logits.device)   <span class="com"># 默认全部是负样本</span>
+    labels.<span class="fn">fill_diagonal_</span>(<span class="num">1.0</span>)                              <span class="com"># 对角线改成正样本</span>
+
+    <span class="com"># logsigmoid(label * logit) 是数值稳定的 logistic 损失写法</span>
+    loss = -F.<span class="fn">logsigmoid</span>(labels * logits).<span class="fn">sum</span>() / n
+    <span class="kw">return</span> loss
+</pre></div>
+<div class="callout warn"><div class="callout-title">两处容易写错的地方</div>
+<p>① 除以 $n$ 而不是 $n^2$——论文的损失定义就是除以 $n$，这不是笔误，它让损失量级与批量保持大致可比；② <code>logit_bias</code> 必须存在且可学习，去掉它会让模型把所有 logits 推向负方向，正样本一起被牺牲。</p></div>
+
+<h3>6.3 硬负例挖掘（BLIP 的 ITM）</h3>
+<div class="code-block"><div class="code-header">hard_negatives.py — 从相似度矩阵里挖出最有价值的负例</div><pre>
+<span class="kw">import</span> torch
+
+
+<span class="kw">def</span> <span class="fn">mine_hard_negatives</span>(sim_matrix):
+    <span class="str">"""sim_matrix: (N, N) 的 ITC 相似度；返回每张图最难的那个负样本文本下标"""</span>
+    sim = sim_matrix.<span class="fn">clone</span>()
+    sim.<span class="fn">fill_diagonal_</span>(-<span class="num">1e4</span>)                  <span class="com"># 屏蔽对角线，确保不会选到正样本自己</span>
+    hard_neg_idx = sim.<span class="fn">argmax</span>(dim=<span class="num">1</span>)          <span class="com"># 每行取最大 = 最像正样本的负样本</span>
+
+    <span class="com"># 构造出 (图像_i, 文本_j) 的硬负例对，交给 ITM 头做二分类</span>
+    <span class="kw">return</span> hard_neg_idx
+</pre></div>
+<p>注意屏蔽对角线用的是一个大负数而不是 <code>-inf</code>：用 <code>-inf</code> 在混合精度下容易产生 NaN。</p>
+
+<h3>6.4 零样本分类</h3>
+<div class="code-block"><div class="code-header">zero_shot.py — 分类器由文本现场生成，可随时更换类别集合</div><pre>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+
+<span class="fn">@torch.no_grad</span>()
+<span class="kw">def</span> <span class="fn">zero_shot_classify</span>(model, images, classnames, templates):
+    <span class="com"># ---- 1) 文本塔：只算一次，结果可离线缓存 ----</span>
+    text_feats = []
+    <span class="kw">for</span> c <span class="kw">in</span> classnames:
+        prompts = [t.<span class="fn">format</span>(c) <span class="kw">for</span> t <span class="kw">in</span> templates]     <span class="com"># 多模板集成</span>
+        per_template = model.<span class="fn">encode_text</span>(prompts)          <span class="com"># (|T|, d)</span>
+        text_feats.<span class="fn">append</span>(F.<span class="fn">normalize</span>(per_template, dim=-<span class="num">1</span>).<span class="fn">mean</span>(dim=<span class="num">0</span>))
+    text_feats = F.<span class="fn">normalize</span>(torch.<span class="fn">stack</span>(text_feats), dim=-<span class="num">1</span>)   <span class="com"># (K, d)</span>
+
+    <span class="com"># ---- 2) 图像塔 + 一次矩阵乘法 ----</span>
+    image_feats = F.<span class="fn">normalize</span>(model.<span class="fn">encode_image</span>(images), dim=-<span class="num">1</span>)  <span class="com"># (N, d)</span>
+    logits = image_feats @ text_feats.t()                        <span class="com"># (N, K)</span>
+    <span class="kw">return</span> logits.<span class="fn">argmax</span>(dim=-<span class="num">1</span>)
+</pre></div>
+<p>先归一化再平均、平均后再归一化，这两步都不能省：如果先平均再归一化，长模板的向量会主导结果；如果平均后不再归一化，模长会影响相似度排序。</p>
+</section>
+
+<section id="ch7"><h2><span class="num">7</span>知识体系总结</h2>
+
+<h3>7.1 三个工作各解决什么</h3>
+<div class="table-wrap">
+<table>
+<tr><th>层次</th><th>问题</th><th>解法</th><th>代表</th></tr>
+<tr><td>表征层</td><td>如何把图像与语言放进同一个可比较的空间</td><td>双塔 + 对比损失</td><td>CLIP</td></tr>
+<tr><td>目标层</td><td>对比损失依赖大批量、耦合任务定义</td><td>把全局归一化换成逐对二分类</td><td>SigLIP</td></tr>
+<tr><td>结构层</td><td>双塔无法生成、无法细粒度交互</td><td>三目标融合 + 交叉注意力</td><td>BLIP</td></tr>
+<tr><td>数据层</td><td>网络图文对噪声大</td><td>生成—筛选—重训的自举闭环</td><td>BLIP（CapFilt）</td></tr>
+<tr><td>系统层</td><td>每换一个大模型就要重训整个多模态栈</td><td>冻结两侧，只训桥接模块</td><td>BLIP-2（Q-Former）</td></tr>
+</table>
+</div>
+
+<h3>7.2 关键公式速查</h3>
+<div class="table-wrap">
+<table>
+<tr><th>名称</th><th>形式</th><th>要点</th></tr>
+<tr><td>余弦相似度矩阵</td><td>$\mathbf{S} = \mathbf{I}\mathbf{T}^{\top}/\tau$</td><td>归一化后内积即余弦；$\tau$ 可学习</td></tr>
+<tr><td>InfoNCE（对称）</td><td>$\text{CE}(\mathbf{S}, I) + \text{CE}(\mathbf{S}^{\top}, I)$</td><td>行、列各一次，分母遍历整批</td></tr>
+<tr><td>Sigmoid 损失</td><td>$-\frac{1}{N}\sum_{ij}\log\sigma(y_{ij}(t\,\mathbf{i}_i\!\cdot\!\mathbf{t}_j + b))$</td><td>逐格独立，$b$ 处理正负不平衡</td></tr>
+<tr><td>ITM（硬负例）</td><td>二分类 + $\arg\max_{j\neq i}\mathbf{i}_i\!\cdot\!\mathbf{t}_j$</td><td>把难度提到能力边界</td></tr>
+<tr><td>ITG</td><td>$-\sum_l \log P(w_l \mid w_{<l}, \text{image})$</td><td>因果注意力，只能生成不能判别</td></tr>
+<tr><td>Zero-shot</td><td>$\arg\max_k \mathbf{i}\cdot\bar{\mathbf{t}}_k$</td><td>分类器由文本现场生成</td></tr>
+</table>
+</div>
+
+<h3>7.3 知识图谱</h3>
+<div class="table-wrap">
+<table>
+<tr><th>环节</th><th>关键概念</th><th>工程含义</th></tr>
+<tr><td>数据</td><td>网络图文对、噪声、CapFilt</td><td>数据质量可以直接决定对齐的上限</td></tr>
+<tr><td>结构</td><td>双塔 vs 交叉注意力、信息瓶颈</td><td>双塔换速度，融合换能力</td></tr>
+<tr><td>目标</td><td>InfoNCE、Sigmoid、ITC/ITM/ITG</td><td>归一化范围决定批量依赖性与并行方式</td></tr>
+<tr><td>推理</td><td>Zero-shot、提示词工程、多模板集成</td><td>文本塔可缓存，检索是矩阵乘法</td></tr>
+<tr><td>延伸</td><td>Q-Former、冻结范式、VLM 视觉塔</td><td>对齐层是今天所有视觉-语言模型的底座</td></tr>
+</table>
+</div>
+
+<div class="callout success"><div class="callout-title">一句话收束</div>
+<p>多模态对齐的核心是把"监督信号"从人工定义的类别换成自然语言。CLIP 证明了这条路的可行性，SigLIP 修掉了它在工程上的最大障碍（批量依赖），BLIP 补上了它的两个短板（生成能力与数据质量）。今天回看，这三个工作更像是一个系统的三个正交方向，而不是互相替代的三代模型。</p></div>
+</section>
+
+<section id="refs"><h2>参考文献</h2>
+<ol>
+<li>Radford, A., Kim, J. W., Hallacy, C. et al. (2021). Learning Transferable Visual Models From Natural Language Supervision. <em>ICML</em>.（CLIP 原始论文，双塔 + 对称 InfoNCE + 零样本迁移）</li>
+<li>Zhai, X., Mustafa, B., Kolesnikov, A., &amp; Beyer, L. (2023). Sigmoid Loss for Language Image Pre-Training. <em>ICCV</em>. arXiv:2303.15343.（SigLIP，逐对 sigmoid 损失与批量解耦）</li>
+<li>Li, J., Li, D., Xiong, C., &amp; Hoi, S. (2022). BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation. <em>ICML</em>. arXiv:2201.12086.（MED 架构与 CapFilt）</li>
+<li>Li, J., Li, D., Savarese, S., &amp; Hoi, S. (2023). BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. <em>ICML</em>. arXiv:2301.12597.（Q-Former 与两阶段冻结训练）</li>
+<li>Li, J., Selvaraju, R., Gotmare, A. et al. (2021). Align before Fuse: Vision and Language Representation Learning with Momentum Distillation. <em>NeurIPS</em>.（ALBEF，BLIP 的 ITC 动量编码器与软标签来源）</li>
+<li>Jia, C., Yang, Y., Xia, Y. et al. (2021). Scaling Up Visual and Vision-Language Representation Learning with Noisy Text Supervision. <em>ICML</em>.（ALIGN，18 亿噪声图文对，规模抵消噪声的路线）</li>
+<li>Zhai, X., Wang, X., Mustafa, B. et al. (2022). LiT: Zero-Shot Transfer with Locked-image Text Tuning. <em>CVPR</em>.（冻结视觉塔只训文本塔，SigLiT 的前身）</li>
+<li>Lee, J., Lee, S., Kim, S. et al. (2024). A Model of Optimal Embeddings for SigLIP. arXiv:2409.14507.（SigLIP 最优嵌入的几何分析，温度决定表征结构）</li>
+<li>Tschannen, M., Djolonga, J., Rubachev, I. et al. (2024). SigLIP 2: Multilingual Vision-Language Encoders with Improved Semantic Understanding, Localization, and Dense Features. arXiv:2502.14786.（多任务、多语言与密集特征的扩展）</li>
+<li>Cherti, M., Beaumont, R., Wightman, R. et al. (2023). Reproducible Scaling Laws for Contrastive Language-Image Learning. <em>CVPR</em>.（OpenCLIP，开源复现与缩放律）</li>
+<li>Sun, Q., Fang, Y., Wu, L. et al. (2023). EVA-CLIP: Improved Training Techniques for CLIP at Scale. arXiv:2303.15389.（用掩码预训练的 EVA 作视觉塔）</li>
+<li>Liu, H., Li, C., Wu, Q., &amp; Lee, Y. J. (2023). Visual Instruction Tuning. <em>NeurIPS</em>.（LLaVA，CLIP 视觉塔 + 线性投影接 LLM）</li>
+<li>Dai, W., Li, J., Li, D. et al. (2023). InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning. <em>NeurIPS</em>. arXiv:2305.06500.（把指令也送进 Q-Former）</li>
+<li>Oord, A. van den, Li, Y., &amp; Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. arXiv:1807.03748.（InfoNCE 的原始出处）</li>
+<li>Alayrac, J.-B., Donahue, J., Luc, P. et al. (2022). Flamingo: a Visual Language Model for Few-Shot Learning. <em>NeurIPS</em>.（BLIP-2 的对照基线，门控交叉注意力路线）</li>
+<li>Wu, Y., Chen, K., Zhang, T. et al. (2024). HoVLE / 多模态大模型综述. arXiv:2306.13549.（《A Survey on Multimodal Large Language Models》，架构演进梳理）</li>
 </ol>
 </section>
-
 
 </main>
+
 <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
 
-<!-- ========== JavaScript ========== -->
 <script>
-// 侧边栏滚动高亮 + 阅读进度条 + 返回顶部
+// Sidebar highlight
 (function() {
-  var sections = document.querySelectorAll('section[ID]');
-  var navLinks = document.querySelectorAll('#sidebar nav a');
-  var progressBar = document.getElementById('progress-bar');
-  var backToTop = document.getElementById('back-to-top');
+  var sections = document.querySelectorAll('section[id]');
+  var links = document.querySelectorAll('#sidebar nav a');
   function highlight() {
-    var scrollY = window.pageYOffset; var offset = 100; var current = '';
-    for (var i = 0; i < sections.length; i++) { if (scrollY >= sections[i].offsetTop - offset) current = sections[i].id; }
-    for (var j = 0; j < navLinks.length; j++) { navLinks[j].classList.remove('active'); if (navLinks[j].getAttribute('href') === '#' + current) navLinks[j].classList.add('active'); }
+    var scrollY = window.scrollY;
+    var current = '';
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - 100) current = sections[i].id;
+    }
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
     var docHeight = document.documentElement.scrollHeight - window.innerHeight;
     var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
     if (progressBar) progressBar.style.width = progress + '%';
     if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
   }
   window.addEventListener('scroll', highlight, { passive: true }); highlight();
 })();
-
-// KaTeX 渲染策略
+// Formula rendering
 (function() {
   var savedFormulas = [];
-  document.querySelectorAll('.formula[data-eq]').forEach(function(f) {
+  document.querySelectorAll('.formula').forEach(function(f) {
     savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
     f.innerHTML = '';
   });
@@ -1122,7 +876,8 @@ tr:hover td { background: var(--c-primary-ghost); }
     if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
     renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
     savedFormulas.forEach(function(item) {
-      var f = item.el; var rawHTML = item.html; f.setAttribute('data-eq', item.eq);
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) f.setAttribute('data-eq', item.eq);
       var body = document.createElement('div'); body.className = 'formula-body';
       body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
       f.appendChild(body);
@@ -1130,7 +885,8 @@ tr:hover td { background: var(--c-primary-ghost); }
       for (var i = 0; i < parts.length; i++) {
         if (isFormula && parts[i].trim()) {
           var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
-          try { katex.render(parts[i].trim(), eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
         } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
         isFormula = !isFormula;
       }

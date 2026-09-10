@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="qgkP0MMJB9OKyj8Vl52XhE">
+<head data-page-node-id="z7qJ5ApUcOX0292vtlHZt1">
+<meta charset="UTF-8" data-page-node-id="0jxTQJM54kfZWDaEeDYJFa">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="fd2OsNRAwswvg4UmKxjiwZ">
+<title>视觉 Transformer — ViT · Swin · 变体横评 · DETR 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png" data-page-node-id="enJVm1fjfKx8uD7HZeLOBf">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" data-page-node-id="WrzYBUOG07OMSykjZRZe7E">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body data-page-node-id="WmA1ZtnhWcnMGSCZYnsm1Z">
+<div id="progress-bar" data-page-node-id="qEURTpox27RnvPyGFnqKlU"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')" data-page-node-id="qIkm2026udLOa7KchBMeCO">&#9776; 目录</div>
+<aside id="sidebar" data-page-node-id="KEFJCWOhl3gSqJXttcvCSc">
+  <h2 data-page-node-id="VOyPTdllm6326bUXtqi98W">视觉 Transformer</h2>
+<nav data-page-node-id="DJigEJeRQdnMb8tDQ35YMt">
+    <a href="#hero" data-page-node-id="YhbcSXk6kY3vyZEiyhSgWP">封面</a>
+    <a href="#ch1" data-page-node-id="43Je7mYkUR2z5KAyE6s8A9">一、引言：要解决什么问题</a>
+    <a href="#ch2" data-page-node-id="CPegGB6d6o4P8aYyiceyjD">二、ViT：把图像变成序列</a>
+    <a href="#ch3" data-page-node-id="mMvfZehdqfw3fAzjwgA2f3">三、Swin：层次化与窗口注意力</a>
+    <a href="#ch4" data-page-node-id="F59lbi4adtaUof8WiFRCMP">四、ViT 变体横评</a>
+    <a href="#ch5" data-page-node-id="ZMIhT1xkGqWxxXq5NvtwME">五、内部机制：registers 与 sink</a>
+    <a href="#ch6" data-page-node-id="AosfShXDhE4jyD8WRANo2s">六、DETR：Transformer 作为解码器</a>
+    <a href="#ch7" data-page-node-id="bUKR2V7pWuFJKM59rMYqNE">七、未来方向</a>
+    <a href="#ch8" data-page-node-id="mOvbZieiMFuTre1BMtwDkP">八、知识体系总结</a>
+    <a href="#refs" data-page-node-id="awemQo37kCOCFzm0qJEoCp">参考文献</a>
+  </nav>
+<a class="back-link" href="../index.html" data-page-node-id="ShkDnj6QGw2l6NvqPSX0IC"><span class="arrow" data-page-node-id="ohzHJUferYx9K2falGZFNK">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main" data-page-node-id="OuX0GwdUtG5Ci4E8o17CrW">
+
+<section id="hero" class="hero" data-page-node-id="1yBQkqCgtagLjGnHzRqtev">
+  <h1 data-page-node-id="Mt1m28EzlPyigCv23HIHZI">视觉 Transformer</h1>
+  <div class="subtitle" data-page-node-id="XCCYbAZQvxpknow7iLQUBi">Vision Transformer · Swin · 变体横评 · DETR · 内部机制</div>
+  <div class="tagline" data-page-node-id="Ng9yWmLqVTujURloZi4bOm">Patch Embedding · 窗口注意力 · 自监督预训练 · 集合预测 · Attention Sink · Registers</div>
+  <div class="badges" data-page-node-id="R0zDtT0azi1IZNgw7OGpKO">
+    <span class="badge" data-page-node-id="hjFQf7GkwZ0VJiM0hMqZ9q">8 个章节</span>
+    <span class="badge" data-page-node-id="WLixJc42k0FZp5c0i024F9">11 张 SVG 结构图</span>
+    <span class="badge" data-page-node-id="BMuLb7NPeruEs0JSCtwEYC">27 个公式</span>
+    <span class="badge" data-page-node-id="m2Mg1QcWzMbgLnfK6pKzuh">4 段 PyTorch 代码</span>
+    <span class="badge" data-page-node-id="SbBQGGdVP0nUC14Hgf3dAz">30 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1" data-page-node-id="FFV2EF3ZFwSVvAhGSwlMHS"><h2 data-page-node-id="5Ti1rXQVOzXmmSzvgN7v2B"><span class="num" data-page-node-id="wjv1D7EpV24nJJw2YeF07J">1</span>引言：视觉 Transformer 要解决什么问题</h2>
+<h3 data-page-node-id="EnQ6Mf03fHflucJygA6OC5">1.1 卷积时代的"归纳偏置红利"</h3>
+<p data-page-node-id="4iUcGHIrw2l3jQQTwebVtG">2020 年之前，视觉骨干网络几乎被卷积神经网络（CNN）垄断：AlexNet（2012）→ VGG（2014）→ ResNet（2015）→ EfficientNet（2019）。CNN 的优势不只来自算力与数据，更来自它<strong data-page-node-id="nOCNUDvHqpyoMuKeWaXcC8">内置的归纳偏置</strong>（inductive bias）：<em data-page-node-id="xzsu4hSfVx0zRpqeKFSBG1">局部性</em>假设相邻像素高度相关，因此卷积核只看小邻域；<em data-page-node-id="fHw43jM4MOC7jaR3n2WQ0B">平移等变</em>假设同一模式出现在图像任何位置都应当被同等识别，因此权重在所有空间位置共享。</p>
+<p data-page-node-id="PDOaz4DWnA5qCNCMdWe3iE">这两条假设与自然图像的统计规律高度吻合，带来两个直接好处：参数极少（卷积核与图像尺寸无关），且在小数据上也能有效学习。代价是模型被"锁"在局部、平移等变的框架里——长距离依赖需要靠堆层数逐级扩大感受野，而"把整张图当作一个整体来推理"这类需求表达起来很别扭。</p>
+<h3 data-page-node-id="XbH1GoPOdnQfdBh81MLGQl">1.2 Transformer 跨界的两个具体障碍</h3>
+<p data-page-node-id="YHdmMjgKRbGYZAkatNWVwt">Transformer 在 NLP 上取代 RNN 之后，一个自然的问题浮现：<strong data-page-node-id="15ZdgAatithlsf2TeWUwDA">去掉卷积、只用注意力，能否做视觉？</strong> 直接移植会撞上两个障碍，它们决定了后续所有工作的技术路线。</p>
+<ul data-page-node-id="TR2kGdkZ5lpd8oMtJHR0Um">
+<li data-page-node-id="DzAF1TdmCNGX7cIjpZjdkZ"><strong data-page-node-id="xg3ieD2vsVZxRrS7DhesZn">序列长度带来的二次复杂度</strong>：自注意力的计算量是 $O(n^2)$（$n$ 为 token 数）。NLP 中一句话不过数百 token；若按像素建模，$224 \times 224$ 的图像就是 50176 个 token，注意力矩阵元素数达 $2.5\times 10^9$，显存与算力都无法承受。因此<strong data-page-node-id="M1nOg4uXtDo5hcuNKAnjqw">如何把图像"变短"</strong>成为第一个核心问题。</li>
+<li data-page-node-id="MCmK1tp6On1qxiZ0pK7hwb"><strong data-page-node-id="qloU35zBQzCO2IUadDjyno">缺少空间先验，必须从数据中学回来</strong>：注意力对输入是<em data-page-node-id="DtP3lKtL1na3CdZGW4mSU5">置换等变</em>的——打乱 token 顺序，输出只会跟着打乱，模型本身没有"上下左右"的概念。CNN 免费获得的空间结构，Transformer 只能通过位置编码显式注入，其余部分要靠数据拟合。</li>
+</ul>
+<h3 data-page-node-id="6FcHJJ94FUuT4HFjohfjJe">1.3 主线：四条并行的技术路线</h3>
+<p data-page-node-id="sstH19ouWgVP5eQB2gnvie">ViT 给出的答案很干脆：<strong data-page-node-id="3fLY4OonsrAtZBFr0CAu2g">把图像切成 $16\times16$ 的块（patch），每块拉平成"一个词"</strong>，序列长度立刻从 5 万降到 $196$。归纳偏置则不注入，改用大规模数据让模型自行学习。由此展开四条路线，本模块按此顺序推进：</p>
+<div class="svg-box" data-page-node-id="wGufvZBQ3UvCCBM70l94ym">
+<svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" data-page-node-id="c5HXsOCpJ115Ocl2u2AEF8">
+  <defs data-page-node-id="8GUBsDX9nrmOu8ygrRlfuF"><marker id="tl-ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" data-page-node-id="fXwp5CbB8Iy5X8caS2xhrL"><polygon points="0 0, 8 3, 0 6" fill="#94a3b8" data-page-node-id="7Me5yiZHvrZf1hNkbxBh7f"/></marker></defs>
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="seceT14KCJoMN60g4MXsFr">视觉 Transformer 的四条技术路线</text>
+  <!-- lane 1 -->
+  <text x="20" y="80" font-size="12.5" fill="#2563eb" font-weight="700" data-page-node-id="RDaUfS9Nooq0YZBUAHEeLW">可行性</text>
+  <line x1="110" y1="74" x2="850" y2="74" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="fBTLnB8U40BgBXIukDwHG4"/>
+  <rect x="120" y="56" width="118" height="36" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="uAC8uoOMQua9BbjxEi2ZxB"/>
+  <text x="179" y="71" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="WD6GEUQRE1eSavdqfTWGuS">ViT (2020)</text>
+  <text x="179" y="85" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="R0d00wtcnDfuW6UoY2srhL">纯注意力可行？</text>
+  <rect x="258" y="56" width="132" height="36" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="TmkZHHJLVBl5elM08cASFj"/>
+  <text x="324" y="71" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="dHK8684eXOMX5l3kAzsUuI">ViT-22B (2023)</text>
+  <text x="324" y="85" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="bSTnAgK2oqPAB5UGPsXDLo">规模上限在哪</text>
+  <!-- lane 2 -->
+  <text x="20" y="150" font-size="12.5" fill="#059669" font-weight="700" data-page-node-id="wujgBuBDD1TC1pwaSxq3nR">效率与层次</text>
+  <line x1="110" y1="144" x2="850" y2="144" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="qK7gDlwqJQMBgU17Q01461"/>
+  <rect x="120" y="126" width="100" height="36" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="gNQmA0JFDR2lfIc41rNSkU"/>
+  <text x="170" y="141" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="dicDaqPFJC5Vep1So0uEaw">PVT (2021)</text>
+  <text x="170" y="155" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="hNFwikXX3UNU089eScRC5u">金字塔 + 稀疏</text>
+  <rect x="240" y="126" width="106" height="36" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="HpAsKGDAr0YJAZsTQMCDBE"/>
+  <text x="293" y="141" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="4ceERz7bVgsyDAWcCGVrLk">Swin (2021)</text>
+  <text x="293" y="155" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="WxXZAvaVCZAeqB1XObWonz">窗口注意力</text>
+  <rect x="366" y="126" width="128" height="36" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="HDcpTpmUIFQ5GPjBYApn72"/>
+  <text x="430" y="141" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="aQXjdRydCbAYrEwuslLxNN">Swin v2 (2021)</text>
+  <text x="430" y="155" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="KKHs8EJWy0JGM6dkl4AwEC">3 亿图 / 70 亿参数</text>
+  <rect x="514" y="126" width="120" height="36" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="hZ8wVsAnRvdDUnvERr9DZ7"/>
+  <text x="574" y="141" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="dKtAKfxZPX390DedhlPQd1">CSWin (2021)</text>
+  <text x="574" y="155" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="fUao27FBDm02jX74IlVIay">十字形窗口</text>
+  <!-- lane 3 -->
+  <text x="20" y="220" font-size="12.5" fill="#7c3aed" font-weight="700" data-page-node-id="ajqEbCttT6ZS4FzjxlowYW">数据效率</text>
+  <line x1="110" y1="214" x2="850" y2="214" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="34h3mt3EhutXdtQKEG4uj0"/>
+  <rect x="120" y="196" width="104" height="36" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="VcCX2g9oSIvZW8raWCfeGk"/>
+  <text x="172" y="211" text-anchor="middle" font-size="11.5" fill="#6d28d9" font-weight="700" data-page-node-id="fU1bP6QFAET27uA5yigYkp">DeiT (2020)</text>
+  <text x="172" y="225" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="s8DkQY6DmrwGCcNmScCZgE">蒸馏 + 增广</text>
+  <rect x="244" y="196" width="114" height="36" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="VyLj9s8CP7A5nRIDjbiVwT"/>
+  <text x="301" y="211" text-anchor="middle" font-size="11.5" fill="#6d28d9" font-weight="700" data-page-node-id="gnH9QSqi31GVa4qyP8pE1m">BEiT (2021)</text>
+  <text x="301" y="225" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="UgRGBIeNamIxHR9LF30r3a">dVAE token 预测</text>
+  <rect x="378" y="196" width="108" height="36" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="oACmPtzrFkM7eok6NWHWH1"/>
+  <text x="432" y="211" text-anchor="middle" font-size="11.5" fill="#6d28d9" font-weight="700" data-page-node-id="qv8XoRNa5RodWDgp0JhGgx">MAE (2021)</text>
+  <text x="432" y="225" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="8yQikYJGYUTxGw6CU83GQP">75% 掩码重建</text>
+  <rect x="506" y="196" width="112" height="36" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="QJlxVitFBphluXPVNTIURD"/>
+  <text x="562" y="211" text-anchor="middle" font-size="11.5" fill="#6d28d9" font-weight="700" data-page-node-id="kCROFxdhi9ym1uImQ7LDPB">DINO (2021)</text>
+  <text x="562" y="225" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="IDsSMv6878oGnkt86zV3W3">自蒸馏，无标签</text>
+  <!-- lane 4 -->
+  <text x="20" y="290" font-size="12.5" fill="#ea580c" font-weight="700" data-page-node-id="naXEdcfcJo24dyz1wOIU0U">角色扩展</text>
+  <line x1="110" y1="284" x2="850" y2="284" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="rZIhMaUkyYd4WFiseTkB04"/>
+  <rect x="120" y="266" width="118" height="36" rx="7" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" data-page-node-id="TrRG2YHnIrL6LuHVbAT1sX"/>
+  <text x="179" y="281" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="TNySb0phQzbTEz9ox1KyBg">DETR (2020)</text>
+  <text x="179" y="295" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="IZt7yufFIGf1qUEBSt7jeQ">集合预测，去 NMS</text>
+  <rect x="258" y="266" width="150" height="36" rx="7" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" data-page-node-id="eY4KKjF2eMuzGrtWHFDNE5"/>
+  <text x="333" y="281" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="rv2QKB1GQXnB5WGZiD91gR">Deformable DETR (2021)</text>
+  <text x="333" y="295" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="XvBL7sEkZDPjlTijKoDmzW">稀疏采样，收敛快 10×</text>
+  <rect x="428" y="266" width="132" height="36" rx="7" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" data-page-node-id="2iywOKyIGzlow4fdiEzxuC"/>
+  <text x="494" y="281" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="apRbAWqyJx1wwhc98QVPG9">DINO-DETR (2022)</text>
+  <text x="494" y="295" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="BJC8gmOHGGCbhyjLqkFYQZ">对比去噪训练</text>
+  <text x="700" y="289" font-size="10.5" fill="#94a3b8" data-page-node-id="E9eGO0vOTKRvkFR9KVSBle">→ 第 6 章</text>
+</svg>
+</div>
+<p data-page-node-id="JepHvUI5kdr4SZMDS2cT7P">四条路线各有明确的问题意识：<strong data-page-node-id="FnIad2bZPw25az31wl6Q1o">可行性</strong>回答"纯注意力行不行"，<strong data-page-node-id="fZNUC4lvvmNon6XeCUj9OT">效率与层次</strong>回答"怎么让它便宜且能当骨干"，<strong data-page-node-id="IGxmNVXB5wfQkB7PvaAVxT">数据效率</strong>回答"没有 3 亿张标注图怎么办"，<strong data-page-node-id="MRNKzjOnbXZTTm41G8eLDA">角色扩展</strong>回答"Transformer 除了当编码器还能做什么"。第 5 章则回到模型内部，讨论 registers 与 attention sink 这类只在实现层面才暴露的机制。</p>
+</section>
+
+<section id="ch2" data-page-node-id="aGFpA1P7jPHDZQe4dRz6Th"><h2 data-page-node-id="NwszaYBk0STZCczKubCpOd"><span class="num" data-page-node-id="SDvatzplvJXoYAr8gGJW0A">2</span>ViT：把图像变成序列</h2>
+<h3 data-page-node-id="3BQxNH8ivcQ9Do5OR6GRwu">2.1 动机：一次"用数据换先验"的赌注</h3>
+<p data-page-node-id="54QgbwzsaSK03mcGow1RFI">ViT 的核心判断是：<strong data-page-node-id="4xin2qFvh12j7DmmF0sleL">CNN 的归纳偏置不是必需的，只是数据不足时的替代品</strong>。作者的原话大意是——当数据规模足够大时，模型不需要人工注入局部性与平移等变，它完全可以从数据中学会这些规律，甚至学得更好、更一般。这个判断把研究问题从"如何设计更好的视觉专用结构"改成了"能否用通用架构 + 更多数据达到同等效果"。</p>
+<p data-page-node-id="wMurgfJ6gtNgrdSljGUKpM">因此 ViT 的论文最重要的不是架构本身（它几乎是 Transformer 编码器的原样搬用），而是那个<strong data-page-node-id="IoqAyGSsTtZZ2yzUVtv4W0">对照结论</strong>：在 ImageNet-1k 上单独训练，ViT 不如同规模的 ResNet；但在 JFT-300M 上预训练后，ViT 反超，且数据越多优势越大。这解释了为什么 ViT 明确把自己的适用场景限定为"大规模预训练 + 下游微调"。</p>
+<h3 data-page-node-id="TXBC5EIBGIRqGtgDM3yD2j">2.2 图像即序列：Patch Embedding</h3>
+<p data-page-node-id="EOWQW9k4BIVo1ATsDVA4cV">把图像 $\mathbf{x} \in \mathbb{R}^{H \times W \times C}$ 划分为 $N$ 个大小为 $P \times P$ 的不重叠块，$N = HW/P^2$。每块展平为长度 $P^2C$ 的向量，再经可学习的线性映射压缩到模型维度 $D$：</p>
+<div class="formula" data-eq="(1)" data-page-node-id="EprtBrhlip320veVuys0Bc">$$\mathbf{x}_p^i \in \mathbb{R}^{P^{2}C}, \qquad N = \frac{HW}{P^{2}}, \qquad \mathbf{x}_p^i E \in \mathbb{R}^{D}, \quad E \in \mathbb{R}^{P^{2}C \times D}$$</div>
+<p data-page-node-id="kGIGN7WEFbTSC5sjDqQcJH">以 $224\times224\times3$、$P=16$ 为例：$N = 196$，序列长度 196，比逐像素建模缩短了 256 倍。这一步在实现上等价于一个 <code data-page-node-id="nEAKXgVULfsByYGFGAxpmy">kernel_size=16, stride=16</code> 的卷积——<strong data-page-node-id="qE615vTux35oUna6v1KXlq">ViT 的第一层其实就是卷积，只是之后再无卷积</strong>。这是理解 ViT 的一个实用要点：它并非"完全没有卷积"，而是把卷积压缩成一次性的分块嵌入。</p>
+<div class="svg-box" data-page-node-id="icEz5mSichWPDV882b1jJW">
+<svg viewBox="0 0 880 280" xmlns="http://www.w3.org/2000/svg" data-page-node-id="eaGsGKSNxmEnzggQDbfFHj">
+  <text x="440" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="wHgLpwOqfJL5mcvsA61UMu">Patch Embedding：从图像网格到 token 序列</text>
+  <!-- image -->
+  <rect x="40" y="60" width="180" height="180" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="dZHJtjTMB5ZvY20CRhKAkX"/>
+  <text x="130" y="52" text-anchor="middle" font-size="11.5" fill="#7c3aed" font-weight="700" data-page-node-id="dkcAWMbIy0AuoDaGP9umms">输入图像 224×224×3</text>
+  <g stroke="#7c3aed" stroke-width="0.8" opacity="0.45" data-page-node-id="pACBZfv2TGFUtLRZWjnSKj">
+    <line x1="62.5" y1="60" x2="62.5" y2="240" data-page-node-id="Hyky4Nl8v2zkYVgtHM0GF2"/><line x1="85" y1="60" x2="85" y2="240" data-page-node-id="zqpHsz1XiIBjq4wAyFYRAe"/><line x1="107.5" y1="60" x2="107.5" y2="240" data-page-node-id="XEpvhfpVcLKULYY5xfZz2y"/><line x1="130" y1="60" x2="130" y2="240" data-page-node-id="oHR967kcyQ9IDsNCqph3kF"/><line x1="152.5" y1="60" x2="152.5" y2="240" data-page-node-id="p5ufh2A1kzrNGs7MC86mGw"/><line x1="175" y1="60" x2="175" y2="240" data-page-node-id="2eioddW7npvJguabgmHas2"/><line x1="197.5" y1="60" x2="197.5" y2="240" data-page-node-id="FU0UKTdpTP15PwZ67FauGG"/>
+    <line x1="40" y1="82.5" x2="220" y2="82.5" data-page-node-id="6JWJT1VtFw11dE4sMMy07H"/><line x1="40" y1="105" x2="220" y2="105" data-page-node-id="Vx98ouHGYiimR0nBatF3fG"/><line x1="40" y1="127.5" x2="220" y2="127.5" data-page-node-id="7cVyA6Ijuek43C4A7hMiEO"/><line x1="40" y1="150" x2="220" y2="150" data-page-node-id="eUPZU79qnul4FDm5aGBaRq"/><line x1="40" y1="172.5" x2="220" y2="172.5" data-page-node-id="02IwkgIKcdZE1GZGzz73ii"/><line x1="40" y1="195" x2="220" y2="195" data-page-node-id="AE6N3qsYGVe6iEw2Typ5AU"/><line x1="40" y1="217.5" x2="220" y2="217.5" data-page-node-id="yBmPtLzhYFYuF126y13Wt7"/>
+  </g>
+  <rect x="62.5" y="82.5" width="22.5" height="22.5" fill="#c4b5fd" stroke="#7c3aed" stroke-width="2" data-page-node-id="P1Irt26ArFdwIBqmC1IRhZ"/>
+  <text x="130" y="262" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="ZIdJFoPtCaaDigPe1WXaX4">P=16 → 14×14 = 196 个 patch</text>
+  <line x1="228" y1="150" x2="268" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="B7KMDCbkz2QF74Mxyy7nps"/>
+  <!-- flatten -->
+  <rect x="276" y="112" width="150" height="76" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="YCampPjJ3grXVJEie6sYs0"/>
+  <text x="351" y="134" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="RWEkZnyw34tNLJT71heRJS">展平 + 线性投影 E</text>
+  <text x="351" y="152" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="3HjzWfFdb7TWRkXYfDhOTQ">16×16×3 = 768 → D=768</text>
+  <text x="351" y="170" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="HPy3b5i6RJ27jGZpEC9GIg">等价于 16×16 步长卷积</text>
+  <line x1="434" y1="150" x2="474" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="jDoltqYzfNqeC78nBjDGRA"/>
+  <!-- tokens -->
+  <g data-page-node-id="8PuXOGJZW10xmEYpMbtdWq">
+    <rect x="482" y="130" width="34" height="34" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.8" data-page-node-id="unycIfqeFoDdqVvgqp7nbS"/>
+    <text x="499" y="152" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700" data-page-node-id="5EnRC5PU2dIO0hS5gQ6rPI">CLS</text>
+  </g>
+  <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.2" data-page-node-id="1t6auPsYdSbFGu3HQA2eFl">
+    <rect x="522" y="130" width="34" height="34" rx="5" data-page-node-id="HggNVqwRAX94xbNLXnoLRH"/><rect x="560" y="130" width="34" height="34" rx="5" data-page-node-id="H9vPfTdeYYE8gjt1IDw1I1"/><rect x="598" y="130" width="34" height="34" rx="5" data-page-node-id="ZUnC9CXTH4Ul01BGMK2bsa"/><rect x="636" y="130" width="34" height="34" rx="5" data-page-node-id="WMsH9kGPUo7u3FGDviu34C"/>
+  </g>
+  <text x="600" y="152" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="700" data-page-node-id="Hu5XloqWRhi6kAvIYr6Dnk">. . .</text>
+  <rect x="678" y="130" width="34" height="34" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2" data-page-node-id="ZoEssvVM4whmowxD2cLpkd"/>
+  <text x="695" y="152" text-anchor="middle" font-size="9.5" fill="#1d4ed8" data-page-node-id="pYauV2a5mChMqsHW1gNmEV">196</text>
+  <text x="600" y="112" text-anchor="middle" font-size="11.5" fill="#2563eb" font-weight="700" data-page-node-id="kdMuu8EX1VktLW9u3HBEwm">token 序列长度 = 197</text>
+  <line x1="726" y1="147" x2="766" y2="147" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="vQtJZO9p8vtqLdgDbhqCPr"/>
+  <rect x="774" y="118" width="80" height="58" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="lwmArhNEmzVMRt4nGZ8SCV"/>
+  <text x="814" y="142" text-anchor="middle" font-size="11" fill="#047857" font-weight="700" data-page-node-id="ripByYaaKEBAvR3spnbleU">+ 位置编码</text>
+  <text x="814" y="160" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="ny2GCBGw0oGKBehBUUUa92">z₀ ∈ ℝ^{197×768}</text>
+  <text x="440" y="218" text-anchor="middle" font-size="11.5" fill="#64748b" data-page-node-id="p8lfhBg5QNJA8xusfKcCip">张量形状：(B, 3, 224, 224) → (B, 196, 768) → 拼接 CLS → (B, 197, 768)</text>
+</svg>
+</div>
+<h3 data-page-node-id="UwA04bWToijUcARiX3oJYk">2.3 CLS Token 与位置编码</h3>
+<p data-page-node-id="ayqoxnQgKzDmMvH4mADTo9">在序列开头拼接一个可学习的向量 $\mathbf{x}_{\text{class}}$，它的作用类似 BERT 的 <code data-page-node-id="3w7uKXc93CVSYGJGAObb4p">[CLS]</code>：不与任何图像块对应，只负责在多层注意力中<strong data-page-node-id="mieDUK8VcJc1fVG8GMyVIm">汇聚全局信息</strong>，最终用它的输出做分类。同时为 197 个位置各加一个可学习的位置编码，恢复空间顺序：</p>
+<div class="formula" data-eq="(2)" data-page-node-id="WfuWoWOyc0J2fOMfhisHHm">$$\mathbf{z}_0 = \big[\,\mathbf{x}_{\text{class}};\; \mathbf{x}_p^1 E;\; \mathbf{x}_p^2 E;\; \dots;\; \mathbf{x}_p^{N} E\,\big] + E_{\text{pos}}, \qquad E_{\text{pos}} \in \mathbb{R}^{(N+1)\times D}$$</div>
+<p data-page-node-id="IJM19JBSSK7yCIp9mUwIab">ViT 的实验表明位置编码取<strong data-page-node-id="Ps6M051q5E9tCzrtF93FpI">可学习的一维编码</strong>与人工设计的正弦余弦编码效果接近，因此选择了实现更简单的前者。注意这里的编码是 1D 的——模型并不知道 patch 的二维排布，只是被告知"你在序列里的第几位"。2D 感知完全依赖于 $P \times P$ 图像块内部的像素结构。</p>
+<h3 data-page-node-id="CrVvG1ph76de42RH6Q4wF9">2.4 Transformer Encoder：Pre-LN 结构</h3>
+<p data-page-node-id="yGpZnhO3sY7vkucOBGS4Yd">ViT 堆叠 $L$ 个结构相同的编码器层。每个含两个子层——多头自注意力（MSA）与前馈网络（MLP），均采用<strong data-page-node-id="HwShcUOt0rTgHP3XMvS2Ap">前置层归一化</strong>（Pre-LN）与残差连接：</p>
+<div class="formula" data-eq="(3)" data-page-node-id="0lCxaBo0cmcPuYj0LHzcLy">$$\mathbf{z}'_\ell = \text{MSA}\big(\text{LN}(\mathbf{z}_{\ell-1})\big) + \mathbf{z}_{\ell-1}, \qquad \mathbf{z}_\ell = \text{MLP}\big(\text{LN}(\mathbf{z}'_\ell)\big) + \mathbf{z}'_\ell$$</div>
+<p data-page-node-id="SDkHSGftSDJMwy4jGJnt50">其中多头注意力是 $h$ 个单头注意力的拼接后线性变换：</p>
+<div class="formula" data-eq="(4)" data-page-node-id="VfdZ2XcU9UI0YKvHI2A490">$$\text{MSA}(\mathbf{z}) = \big[\,\text{head}_1; \dots; \text{head}_h\,\big]W^{O}, \qquad \text{head}_i = \text{Attn}\big(\mathbf{z}W_i^{Q},\, \mathbf{z}W_i^{K},\, \mathbf{z}W_i^{V}\big)$$</div>
+<div class="formula" data-eq="(5)" data-page-node-id="29WCMBcoQ9cC3fF2x65Dfa">$$\text{Attn}(Q,K,V) = \text{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V$$</div>
+<p data-page-node-id="nc4ODBDa1qzNOjGJ5tK52F">前馈网络对每个 token 独立作用，先升维到 $4D$、再降回 $D$：</p>
+<div class="formula" data-eq="(6)" data-page-node-id="sjpl0SfO1jXZlCtISV76wC">$$\text{MLP}(\mathbf{u}) = \text{GELU}(\mathbf{u}W_1 + b_1)\,W_2 + b_2, \qquad W_1 \in \mathbb{R}^{D \times 4D},\; W_2 \in \mathbb{R}^{4D \times D}$$</div>
+<div class="callout" data-page-node-id="VzTdUS8Q4Uq3hIzqcBpZku"><div class="callout-title" data-page-node-id="GwECoJKE1URcuKD9UVejHd">为什么用 Pre-LN 而不是原始 Transformer 的 Post-LN</div>
+<p data-page-node-id="mFKlPDsXUWPtjNl32Dn09k">原始 Transformer 用 Post-LN：$\mathbf{z}_\ell = \text{LN}(\text{MSA}(\mathbf{z}_{\ell-1}) + \mathbf{z}_{\ell-1})$。Post-LN 把归一化放在残差相加之后，梯度要穿过归一化层才能回传到主干，深层时容易不稳定，通常需要学习率预热。ViT 采用 Pre-LN 后<strong data-page-node-id="BPoJGqwRiomejUUWrinSEU">无需预热即可训练到 32 层以上</strong>，这是它"能往深了堆"的前提之一。代价是最终特征需要额外做一次 LN，公式 (7) 中的 $\text{LN}$ 正是为此。</p>
+</div>
+<h3 data-page-node-id="xTjRZ6Kyt6RpHbGmavQrxY">2.5 完整前向传播</h3>
+<p data-page-node-id="02acyxMbx7ImvrHwAF178o">经过 $L$ 层编码后，只取 <code data-page-node-id="qb6528YC7Z4OWrTH4qinGq">[CLS]</code> 位置的输出，经 LN 与线性分类头得到预测：</p>
+<div class="formula" data-eq="(7)" data-page-node-id="Q1X9yqZeZXA3aLpLHcyoFd">$$\mathbf{y} = \text{softmax}\Big( \text{LN}\big(\mathbf{z}_L^{0}\big)\,W_{\text{head}} + b_{\text{head}} \Big)$$</div>
+<p data-page-node-id="PpEpJGTTZs2TZENgdXaGZ1">分类也可以改用全部 token 的<strong data-page-node-id="yZ7gbCLHAyOyMgjivOO9Dn">全局平均池化</strong>（GAP），两者效果相当。ViT 作者选择 CLS token 既是沿用 BERT 习惯，也是因为它在自监督与多任务中更易复用；而后续不少工作（尤其是密集预测任务）会去掉 CLS、直接对 patch token 做池化或上采样。</p>
+<h3 data-page-node-id="IuDCax7pwxZqACEEiFdP74">2.6 归纳偏置的代价：为什么小数据不如 CNN</h3>
+<p data-page-node-id="frn8KlDgDc7tapO5fDaC3R">这是 ViT 最值得记住的结论。ViT 缺少 CNN 的两条空间先验，于是它必须<strong data-page-node-id="1oOPqdhOENCtSKkHxQ4M6H">从数据中把"局部性"和"平移等变"学回来</strong>。小数据下这个过程学不充分，模型只能退而记住训练集的表面统计，泛化差；大数据下学到的是更一般的规律，反而超过人工设计的偏置。</p>
+<div class="svg-box" data-page-node-id="Vgr8X5Eph00eOa7AEpopDB">
+<svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="pGteTOtyFia8NMBLQRx5my">
+  <text x="430" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="8bSzpY6dzuC56KB9QIprRP">数据规模决定 ViT 与 CNN 的相对优劣</text>
+  <!-- axes -->
+  <line x1="90" y1="250" x2="800" y2="250" stroke="#94a3b8" stroke-width="1.5" data-page-node-id="xhCWnvrV3QTsiHrbK1K9MG"/>
+  <line x1="90" y1="250" x2="90" y2="60" stroke="#94a3b8" stroke-width="1.5" data-page-node-id="nnNWyv8ewExsVGuKHt6lCU"/>
+  <text x="445" y="284" text-anchor="middle" font-size="12" fill="#475569" data-page-node-id="JJW2CARXQmBZYpTFvu8pOd">预训练数据规模（对数）</text>
+  <text x="30" y="160" font-size="12" fill="#475569" transform="rotate(-90 30 160)" data-page-node-id="HgRG7HmhHuFUB8GXgrMawU">下游精度</text>
+  <text x="120" y="266" text-anchor="middle" font-size="10.5" fill="#94a3b8" data-page-node-id="eFoL9KGEXFlFPHsPqu9sHI">ImageNet-1k</text>
+  <text x="300" y="266" text-anchor="middle" font-size="10.5" fill="#94a3b8" data-page-node-id="wXFim2Z0uVc2Jdbo5EboNb">ImageNet-21k</text>
+  <text x="540" y="266" text-anchor="middle" font-size="10.5" fill="#94a3b8" data-page-node-id="nlGU3aPpRznIu977EdWqIs">JFT-300M</text>
+  <!-- CNN curve -->
+  <path d="M110 168 C 240 140, 380 122, 560 108 S 740 96, 790 92" fill="none" stroke="#ea580c" stroke-width="2.6" data-page-node-id="gXY4qXr0seLL6G06aTMlT7"/>
+  <text x="700" y="82" font-size="12" fill="#ea580c" font-weight="700" data-page-node-id="G2nU5Vk2qD9QEINrLFcmko">BiT / ResNet（有归纳偏置）</text>
+  <!-- ViT curve -->
+  <path d="M110 232 C 250 220, 400 178, 560 122 S 720 96, 790 84" fill="none" stroke="#2563eb" stroke-width="2.6" stroke-dasharray="7,4" data-page-node-id="0bVPCdqHAp6HPss6i1PDrG"/>
+  <text x="250" y="238" font-size="12" fill="#2563eb" font-weight="700" data-page-node-id="JpOxBjqKL3BrnRfZJUB8Nt">ViT（无卷积先验）</text>
+  <!-- crossover -->
+  <circle cx="596" cy="116" r="6" fill="#7c3aed" data-page-node-id="GEE0xJh205SB8KEhB4Tfv4"/>
+  <line x1="596" y1="116" x2="596" y2="250" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="4,3" data-page-node-id="KuK5jCsZn0Y0GTN16Ho8M7"/>
+  <text x="606" y="110" font-size="11.5" fill="#7c3aed" font-weight="700" data-page-node-id="vjJOfQ3j6Q9wmNXY6CkWoc">交叉点</text>
+  <rect x="140" y="150" width="230" height="56" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.2" data-page-node-id="JkkhdVmmxDK54UOwkJwDhG"/>
+  <text x="255" y="170" text-anchor="middle" font-size="11" fill="#c2410c" font-weight="700" data-page-node-id="UvTaeXaz3l1slqiZgGEl5u">小数据区间：CNN 胜</text>
+  <text x="255" y="190" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="VOLHZ1jWKXqr9AY4ZsAAFy">归纳偏置 = 免费的正则化</text>
+  <rect x="520" y="176" width="250" height="56" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.2" data-page-node-id="KCbH9KLFuQJrlZg7lyGw70"/>
+  <text x="645" y="196" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700" data-page-node-id="0tNLsG6jgyHwcjHDGJQC4n">大数据区间：ViT 胜</text>
+  <text x="645" y="216" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="QK4lCUL04xtUHuEJdVuEh4">数据充足时先验反而成为约束</text>
+</svg>
+</div>
+<h3 data-page-node-id="6s9OFFNmmLs2oX3ezIVbW7">2.7 高分辨率微调</h3>
+<p data-page-node-id="y7ts1KcJ3TeK0sv4rondaS">预训练用 $224\times224$ 得到 $N=196$ 个位置编码，下游若换成更大分辨率（如 $384$、$512$），patch 数 $N'$ 会变化，位置编码数量不匹配。ViT 的做法是对预训练的位置编码做<strong data-page-node-id="rE9A8zVKQzHcQe0xlh5uHc">二维插值</strong>，而非从头初始化——因为从头学需要额外大量数据，会浪费预训练成果：</p>
+<div class="formula" data-eq="(8)" data-page-node-id="gPEnUs1rrx9je99BPYDu6o">$$E'_{\text{pos}} = \text{Interp}_{2\text{D}}\big(E_{\text{pos}},\, \tfrac{H'}{P} \times \tfrac{W'}{P}\big)$$</div>
+<p data-page-node-id="uzfqHcgHTA54Sy5XI4sFTv">实践中把预训练编码按原始的 $14\times14$ 网格还原、双三次插值到 $24\times24$（对应 384）或 $32\times32$（对应 512），再展平。这个细节看似琐碎，却是 ViT 能跨分辨率复用的关键——否则每换一次输入尺寸都要重训。</p>
+<h3 data-page-node-id="sGlVxkitqZnCNTY4sMT2ZX">2.8 参数量与计算量</h3>
+<p data-page-node-id="OJ6A1Ev2j2CzQgeAgJ5am9">设模型维度 $D$、层数 $L$、token 数 $N$。主要计算量集中在两处：自注意力 $O(N^2D)$ 来自 $N\times N$ 的注意力矩阵；线性投影 $O(ND^2)$ 来自 $Q,K,V$ 与 MLP。当 $N \gg D$ 时第一项主导——这正是 Swin 要解决的问题：</p>
+<div class="formula" data-eq="(9)" data-page-node-id="eYvp4fjnTpw5yBWt7xXnPp">$$\text{FLOPs} \approx \underbrace{4ND^{2}}_{\text{QKV 与输出投影}} + \underbrace{2N^{2}D}_{\text{注意力矩阵}} + \underbrace{8ND^{2}}_{\text{MLP}}$$</div>
+<p data-page-node-id="qZ4eDBhNncECaBAC0Fcnq8">参数量主要落在 MLP 与投影矩阵上，与 $N$ 无关，因此 ViT-Base（$D=768,L=12$）约 86M 参数，与 ResNet-50（25M）相比更重——但有归纳偏置的 ResNet 用更少参数就能达到相近的 ImageNet-1k 精度，这又回到了 2.6 节的"数据换先验"。</p>
+<h3 data-page-node-id="t4B5G3GrftSvkuKFMU0rn4">2.9 PyTorch 实现</h3>
+<div class="code-block" data-page-node-id="OTayfCuFrfPQlsDGRgHz3V"><div class="code-header" data-page-node-id="NAEzry2PrEte6oX2ltlxzh">vit.py — Patch Embedding 与编码器块</div><pre data-page-node-id="uUGLuSCC86Jb2DiiFf4FmS">
+<span class="kw" data-page-node-id="77h9TbdhXNA8cWSk1mMKo6">import</span> torch
+<span class="kw" data-page-node-id="czGiDDUE9t1pf4MPtSJ3nl">import</span> torch.nn <span class="kw" data-page-node-id="waR6tJXFmzQzu3WQiZsJts">as</span> nn
+
+<span class="kw" data-page-node-id="tAJ7oo5Bn5U7yMnqj3Wlkq">class</span> <span class="cls" data-page-node-id="wv8VrTd3NTL7tRrd5maXfJ">PatchEmbed</span>(nn.Module):
+    <span class="str" data-page-node-id="BSumRoB8PLcFHnVYmyJ6hf">"""把 (B,3,H,W) 切成 patch 并线性投影到 D 维"""</span>
+    <span class="kw" data-page-node-id="4ZDpCV22V444VGYKyoHav7">def</span> <span class="fn" data-page-node-id="q39H6Gp0B84G3iqd2TnDqv">__init__</span>(<span class="kw" data-page-node-id="oDXdY7XcIci9SFFWlVvkkd">self</span>, img_size=<span class="num" data-page-node-id="Dbj9OKFmkPRaEqSoXSQIdu">224</span>, patch_size=<span class="num" data-page-node-id="qcZZid6XonZs4QHCQ8tfX3">16</span>, in_chans=<span class="num" data-page-node-id="Gplsu5n1Jydn6mxYbOkZ3y">3</span>, embed_dim=<span class="num" data-page-node-id="rDiqPgB30EEt5HpAF6aUzy">768</span>):
+        <span class="fn" data-page-node-id="6iRppJZDCUAz9bSvbC7RMf">super</span>().<span class="fn" data-page-node-id="oTGjVLEArR7XuHH1HYt6K5">__init__</span>()
+        <span class="kw" data-page-node-id="r8nO0ZhIsPlMu4tI1FWAtt">self</span>.num_patches = (img_size // patch_size) ** <span class="num" data-page-node-id="GznmwgYGGL0Bjv5KNldizf">2</span>
+        <span class="com" data-page-node-id="GVgYV9IimmuJ6sAXvnQb7R"># 等价于 kernel=stride=patch_size 的卷积，无重叠、无 padding</span>
+        <span class="kw" data-page-node-id="FDCMFyFegvKz7DqUNrL3rE">self</span>.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
+
+    <span class="kw" data-page-node-id="R78sm8WsvFWiVHd2w4OJoW">def</span> <span class="fn" data-page-node-id="pgYqO1pgmTvi25WIlE6MV9">forward</span>(<span class="kw" data-page-node-id="tJu3oVCFGF8y0zniCev4NV">self</span>, x):
+        x = <span class="kw" data-page-node-id="701NJSc9CQBjsBUr5VIEnX">self</span>.proj(x)                       <span class="com" data-page-node-id="VrP13883ekSniH51is1uCX"># (B, D, 14, 14)</span>
+        x = x.flatten(<span class="num" data-page-node-id="KHYsTnkwLeZ4vPuHx0xEnw">2</span>).transpose(<span class="num" data-page-node-id="lok1Gn2xaeUUxIRDhZU1ox">1</span>, <span class="num" data-page-node-id="1qGkduRT6DXxXc3781BrHV">2</span>)       <span class="com" data-page-node-id="u2Q8D98WVEQCRgqmEemAHr"># (B, 196, D)</span>
+        <span class="kw" data-page-node-id="khNNgDsYfXfjelA5evVsxy">return</span> x
+
+<span class="kw" data-page-node-id="oSBxZYmaWWiwInnVvG7h3y">class</span> <span class="cls" data-page-node-id="yO96owmQQK5nnovERDbCL7">Block</span>(nn.Module):
+    <span class="str" data-page-node-id="pTtHJhtANgd9HXizL1Nbqv">"""Pre-LN 编码器块：LN -> MSA -> 残差 -> LN -> MLP -> 残差"""</span>
+    <span class="kw" data-page-node-id="PSf5Ek8cWMTZHmHyZhfJhi">def</span> <span class="fn" data-page-node-id="bvUA4vtvKx1FSU2JsBaanp">__init__</span>(<span class="kw" data-page-node-id="EhgvDtcQD3ddFCeNK5qY6P">self</span>, dim, num_heads, mlp_ratio=<span class="num" data-page-node-id="NWTyRTvhmhuQ9KzgMrMuSa">4.</span>, drop_path=<span class="num" data-page-node-id="iUXJJtk94op3A766N0YeBn">0.</span>):
+        <span class="fn" data-page-node-id="AGtUvT3QyChEBAzitsThFe">super</span>().<span class="fn" data-page-node-id="67DkOGGr5WmILl9IAnirqn">__init__</span>()
+        <span class="kw" data-page-node-id="tYhSgF637I8Fwn0lCX7Jky">self</span>.norm1 = nn.LayerNorm(dim)
+        <span class="kw" data-page-node-id="zuV5PIEBaOMAAfN9fEjxYB">self</span>.attn  = nn.MultiheadAttention(dim, num_heads, batch_first=<span class="kw" data-page-node-id="BFnaE4YPMJ6hA3ehVAj2IH">True</span>)
+        <span class="kw" data-page-node-id="qsAkxHPscFS1vucRTTv2do">self</span>.norm2 = nn.LayerNorm(dim)
+        hidden = <span class="fn" data-page-node-id="cghFTxEMyob2sdTyHlGEHZ">int</span>(dim * mlp_ratio)
+        <span class="kw" data-page-node-id="0k8IyuCX9QU6lgiyQNaKrk">self</span>.mlp = nn.Sequential(
+            nn.Linear(dim, hidden), nn.GELU(), nn.Linear(hidden, dim)
+        )
+        <span class="kw" data-page-node-id="87PO9YhMXIADJssAoA2XAi">self</span>.drop_path = drop_path
+
+    <span class="kw" data-page-node-id="VQIlxSYaF6HM1nTJe4jbaN">def</span> <span class="fn" data-page-node-id="cQwT0vseonWDjY6KZeR45X">forward</span>(<span class="kw" data-page-node-id="P5kLmCIjvp8whNaA6CKYei">self</span>, x):
+        <span class="com" data-page-node-id="Nc3ezy23E7c1grPaQFQhlO"># Pre-LN：先归一化再进子层，梯度主干不被归一化阻断</span>
+        h = <span class="kw" data-page-node-id="IkEkRPZ1qEtuo7S2soypKF">self</span>.norm1(x)
+        h, _ = <span class="kw" data-page-node-id="1qN2FXh0UgXyTjMCXmGdqL">self</span>.attn(h, h, h)              <span class="com" data-page-node-id="HWFAji59nG4LslZJRdzJqm"># 自注意力，Q=K=V</span>
+        x = x + h
+        x = x + <span class="kw" data-page-node-id="CZIeWXQgRMkcRh7bG6byCQ">self</span>.mlp(<span class="kw" data-page-node-id="SmuZylc4iW7oj5bGMA7ACX">self</span>.norm2(x))
+        <span class="kw" data-page-node-id="FdxcqvwaKMcfutZu3nFCwq">return</span> x
+
+<span class="kw" data-page-node-id="LVkYLNBhBtNxEJ2ezHYFSB">class</span> <span class="cls" data-page-node-id="IPsEfBd8wSLIjKQiPky9Be">ViT</span>(nn.Module):
+    <span class="kw" data-page-node-id="wvKKRNY7Gej6I2y62ObTRK">def</span> <span class="fn" data-page-node-id="jedggnEJgjjvoPZbJM5NPW">__init__</span>(<span class="kw" data-page-node-id="tOt7zHJjGjLeHWTAFoNcso">self</span>, img_size=<span class="num" data-page-node-id="QEnb8FXZz6okjNKlIvNHNB">224</span>, patch_size=<span class="num" data-page-node-id="gepCGqK4v3Y43cuwTsBkan">16</span>, num_classes=<span class="num" data-page-node-id="LYD25o2PeiUeBkrGrnMxBE">1000</span>,
+                 dim=<span class="num" data-page-node-id="q4PVGKKXtPOHW01FwtUjIB">768</span>, depth=<span class="num" data-page-node-id="rqz5dV6N25OWMhcicV7w6c">12</span>, heads=<span class="num" data-page-node-id="ZG05GUGffDoW2qj6130g32">12</span>):
+        <span class="fn" data-page-node-id="NQqFKP45HFHbeTi9mgyAch">super</span>().<span class="fn" data-page-node-id="QnQcrq1LDhCKdh4tQ5eMsI">__init__</span>()
+        <span class="kw" data-page-node-id="DjEHIMRuCseUFjQP31wYl7">self</span>.patch_embed = <span class="cls" data-page-node-id="AUjxhwJuD3KrSM7GZ6iduR">PatchEmbed</span>(img_size, patch_size, <span class="num" data-page-node-id="T7NGZqlFSouY2m0SAm6iYH">3</span>, dim)
+        n = <span class="kw" data-page-node-id="hpACChY9M4Nxe5QotPpozi">self</span>.patch_embed.num_patches
+        <span class="com" data-page-node-id="s6AHOSJaz6mjiy9nsMO0Ph"># CLS token 与位置编码都是可学习参数</span>
+        <span class="kw" data-page-node-id="KOkt8PAIx8WRXop4CG3chE">self</span>.cls_token = nn.Parameter(torch.zeros(<span class="num" data-page-node-id="H6D0Pgo04ml3DVk0cczZuN">1</span>, <span class="num" data-page-node-id="T5Dbz7xmQABPGPVu0qnnYy">1</span>, dim))
+        <span class="kw" data-page-node-id="kOCuyO0IvvTyuLz1Og6ryJ">self</span>.pos_embed = nn.Parameter(torch.zeros(<span class="num" data-page-node-id="B5LMcqGmORRL7iHBgA1BSD">1</span>, n + <span class="num" data-page-node-id="WFGl5HPcFuajskHC8Ghsq8">1</span>, dim))
+        <span class="kw" data-page-node-id="UQ4e5zEOEXNrl3WBuKfY6g">self</span>.blocks = nn.Sequential(*[<span class="cls" data-page-node-id="MOuXpwerPDUSRukhvPVM0V">Block</span>(dim, heads) <span class="kw" data-page-node-id="GCTCd02tb5joeHbPgwfyjM">for</span> _ <span class="kw" data-page-node-id="Glwe7sQAMkvSm1OZje6Lf7">in</span> <span class="fn" data-page-node-id="bYehNLWissu6Z18JeTxKko">range</span>(depth)])
+        <span class="kw" data-page-node-id="ypyuaYVIgLFnyYQ2h3oXCj">self</span>.norm = nn.LayerNorm(dim)
+        <span class="kw" data-page-node-id="GzSHY7LYgDRijW6tPCxMyD">self</span>.head = nn.Linear(dim, num_classes)
+
+    <span class="kw" data-page-node-id="GFj5MEoS6K4K10WtiohYwV">def</span> <span class="fn" data-page-node-id="viCuHcSsxrWGgOXpohZYcC">forward</span>(<span class="kw" data-page-node-id="6GuXhHij6cpYBNSb5255nu">self</span>, x):
+        B = x.shape[<span class="num" data-page-node-id="Eq4erWpGmZ9rU38KrO5IdW">0</span>]
+        x = <span class="kw" data-page-node-id="IiVAhnl72Rda8JRmXgjBpJ">self</span>.patch_embed(x)                       <span class="com" data-page-node-id="YUf3nU6VFYSBHtVs8cIBFY"># (B, 196, D)</span>
+        cls = <span class="kw" data-page-node-id="XsB4sMQna2szyXSthfwDOj">self</span>.cls_token.expand(B, -<span class="num" data-page-node-id="UbkJHOgNZcPSFMcxESFHSN">1</span>, -<span class="num" data-page-node-id="zdBq8kAP7jhMSu3KgV90ie">1</span>)        <span class="com" data-page-node-id="CeleAODORBTm1krlmgdeTl"># (B, 1, D)</span>
+        x = torch.cat([cls, x], dim=<span class="num" data-page-node-id="4wQIT0eUExcHmME2WArtRJ">1</span>) + <span class="kw" data-page-node-id="y31GhDjS24R41NvZB2z2Vi">self</span>.pos_embed  <span class="com" data-page-node-id="VMeAMmTBD1xhzeE7sLwuIK"># (B, 197, D)</span>
+        x = <span class="kw" data-page-node-id="smNZir9nOEloMnxk6zHgt9">self</span>.blocks(x)
+        <span class="kw" data-page-node-id="HEluxF96UY1nlB7TQezLKO">return</span> <span class="kw" data-page-node-id="WkYG2M7BUngmQ0sBUJ8U0f">self</span>.head(<span class="kw" data-page-node-id="cGHXq60xWNhBSfy2wXeVD6">self</span>.norm(x)[:, <span class="num" data-page-node-id="bhsbI8JIkCArL1kjOADFby">0</span>])       <span class="com" data-page-node-id="Ul09Q76lN1OcEE5wvpuZg6"># 只取 CLS 位置</span>
+</pre></div>
+</section>
+<section id="ch3" data-page-node-id="6W1PaHdlaqqGWi7gsDM0rT"><h2 data-page-node-id="FolNr7hM45ZGrWanC5v2b5"><span class="num" data-page-node-id="J0zbGl77sLQNcrSFKFO3cG">3</span>Swin：层次化与窗口注意力</h2>
+<h3 data-page-node-id="FiL0T9X6RUdsak1utuxvAE">3.1 动机：ViT 的两个结构性缺陷</h3>
+<p data-page-node-id="wRX74bZDunFkRdQ2v2WLsU">ViT 证明了纯注意力可行，但要当"通用视觉骨干"还有两处硬伤，它们不是调参能解决的：</p>
+<ul data-page-node-id="Z4XPi8HcqG27cSW7RftDwg">
+<li data-page-node-id="X9fhhSZ7WeEm4LkmtVNxCz"><strong data-page-node-id="lUCJDoWyrbny4lZaBcAbLC">单一尺度，无法做密集预测</strong>。ViT 全程保持 $14\times14$ 的特征图分辨率，只有 $1/16$ 这一种尺度。而目标检测、语义分割、实例分割都需要<strong data-page-node-id="Fp3QDVFhU1NwtcYNDMoBv7">多尺度特征金字塔</strong>（FPN 之所以有效正是基于此）。ViT 缺少高分辨率层级，直接接检测头效果不佳。</li>
+<li data-page-node-id="D5aEFCfR4sNYaDkt9QEmys"><strong data-page-node-id="OW6uenjv8G6sdPk7J6T2BJ">全局注意力的二次复杂度</strong>。每个 token 都要与其余所有 token 计算注意力，$O(N^2)$ 使其在高分辨率输入（如 $1024\times1024$ 的分割任务）下代价急剧上升。而视觉任务恰恰对分辨率极其敏感。</li>
+</ul>
+<p data-page-node-id="K5lFdrvdPO2We7teCXlhYA">Swin 的作者把这两点挑明后给出方案：<strong data-page-node-id="F9MHB9PR6et51pnXE7qLLZ">让注意力只在局部窗口内进行，再让窗口"错位"以交换跨窗口信息</strong>；同时像 CNN 那样逐级下采样，构建层次化表示。这两条设计分别解决了复杂度与多尺度。</p>
+<h3 data-page-node-id="yrzBFNX4lbAPcIB8REOaAr">3.2 窗口注意力（W-MSA）</h3>
+<p data-page-node-id="PkVWfkwsMqV8O24egtaV4w">把特征图划分为不重叠的 $M \times M$ 窗口（默认 $M=7$），自注意力<strong data-page-node-id="v5LGAlEjgyn43OCJqdLgWT">只在每个窗口内部计算</strong>。窗口内 token 数恒为 $M^2$，与图像大小无关。设特征图有 $h \times w$ 个 token、通道数为 $C$，两种做法的复杂度对比：</p>
+<div class="formula" data-eq="(10)" data-page-node-id="oU65VKCo6BfW1MnL2K1c2S">$$\Omega(\text{MSA}) = 4hwC^{2} + 2(hw)^{2}C, \qquad \Omega(\text{W-MSA}) = 4hwC^{2} + 2M^{2}hwC$$</div>
+<p data-page-node-id="hn4V5Jhg5Ny3PZOBpiEXOG">两式第一项相同（QKV 投影），差别全在第二项：全局注意力随 token 数<strong data-page-node-id="ReHIiDJRuwCCGHUkKbDf2p">平方增长</strong>，窗口注意力则<strong data-page-node-id="sf1NHCB24tipnWEiJvmv0A">线性增长</strong>（$M^2$ 为常数）。当 $hw \gg M^2$ 时，后者优势巨大——这是 Swin 能处理高分辨率的根本原因。</p>
+<h3 data-page-node-id="GimomL1vvhxDt0u3YIDmcA">3.3 移位窗口（SW-MSA）</h3>
+<p data-page-node-id="Ym0L4gbnJvtjDjldeXzfFQ">窗口划分的代价是<strong data-page-node-id="CRYlNuofC8VBRM5R7GMnj7">窗口之间失去了联系</strong>：每个 token 只能看到同窗口内的 $M^2-1$ 个邻居，感受野被锁死在局部。Swin 的解法非常巧妙——在相邻的两层之间，把窗口整体<strong data-page-node-id="v27N3jszaOPHoWDdOYPAr1">向右下平移 $\lfloor M/2 \rfloor$ 个像素</strong>再划分一次：</p>
+<div class="formula" data-eq="(11)" data-page-node-id="Mi9yB4WUnYPwc51W0gpiJ1">$$\text{偏移量} = \Big\lfloor \frac{M}{2} \Big\rfloor \quad (\text{默认 } M=7 \Rightarrow \text{偏移 } 3)$$</div>
+<p data-page-node-id="k3GDOYCvup40EsXskmF56s">这样上一层的边界会落到这一层的窗口内部，信息得以跨窗口流动。但偏移会产生<strong data-page-node-id="9OGcqGOQUA2KTp2wvIW1Af">尺寸不足 $M\times M$ 的边角窗口</strong>。Swin 的处理是<em data-page-node-id="4UDxCjvdIgLGV72VJHQBqB">循环移位</em>（cyclic shift）：把特征图整体平移，使边角部分补到另一侧，从而保持窗口数不变；同时用<strong data-page-node-id="8cVWH2gHS8JHNsB1RJEZvV">注意力掩码</strong>阻止原本不相邻的区域互相注意，保证计算等价于真正的分块。</p>
+<div class="svg-box" data-page-node-id="GkPPZUIj6wv6U5Wd2VPtSv">
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="r0B572qHYBG4StMFcLug2p">
+  <text x="440" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="VDLI9uceaxkDuHjM7djiE1">W-MSA 与 SW-MSA：规则窗口 vs 移位窗口</text>
+  <!-- left: W-MSA -->
+  <text x="215" y="56" text-anchor="middle" font-size="12.5" fill="#2563eb" font-weight="700" data-page-node-id="A7pBTEqBdc5bIGWfLS1Ipp">W-MSA：窗口内注意力（层 ℓ）</text>
+  <rect x="60" y="70" width="310" height="180" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="7YbJ5EGzpQ8BhAbhpVrl9J"/>
+  <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.4" data-page-node-id="0HYjlNQB5A4e47QO01SG5B">
+    <rect x="70" y="80" width="66" height="56" rx="4" data-page-node-id="TYyUbrlDIHIB3k7qbdm2Y8"/><rect x="146" y="80" width="66" height="56" rx="4" data-page-node-id="vNwA1Cv95Yl1cFJFtwtbFe"/><rect x="222" y="80" width="66" height="56" rx="4" data-page-node-id="VHSHUcGtxVT5cZADH4Q6dq"/><rect x="298" y="80" width="62" height="56" rx="4" data-page-node-id="axdf1HQGZyNG1L5Ny0kLU4"/>
+    <rect x="70" y="146" width="66" height="56" rx="4" data-page-node-id="QA4CF1a0CYHXmCjdTibGDq"/><rect x="146" y="146" width="66" height="56" rx="4" data-page-node-id="w7hWBMdgFxZkC0flTSoH3s"/><rect x="222" y="146" width="66" height="56" rx="4" data-page-node-id="bSjkqZWFFGK6tI8jZzN6Dk"/><rect x="298" y="146" width="62" height="56" rx="4" data-page-node-id="bMSgoZXNcWHpHeFlJirUzl"/>
+    <rect x="70" y="212" width="66" height="28" rx="4" data-page-node-id="8oNUrpT4ol5gcE3GlgFKGt"/><rect x="146" y="212" width="66" height="28" rx="4" data-page-node-id="mB5PWqiIGAi0lK7ij4t0NQ"/><rect x="222" y="212" width="66" height="28" rx="4" data-page-node-id="R07mANY9raLqK926MoHaU8"/><rect x="298" y="212" width="62" height="28" rx="4" data-page-node-id="0iRMf3Y6jKHE9X6FCTldeQ"/>
+  </g>
+  <text x="215" y="272" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="j4Sznid3kVkHHdcVpSzEsq">窗口边界固定 ⇒ 跨窗口信息不通</text>
+  <!-- arrow -->
+  <line x1="386" y1="160" x2="436" y2="160" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="ZMiWGSETShCGelCcJ1jxTM"/>
+  <text x="411" y="150" text-anchor="middle" font-size="10.5" fill="#7c3aed" font-weight="700" data-page-node-id="JloEjmNaWXGxP6pXw1C6gS">shift</text>
+  <!-- right: SW-MSA -->
+  <text x="665" y="56" text-anchor="middle" font-size="12.5" fill="#7c3aed" font-weight="700" data-page-node-id="ApUe6KsRYuuq8QFfDycsTG">SW-MSA：窗口右下移 3（层 ℓ+1）</text>
+  <rect x="510" y="70" width="310" height="180" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="nhN9SsrPTYsGv1wdAdGuUa"/>
+  <g fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4" data-page-node-id="WVk59bGkRM4GyJpDSi0kKI">
+    <rect x="510" y="70" width="76" height="66" rx="4" data-page-node-id="lS8RhvZieahDOYGYPPWxsC"/><rect x="596" y="70" width="76" height="66" rx="4" data-page-node-id="7Mu3JZb17VHjrnu8PzBrtc"/><rect x="682" y="70" width="76" height="66" rx="4" data-page-node-id="5uhtFWWr67T9b8l3GDmNjh"/><rect x="768" y="70" width="52" height="66" rx="4" data-page-node-id="dUOCGgvFCybUjWM5FAuqBv"/>
+    <rect x="510" y="146" width="76" height="66" rx="4" data-page-node-id="7CYQ6oIhRBTH5jmh7ceWZ6"/><rect x="596" y="146" width="76" height="66" rx="4" data-page-node-id="iFnJJKiCAGgk8Gsypri9IB"/><rect x="682" y="146" width="76" height="66" rx="4" data-page-node-id="i2VHOVyotgnah3tVPi06Y7"/><rect x="768" y="146" width="52" height="66" rx="4" data-page-node-id="pjv4K0DHGISKkDwoyfFpHy"/>
+    <rect x="510" y="222" width="76" height="28" rx="4" data-page-node-id="WHJOEFDdycK7552khIcaec"/><rect x="596" y="222" width="76" height="28" rx="4" data-page-node-id="BbpBoND6EZSni0WA1SfPSr"/><rect x="682" y="222" width="76" height="28" rx="4" data-page-node-id="G5RTViUEyPSo6DLIgAYMEE"/><rect x="768" y="222" width="52" height="28" rx="4" data-page-node-id="GadEjc9s9GVLXhL29A811r"/>
+  </g>
+  <!-- shifted grid overlay -->
+  <g stroke="#dc2626" stroke-width="1.6" stroke-dasharray="5,3" fill="none" data-page-node-id="4hGDD4M6mv1MjA269nhmmN">
+    <line x1="586" y1="70" x2="586" y2="250" data-page-node-id="sX6Jh6da6IVUyOUltA3rEI"/><line x1="672" y1="70" x2="672" y2="250" data-page-node-id="p3VLhITClcVE0bWEeZJSEu"/>
+    <line x1="510" y1="136" x2="820" y2="136" data-page-node-id="mo7NyOFg8s9djwYruChvXR"/><line x1="510" y1="212" x2="820" y2="212" data-page-node-id="ejWywXZZVARj7PaeN5nqFx"/>
+  </g>
+  <text x="665" y="272" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="YvuJDr3ZUk9QAxBx6O8OvR">窗口错位 ⇒ 边界落入新窗口内部，信息跨窗流动</text>
+</svg>
+</div>
+<div class="callout warn" data-page-node-id="jNlELkNN8DcFbEZBG0SXZ2"><div class="callout-title" data-page-node-id="dBrZHlGi74btsDkIEZPnqR">循环移位与掩码：一个容易忽略的实现细节</div>
+<p data-page-node-id="6hcLrvHOHSHXCRZ631FBtd">直接平移会让边缘窗口变小，导致窗口数变化、无法批量并行。Swin 的做法是把特征图<strong data-page-node-id="oDGtwYzE86BoBrxsQDsQSx">循环平移</strong>（<code data-page-node-id="CymrgXMmBNrHzgWHJFGZAW">torch.roll</code>）使窗口数不变，但这会把原本相距很远的区域塞进同一个窗口。为了不让它们互相注意，需要给注意力矩阵加一个掩码：</p>
+<div class="formula" data-eq="(12)" data-page-node-id="AP0pTyAT7P8geZJw0mwSkX">$$\text{Attn} = \text{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}} + B + \mathbf{M}\right)V, \qquad M_{ij} = \begin{cases} 0, & i,j \text{ 在移位前同属一个窗口} \\ -\infty, & \text{否则} \end{cases}$$</div>
+<p data-page-node-id="CzN5KyTMG6UDRsnJbQYrkn">掩码位置填 $-\infty$，经 softmax 后权重为 0，等价于"这些位置互不可见"。这一步保证循环移位后的计算与真实分块完全等价，是 Swin 实现中最容易写错的地方。</p>
+</div>
+<h3 data-page-node-id="qigTtFuKBvLJPDtASHrOFA">3.4 层次化结构与 Patch Merging</h3>
+<p data-page-node-id="D0ms4M4DOu8GzhnxyaHgJc">Swin 把网络分成 4 个 stage，每个 stage 内保持分辨率不变、堆叠若干 Transformer 块（窗口注意力 + 移位窗口注意力成对出现）；stage 之间通过 <strong data-page-node-id="NDv0meDnQazWN9KK8UwWsd">Patch Merging</strong> 下采样：把 $2\times2$ 邻域内 4 个 token 在通道维拼接（$4C$），再经线性层压回 $2C$。这与 CNN 中"空间减半、通道翻倍"的经典金字塔完全对应。</p>
+<div class="formula" data-eq="(13)" data-page-node-id="O7G4zrw8SStrXKVAAJ7wAk">$$\text{PatchMerging}: \mathbb{R}^{\frac{H}{2^{s}}\times\frac{W}{2^{s}}\times C} \longrightarrow \mathbb{R}^{\frac{H}{2^{s+1}}\times\frac{W}{2^{s+1}}\times 2C}$$</div>
+<div class="svg-box" data-page-node-id="IwAO55mKxz9ncdW7rHfGME">
+<svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" data-page-node-id="etqi1VBTS2EXu86FM2Se0g">
+  <text x="440" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="2SZPKkzjX1j0FRQ7VXlv48">Swin 的层次化金字塔（对照 CNN 的分辨率-通道变化）</text>
+  <!-- stages -->
+  <g data-page-node-id="k1UQEmNu8TGc5WBbZF5vzN">
+    <rect x="40" y="70" width="170" height="150" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.8" data-page-node-id="4W9vNehskrJl9YiMJGKYcR"/>
+    <text x="125" y="58" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700" data-page-node-id="ACiHfsXEXpMUnyzyzaBwIR">Stage 1</text>
+    <text x="125" y="100" text-anchor="middle" font-size="11" fill="#1e3a5f" data-page-node-id="YrAvjU1bOwJh79hxiJToSx">H/4 × W/4</text>
+    <text x="125" y="120" text-anchor="middle" font-size="11" fill="#1e3a5f" data-page-node-id="jpKVitj9xhJLdKEeo1c1ig">通道 C = 96</text>
+    <g stroke="#2563eb" stroke-width="0.9" opacity="0.5" data-page-node-id="c8apmwKSzmvrltDATmEiLK">
+      <line x1="40" y1="145" x2="210" y2="145" data-page-node-id="XtZ7C8CCpThnuF6udP8niM"/><line x1="40" y1="175" x2="210" y2="175" data-page-node-id="EsNtDS4U2jhZdAIjO8mUlg"/><line x1="40" y1="205" x2="210" y2="205" data-page-node-id="DCAe99TgSX8KDiUoxiHhfX"/>
+      <line x1="97" y1="70" x2="97" y2="220" data-page-node-id="a0k4HnAyJQ47NPxhSsaX8D"/><line x1="154" y1="70" x2="154" y2="220" data-page-node-id="J8F9d7k1EzymDVDKc9od5Y"/>
+    </g>
+    <text x="125" y="240" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="aH3SGuPPtcePiIDZl40XB1">窗口 7×7</text>
+  </g>
+  <line x1="216" y1="145" x2="252" y2="145" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#tl-ar)" data-page-node-id="K4hkJEGYAdWRTx1Y8dpmFM"/>
+  <text x="234" y="136" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="Cn0T8rFdY61LttHWCokRgf">merge</text>
+  <g data-page-node-id="6CFMzNZGRlpATyGKGrNSqy">
+    <rect x="258" y="95" width="130" height="110" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" data-page-node-id="wYMlgwWKIcu8wOAeqLXSGN"/>
+    <text x="323" y="58" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="nBYGwYmQG5rNohEjuloQHm">Stage 2</text>
+    <text x="323" y="125" text-anchor="middle" font-size="11" fill="#3b2470" data-page-node-id="8BnDksVAqWn9cLOM7yUoFC">H/8 × W/8</text>
+    <text x="323" y="145" text-anchor="middle" font-size="11" fill="#3b2470" data-page-node-id="ZBGh6KtP3R4rFNOm47sueI">通道 2C = 192</text>
+    <text x="323" y="178" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="BrgFSpRcvWd5hWBb6oDWWz">窗口 7×7</text>
+  </g>
+  <line x1="394" y1="145" x2="430" y2="145" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#tl-ar)" data-page-node-id="kAo4zqzoLi2NiaDdQCoGVf"/>
+  <text x="412" y="136" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="nyWzBvtV5bqdyBj68iO1ch">merge</text>
+  <g data-page-node-id="ntXH5EiiqSKwd9ts7M3Sar">
+    <rect x="436" y="115" width="100" height="80" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.8" data-page-node-id="MbQibesPsnDu2v8N1A1W19"/>
+    <text x="486" y="58" text-anchor="middle" font-size="12" fill="#047857" font-weight="700" data-page-node-id="gJAsEh8h1vORdGl02lpasF">Stage 3</text>
+    <text x="486" y="148" text-anchor="middle" font-size="11" fill="#064e3b" data-page-node-id="7MEKYIrj1EBodzwCBk6kWv">H/16 × W/16</text>
+    <text x="486" y="168" text-anchor="middle" font-size="11" fill="#064e3b" data-page-node-id="u6c8evtqTiDwhdJCsmduoD">通道 4C = 384</text>
+  </g>
+  <line x1="542" y1="145" x2="578" y2="145" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#tl-ar)" data-page-node-id="j4zbBKQRuNbmByriqiKa2D"/>
+  <text x="560" y="136" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="g1uGZgabQQrU1rJtOP5UNs">merge</text>
+  <g data-page-node-id="gBArdoUuGBUFNDl9480sYC">
+    <rect x="584" y="132" width="72" height="58" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8" data-page-node-id="ONnbq884GeLNTm6JvcBp4c"/>
+    <text x="620" y="58" text-anchor="middle" font-size="12" fill="#c2410c" font-weight="700" data-page-node-id="BLZRKOcEHw6K1mONOVcB0k">Stage 4</text>
+    <text x="620" y="158" text-anchor="middle" font-size="10.5" fill="#7c2d12" data-page-node-id="CLGVbJ0lA5K8pn8Jo2VDcR">H/32×W/32</text>
+    <text x="620" y="176" text-anchor="middle" font-size="10.5" fill="#7c2d12" data-page-node-id="yB17lKcaYGqCS05kR2T4js">8C = 768</text>
+  </g>
+  <!-- outputs -->
+  <line x1="662" y1="160" x2="700" y2="160" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#tl-ar)" data-page-node-id="GIW18RbMM1v90GNvrPMgMY"/>
+  <rect x="708" y="66" width="150" height="200" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" data-page-node-id="oVf7HQviXMv9VnQRnpCENE"/>
+  <text x="783" y="88" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="700" data-page-node-id="f5GIboswWSqhQJgtm9WibA">下游任务</text>
+  <text x="783" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="nYuHfsfGkAeYGCjckCaiuU">分类</text>
+  <text x="783" y="134" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="WrSc6dXLtJuADCuBj4AQyM">（用 Stage 4）</text>
+  <line x1="720" y1="146" x2="846" y2="146" stroke="#e2e8f0" stroke-width="1" data-page-node-id="BLcAnBjcSZCoTLzfiSGuQC"/>
+  <text x="783" y="168" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="nhsMMi07RC3kx4W0CBvIdZ">检测 / 分割</text>
+  <text x="783" y="188" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="GQdrIo4qTSmOLAXSBmlnOD">（用 4 级金字塔</text>
+  <text x="783" y="206" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="wHew2Oc9TaH9uqiVHNdjNm">接 FPN）</text>
+  <text x="783" y="240" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="CyfXxQnceO3TYjWYLDgZXK">这才是"骨干"</text>
+  <text x="440" y="300" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="hoOUVLtK6qCPbCIO7ja1S6">空间分辨率逐级减半、通道翻倍 —— 与 ResNet 的特征金字塔形状一致，因此可直接替换 CNN 骨干</text>
+</svg>
+</div>
+<h3 data-page-node-id="4vDtW5buMvAWcDcO7xKPBm">3.5 相对位置偏置</h3>
+<p data-page-node-id="UYzo7zcWqHpW6WoG5pya7u">ViT 的绝对位置编码在窗口注意力下不再合适（窗口会移位，绝对坐标失去意义）。Swin 改用<strong data-page-node-id="hibodGWQO7jCdbUzV3r02D">相对位置偏置</strong>，直接加到注意力得分上：</p>
+<div class="formula" data-eq="(14)" data-page-node-id="1S89qI8aQvXIFp5ftH34z3">$$\text{Attention}(Q,K,V) = \text{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d}} + B\right)V, \qquad B \in \mathbb{R}^{M^{2}\times M^{2}}$$</div>
+<p data-page-node-id="JE7YaXzNHpvRsGXuQfiC96">$B$ 中的元素只取决于两个 token 的<strong data-page-node-id="4SMmcM7WviOF2WQ1HSVHZG">相对位移</strong>，因此取值空间远小于 $M^2 \times M^2$——位移在两个方向上各被裁剪到 $[-M+1, M-1]$，参数表大小为 $(2M-1)^2$。$M=7$ 时仅需 $13\times13=169$ 个偏置参数，比完整的 $49\times49=2401$ 小一个量级。实验显示这一项对精度贡献显著。</p>
+<h3 data-page-node-id="I0rbiGiUdZm1XcbYXkgVlv">3.6 两种注意力的适用边界</h3>
+<div class="table-wrap" data-page-node-id="RRKHdbg0Cp64Fh0K3jKFty">
+<table data-page-node-id="5nJN5KyT8hXyXcdK2KC5Nu">
+<tr data-page-node-id="jsYP5wH9SVk4XJ0qGaPsx6"><th data-page-node-id="0vD1j9996bVjAfKOIoCSJS">维度</th><th data-page-node-id="47Jlv1FlJ2r9PmaPlujdZN">ViT（全局注意力）</th><th data-page-node-id="frThocoGEYR3slacdTUv0o">Swin（窗口注意力）</th></tr>
+<tr data-page-node-id="GTeOSue1gltOXZAadvzZ3z"><td data-page-node-id="Gi3WhdYM8AyMKcDpwgOB2L">注意力范围</td><td data-page-node-id="HLKMgqEsOYOipHkxzV6arD">全图，每个 token 可见所有 token</td><td data-page-node-id="QJ1GPtz5pDgoxWWOicPnQW">窗口内，$M^2$ 个 token</td></tr>
+<tr data-page-node-id="Aqb3zredssctGkcHQouAsD"><td data-page-node-id="ohAGofTKpeVnNSxzPiCuDc">计算复杂度</td><td data-page-node-id="v1D26QT27fhhdxDzzqy3kB">$O(N^2)$，随分辨率平方增长</td><td data-page-node-id="DN3a0Q3ehBG0KOiZ1lHf2h">$O(N)$，随分辨率线性增长</td></tr>
+<tr data-page-node-id="vWTLYOGvpxLnlECDwkYask"><td data-page-node-id="QlPLXWnCMC5WgKxwPbU1g7">特征尺度</td><td data-page-node-id="pWYGLJeC2wnyydMiW6ivMk">单一尺度（$1/16$）</td><td data-page-node-id="o8TESmFSWE7fPtS5i7hZQK">四级金字塔（$1/4 \sim 1/32$）</td></tr>
+<tr data-page-node-id="wqtgfCLA227xq8Wn4Zgd7y"><td data-page-node-id="rggcGJbkaZCGRCtlqHQr9z">跨区域信息</td><td data-page-node-id="WziI7qWcsQUaEhcwb2JBU7">单层即可全局交互</td><td data-page-node-id="BXilX7grJJkzIuw5QNoZ7F">需靠窗口移位逐层扩散</td></tr>
+<tr data-page-node-id="5oUyVZPOnOYLJjDafGKYOB"><td data-page-node-id="Druv69ebrJXlPxuQa83sl4">作为检测/分割骨干</td><td data-page-node-id="RMqPO6K8gKmtMZqSY3GoQa">需额外改造（如 ViTDet）</td><td data-page-node-id="MT43gIfxoqQPz4ZRJXPjgN">开箱即用，直接接 FPN</td></tr>
+<tr data-page-node-id="GtvDOOgN4kS7OkONUDE5Qu"><td data-page-node-id="j16hnHFbzNLeGdFonzFfPw">感受野增长</td><td data-page-node-id="9OWCeSLfcYbgdQplDyCRaF">第一层就全局</td><td data-page-node-id="tbDekErABt41V4KVG7SCYY">近似卷积式的逐层扩大</td></tr>
+</table>
+</div>
+<p data-page-node-id="YcnxLw1fHjZU5cIUbGtwFL">两者的取舍本质上是<strong data-page-node-id="zPcxMY6DkczsV7jwUpCKVF">"早全局"还是"晚全局"</strong>：ViT 在第一层就让每个 token 看到全图，代价是二次复杂度；Swin 先局部、逐层靠移位扩大感受野，代价是信息扩散需要更多层。对于需要高分辨率的密集预测任务，后者更划算；对于固定低分辨率的分类任务，前者简单有效。</p>
+<h3 data-page-node-id="m6H2VVjC7U2hAiSa2HlvA8">3.7 Swin v2：把模型推到 30 亿参数</h3>
+<p data-page-node-id="kcgEKFE6DAaf5H7ldqBaXb">Swin v2 的目标是让 Swin 在更大规模下不崩，为此做了三处改动，都是针对"深层大模型训练不稳定"的：</p>
+<ul data-page-node-id="BlURQsH9NK1LIUDAIBwBNG">
+<li data-page-node-id="ypgKIdwHYAkYY4pucHFFFm"><strong data-page-node-id="DNQmAk93qpVocPCLxhfkgv">残差后归一化</strong>：把 LN 从子层输入侧移到输出侧（即回到 Post-LN 的位置，但配合缩放）。前作 Pre-LN 在大模型上激活值会逐层累积放大，Swin v2 改回后置并配合缩放，使激活幅度稳定。<em data-page-node-id="8TYTjC0kntDtvOhtC0nBo9">这是 ViT 与 Swin 在归一化位置上的一个直接对立选择，原因是模型规模不同</em>。</li>
+<li data-page-node-id="oUftraq0fdthMAIk7nvawk"><strong data-page-node-id="jCuB5fPXelrMCQlPkA2QSX">余弦注意力</strong>：把注意力得分用 $\cos$ 函数缩放替代原来的 $\sqrt{d}$ 缩放，使极值有界，避免大模型下注意力 logits 过大导致训练发散。</li>
+<li data-page-node-id="tqICYb57C6a1RVoGHl4hM8"><strong data-page-node-id="OCLTy8e6aqGoKYohE8K9QF">对数连续位置偏置</strong>：把相对位置偏置从离散参数表改为小型 MLP 对连续相对坐标建模，使模型能在预训练分辨率之外<strong data-page-node-id="JKayDKHI3ivHNyBDFrDBcW">外推</strong>到更大窗口与更高分辨率。</li>
+</ul>
+<p data-page-node-id="ysxU3tjAVEIEKeRW2bzpHn">Swin v2 用 70 亿张图像（70M 私有数据 + 1.5B 公开数据）预训练出 30 亿参数的模型，在 ImageNet 上达到 84.0% top-1，说明窗口注意力架构确实能随规模扩展。</p>
+<h3 data-page-node-id="9cgwHi7VMdq937LA7cmMIf">3.8 PyTorch 实现：移位窗口的掩码</h3>
+<div class="code-block" data-page-node-id="1oZ0FJS3tC23aSB47gBqkw"><div class="code-header" data-page-node-id="w5hJ7AAJRj9YEw0JowCHgP">swin_window.py — 窗口划分、循环移位与注意力掩码</div><pre data-page-node-id="03NHGb98riryPRg72TTHAW">
+<span class="kw" data-page-node-id="RV1d58QA5R1lK22s3OZSUw">import</span> torch
+
+<span class="kw" data-page-node-id="zg5BftpmbsEL8CDVSj1Y1j">def</span> <span class="fn" data-page-node-id="O2lrNMmmyNWL1HHiLPJGC8">window_partition</span>(x, M):
+    <span class="str" data-page-node-id="5uL8yN8IfL47MYwwO9oAQA">"""(B,H,W,C) -> (B*num_win, M, M, C)"""</span>
+    B, H, W, C = x.shape
+    x = x.view(B, H // M, M, W // M, M, C)
+    windows = x.permute(<span class="num" data-page-node-id="SQq9bUW1dCIM9sJQZANZ51">0</span>, <span class="num" data-page-node-id="gRvBemxR7vNipGIQDBCp7S">1</span>, <span class="num" data-page-node-id="Zrk4fsH9GBd5PkRCMvIdGS">3</span>, <span class="num" data-page-node-id="XpjeW3rJPK1NAL8rFzfTYI">2</span>, <span class="num" data-page-node-id="mdlGVRxfcQEGELDDN8zy0y">4</span>, <span class="num" data-page-node-id="aNFAuzEJGs4wgiUAf0nkey">5</span>).contiguous()
+    <span class="kw" data-page-node-id="HMVHrrW5MDwKvIxZqKTXRX">return</span> windows.view(-<span class="num" data-page-node-id="KVP9ndIb2jpoTuyoE05z86">1</span>, M, M, C)
+
+<span class="kw" data-page-node-id="0rUJPUCO5CtSWoLKJ9NcLg">def</span> <span class="fn" data-page-node-id="1VAhrTMR1cpUBii89mJaTM">window_reverse</span>(windows, M, H, W):
+    <span class="str" data-page-node-id="QtVG68BudDCX405Fl5qJ2A">"""窗口还原为特征图，与 window_partition 互逆"""</span>
+    B = <span class="fn" data-page-node-id="XBGn1JFn4nUb3j8mpMuWsU">int</span>(windows.shape[<span class="num" data-page-node-id="RiTPgfafXJHGTk3VQ4rZqX">0</span>] / (H * W / M / M))
+    x = windows.view(B, H // M, W // M, M, M, -<span class="num" data-page-node-id="IZAl7DntX7WEZG5rkPNLjI">1</span>)
+    x = x.permute(<span class="num" data-page-node-id="HZRmx5s8YZeaLcGX9r8GCs">0</span>, <span class="num" data-page-node-id="eCTuNl15rgH8FvWjxcTBOU">1</span>, <span class="num" data-page-node-id="55qPnHuxpLUbNpkQCkRilO">3</span>, <span class="num" data-page-node-id="MZdLaDgDJAQGy7BqYIe8AO">2</span>, <span class="num" data-page-node-id="o8HA83sbB3HtFCB98McFFA">4</span>).contiguous()
+    <span class="kw" data-page-node-id="BRlnHhIssiDkLkoVc21ATj">return</span> x.view(B, H, W, -<span class="num" data-page-node-id="KYfSs9EumddT62wfur55an">1</span>)
+
+<span class="kw" data-page-node-id="IQA8urVQgXxQHbPokCiAMW">def</span> <span class="fn" data-page-node-id="69RhANbTrX3EnvWI4sZnj2">compute_mask</span>(H, W, shift, M):
+    <span class="str" data-page-node-id="FlRZ7GRToViVnSBX1cfXZA">"""循环移位后，标记哪些 token 原本不属于同一窗口 —— 这些位置将被置 -inf"""</span>
+    img_mask = torch.zeros((<span class="num" data-page-node-id="g8mDRMldDz23BljiEpDpj1">1</span>, H, W, <span class="num" data-page-node-id="OxSsZnYE0q2BHALII4jA5z">1</span>))
+    h_slices = (slice(<span class="num" data-page-node-id="5sCKfbrtBwEDCAp56wulkL">0</span>, -M), slice(-M, -shift), slice(-shift, <span class="kw" data-page-node-id="CZHEomqUMu7HieGOEoHlKB">None</span>))
+    w_slices = (slice(<span class="num" data-page-node-id="BLA7P5G9W6gEKGuLfqqXis">0</span>, -M), slice(-M, -shift), slice(-shift, <span class="kw" data-page-node-id="9ggykACmiQ0oA3FwdiAQOf">None</span>))
+    cnt = <span class="num" data-page-node-id="SjcqNb45Bqmir3RITYFvee">0</span>
+    <span class="kw" data-page-node-id="s7TUwLldJCpjWoGOap2iHA">for</span> h <span class="kw" data-page-node-id="jUqoJyOczTPi2KAF4N8AxG">in</span> h_slices:
+        <span class="kw" data-page-node-id="DilTh4BQ0gTvnLwoNS259V">for</span> w <span class="kw" data-page-node-id="0EZ2yFfF9jpGSNKyeOReFn">in</span> w_slices:
+            img_mask[:, h, w, :] = cnt
+            cnt += <span class="num" data-page-node-id="5XLnnpCz2W6OVCTUSOddQ5">1</span>
+    mask_windows = window_partition(img_mask, M).view(-<span class="num" data-page-node-id="Wie3VYsYsdR02n8vIGiXv2">1</span>, M * M)
+    attn_mask = mask_windows.unsqueeze(<span class="num" data-page-node-id="X4epPHRodQrVBW6H34j97h">1</span>) - mask_windows.unsqueeze(<span class="num" data-page-node-id="Qwq6mcLdlY8cnRoE4fzqiE">2</span>)
+    <span class="com" data-page-node-id="nsJ4qUJIzkjgKJG2c033D6"># 同一原始窗口内 -> 0；否则 -> -100（softmax 后近似 0 权重）</span>
+    <span class="kw" data-page-node-id="bHXa4YNv2mD7I4LdhUf6oF">return</span> attn_mask.masked_fill(attn_mask != <span class="num" data-page-node-id="omwoeua1b1NRGNBMlSja38">0</span>, <span class="fn" data-page-node-id="wgE5RMwqnRKtdNRD95d7sJ">float</span>(-<span class="num" data-page-node-id="GdOPNXPoRpdly3paDhPVEC">100.0</span>))
+
+<span class="kw" data-page-node-id="kHSM5709k3FFlTAof1VboL">def</span> <span class="fn" data-page-node-id="yW5MXFDwBQebaXCNoFdX1z">shifted_window_attention</span>(x, M=<span class="num" data-page-node-id="HMzHJ1khp7kgBMTg4LHv8U">7</span>, shift_size=<span class="num" data-page-node-id="f38isTcSFIBzJjLbAPEBdm">3</span>, attn=<span class="kw" data-page-node-id="3HNnQyyuLFj7qPmqcfnzRF">None</span>):
+    B, H, W, C = x.shape
+    <span class="com" data-page-node-id="6AKse7wx85dW4RgFPQR8w7"># 1) 循环移位：把特征图整体平移，使边角补到另一侧</span>
+    shifted = torch.roll(x, shifts=(-shift_size, -shift_size), dims=(<span class="num" data-page-node-id="FFlmjLjAnPy80Y63zCvWVV">1</span>, <span class="num" data-page-node-id="UG0gZ2EfSevAZXpdESEHxJ">2</span>))
+    <span class="com" data-page-node-id="tHNyVIpaqsRFl41xAigfhC"># 2) 划分窗口 + 带掩码的窗口内注意力</span>
+    windows = window_partition(shifted, M).view(-<span class="num" data-page-node-id="v7i9ml5KfgYEezoGUWywoM">1</span>, M * M, C)
+    <span class="kw" data-page-node-id="ZGYSvDTcE0Ady81ew1wk7z">if</span> attn <span class="kw" data-page-node-id="9rQXR61LFJIuAzrUgzxJMt">is not None</span>:
+        out = attn(windows, attn_mask=compute_mask(H, W, shift_size, M))
+    <span class="kw" data-page-node-id="oq2OBIFvTENeEywnAu92BZ">else</span>:
+        out = windows
+    <span class="com" data-page-node-id="gsC9SRSG4Rpdt8EpzTlMZD"># 3) 还原窗口并反向移位，回到原坐标系</span>
+    out = window_reverse(out.view(-<span class="num" data-page-node-id="M6kx6AFAawFeceaX05VDPR">1</span>, M, M, C), M, H, W)
+    <span class="kw" data-page-node-id="COSciWHiAhEUeAgKT4L6kt">return</span> torch.roll(out, shifts=(shift_size, shift_size), dims=(<span class="num" data-page-node-id="bM87iM36yyLBAWylCm9ZEY">1</span>, <span class="num" data-page-node-id="YRMzh3oJlAVTCVJoYw1J2T">2</span>))
+</pre></div>
+</section>
+
+<section id="ch4" data-page-node-id="VkiDfnsKykaWewMXyHKZG9"><h2 data-page-node-id="iG0kNamWklJFqjNzc2jhcd"><span class="num" data-page-node-id="2E3k9xdvHgWuUV9NzR6SPB">4</span>ViT 变体横评：每个工作在解决什么</h2>
+<h3 data-page-node-id="VFEJIhN3Zvlqde97PQu12B">4.1 分类维度：先看动机，再看结构</h3>
+<p data-page-node-id="z8Q0EVv5HXgnKrNVgLtGTo">ViT 之后的变体数量庞大，但按"要解决什么问题"归拢，只有四条主线。下表先给出分类标准，后续各节按此展开——<strong data-page-node-id="xjZdA1QkP1FtSOPDg6zsfo">理解动机比记住结构重要</strong>，因为结构是动机的产物。</p>
+<div class="table-wrap" data-page-node-id="TiA5ZjK95IM2DMSS7fClQM">
+<table data-page-node-id="wvTxRyZhZnoTYKXNAbZxsn">
+<tr data-page-node-id="JnAgtNLApZOXh31WFhDIN9"><th data-page-node-id="doluLvG1P71BnTxfZBIA8G">主线</th><th data-page-node-id="XTBaTII03RNLW2tn6AwSvh">要解决的痛点</th><th data-page-node-id="5njsftRCZ6AHqQVzUCCg0J">代表工作</th><th data-page-node-id="DwRnIMgNjnDjpESBdBjCur">核心手段</th></tr>
+<tr data-page-node-id="ZDZf41OMlBkFd8oBkeUC5r"><td data-page-node-id="fHo1HTKXVeoxa2OpzVBqj6"><strong data-page-node-id="CyN1lAriJNlvb6eVVU6lU1">数据效率</strong></td><td data-page-node-id="rcpGvq5vB0DsZiPqtKRxqs">没有 3 亿张标注图，ViT 训不动</td><td data-page-node-id="pOAFdcDTD5OvIjODHYvurk">DeiT、CaiT、T2T-ViT</td><td data-page-node-id="jYHk4WSMXXTbjKCdchMkEM">蒸馏、强增广、结构改造</td></tr>
+<tr data-page-node-id="Q61hxwhgyGe1xt28kPK7CW"><td data-page-node-id="w7vPocEy45emXhHKtvHree"><strong data-page-node-id="y6EMFkwAYQl3P7Z8MX2x7M">自监督</strong></td><td data-page-node-id="pySlQJukVrvWD9ndgYPpOj">标注昂贵，希望用无标注数据预训练</td><td data-page-node-id="4yaNtlRINupS4U4Ejz1vHx">BEiT、MAE、DINO、iBOT</td><td data-page-node-id="RmaBedAgy8G5LL7kGRl2gP">掩码重建、自蒸馏</td></tr>
+<tr data-page-node-id="NVEpMFsFGgWA10dQ9wLIdf"><td data-page-node-id="QlXMNOTct5y5GvLeGEOlYo"><strong data-page-node-id="mGzXU5V5X051gfGIdfBIP3">效率与层次</strong></td><td data-page-node-id="lAp0MkNoONH7pc58G2BOiJ">二次复杂度、缺少多尺度金字塔</td><td data-page-node-id="uXKevhiGwRpxiHmkrPqLdE">PVT、Swin、CSWin、Twins</td><td data-page-node-id="0PrZSKpRlOCMgChJ4JR7wZ">稀疏/窗口注意力、金字塔</td></tr>
+<tr data-page-node-id="FvtSjvrPJHQnZQbEtVCZpk"><td data-page-node-id="DQnCyHf2dNyut26JcyIFYP"><strong data-page-node-id="W2QtiXKTsREJU1HVsErrHo">混合与多模态</strong></td><td data-page-node-id="zPYDiDdKtC6SSVqcL7mUxf">纯注意力缺先验；视觉需与语言对齐</td><td data-page-node-id="Dy3JrVTXcApknOoWd3zbyM">ConViT、CvT、CLIP、SigLIP</td><td data-page-node-id="S3mRwj0ProD5bTkUkfQ1Aq">卷积+注意力、对比学习</td></tr>
+</table>
+</div>
+<h3 data-page-node-id="TsItAC6Dft5S1WhIfd8GSE">4.2 数据效率线：在 ImageNet-1k 上也能训</h3>
+<p data-page-node-id="FUCJHIHL8YkUGJ3OU34A0g"><strong data-page-node-id="GKohJuGh1gkkiBbzx7JQSn">DeiT</strong>（2020.12）的动机最直接：ViT 需要 JFT-300M，但学术圈拿不到。它证明<strong data-page-node-id="O5Ocna0KpeQYN87nwSeLPo">只用 ImageNet-1k 也能训好 ViT</strong>，靠两招——其一是强数据增广（RandAugment、Mixup、CutMix、随机擦除）与正则化（随机深度、标签平滑），其二是<strong data-page-node-id="fMkeHdAp9JHWslg06tnaxv">蒸馏</strong>：引入一个额外的 distillation token，让学生同时模仿教师的输出：</p>
+<div class="formula" data-eq="(15)" data-page-node-id="LqlSa3FFhGin627vz9hLJe">$$\mathcal{L} = (1-\lambda)\,\mathcal{L}_{\text{CE}}\big(\psi(Z_s),\, y\big) + \lambda\,\mathcal{L}_{\text{CE}}\big(\psi(Z_s),\, y_t\big), \qquad y_t = \arg\max_c Z_t(c)$$</div>
+<p data-page-node-id="bk7ufg7DIt7rnhrHeSsAhS">关键结论是<strong data-page-node-id="VpqpHT1y4vfQ4EUjSIbbDO">用 CNN（RegNet）当教师比用同类 Transformer 教师更好</strong>——因为学生从教师那里继承的正是它所缺的归纳偏置。DeiT 的另一个副产品是"DeiT 数据量"这个新基准：不再是"要不要 3 亿图"，而是"用对方法，1k 就够"。</p>
+<p data-page-node-id="DD9frOQYmK0gatHGwvED8J"><strong data-page-node-id="qfPUEPZ3ABQcCmmKLp9EYz">CaiT</strong>（2021.03）从另一个角度切入：DeiT 证明了能训，但深层 ViT 仍不稳定。CaiT 提出两项改动——<strong data-page-node-id="6bDwQs7nOZtDUSTwBcohAU">LayerScale</strong> 给每个残差分支的输出乘一组可学习的小初值缩放系数（初值约 $10^{-4}\sim10^{-6}$），使深层残差接近恒等映射，训练初期更稳；<strong data-page-node-id="8GwhI4GJYTeDyQAoc1pZ9E">Class-Attention</strong> 把网络拆成两段，前段所有 token 一起注意，后段只让 CLS token 注意、patch token 不再更新，减少冗余计算。后者把深层的计算量集中到分类真正需要的部分。</p>
+<div class="formula" data-eq="(16)" data-page-node-id="bvnXV3SAKcQUdiEy666OxG">$$\text{LayerScale}: \mathbf{z}_\ell = \mathbf{z}_{\ell-1} + \text{diag}(\lambda_1,\dots,\lambda_D)\cdot \text{MSA}(\text{LN}(\mathbf{z}_{\ell-1})), \quad \lambda_i \sim \mathcal{N}(0, \epsilon)$$</div>
+<p data-page-node-id="lR3sw9QhQH9XjIWTZ4mG0m"><strong data-page-node-id="0DKDxtJf8wmDBY8GOBLYAv">T2T-ViT</strong>（2021.01）则质疑 patch 化本身：把图像硬切成 16×16 的块，块内像素结构被展平后可能已经损失。它用一次<em data-page-node-id="r5A4pqxCNuRbSf0GoO7dEZ">Tokens-to-Token</em> 模块（递归地把相邻 token 聚合展开）逐步"软"分块，再用更浅的 ViT 处理。</p>
+<h3 data-page-node-id="Mki6phOM0a16hIsTtbAHvz">4.3 自监督线：把预训练的成本从"标注"换成"算力"</h3>
+<p data-page-node-id="6ncDQY0ZcqjlUdDs66qFGR">有监督预训练需要海量<strong data-page-node-id="vA8mRbCCQKlWUckW5zQhqY">标注</strong>。自监督的价值在于用无标注图像即可预训练，标注只留给下游微调。</p>
+<p data-page-node-id="i5oj2VNmLGFBL4u7CWzexJ"><strong data-page-node-id="WfgmVO9ajw7Pu6mXnY1lvW">BEiT</strong>（2021.06）借鉴 BERT 的掩码语言建模：随机掩掉 40% 的 patch，让模型预测被掩 patch 的<strong data-page-node-id="jaQMOvurqTSFWVtgoYBPZ1">离散视觉 token</strong>。视觉 token 由一个预先训练好的 dVAE 提供（类似把图像"分词"）。之所以不用像素回归，是因为直接回归像素会让模型关注低级细节、学不到语义——这一点与 MAE 的选择恰好相反，值得对照。</p>
+<p data-page-node-id="U7Cb1vpoNvB59svkdkFLxG"><strong data-page-node-id="3NBg0FYtTSynJiQKq6f4M1">MAE</strong>（2021.11）把掩码率提高到 <strong data-page-node-id="mB5ESp6DQbD0pB36JxoZJQ">75%</strong>，并采用<strong data-page-node-id="WratQUfitbeKyKEDMMmBzN">非对称编码器-解码器</strong>：编码器只处理可见的 25% patch（大幅省算力），解码器（轻量）负责重建全部 patch。损失只在被掩 patch 上计算：</p>
+<div class="formula" data-eq="(17)" data-page-node-id="62ftME9pZwEzoaByHUIm2y">$$\mathcal{L}_{\text{MAE}} = \frac{1}{|\mathcal{M}|}\sum_{i \in \mathcal{M}} \big\| \hat{\mathbf{y}}_i - \mathbf{x}_i \big\|^{2}, \qquad \mathcal{M} = \text{被掩码 patch 集合}$$</div>
+<p data-page-node-id="avat4F2ZUS2C2vecTulCfC">MAE 的关键洞察有两条：其一，<strong data-page-node-id="mwIR5RCRNdmN7ZjC2lXUE6">高掩码率逼出语义理解</strong>——只看到 25% 的图，靠低级插值补不出缺失内容，模型必须理解物体结构；其二，<strong data-page-node-id="vlfdoZd6dkdWNRdcGFlA3s">掩码率高反而省算力</strong>，因为编码器只见 1/4 token。这里与 BEiT 的分歧（像素回归 vs token 分类）说明：像素重建本身可行，关键是配合足够高的掩码率，避免模型走"复制邻近像素"的捷径。</p>
+<p data-page-node-id="PqHDrrMXRFda2TwdYIk0Er"><strong data-page-node-id="fcIZoRnhUfNHUFUCAWrjCA">DINO</strong>（2021.04）走第三条路：不重建、不预测 token，而是<strong data-page-node-id="9tZBEc5G8Fvo3HRcBW0orh">自蒸馏</strong>——同一图像的两个增广视图分别送入学生与教师，让学生匹配教师的输出分布。它用两个技巧防止坍缩：<em data-page-node-id="fEd2C2IwYbzImCrBP3pMEM">中心化</em>（减去输出的滑动平均中心，避免某一维主导）与<em data-page-node-id="wCeG2GYZKM9XFWUoeP5bNW">锐化</em>（低温 softmax 让分布更尖），配合教师权重的 EMA 更新：</p>
+<div class="formula" data-eq="(18)" data-page-node-id="KMzzB5NCsOFclzjxLpWXx5">$$P_s(x)^{(i)} = \frac{\exp\!\big(g_s(x)^{(i)}/\tau_s\big)}{\sum_k \exp\!\big(g_s(x)^{(k)}/\tau_s\big)}, \qquad \mathcal{L} = -\sum_i P_t(x')^{(i)} \log P_s(x)^{(i)}$$</div>
+<p data-page-node-id="oPKY0R2oMmtFFpx6PcCiK1">DINO 的意外收获是：其注意力图自动呈现<strong data-page-node-id="TIpHuPOM7tFG6vvz5fmkdk">清晰的物体分割</strong>——完全无监督、无分割标签。这说明自监督 ViT 内部自发形成了物体级表示，也直接启发了后续大量分割工作。</p>
+<div class="svg-box" data-page-node-id="BWaAGYA0Df32woTKQfncnY">
+<svg viewBox="0 0 900 330" xmlns="http://www.w3.org/2000/svg" data-page-node-id="cUM9ZFocDabgRoWGlyj7xS">
+  <text x="450" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="mHoqQhZRBhj2FsSII9fRoG">ViT 变体家族：按动机分四条线</text>
+  <ellipse cx="450" cy="170" rx="86" ry="34" fill="#dbeafe" stroke="#2563eb" stroke-width="2.2" data-page-node-id="cbQZlfIRGJbHJ2czTmdFkO"/>
+  <text x="450" y="168" text-anchor="middle" font-size="13.5" fill="#1d4ed8" font-weight="700" data-page-node-id="mZxAtMjxKsbVHjdcwOn7Hl">ViT (2020)</text>
+  <text x="450" y="186" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="sxaZYlx8jrblryTwSJ2z8P">需要 JFT-300M</text>
+  <!-- 数据效率 -->
+  <line x1="366" y1="152" x2="222" y2="92" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="sxtvZCYbmFLlUL2Zj2j1xv"/>
+  <rect x="66" y="52" width="160" height="76" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="CM5vHoGyNKXnjtEHENZzlf"/>
+  <text x="146" y="72" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="Z4NEDHWKsweEFSVx3k5p7y">数据效率</text>
+  <text x="146" y="92" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="JgUcCKOOyBBII2FUhROSsA">DeiT · CaiT</text>
+  <text x="146" y="110" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="VxwsQGO8TDbcqulhH9wD1T">T2T-ViT</text>
+  <!-- 自监督 -->
+  <line x1="450" y1="136" x2="450" y2="88" stroke="#059669" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="9qW1Mutf9Ell6c0o4RlWvp"/>
+  <rect x="360" y="48" width="180" height="76" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="GtFdbH1H9GQy05O7uxMAKw"/>
+  <text x="450" y="68" text-anchor="middle" font-size="12" fill="#047857" font-weight="700" data-page-node-id="UYLSjTj4F0VgbNHpQDGVHZ">自监督预训练</text>
+  <text x="450" y="88" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="JllcKUW8x2wLRbLsRXMZWM">BEiT · MAE</text>
+  <text x="450" y="106" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Wk0PyyXDHB4wF4pnEH4B3Y">DINO · iBOT</text>
+  <!-- 效率层次 -->
+  <line x1="534" y1="152" x2="678" y2="92" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="qFCadymDRkwI0ev9DKt1kr"/>
+  <rect x="674" y="52" width="170" height="76" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6" data-page-node-id="kaSQDZ6xnTOnhCp865waOH"/>
+  <text x="759" y="72" text-anchor="middle" font-size="12" fill="#c2410c" font-weight="700" data-page-node-id="GBNo6ooHGuzuueBlMD9BDw">效率与层次</text>
+  <text x="759" y="92" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="tlZxwlAHvG53bWfYnOmX7H">PVT · Swin</text>
+  <text x="759" y="110" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="yTe9pqCe6I156PkFctADh0">CSWin · Twins</text>
+  <!-- 混合多模态 -->
+  <line x1="450" y1="204" x2="450" y2="248" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="j6VJ5ACPYopByO5D4Qcc8I"/>
+  <rect x="336" y="248" width="228" height="76" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6" data-page-node-id="zaYReJdOpwSWJXwZiARgEt"/>
+  <text x="450" y="268" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700" data-page-node-id="684fo5Bi1lL3YGD7hsg8UX">混合结构 · 多模态 · 规模</text>
+  <text x="450" y="288" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="WadhlXHyitmBwenTZaSFrO">ConViT · CvT · CLIP</text>
+  <text x="450" y="306" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="zAWCrRBUr1VXdYUpRuMyRu">SigLIP · EVA · ViT-22B</text>
+</svg>
+</div>
+<h3 data-page-node-id="ZZaRDwzDrmt06PVbkvJnEg">4.4 效率与层次线：把 ViT 变成真正的骨干</h3>
+<p data-page-node-id="9SFMnsMvAaRdHtsbJkclP8">这一线已在第 3 章详述 Swin，此处补上同期的其他思路，重点在<strong data-page-node-id="Qa2AZJ86Veq8yeGXKEW5pn">各自对"稀疏注意力"的不同理解</strong>：</p>
+<ul data-page-node-id="KTTZgPjfsmFbEiXRwsvofZ">
+<li data-page-node-id="5A9kBu8TGGcCNYecsrJieA"><strong data-page-node-id="DGtSTvyhUpPjCOJz70m0sh">PVT</strong>（2021.02）：最早的 ViT 金字塔方案。用 <em data-page-node-id="3CySq62HLoUN1uNuF0zPHD">Spatial Reduction Attention</em> 把 K、V 的空间尺寸缩小 $R$ 倍再算注意力，复杂度降为原来的 $1/R^2$；与 Swin 的区别是它<strong data-page-node-id="oBoRuFC1V4OrbDwgv8rsKR">保留了全局注意力的形状</strong>，只是降低了分辨率。</li>
+<li data-page-node-id="vAmcQlGkh8zG090S67BVvr"><strong data-page-node-id="t2p6fTApAfl1nZKeDUHCbT">Twins</strong>（2021.04）：交替使用<em data-page-node-id="cEKkLSUyE6kMQR65dm7gx6">局部窗口注意力</em>与<em data-page-node-id="SYyqttQ4a2uHGU1AtXpOx5">全局下采样注意力</em>（对池化后的全局 token 做注意力），兼顾局部细节与全局建模，同时用位置编码生成器处理可变分辨率。</li>
+<li data-page-node-id="g0q8QGd4ooUaDqZEN47nkm"><strong data-page-node-id="10uFeR5XfZLyYN63vCbwSc">CSWin</strong>（2021.07）：把窗口改成<strong data-page-node-id="3m5lMiYxty24kGxWLqNDcx">十字形</strong>——横向与纵向的长条窗口，再拼接。作者观察到"横向/纵向长条"比方形窗口更契合图像的行列结构，且可用更大的窗口而不增加太多计算。</li>
+<li data-page-node-id="pJDJxCjW03kQIBrgzI4kak"><strong data-page-node-id="vudVa9fls0WOiPwXkqFPFz">Neighborhood Attention</strong>（NAT，2022）：用固定稀疏模式（每个 token 只注意邻域）替代窗口，配合专门的 CUDA 核，实现"滑动窗口式"注意力。</li>
+</ul>
+<h3 data-page-node-id="GqA0o1ZXJGErDweLS8hPSD">4.5 混合结构与多模态</h3>
+<p data-page-node-id="EUpPii9OiwfpQjFCwWB6EQ"><strong data-page-node-id="GQwDXd6gYikbLJA6W2LUBc">ConViT</strong>（2021.03）的动机带有理论色彩：它指出标准自注意力在初始化时等价于一个<em data-page-node-id="3RmlPeOrfXuIFcSFaTwum3">带特定权重结构的卷积</em>，但训练会把这个结构破坏掉。于是它引入 <em data-page-node-id="eQB0QCZOykiwlhXGG02RcU">gated positional self-attention</em>，用一个门控在"卷积分支"与"自注意力分支"之间连续插值，让模型自己决定某层更像卷积还是更像注意力。<strong data-page-node-id="PrpbYSk07pu7VCW8g3GsI8">CvT</strong>（2021.03）则更直接：把卷积嵌入注意力内部（用卷积生成 Q、K、V，用深度可分离卷积代替 patch 化），走"卷积与注意力真正融合"的路线。</p>
+<p data-page-node-id="hdt9cXFSwQRNoXDrErnrsf"><strong data-page-node-id="u9vIt64uKNorK1BU1HcXnV">CLIP</strong>（2021.02）把 ViT 带到多模态：用 4 亿图文对做对比学习，让图像编码器（ViT）与文本编码器（Transformer）的输出在共享空间中对齐，从而实现<strong data-page-node-id="kHWPTGmh8vNjL2qaD4tW2D">零样本分类</strong>——把类别名写成 prompt，与图像算相似度即可分类，不需要任何该类别的训练样本。<strong data-page-node-id="5Llj3pGAVv5HtpRekJd4iE">SigLIP</strong>（2023.03）把 CLIP 的 softmax 对比损失换成 sigmoid 形式，解耦了 batch 内全局归一化，使小 batch 训练也稳定，工程上更实用。<strong data-page-node-id="41HfTvS1uvGEa8a7kVCHnu">EVA</strong>（2022.11）在掩码重建时以 CLIP 特征为回归目标（而非像素），把"语义级重建"与"无标注数据"结合，是 MAE 路线的自然延伸。<strong data-page-node-id="kgelsOcQbSrT8KQXLNE6aA">ViT-22B</strong>（2023.02）把 ViT 推到 220 亿参数，重点解决大规模训练的数值稳定问题（查询-键归一化、并行层），验证了"视觉 Transformer 也遵循某种规模规律"。</p>
+<h3 data-page-node-id="39VbLbUeOYJcHymC5RhJIy">4.6 横评表</h3>
+<div class="table-wrap" data-page-node-id="UPsH5Z59GzAomFMcUvMSAy">
+<table data-page-node-id="FxI9UHbR7Zie2oZIm9p2aw">
+<tr data-page-node-id="ZNOQF41XeZKuZFkp1Ywjek"><th data-page-node-id="sm196l4jwY3CjPCpTzeIa8">模型</th><th data-page-node-id="Fb5C7W5W3zWpDk2o2LZkD9">年份</th><th data-page-node-id="ktY9dRdFbNrP79PmZ2NGa8">核心动机</th><th data-page-node-id="BbcUOYqdsnreNpAtl09Ldm">关键手段</th><th data-page-node-id="9SEGJmVGNnFBLr4ClPzDBQ">代价 / 局限</th></tr>
+<tr data-page-node-id="TUEH6vtduI4otUsBknzKza"><td data-page-node-id="tu3EbxrmeTCHVjZTmpCIk1">ViT</td><td data-page-node-id="HZzBsU1DMyrw9GRQGpkAlB">2020.10</td><td data-page-node-id="Pr8d8vZ010TftHPLwqTZD2">纯注意力能否做视觉</td><td data-page-node-id="vRLnYwLp7Ttn8duLKmvaeP">Patch 化 + 全局注意力</td><td data-page-node-id="hBMRBaWQuNjsMzSieP7uq0">需海量数据，单尺度</td></tr>
+<tr data-page-node-id="UATnFmm2hdfA1wCLQtNEUm"><td data-page-node-id="d0QMrN5WeD0QhzxuN00uvn">DeiT</td><td data-page-node-id="aiKLYUN13pvnyz6J8PZli9">2020.12</td><td data-page-node-id="N4b103DDdknq6c0VvUq48F">摆脱 JFT-300M</td><td data-page-node-id="vsOnx2EMYITAFx0VrvDCqy">蒸馏 token + 强增广</td><td data-page-node-id="vcNlhvrd0WxV9Vl200rb7y">仍弱于大数据预训练版本</td></tr>
+<tr data-page-node-id="lZtfVIVzBDgJSm4DyakNCK"><td data-page-node-id="CBAGLgSMIfdcx9lQDzFTN6">T2T-ViT</td><td data-page-node-id="jRX1C5DUEXqoASlZSumkuE">2021.01</td><td data-page-node-id="A8U9yFpYTeY9ZZPUH3xoEv">硬分块损失块内结构</td><td data-page-node-id="4dncmHhtfXGjZ7D2RaRF5V">递归软分块</td><td data-page-node-id="4GhejhYng39JxHBw0RBisK">结构复杂，收益有限</td></tr>
+<tr data-page-node-id="HDlr1TUYga9VSIkFEFEW4b"><td data-page-node-id="bvHV4AWUrfheaAJKgtfl44">PVT</td><td data-page-node-id="bW650pZMyZXM4aLPQFNlKx">2021.02</td><td data-page-node-id="0nZgzsaj8kPpLK4xJz2E0o">ViT 无法做密集预测</td><td data-page-node-id="vjWkwmGPsl60N3bdCsNSmD">金字塔 + 稀疏 K/V</td><td data-page-node-id="3HCr5Dhwd4joocQVTSGcEt">仍是全局注意力形状</td></tr>
+<tr data-page-node-id="5lf3Ay9n7aNocAcW1FtoI1"><td data-page-node-id="h9QiKxQKHejKLDomOxbqBP">CLIP</td><td data-page-node-id="8BdefyV9kgXQtP69kgOdV8">2021.02</td><td data-page-node-id="HlwX4lA31BBlSfuoIhSCiu">视觉与语言对齐</td><td data-page-node-id="jewSRF6ns8i99xlWe2HFCT">4 亿图文对比学习</td><td data-page-node-id="DYJDzWuoCDqkMP8M8cZEnb">依赖大规模配对数据</td></tr>
+<tr data-page-node-id="7W5wbzBOi2MLiLSdjYdBW4"><td data-page-node-id="9FbwHvl1vns4eHlMjw1DGC">CaiT</td><td data-page-node-id="I2dpjFCKcN1ZMwdH056Qb5">2021.03</td><td data-page-node-id="DYPz3B6YLpwcFi4nGJR2B2">深层 ViT 训练不稳</td><td data-page-node-id="VxDhdqJNwBZfbwfcZjfHqz">LayerScale + Class-Attn</td><td data-page-node-id="xwPnuFJtNXHJB2E7eF2igm">后段表达能力受限</td></tr>
+<tr data-page-node-id="QwZFqgnAkVhvdniaGYDz0z"><td data-page-node-id="qJxoEV4CHMSkBs4IHdeYuU">ConViT / CvT</td><td data-page-node-id="gIHQ7XIGDhzV8EYovwTGEE">2021.03</td><td data-page-node-id="KDqAc8OEAmR6suuU7NpWXd">纯注意力缺空间先验</td><td data-page-node-id="HOg5JoUhJOmtIAE4h3wVae">卷积与注意力融合</td><td data-page-node-id="QFCWMdlsiSpNlYF9JCztxB">结构不统一，迁移性一般</td></tr>
+<tr data-page-node-id="FUC9ONq88KXhwnDjDGdelx"><td data-page-node-id="ns4UX1H7jtGDycUAVk4Zgf">DINO</td><td data-page-node-id="IRu07nwLT0M94b9yG5UYeU">2021.04</td><td data-page-node-id="TIJXfZeaBgKGDoAapQpzoL">无标注预训练</td><td data-page-node-id="FddThz45EqINDM5fBHEZ9s">自蒸馏 + 中心化锐化</td><td data-page-node-id="xwAIKmukHKnYWjRtIrHVcZ">需较大 batch，训练久</td></tr>
+<tr data-page-node-id="q9VcJQxpoIL8ClcLs6m3Bv"><td data-page-node-id="wyGd4L2S6BsvBJ23maBu07">Twins</td><td data-page-node-id="ooVMqKTPYdHzRgW2ChDIZW">2021.04</td><td data-page-node-id="507ZViiRAsS9gXy45jmLdL">局部与全局兼顾</td><td data-page-node-id="iU0PL8xqsuiFQRdNjxASYZ">局部窗口 + 全局下采样</td><td data-page-node-id="VCl1P8lsOBSsFohKnxxBGw">实现较复杂</td></tr>
+<tr data-page-node-id="Wfhv3EXZpgMqYCQGFcKdug"><td data-page-node-id="nzSjV0c5F5DwEHzuB4mxBR">Swin</td><td data-page-node-id="aMsWQsSnV5fP7zzlisB2Xm">2021.03</td><td data-page-node-id="JzlAKBs5wZqKS0uARFzFty">二次复杂度 + 缺金字塔</td><td data-page-node-id="eeA5GdvxiHMqTdDcQytdxq">窗口 + 移位窗口 + 层次</td><td data-page-node-id="JwH8Mma65XwTuyTWb0iHFS">跨窗口交互需多层</td></tr>
+<tr data-page-node-id="5QU2K9XR4NZRrKQSi0ZADo"><td data-page-node-id="slZbkyCBFERW84WHFKrNzs">BEiT</td><td data-page-node-id="WU4pvqxvdUApfgzBC1siyR">2021.06</td><td data-page-node-id="AmskMF65YCdcJ5UdZ0mS2s">把预训练成本转为算力</td><td data-page-node-id="vpAhn2yNNL6Xtd6S1RV6Bx">dVAE token 掩码预测</td><td data-page-node-id="JLe2h7cGW5BlqEYPGjhrcU">依赖额外的 dVAE 阶段</td></tr>
+<tr data-page-node-id="GtMnuFRWGv7DoHC4Z4A4Qt"><td data-page-node-id="zYK1wXXoPVMhTrGTjjvT90">MAE</td><td data-page-node-id="FAnxaKA3Mt2NC2UA08aMTm">2021.11</td><td data-page-node-id="7gVIGdJqPvR6IpVGTk8K9n">掩码重建的语义性</td><td data-page-node-id="EuBNRC2K9YnNljLzSIoVfq">75% 掩码 + 非对称编解码</td><td data-page-node-id="dpEAn62DeQVq8d4nS6uW3F">微调轮数偏多</td></tr>
+<tr data-page-node-id="DjAhuFNvK8gtMc91ZeEEGn"><td data-page-node-id="erHoNlCCMVZQkaxcHoO0RU">CSWin</td><td data-page-node-id="pLxttZlJwZPl26VQUGZtqF">2021.07</td><td data-page-node-id="u9KOPXpSRd0aWvqk8FLCoy">方形窗口不合图像结构</td><td data-page-node-id="dw7u429DyJanhsrVK6svQ4">十字形窗口</td><td data-page-node-id="OkGOlJ6XAJefrljtfdA3aE">需定制实现</td></tr>
+<tr data-page-node-id="cUldcoPDjCyHEsKTWDPniC"><td data-page-node-id="3BiZih4p6qLOhMy0XqaFoT">EVA</td><td data-page-node-id="qtw3EAr40g4rVZIhDAoa7s">2022.11</td><td data-page-node-id="8TMNpK6VIkwSXw99udQHES">像素重建偏低级</td><td data-page-node-id="t8eHAABw3uLO9Z1GL7RIcg">以 CLIP 特征为重建目标</td><td data-page-node-id="ghuKShkL8c9Wh5HiWWVQPm">依赖 CLIP 教师</td></tr>
+<tr data-page-node-id="jUxCigvxFrOCERXvFvSKKa"><td data-page-node-id="jcc247xq4vdcH4lAWeRC1Z">ViT-22B</td><td data-page-node-id="cSAdzyqitdkD7s9m5LKjZS">2023.02</td><td data-page-node-id="wYeB8T5fIwlqV2lG8ZfJ01">视觉是否服从规模规律</td><td data-page-node-id="R3KGEYjkHXqErckgmd2TTx">QK 归一化 + 并行层</td><td data-page-node-id="JfZi7c1kms3fwNvuWXI10H">训练成本极高</td></tr>
+</table>
+</div>
+<h3 data-page-node-id="uQGktRuAJN897OpQ5vj0Ze">4.7 选型建议</h3>
+<ul data-page-node-id="B1dJadqFGzHrwBoMYQMHga">
+<li data-page-node-id="wPhWui3gVzC5HKxxxPvbM3"><strong data-page-node-id="apr6eE59RbTjzD6DkPBUfA">只需图像分类、数据量充足</strong>：ViT 或 DeiT。结构最简单，微调成本低。</li>
+<li data-page-node-id="99knkcJDBN6ETOhidVxvMt"><strong data-page-node-id="Vj2DNOg9Pgpv8FDFakNbSK">需要检测 / 分割等密集预测</strong>：Swin、PVT、CSWin 这类层次化骨干。可以直接替换 CNN 骨干，接 FPN 与检测头。</li>
+<li data-page-node-id="lKG2uWnHEmGlUtDRWBGjqz"><strong data-page-node-id="O7PmjXgR1HkaqUieWEbExv">标注少、算力有限</strong>：DeiT（蒸馏 + 增广）或 CLIP 零样本。前者无需预训练，后者无需下游标注。</li>
+<li data-page-node-id="8PqmgDrEGB3nLUB0iXjb86"><strong data-page-node-id="FPhxtmhdmHfBVtArtGcDBd">有大量无标注图像、希望强表示</strong>：MAE 或 DINO。MAE 适合需要精细重建的任务，DINO 的表示更适合语义检索与分割。</li>
+<li data-page-node-id="WRBa9oE5COTBi9a8WGgDXV"><strong data-page-node-id="w4YZKD3fZUK7VH5n3X8bl2">需要图文跨模态</strong>：CLIP / SigLIP。注意它们的目标是<em data-page-node-id="A7YFTphjnAZZ2uho64fqAl">对齐</em>而非<em data-page-node-id="vaXVH1IJgMfGH666pIniWK">精细定位</em>，密集任务上仍需额外设计。</li>
+<li data-page-node-id="Hv0r2E0rnYmrb5RRjYGmzO"><strong data-page-node-id="78wQAY2cX1CQWbwpAkuovS">追求极致精度、不计成本</strong>：ViT-22B 或 EVA。但要先确认数据与算力预算。</li>
+</ul>
+</section>
+<section id="ch5" data-page-node-id="tFqwmmvJHFCVkiOib7lzsG"><h2 data-page-node-id="iRexr9KDrF3NWAJuIN0DEy"><span class="num" data-page-node-id="SjDh7M5YaSwGEw2pbY0HCM">5</span>内部机制：registers 与 attention sink</h2>
+<p data-page-node-id="qSw3wNVK2BOf2ddzSXBfY9">前面几章讨论的都是"架构长什么样"。但 ViT 的实际行为里有一些只靠架构图看不出来、却直接影响训练与部署的现象——它们多在 2023 年前后才被系统研究清楚。本章讨论其中最关键的两个：<strong data-page-node-id="Ihinxe3nFrz5feIQZqED1P">attention sink</strong> 与 <strong data-page-node-id="Tm68YHDypNCd7gJtfV4syd">registers</strong>。</p>
+<h3 data-page-node-id="wwcGttjEqRs2yM8IQsISru">5.1 Attention Sink：softmax 逼出来的"垃圾桶"</h3>
+<p data-page-node-id="8ulSsQKdiY2b9pGxm4tHZV">先说清一个容易被忽略的约束。自注意力对每个查询 $i$ 都要做一次 softmax 归一化：</p>
+<div class="formula" data-eq="(19)" data-page-node-id="9DQkNrgy2aHYaLGKwZJVms">$$\alpha_{ij} = \frac{\exp(s_{ij})}{\sum_{j'=1}^{n} \exp(s_{ij'})}, \qquad \sum_{j=1}^{n}\alpha_{ij} = 1 \;\; \text{（强制）}$$</div>
+<p data-page-node-id="4P12bPNNGrjIYD2NFTO299">关键在于<strong data-page-node-id="xa9cFNEHB2DwzgFPpU9M7Z">这个和为 1 是强制的</strong>。这意味着：当某个查询位置<em data-page-node-id="JPaaSFH9ktthHFbhlFFziT">不需要</em>从任何位置取信息时（比如对应的 patch 是一片无内容的背景），模型无法输出"全零注意力"——它必须把这份概率质量分配到某处。于是模型学会了一个策略：把质量集中投给某个<strong data-page-node-id="hOUgHLuX0UhTZ7lQRLZGKF">固定且信息量为零的 token</strong>，让该 token 的 value 向量在训练中演化成一个近似"空操作"的表示。这个被吸收注意力的位置就称为 <strong data-page-node-id="4BcxORwJr5muOiOocsOCZq">attention sink</strong>（注意力汇）。</p>
+<div class="formula" data-eq="(20)" data-page-node-id="RIxkfLdN3vCElHY6d7bwvF">$$\text{sink 条件}: \quad \exists\, s^{*}:\; \sum_{i} \alpha_{i s^{*}} \gg \frac{1}{n}, \qquad \text{且 } s^{*} \text{ 的语义贡献可忽略}$$</div>
+<p data-page-node-id="njBx4kWScdowqR8IdOsQTh">最直观的证据来自 <code data-page-node-id="PdpmlUiFyR3BH8HfO1CtDF">[CLS]</code> token 与首个 patch：ViT 中它们经常成为 sink，被几乎所有层大量关注——即便在分类任务里它们并不承载任何具体语义。这个现象并非视觉独有：大语言模型里同样存在 attention sink（首个 token 常被大量关注），并且在<em data-page-node-id="k7jLrGvt4qkzAdEnpKgqbR">长上下文推理</em>中非常关键——如果为了省显存把早期 token 从 KV cache 中删掉，模型输出会崩坏，原因正是丢掉了 sink。</p>
+<div class="svg-box" data-page-node-id="z0AcsRB3wr8b8vop4Xbjae">
+<svg viewBox="0 0 860 320" xmlns="http://www.w3.org/2000/svg" data-page-node-id="H7cm6c0eAAMz42enlX9E1S">
+  <text x="430" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="WuPwQjcgk4ihLhCvnlOhEG">Attention Sink：softmax 必须把概率质量分配出去</text>
+  <!-- left: without sink -->
+  <text x="205" y="56" text-anchor="middle" font-size="12.5" fill="#ea580c" font-weight="700" data-page-node-id="bE7SEsWlChHCeKGSVtJBH1">① 无 sink：质量无处安放</text>
+  <g data-page-node-id="I3SZJBKaFe3oGVxG7Msjv3">
+    <rect x="60" y="72" width="290" height="42" rx="6" fill="#fff7ed" stroke="#ea580c" stroke-width="1.4" data-page-node-id="dfyUe9o8zzCiJVqwwlVt3h"/>
+    <text x="205" y="98" text-anchor="middle" font-size="11" fill="#c2410c" data-page-node-id="M3lOzsri6tUL2vbdAy4bL2">查询"背景 patch"：没有需要关注的内容</text>
+  </g>
+  <!-- attention bars -->
+  <g data-page-node-id="nGOHFyEVM1g3ftJSBc04Qx">
+    <text x="60" y="146" font-size="11" fill="#475569" data-page-node-id="D5AVgMw8vqccEabwDm9Npa">注意力分布</text>
+    <g fill="#ea580c" opacity="0.85" data-page-node-id="hmmOaczKHlPpKarhLSfYD2">
+      <rect x="60" y="156" width="96" height="26" rx="4" data-page-node-id="uc09N7UojEX8iQgGewLhXj"/><rect x="160" y="156" width="26" height="26" rx="4" opacity="0.5" data-page-node-id="EnC4nTTPnjK8263FobsvI8"/>
+      <rect x="190" y="156" width="18" height="26" rx="4" opacity="0.3" data-page-node-id="0mAaER6lkwzljGn6M1GMF3"/><rect x="212" y="156" width="14" height="26" rx="4" opacity="0.25" data-page-node-id="r8uQmY0cDgwHnNgwEnN0E1"/>
+      <rect x="230" y="156" width="12" height="26" rx="4" opacity="0.2" data-page-node-id="4xP4TXBJdV9y0ncd0peRdG"/><rect x="246" y="156" width="10" height="26" rx="4" opacity="0.18" data-page-node-id="WDMcLPjcnE6fBovGcHAtgw"/>
+      <rect x="260" y="156" width="90" height="26" rx="4" opacity="0.12" data-page-node-id="TKievJO7YERHYYay1IAkbA"/>
+    </g>
+    <text x="108" y="174" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="700" data-page-node-id="OM3Pp42iL98hbwNSCDXlUV">≈ 0.87</text>
+    <text x="60" y="204" font-size="10.5" fill="#94a3b8" data-page-node-id="mEbhjyuhLfVzWIesHSf7iC">token 1（sink）</text>
+    <text x="350" y="204" font-size="10.5" fill="#94a3b8" data-page-node-id="axrXH0ZrJQ9B9m1erGaCE5">其余 token ≈ 0</text>
+  </g>
+  <text x="205" y="238" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="e6cbliThQD03obx80Xg2q6">质量被"挤"到某个无信息 token 上</text>
+  <text x="205" y="256" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="VXNpCo6jPzJlFULaBk74mq">该 token 的 value 被训练成近似"空操作"</text>
+  <!-- divider -->
+  <line x1="430" y1="46" x2="430" y2="288" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6,4" data-page-node-id="okfsIItlO2menn6MtEqKIs"/>
+  <!-- right: implications -->
+  <text x="645" y="56" text-anchor="middle" font-size="12.5" fill="#2563eb" font-weight="700" data-page-node-id="q7tBuo23Uqdv6SGJr2iM1f">② 由此推出的三个工程结论</text>
+  <rect x="470" y="72" width="350" height="58" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.4" data-page-node-id="Gjc7eAslWk6gkdmOdBx1Sw"/>
+  <text x="486" y="94" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="DXheDUbDDGiT0f0tqz3HAa">Token 剪枝要小心</text>
+  <text x="486" y="114" font-size="10.5" fill="#475569" data-page-node-id="ZAexiduh3lyvQnRHV7zDtd">删掉 sink token 会让注意力质量紊乱，输出崩坏</text>
+  <rect x="470" y="142" width="350" height="58" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.4" data-page-node-id="mjznKnfBCh2UlUJijCn94w"/>
+  <text x="486" y="164" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="X4BvMLe34xtPXRjyjBOUGo">KV cache 压缩需保留早期 token</text>
+  <text x="486" y="184" font-size="10.5" fill="#475569" data-page-node-id="XZQRYivZ6kbfTvmGGc2uDn">长上下文推理中丢弃首批 token 是常见失效原因</text>
+  <rect x="470" y="212" width="350" height="58" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.4" data-page-node-id="4JqXw1S5YKct1V7xUS6EuF"/>
+  <text x="486" y="234" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="Ini3VNapqSm14GXKV4goQ8">低比特量化要保护 sink 维度</text>
+  <text x="486" y="254" font-size="10.5" fill="#475569" data-page-node-id="jmI1v08oB86w7nGDEFaNtW">极值通道承载了大量概率质量，量化误差被放大</text>
+  <text x="645" y="300" text-anchor="middle" font-size="10.5" fill="#94a3b8" data-page-node-id="povIuIpyHWEDoFYkbWru6r">机制在 ViT 与 LLM 中同源，均源于 softmax 的归一化约束</text>
+</svg>
+</div>
+<h3 data-page-node-id="wlptGDd3rOjgkGaFJbRUWY">5.2 Registers：给模型一个显式的"垃圾桶"</h3>
+<p data-page-node-id="w4sw53kxmGCWee7nnyPB5S">attention sink 解释了"为什么注意力会跑到无意义的 token 上"，而 <strong data-page-node-id="s10UQ0JCl8OCUrPVFmVsnC">registers</strong> 是对这一现象的工程化利用。研究者的出发点是另一个观察：<strong data-page-node-id="mp14une6V2VHEbUhnth68F">ViT 的特征图里存在高范数的离群 token</strong>，它们集中在<em data-page-node-id="fdlIUPfAfEEiOOlVOAoTXZ">信息量很低的背景区域</em>。这些 token 在推理时承担了 sink 的角色，但它们同时会污染特征——在做分割、深度估计这类需要逐 patch 输出的密集任务时，这些异常值会出现在结果里。</p>
+<p data-page-node-id="7HXhGfN59i868AarNxH9F8">解法出人意料地简单：<strong data-page-node-id="ww7qclaz2zGcvQna11TFI7">额外拼接若干个（通常 4 个）可学习的 register token</strong>，让它们专门去当 sink，把原本流向背景 patch 的注意力吸收过来。</p>
+<div class="formula" data-eq="(21)" data-page-node-id="aOiRnB8Xae5xkZSXjj4Grd">$$\mathbf{z}_0 = \big[\,\mathbf{x}_{\text{class}};\;\mathbf{r}_1;\dots;\mathbf{r}_K;\;\mathbf{x}_p^1E;\dots;\mathbf{x}_p^{N}E\,\big] + E_{\text{pos}}, \qquad K = 4$$</div>
+<p data-page-node-id="4DFI26tY2wbSIEBCT4RZyH">效果很具体：注意力图变得干净，patch token 之间的注意力恢复正常；在下游密集预测任务上（如 ADE20k 分割、NYUd 深度估计）获得明显提升，且分类精度不受影响。另一个有价值的副产品是，加入 registers 后<strong data-page-node-id="fiB8KBAVHtbmAf5fkc7AeO">对模型做 token 剪枝或丢弃更安全</strong>——因为信息不再集中存储在少数几个会被误删的 token 里。</p>
+<div class="svg-box" data-page-node-id="U9Cnb1IxhcAQINAgqkxZ3X">
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="koxtxiAK842JqB8Br5QJyF">
+  <text x="440" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="Xnn3Fjwsgfoi2hIfBsrVx8">Registers 的作用：把注意力从背景 patch 转移到专用 token</text>
+  <!-- left -->
+  <text x="215" y="56" text-anchor="middle" font-size="12.5" fill="#dc2626" font-weight="700" data-page-node-id="z6eVd6mfDS3PZZgLt0w9ni">无 register：异常值落在背景 patch</text>
+  <rect x="80" y="72" width="270" height="150" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" data-page-node-id="BuLlTQxv1MvmdWEpRoTqR1"/>
+  <g stroke="#e2e8f0" stroke-width="0.8" data-page-node-id="tDk510pxoV31CJXx2yA9hX">
+    <line x1="80" y1="102" x2="350" y2="102" data-page-node-id="ObLC6OnGPbX3RnPdXnqTb9"/><line x1="80" y1="132" x2="350" y2="132" data-page-node-id="ruIzgLPcbwkGIS4Xz0Qdyq"/><line x1="80" y1="162" x2="350" y2="162" data-page-node-id="W4B15fO3lss7CNnp02FwCE"/><line x1="80" y1="192" x2="350" y2="192" data-page-node-id="eTVL2cNvgvbdluCNJ0rOnv"/>
+    <line x1="125" y1="72" x2="125" y2="222" data-page-node-id="3YFchB8A3ha2iiQgn5uCK7"/><line x1="170" y1="72" x2="170" y2="222" data-page-node-id="nv9bp1kozHzNwJHyf5YSpp"/><line x1="215" y1="72" x2="215" y2="222" data-page-node-id="Fh4YpcNIWnL59jD2zXfVVc"/><line x1="260" y1="72" x2="260" y2="222" data-page-node-id="9narQYt7aUhtdd61OxF2f6"/><line x1="305" y1="72" x2="305" y2="222" data-page-node-id="nsKtMdLlHT0ZWCVXXmoOVA"/>
+  </g>
+  <rect x="125" y="102" width="45" height="30" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6" data-page-node-id="1TBz0zei40bYISPafyXgOL"/>
+  <text x="147" y="122" text-anchor="middle" font-size="10.5" fill="#b91c1c" font-weight="700" data-page-node-id="imrBkm9eBAAjQNd2dLIqZS">↑高范数</text>
+  <rect x="215" y="162" width="45" height="30" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6" data-page-node-id="aVPYpL4lFkbxgmw55TSlod"/>
+  <text x="237" y="182" text-anchor="middle" font-size="10.5" fill="#b91c1c" font-weight="700" data-page-node-id="lvENsFCcJ5k0BOyIgrdySD">↑高范数</text>
+  <rect x="215" y="72" width="135" height="90" fill="#ffffff" opacity="0.35" data-page-node-id="N0SqUXnk5RuZ08vlrH7uSA"/>
+  <text x="282" y="112" text-anchor="middle" font-size="10.5" fill="#7c3aed" font-weight="700" data-page-node-id="4H4xNI2y6xmCcevftfLHDe">物体区域</text>
+  <text x="282" y="130" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="FJFbBGUoIGqtMFZiNbQDew">（语义应该在这里）</text>
+  <text x="215" y="246" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="n31kijikMGQUTKk4JhhW4G">背景 patch 被当成 sink → 污染密集预测输出</text>
+  <!-- arrow -->
+  <line x1="374" y1="150" x2="418" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="DB8xqFBgD8RGAtb6VM2YYE"/>
+  <!-- right -->
+  <text x="665" y="56" text-anchor="middle" font-size="12.5" fill="#059669" font-weight="700" data-page-node-id="9FYqprp2pBrtwvRFRI5hNR">加 4 个 register：注意力被吸收</text>
+  <rect x="490" y="72" width="310" height="150" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" data-page-node-id="nA9obqvZ4thMGbg5652lO9"/>
+  <g stroke="#e2e8f0" stroke-width="0.8" data-page-node-id="nZSQO2jampgFnLjdPFj4wu">
+    <line x1="490" y1="102" x2="800" y2="102" data-page-node-id="DJkUidGgePCGwcOC4y7xcI"/><line x1="490" y1="132" x2="800" y2="132" data-page-node-id="z3KUxWu0OatyYweC33oEB3"/><line x1="490" y1="162" x2="800" y2="162" data-page-node-id="WBETxuzanez9gSfIXwZ5CC"/><line x1="490" y1="192" x2="800" y2="192" data-page-node-id="3ndz7rPlqBscEQSaGDMAk3"/>
+    <line x1="543" y1="72" x2="543" y2="222" data-page-node-id="vOa3Zdy9NbG2RNJyxFAzVO"/><line x1="596" y1="72" x2="596" y2="222" data-page-node-id="92gsGrM172zOwfrqCSXIwe"/><line x1="649" y1="72" x2="649" y2="222" data-page-node-id="LHCTXNB9oTCMoE04SOEY83"/><line x1="702" y1="72" x2="702" y2="222" data-page-node-id="xsLpHEFRgQJUVuHhBcCGIo"/><line x1="755" y1="72" x2="755" y2="222" data-page-node-id="R9IH1hK3EHsRaQwrvJVwEr"/>
+  </g>
+  <rect x="649" y="72" width="151" height="90" fill="#d1fae5" opacity="0.55" data-page-node-id="JrGFsEHiJ1iTf68GW8zZoj"/>
+  <text x="726" y="112" text-anchor="middle" font-size="10.5" fill="#047857" font-weight="700" data-page-node-id="d0EsG6cVqTGL8R9BFyYVBb">物体区域</text>
+  <text x="726" y="130" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="whNdmRCOl7hKG47POtS5yu">注意力正常集中于此处</text>
+  <g fill="#c4b5fd" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="6fL9s3TXqdPvDHeWWcDb58">
+    <rect x="497" y="230" width="30" height="24" rx="4" data-page-node-id="7r5sS2DIFzvkPNPb1MZzAO"/><rect x="531" y="230" width="30" height="24" rx="4" data-page-node-id="9RHABKJS1gA8TKDUyFhzvg"/><rect x="565" y="230" width="30" height="24" rx="4" data-page-node-id="mNRNoC6lO0gKG9lKO4PTbm"/><rect x="599" y="230" width="30" height="24" rx="4" data-page-node-id="GZYe5KHOV4vfPHM9tapJoH"/>
+  </g>
+  <text x="563" y="246" text-anchor="middle" font-size="9.5" fill="#5b21b6" font-weight="700" data-page-node-id="SfSk9sJOT9l9w07hmEtV6Q">r₁ r₂ r₃ r₄</text>
+  <text x="645" y="246" font-size="11" fill="#5b21b6" font-weight="700" data-page-node-id="PAomuUXyEvwDbrA7mjmoAU">← register 承担 sink 角色</text>
+  <text x="645" y="278" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="GOvxamHi5XAqyiJlibx9WD">分类精度不变，密集预测任务显著提升</text>
+</svg>
+</div>
+<h3 data-page-node-id="milCytG5Puk9ERdNG7mYNj">5.3 训练稳定性：三件常被低估的小事</h3>
+<p data-page-node-id="yKMeb49BNvPl7VrLOHm5u2">ViT 能训到几十层，靠的不只是架构，还有几个实现层面的技巧。它们在论文里往往只占一两行，但去掉就会明显变差。</p>
+<ul data-page-node-id="GhKDW5jBDpTdOHzbQPEb4l">
+<li data-page-node-id="OlRg5jMxzAaNT4gZxFVkUa"><strong data-page-node-id="SC1foHiumwnKsBLT2E02ws">LayerScale</strong>（CaiT，见公式 16）：给每个残差分支输出乘一组小初值可学习缩放。深层的残差在初始化时接近恒等映射，梯度可稳定回传。初值越小越稳定，但收敛越慢，实践中常取 $10^{-4}$（浅层）到 $10^{-6}$（深层）。</li>
+<li data-page-node-id="MHSNlUABXnUzWwxuBh6cjw"><strong data-page-node-id="VDqRRta4mPo0AoiMJjAtgX">随机深度</strong>（Stochastic Depth / DropPath）：训练时以一定概率<em data-page-node-id="7jAJVTiNaiH7rU1HySGHKw">整层跳过</em>残差分支，相当于对深度做随机正则。ViT 中常用的丢弃率随层数线性增长（如从 0 到 0.1），浅层保留、深层多丢。</li>
+<li data-page-node-id="V6GfiaBkdHNN5pQCutC2w1"><strong data-page-node-id="CfFSq1gG4jHg5BhGAVh7wo">权重衰减与 EMA</strong>：ViT 对权重衰减比 CNN 更敏感，通常需要显式设置（约 0.05）；同时用参数的指数滑动平均（EMA）作为最终模型，可显著平滑训练波动。</li>
+</ul>
+<div class="callout warn" data-page-node-id="QmHIazHVY3nU5GUQo8B4rn"><div class="callout-title" data-page-node-id="JrGYVjBdrAx7Oj29ImPM5k">一个常见误区：Pre-LN 与稳定训练并不等价</div>
+<p data-page-node-id="pejiXFGz6NeWMcnoEmawuQ">ViT 用 Pre-LN 免去了学习率预热，但 Pre-LN 的副作用是<strong data-page-node-id="ipX6qmVJydDHOFQSKWbUvr">残差主干的激活值会随层数累积放大</strong>——因为没有在相加之后做归一化，每层的输出量级都在往主干上加。模型小时不明显，规模上去后会出现激活爆炸。这既解释了 Swin v2 为何改回后置归一化（3.7 节），也解释了 ViT-22B 为何要额外做查询-键归一化。<em data-page-node-id="Jn9PHRGGjjEniL24RcI08z">"用 Pre-LN 就稳"只在中小规模成立</em>。</p>
+</div>
+<h3 data-page-node-id="7gCd8mOtn9CFDwwmxbYIgw">5.4 位置编码插值：实现上的两个坑</h3>
+<p data-page-node-id="r4vj0QVg165Kx7rm8yOQi4">2.7 节已给出插值的概念形式，实现时有两个细节值得强调。其一是<strong data-page-node-id="h91I6C0Y5OhUtYsD02i2RK">插值必须在二维网格上做</strong>：位置编码是按 $14\times14$ 展平存储的，必须先用 <code data-page-node-id="HBfvUxNYTmoiLk4Vw4ADYB">reshape</code> 还原成二维，插值后再展平；直接按一维长度插值会破坏空间邻接关系。其二是<strong data-page-node-id="AEtkGePYz1KzOOdEsoq7L8">CLS 的位置编码要单独处理</strong>：它不参与二维网格，通常保持原值或单独插值，不能与 patch 编码混在一起。</p>
+<div class="code-block" data-page-node-id="Bsa3zkUqtorfG3tDZAnm0n"><div class="code-header" data-page-node-id="KCMylFTHwNPIOXtsUCuRPH">pos_interp.py — 二维位置编码插值</div><pre data-page-node-id="BYTYt61P1j2XYqeVrdqAHX">
+<span class="kw" data-page-node-id="xvwdoKUwJ4DdUB8MyRDFgB">import</span> torch.nn.functional <span class="kw" data-page-node-id="OPqzd5LA1UiSrKpvS1ySCm">as</span> F
+
+<span class="kw" data-page-node-id="DBZ9b86fBNnlTPMTGdERe1">def</span> <span class="fn" data-page-node-id="V2gqrsN6Zw6EM1CQdHr6Gw">interpolate_pos_encoding</span>(pos_embed, num_patches, patch_grid, new_grid):
+    <span class="str" data-page-node-id="8tA40ROxNHsHnvVqr3ajvD">"""pos_embed: (1, 1+N, D)；patch_grid: 预训练的 (h, w)；new_grid: 目标的 (H, W)"""</span>
+    N = pos_embed.shape[<span class="num" data-page-node-id="DIBrVjd7smZWYhei3AzOdD">1</span>] - <span class="num" data-page-node-id="9HWegEt6nQQMiDfzxpWUsR">1</span>
+    <span class="kw" data-page-node-id="BbLcIiHdJtpiZ3mppJ8rNq">if</span> num_patches == N <span class="kw" data-page-node-id="LsxDhgLeGY0KlRyq9Xy3Ns">and</span> patch_grid == new_grid:
+        <span class="kw" data-page-node-id="dLy6noSSYGb4eAtYdMyJ5r">return</span> pos_embed
+    <span class="com" data-page-node-id="gVCrUOyTbCUFRLjSaXwCn6"># 1) 分离 CLS 与 patch 的位置编码</span>
+    cls_pos = pos_embed[:, :<span class="num" data-page-node-id="dVPVjBSLULjLyqSKBgankF">1</span>]
+    patch_pos = pos_embed[:, <span class="num" data-page-node-id="CfsN1BxoQHlJOW65PxAySF">1</span>:]
+    D = pos_embed.shape[-<span class="num" data-page-node-id="ILQUkwam8A45S2Q01HHTe3">1</span>]
+    h, w = patch_grid
+    H, W = new_grid
+    <span class="com" data-page-node-id="4f3sDwRJt3S7gW9r1xE3PA"># 2) 还原成二维网格再做双三次插值 —— 不能拉平成一维插值</span>
+    patch_pos = patch_pos.reshape(<span class="num" data-page-node-id="A878b28PN6XiLBhT0ygi2O">1</span>, h, w, D).permute(<span class="num" data-page-node-id="xXjNvHln5CPoLMfiKsYNMM">0</span>, <span class="num" data-page-node-id="9q4quncxmunjuuOHyRVPYF">3</span>, <span class="num" data-page-node-id="lnBNKFBXtfm4aWCwPM0VeZ">1</span>, <span class="num" data-page-node-id="BlnZ8KYzH6kPE2Fn549XEu">2</span>)
+    patch_pos = F.interpolate(patch_pos, size=(H, W), mode=<span class="str" data-page-node-id="CdC5MAXfHWABri7Z95Yc1q">'bicubic'</span>, align_corners=<span class="kw" data-page-node-id="yjAkrSWLybY5dIImAeCwDP">False</span>)
+    patch_pos = patch_pos.permute(<span class="num" data-page-node-id="7gGmdeBz36XdZnqHZXsomd">0</span>, <span class="num" data-page-node-id="faEhytsvXFoqY81VZKvRom">2</span>, <span class="num" data-page-node-id="EMdcJeaofjPT5tifcWUfLW">3</span>, <span class="num" data-page-node-id="7rDdMnQUgbpxSUdjYN9xWj">1</span>).reshape(<span class="num" data-page-node-id="Di1F8vxH6DEfniCwLlBNpx">1</span>, H * W, D)
+    <span class="com" data-page-node-id="s6LZJQ40DNx83c76NJE1Y6"># 3) 重新拼回 CLS</span>
+    <span class="kw" data-page-node-id="2oe6GWzZ5hi57dIoHONDp8">return</span> torch.cat([cls_pos, patch_pos], dim=<span class="num" data-page-node-id="hVcUIRFmCtLy9Bw7858Z21">1</span>)
+</pre></div>
+<h3 data-page-node-id="HdaCJOlgj2Z3jRUCoR0qg6">5.5 注意力距离的层间演化</h3>
+<p data-page-node-id="qSp6qtgISwYAUKD1asKJRo">最后补一个有助于建立直觉的观察：ViT 的注意力<strong data-page-node-id="Xke2HhMyYC1XCffSpnuYx8">平均关注距离随层数显著增长</strong>。浅层倾向于关注邻近 patch（行为接近卷积），中层开始跨越中等距离，深层则几乎全局。这与 CNN 通过堆叠扩大感受野的过程相似，但 ViT 是"自发学出来的"，而非结构强制的。</p>
+<p data-page-node-id="8ERSuVcVESdGDeHzMNKpct">这个演化规律有三点实用含义：其一，它解释了为什么在浅层做局部窗口注意力（Swin、CSWin）代价不大——浅层本来就在看局部；其二，它解释了 DINO 的注意力图为何能自动分割出物体——深层注意力已经具备全局、物体级的组织；其三，它也是"要不要给 ViT 注入卷积先验"这一争论的经验依据：浅层的局部性与卷积先验一致，这也是 ConViT 用门控让浅层偏向卷积的动机。</p>
+</section>
+
+<section id="ch6" data-page-node-id="RFUDyHXLtnGByT6dGLfXBM"><h2 data-page-node-id="diu2SBN8DT0Jdrl6qEf8NZ"><span class="num" data-page-node-id="WJCyOnoRlmKGjwqzaLWBrG">6</span>DETR：Transformer 作为 decoder 与范式改变</h2>
+<h3 data-page-node-id="pB1FH7G2naAFSdZxKGqe8n">6.1 动机：检测管线里的手工组件</h3>
+<p data-page-node-id="7jk9Xl7DSNMzCatu7dCaEO">在 DETR 之前，目标检测的主流范式（Faster R-CNN、RetinaNet、YOLO 系列）有一条固定流水线：<strong data-page-node-id="FeTfTC7cyt6EHnYsZf8HdF">生成大量候选框 → 逐框分类与回归 → 非极大值抑制（NMS）去重</strong>。这条流水线里有两个"不优雅"的地方：</p>
+<ul data-page-node-id="OWXPHU5bAiFGACMGmTr7pM">
+<li data-page-node-id="ji0TphxUriiQlMsU5nCIcG"><strong data-page-node-id="kAdBB8zGV5VOeA00PYRpK5">需要人工设计的先验</strong>：锚框（anchor）的尺寸、长宽比、数量都要针对数据集调参；正负样本如何分配（哪些框算正样本）也是启发式规则。</li>
+<li data-page-node-id="NbhE2I03IzZoXDeUDvgpjT"><strong data-page-node-id="NPSfVQ3hh6a6Ft9xzfjB09">NMS 是不可微的后处理</strong>：它无法参与端到端训练，且需要调 IoU 阈值。阈值稍变，结果就会明显波动。这意味着检测器不能真正"端到端"。</li>
+</ul>
+<p data-page-node-id="2adnL9DVgcphAKr0JxYNPM">DETR 的动机是把这个管线整体去掉，把检测直接建模成一个<strong data-page-node-id="OIEgQEw3e1a2oYe2RYrhx2">集合预测</strong>问题：给定图像，输出一个<em data-page-node-id="PpcF39JzkCkOAq7MBcesau">大小固定</em>的预测集合（如 100 个框），其中包含真实物体与"无物体"（∅）两类，然后用一个能处理集合的损失去训练。既然预测集合是"无序"的，NMS 这种"去重"操作在原理上就不再需要——<strong data-page-node-id="6BRMiBDFSUbexjBvLAi2CT">去重由损失函数在训练中完成，而不是由后处理在推理中完成</strong>。</p>
+<h3 data-page-node-id="xrT1fMSRWHjtsiZHPA2c4D">6.2 架构：编码器看全局，解码器出集合</h3>
+<p data-page-node-id="r7hrK8cv8O4KwAEfeGi5Tf">DETR 的架构可以清晰地分成三段，其中 Transformer 的角色与第 2 章完全不同——<strong data-page-node-id="MwHoxSbwQBJY6OL3D4RiIn">它不再是骨干，而是解码器</strong>：</p>
+<ul data-page-node-id="sTiyAgXJMEEfGkFQ2w3DhO">
+<li data-page-node-id="oLMpP4pW7PNH24H9lHzWxQ"><strong data-page-node-id="PX095HVJlWDtFVF2GpcXb7">CNN 骨干</strong>（ResNet）：把图像转成特征图，展平并加位置编码后送入 Transformer。注意这里仍用 CNN 提特征，ViT 尚未接管这一步。</li>
+<li data-page-node-id="9jAMApwuBe8D3afwdEJbVw"><strong data-page-node-id="dWn4nVYOGFKfulZMzBk1u6">Transformer 编码器</strong>：全局自注意力。之所以关键，是因为检测需要<strong data-page-node-id="APiZEiAzWmCJGyACGxUngb">整图推理</strong>——判断"这是一个物体"往往要看它与其他区域的关系（如与旁边物体对比大小）。CNN 的局部感受野需要堆很多层才能建立这种全局依赖，而自注意力一层即可。论文指出编码器的作用类似"把实例从背景中解耦出来"。</li>
+<li data-page-node-id="Y3DtPHWDFumR5W0h39i8Pw"><strong data-page-node-id="6pmgwAHchk3egpx2IFTzT7">Transformer 解码器 + object queries</strong>：这是 DETR 最核心的设计。解码器有固定的 $N$ 个输入位置，称为 <strong data-page-node-id="jXel7UWfAF6DAP4WUiyDeo">object queries</strong>——它们是可学习的向量，不是来自图像。每个 query 通过交叉注意力"查询"编码器输出的特征，最终各自输出一个预测（类别 + 框）。</li>
+</ul>
+<div class="formula" data-eq="(22)" data-page-node-id="JxVq2AFOFSzAUsMlUB6AYN">$$\hat{\mathbf{y}}_i = \big(\hat{p}_i(c),\; \hat{\mathbf{b}}_i\big), \quad i = 1,\dots,N, \qquad N = 100 \text{（远大于图中物体数）}$$</div>
+<p data-page-node-id="6KlIUuMlNMjTUPijWIFqXv">object queries 的直觉可以理解为：模型被分配了 100 个"查询槽位"，每个槽位学习去关注图像的某类位置或模式。因为分配是<strong data-page-node-id="KCltPj6qPC0HepTaFBFMOh">无序</strong>的，所以必须用集合损失来训练——这就是下一节的二分匹配。</p>
+<div class="svg-box" data-page-node-id="E4WbOgzLEqbrax8d1KzADj">
+<svg viewBox="0 0 920 320" xmlns="http://www.w3.org/2000/svg" data-page-node-id="jFK0g3YissIzzR025KS6IK">
+  <text x="460" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="JACNVDjVNlFjZMvG2rB8KW">DETR 架构：CNN 骨干 → Transformer 编码器 → 解码器 + object queries</text>
+  <!-- backbone -->
+  <rect x="20" y="86" width="112" height="96" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="iUPeNI1J7jdQkOVh8Ehxgp"/>
+  <text x="76" y="126" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="700" data-page-node-id="EZQE7WkZBYREh6MDsBtHDN">CNN</text>
+  <text x="76" y="146" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="700" data-page-node-id="lsgeD576aXmHUFudL8gW4T">骨干</text>
+  <text x="76" y="168" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="W3Q6KZD7BVKuaEGygS3XU7">ResNet</text>
+  <line x1="134" y1="134" x2="164" y2="134" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="o7e5ocjnk8WPPMvFiz89Lc"/>
+  <!-- encoder -->
+  <rect x="168" y="66" width="176" height="136" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.8" data-page-node-id="HpdivJZ3NRISDWrEAhDqrg"/>
+  <text x="256" y="92" text-anchor="middle" font-size="12.5" fill="#1d4ed8" font-weight="700" data-page-node-id="4uSwprurMzrr9lJI5jiKx0">Transformer 编码器</text>
+  <text x="256" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="zr1kdBHl7nfpDGLS0BzdO9">全局自注意力</text>
+  <text x="256" y="134" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="mkNhNOHYb2uMsFwtGc1Acs">+ 位置编码</text>
+  <text x="256" y="160" text-anchor="middle" font-size="10.5" fill="#7c3aed" data-page-node-id="VJEFkY7UYscJiYkVJnevrm">作用：把实例与背景解耦</text>
+  <text x="256" y="182" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="OQtT5dxNIMlVkq9GdfiHcg">整图推理，一层即全局</text>
+  <line x1="346" y1="134" x2="376" y2="134" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="WsKB45fF07Zc8ZQYEbByBV"/>
+  <!-- decoder -->
+  <rect x="380" y="66" width="176" height="136" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.8" data-page-node-id="31rrkv9ldxvG1l1HiolTcj"/>
+  <text x="468" y="92" text-anchor="middle" font-size="12.5" fill="#047857" font-weight="700" data-page-node-id="piFwGnh1xY2vCHUWxU7eZ8">Transformer 解码器</text>
+  <text x="468" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="lm8PIbB3GvLdfpNf8KF0GG">自注意力 + 交叉注意力</text>
+  <text x="468" y="134" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="ajqePqQfRrHcmYNwQoSGuM">读取编码器输出</text>
+  <text x="468" y="160" text-anchor="middle" font-size="10.5" fill="#047857" data-page-node-id="KC2cdFnGQREzIac7LSy0Sy">输入：object queries</text>
+  <text x="468" y="182" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="kEbeE3ky41xHv2ywTDqf8E">可学习，与图像无关</text>
+  <!-- queries below -->
+  <g fill="#fef3c7" stroke="#d97706" stroke-width="1.3" data-page-node-id="WDWuy7nrXA5r0gQq4cVGBP">
+    <rect x="388" y="222" width="26" height="22" rx="4" data-page-node-id="NCn3Dl5BXhYGsqgN11qEKT"/><rect x="420" y="222" width="26" height="22" rx="4" data-page-node-id="9eV5aXveevVix8O0m4ygDu"/><rect x="452" y="222" width="26" height="22" rx="4" data-page-node-id="WiysvBt6v6FMJQDZyKRYi6"/>
+    <rect x="484" y="222" width="26" height="22" rx="4" data-page-node-id="5PK5yCEDIMfZb9k8wp7A6F"/><rect x="516" y="222" width="26" height="22" rx="4" data-page-node-id="laHKHs3THBKRr1LEjHl6qN"/>
+  </g>
+  <text x="561" y="238" font-size="10.5" fill="#92400e" font-weight="700" data-page-node-id="BYajD2pRHHFTtsLGcs7HaE">… 共 100 个</text>
+  <line x1="468" y1="204" x2="468" y2="220" stroke="#d97706" stroke-width="1.6" marker-end="url(#tl-ar)" data-page-node-id="4FSV3cZjkN9Kp3Y5prxc2R"/>
+  <line x1="582" y1="134" x2="614" y2="134" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="MG1DsH6xb3ZZrBaaecsYpQ"/>
+  <!-- predictions -->
+  <rect x="618" y="80" width="118" height="108" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" data-page-node-id="XCOQX0FTvF1QHfujOjVz91"/>
+  <text x="677" y="102" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="700" data-page-node-id="92YaElcNrf02axGX8HWmY1">100 个预测</text>
+  <text x="677" y="124" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="KpjQ0HFkTEWCq7zjpDpc98">类别 + 框</text>
+  <text x="677" y="148" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="apPeCgiESdHAmTLv7Cw2kb">含"无物体"∅</text>
+  <text x="677" y="172" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="Wy6FXJftZeIbONvEGGlhsx">无序集合</text>
+  <line x1="738" y1="134" x2="770" y2="134" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="Q21TzLG5Hj4u0MX3XPpzuN"/>
+  <!-- loss -->
+  <rect x="774" y="86" width="126" height="96" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6" data-page-node-id="ZetrSaU42dm4w9Fz7hHV2e"/>
+  <text x="837" y="112" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="aDLUzq0mlJzmu3mJeTzC26">二分图匹配</text>
+  <text x="837" y="134" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Z2fCdVSBq6x3jx1AGt0mxJ">匈牙利算法</text>
+  <text x="837" y="158" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="bFoAL6lWZWTcl7FP5foPzd">一对一分配</text>
+  <text x="460" y="290" text-anchor="middle" font-size="11.5" fill="#dc2626" font-weight="700" data-page-node-id="FsBb89mvG7KHePhG0tGYoa">训练时一对一匹配 → 推理时无需 NMS</text>
+  <text x="460" y="308" text-anchor="middle" font-size="10.5" fill="#64748b" data-page-node-id="jhqgxOL5meIB7hieUWUhb1">去重从"后处理"搬到了"损失函数"里</text>
+</svg>
+</div>
+<h3 data-page-node-id="BuC6w1gnjR2eeKTHGV8wHG">6.3 二分图匹配损失：去重的关键</h3>
+<p data-page-node-id="jvj1MiuOMrHHqjBKec0QwF">训练时，模型输出 $N=100$ 个预测，而真值只有 $M$ 个物体（$M \ll N$）。由于预测是无序集合，需要先确定"哪个预测对应哪个真值"，这正是一个<strong data-page-node-id="TPDfZoxAbRDa343lRbutRq">二分图匹配</strong>问题。DETR 用匈牙利算法求使总匹配代价最小的分配 $\hat{\sigma}$：</p>
+<div class="formula" data-eq="(23)" data-page-node-id="nflax4raoQ4Q1UangP2RKR">$$\hat{\sigma} = \arg\min_{\sigma \in \mathfrak{S}_N} \sum_{i=1}^{M} \mathcal{L}_{\text{match}}\big(y_i,\, \hat{y}_{\sigma(i)}\big)$$</div>
+<p data-page-node-id="mATLDGiU9IGJfBzVnuEdIv">匹配代价同时考虑分类与框的位置：</p>
+<div class="formula" data-eq="(24)" data-page-node-id="DRkma7yMmQ6T3G7gPmaAV3">$$\mathcal{L}_{\text{match}}\big(y_i, \hat{y}_{\sigma(i)}\big) = -\mathbb{1}_{\{c_i \neq \varnothing\}}\,\hat{p}_{\sigma(i)}(c_i) + \mathbb{1}_{\{c_i \neq \varnothing\}}\,\mathcal{L}_{\text{box}}\big(b_i, \hat{b}_{\sigma(i)}\big)$$</div>
+<p data-page-node-id="n6wiHtJoQSPf6SCmU6nCuE">确定匹配后，计算真正的损失。分类项用交叉熵，框回归项用 L1 与 GIoU 的线性组合——<strong data-page-node-id="1T8DqWW8K6akpNBwp9xHbX">L1 对尺度敏感、GIoU 对尺度不敏感</strong>，两者互补，这是 DETR 的一个工程经验：</p>
+<div class="formula" data-eq="(25)" data-page-node-id="EoPsirJQ9MHmjhbO77FNsR">$$\mathcal{L}_{\text{Hungarian}}(y, \hat{y}) = \sum_{i=1}^{N}\Big[ -\log \hat{p}_{\hat{\sigma}(i)}(c_i) + \mathbb{1}_{\{c_i \neq \varnothing\}}\big(\lambda_{\text{iou}}\mathcal{L}_{\text{GIoU}} + \lambda_{\text{L1}}\|b_i - \hat{b}_{\hat{\sigma}(i)}\|_1\big) \Big]$$</div>
+<div class="callout success" data-page-node-id="fcvoBuaYV5BTzwiRsFHDEp"><div class="callout-title" data-page-node-id="qZQBEWZ2JxHKXgYqq6yhrv">为什么一对一匹配能替代 NMS</div>
+<p data-page-node-id="o9a8xaLOS94FwUg3aqBH9N">NMS 存在的理由是：同一个物体被多个候选框命中，需要去重。而在 DETR 的一对一匹配里，<strong data-page-node-id="Hp81ubUtuiI3stbsH4EyTv">每个真值物体只被分配给一个预测</strong>，其余预测被显式监督为"无物体"（∅）。于是模型在训练中学会"一个物体只由一个 query 负责"，冗余预测在源头上就被抑制了。这正是"把去重从后处理搬进损失"的含义——<strong data-page-node-id="pIfeCdT1aysa9tr9VjLwdN">NMS 处理的是结果，匹配损失处理的是动机</strong>。</p>
+</div>
+<div class="svg-box" data-page-node-id="3HDQYMkC6xqTCHh4LHiRVe">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg" data-page-node-id="yKYkGkCQnsP5VjnKVovbIS">
+  <text x="390" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="PwNWHVm1QX60G8bwKJmt51">二分图匹配：3 个预测 ↔ 2 个真值（其余监督为 ∅）</text>
+  <!-- left: predictions -->
+  <g data-page-node-id="dojceOsKAZkRCBHv75FFyA">
+    <rect x="60" y="60" width="150" height="40" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6" data-page-node-id="FptlL8H2eL8E8iRhthUMqh"/>
+    <text x="135" y="86" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="GkHH62Us1pnZNDBaoNC7By">预测 1：人 0.92</text>
+    <rect x="60" y="112" width="150" height="40" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6" data-page-node-id="pDcs7mRxbVHnys8DS5TtlX"/>
+    <text x="135" y="138" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="wMTsOWAEkT3aQZnfWxuNsQ">预测 2：狗 0.88</text>
+    <rect x="60" y="164" width="150" height="40" rx="7" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4" data-page-node-id="Yf2U6PHP9EdlGPSstDVenJ"/>
+    <text x="135" y="190" text-anchor="middle" font-size="11.5" fill="#64748b" font-weight="700" data-page-node-id="oYJCC2orIAqiwsaEOuZqAW">预测 3：∅</text>
+  </g>
+  <!-- right: ground truth -->
+  <g data-page-node-id="8rvTcM02NG0KERs4CZQo2c">
+    <rect x="570" y="86" width="150" height="40" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="XOsbVKFmxdg5Nqs6D1xTgl"/>
+    <text x="645" y="112" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="6ll3jmBaJyCNcHXnujlbvw">真值 A：人</text>
+    <rect x="570" y="138" width="150" height="40" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="RCtRUm5QP0HwlQxkQbXmtm"/>
+    <text x="645" y="164" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="baiUv0KE1VmmZLEEuGgqCx">真值 B：狗</text>
+  </g>
+  <!-- matches -->
+  <line x1="212" y1="80" x2="568" y2="106" stroke="#ea580c" stroke-width="2.4" data-page-node-id="k1B3rgmR38scwdFu09IUgs"/>
+  <line x1="212" y1="132" x2="568" y2="158" stroke="#ea580c" stroke-width="2.4" data-page-node-id="2E6mFChUOgtbjk6h7yeozz"/>
+  <line x1="212" y1="184" x2="540" y2="184" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="5,4" data-page-node-id="jHL9358MeHqR1eMwyOGJL8"/>
+  <text x="390" y="86" text-anchor="middle" font-size="10.5" fill="#c2410c" font-weight="700" data-page-node-id="FK0rHAiXIcHyp76DZWxHx1">匹配（代价最小）</text>
+  <text x="390" y="140" text-anchor="middle" font-size="10.5" fill="#c2410c" font-weight="700" data-page-node-id="esE5udashp6RT1yaxfidza">匹配（代价最小）</text>
+  <text x="392" y="204" text-anchor="middle" font-size="10.5" fill="#64748b" data-page-node-id="FPdmWMcCesTRHaKQHiTRRr">未匹配 → 监督为"无物体"</text>
+  <text x="390" y="238" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="LDO6EmAMp6ONEUwHvXADCz">一对一约束 ⇒ 同一物体不会被多个预测重复命中 ⇒ 无需 NMS</text>
+</svg>
+</div>
+<h3 data-page-node-id="UO68gRE1ff7Ch8h87qA9iB">6.4 范式改变：三个层面</h3>
+<div class="table-wrap" data-page-node-id="4ol6kT3gy4gQDgiY6Ai5Wr">
+<table data-page-node-id="UqulwAEKk2uFVNXuC1dccN">
+<tr data-page-node-id="oNCAteWASen7bACEWefVXd"><th data-page-node-id="kZZVfmCvsCEDjCuWsLWWgv">层面</th><th data-page-node-id="u6P4kp5obqvMaiQeGltfnC">DETR 之前</th><th data-page-node-id="a5Htj0R0Mvl2cNKYPbgrZU">DETR 之后</th></tr>
+<tr data-page-node-id="itH96ArK5RRwIeqBxPrJsG"><td data-page-node-id="GndBVFoYSVBX46dPqrVs9K">预测形式</td><td data-page-node-id="d8sQX7An9EXMHvl0ElN9KK">密集预测：每个位置出多个候选框</td><td data-page-node-id="KrRvE8wiDMwjQFL203Nsuk">集合预测：固定大小、无序的输出集合</td></tr>
+<tr data-page-node-id="2LryKYfcb7QBZZ1NGOG8P1"><td data-page-node-id="FE3xCQu5SA38lMAgUkohw2">去重方式</td><td data-page-node-id="1QHqCciWJiGuJwsbOKN2vF">NMS 后处理，不可微，需调 IoU 阈值</td><td data-page-node-id="8V8uE3DGfUKG7Nc88q2OFP">一对一匹配损失，训练中完成</td></tr>
+<tr data-page-node-id="r2y0dKxk9Cy9dZg2C5PrCR"><td data-page-node-id="H6TF1oQUpXru8sY6TiZpcE">先验依赖</td><td data-page-node-id="lFKPGWodHNf0TAxDztoYY3">锚框尺寸/比例、正负样本分配规则</td><td data-page-node-id="cCp0FTn2XhDauQa3eTG2Nc">无锚框、无分配规则，直接回归</td></tr>
+<tr data-page-node-id="tPj0t1IS61Iy5ZaG1OoxmR"><td data-page-node-id="oUB6IrGgA9BuAYhVfq81Ad">Transformer 角色</td><td data-page-node-id="vj7Ghq2EYpha7J5SFGJFWy">（此前）用作分类骨干</td><td data-page-node-id="mDyoPbX1Y7jquBVYNM9r2y">用作<strong data-page-node-id="fCa9p6bBYC1bsMaC5Jpjfq">解码器</strong>，输出结构化集合</td></tr>
+<tr data-page-node-id="zaKRlKHYXJQH5jAbfT1k6s"><td data-page-node-id="sFLAERHzMrKjvT01xb1RlE">下游可扩展性</td><td data-page-node-id="Yu4pMNyD0kt8LpY2RmPhop">各任务需要独立设计检测头</td><td data-page-node-id="JBXg9P8dmupowT0AjgY31Q">同一集合预测框架可扩展到分割、关键点、跟踪</td></tr>
+</table>
+</div>
+<h3 data-page-node-id="6FmDvOUBzaNAujarhYrVyg">6.5 DETR 的问题与后续改进</h3>
+<p data-page-node-id="adKspgewbdR5YAdws7f0M1">DETR 的理念优雅，但原版有两个明显的工程问题，后续工作几乎都是围绕它们展开：</p>
+<ul data-page-node-id="Gpj6G2BQcb9EVtaHCoJwMN">
+<li data-page-node-id="8GWseCVTtZT8ge6hfEWSr4"><strong data-page-node-id="l1sYyXGV1f414EDEphbFnu">收敛极慢</strong>：需要 500 个 epoch 才能收敛，而 Faster R-CNN 只需几十个。原因是交叉注意力在训练初期要"从零学会关注哪里"，且一对一匹配使每个 query 的正样本极其稀疏。<strong data-page-node-id="mIzVH2BKEg5zW89kcBX580">Deformable DETR</strong>（2021.03）的解法是让注意力只在参考点周围的少量采样点上进行（可变形注意力），把收敛轮数降到约 1/10，同时也降低了高分辨率下的复杂度。</li>
+<li data-page-node-id="I1d5EBAGmlcVVHHun8n0GW"><strong data-page-node-id="xPUnCxGBBq4B2xsuuco2dW">小物体效果差、query 语义不明</strong>：object queries 学到的模式不可解释，且多尺度特征利用不足。<strong data-page-node-id="KaN6YylwjFeNxxHHdSelNL">DAB-DETR</strong>（2022.01）把 query 显式定义为 4 维框坐标（$x,y,w,h$），并在解码器逐层细化，让 query 有了明确语义；<strong data-page-node-id="8pgGOq168pMo2PG1GUrspd">DN-DETR</strong>（2022.03）引入"去噪训练"——给真值框加噪声让解码器重建，缓解一对一匹配的稀疏监督问题；<strong data-page-node-id="ITFD5P8ZOLxn7YtRi8MGES">DINO</strong>（2022.03，与 4.3 节的自监督 DINO 同名但不同工作）结合对比去噪与混合 query 选择，成为 DETR 系列的强基线。</li>
+<li data-page-node-id="h6aNnrcwcKqliWbsrPcWG3"><strong data-page-node-id="CzIy9C9pjN4PzXlAYQCpsL">实时化</strong>：<strong data-page-node-id="PjCAmSHeOVJrdHvvQtm8F0">RT-DETR</strong>（2023.04）通过高效混合编码器与 IoU 感知的 query 选择，把 DETR 推到实时检测的速度区间，证明"无 NMS 的端到端检测"可以实用。</li>
+</ul>
+<div class="code-block" data-page-node-id="j9kUVko6A68bJcYYcP964b"><div class="code-header" data-page-node-id="oCGrqCXnf0EXPv5BRWgUIQ">detr_decoder.py — DETR 解码器与 object queries</div><pre data-page-node-id="NziNUzzPEr7POe63CVhXzr">
+<span class="kw" data-page-node-id="T0wAdMWBvH3qBuN79Y0JYe">import</span> torch
+<span class="kw" data-page-node-id="ui5TkcmEz1ZSYV7jPgImfR">import</span> torch.nn <span class="kw" data-page-node-id="vTuBf4foQEQmqrN9JEGMZt">as</span> nn
+<span class="kw" data-page-node-id="ad9jIau1VL2fkwcpXVhRbB">from</span> scipy.optimize <span class="kw" data-page-node-id="guXEbxXM7GThEpYSTGwSVU">import</span> linear_sum_assignment
+
+<span class="kw" data-page-node-id="7jXSXBXxAaWRb1ESbvf4Zu">class</span> <span class="cls" data-page-node-id="ekgywHGWMd0EbLgjtrufRS">DETRDecoder</span>(nn.Module):
+    <span class="str" data-page-node-id="9cxKKHWHM5NWV6vCFhwfez">"""Transformer 解码器：object queries 通过交叉注意力读取编码器特征"""</span>
+    <span class="kw" data-page-node-id="2NkHwP00jrJKSyqvEPrPCi">def</span> <span class="fn" data-page-node-id="Bdn38pM7iM2OpIXrvyw19B">__init__</span>(<span class="kw" data-page-node-id="pFlm8I5FrqQJMS8l7kEFL0">self</span>, dim=<span class="num" data-page-node-id="sjFAIIl0GMkhaiOxm77hJk">256</span>, num_queries=<span class="num" data-page-node-id="5AOuI5cPqhG7SQnXJJTqcN">100</span>, num_heads=<span class="num" data-page-node-id="89HIuoGH4qF84QNbwDVvjB">8</span>, num_layers=<span class="num" data-page-node-id="hWPC8KhMqSnoTHkxAz7v2B">6</span>):
+        <span class="fn" data-page-node-id="doUx89qw3T9M8lQQQGo3Nc">super</span>().<span class="fn" data-page-node-id="0Kyw7YlHsela0gdXZ2GCCJ">__init__</span>()
+        <span class="com" data-page-node-id="yZ81LG3Odd9doOA576HEQr"># object queries：可学习参数，与输入图像无关</span>
+        <span class="kw" data-page-node-id="1v4kBGWq14kSJlFrDxYG80">self</span>.query_embed = nn.Parameter(torch.randn(num_queries, dim) * <span class="num" data-page-node-id="W4rlQiOjgNKCb3dnqmo2ym">0.01</span>)
+        layer = nn.TransformerDecoderLayer(dim, num_heads, dim * <span class="num" data-page-node-id="xELNO2qYzbrZo3Zb0iAqvQ">4</span>,
+                                           dropout=<span class="num" data-page-node-id="Owoqy0W29Rn2nvnHBqYCCy">0.1</span>, batch_first=<span class="kw" data-page-node-id="3mRAkMNtPtIAL5u0iee9Dv">True</span>)
+        <span class="kw" data-page-node-id="9IkAAUirvq5d4wRY7BxhcY">self</span>.decoder = nn.TransformerDecoder(layer, num_layers)
+
+    <span class="kw" data-page-node-id="HBpX8VKnMn09a9WFF2o7cb">def</span> <span class="fn" data-page-node-id="DMS2CbDAoxZqIhqYzzPGiw">forward</span>(<span class="kw" data-page-node-id="lCEr2yXNOaulA3zy6y2q0o">self</span>, memory, memory_mask=<span class="kw" data-page-node-id="zhInuJbdw7C9uROYxon8QJ">None</span>):
+        <span class="com" data-page-node-id="YPaxILx9t4CShVUegOnTCA"># memory: 编码器输出 (B, HW, D)</span>
+        B = memory.shape[<span class="num" data-page-node-id="UdHLTBRS3ZMSbVPH1YiK0K">0</span>]
+        queries = <span class="kw" data-page-node-id="E8Gw8PnlB3eHxXRqtFH2A5">self</span>.query_embed.unsqueeze(<span class="num" data-page-node-id="6iE15UNDaraOvAi0fJXfYr">0</span>).expand(B, -<span class="num" data-page-node-id="OgQBhXkXDYA5fD18Ta8u9x">1</span>, -<span class="num" data-page-node-id="ZZpj52n0JqzaUYm97NPHxa">1</span>)
+        <span class="com" data-page-node-id="ADjUgzjRqTfD02fcz8x8uE"># 自注意力在 100 个 query 之间，交叉注意力的 K/V 来自编码器</span>
+        <span class="kw" data-page-node-id="zkNbycafPhhmxfZZM6hRzZ">return</span> <span class="kw" data-page-node-id="2BDaBDSZV4B1Jiz4i5g3Cc">self</span>.decoder(queries, memory, memory_key_padding_mask=memory_mask)
+
+<span class="kw" data-page-node-id="GvT88RPWlkL2MiuBbHSkJl">def</span> <span class="fn" data-page-node-id="ZakcFk3q0CCXbruB5XWQIs">hungarian_match</span>(cost_matrix):
+    <span class="str" data-page-node-id="SN0gu147MgsQUtv9tkVdxr">"""二分图匹配：返回 (行索引, 列索引)。要求行数 >= 列数（预测数 >= 真值数）"""</span>
+    <span class="kw" data-page-node-id="o70SzGAcQ7A5XnutpFM4s8">assert</span> cost_matrix.shape[<span class="num" data-page-node-id="HLPPbyVRY3FhQJQHWgJ0nS">0</span>] >= cost_matrix.shape[<span class="num" data-page-node-id="c9NUpEzQOKgGL3nDeyn91p">1</span>]
+    row, col = linear_sum_assignment(cost_matrix.detach().cpu().numpy())
+    <span class="kw" data-page-node-id="wIQEvIgM8thSmERZlyHDhb">return</span> torch.as_tensor(row), torch.as_tensor(col)
+
+<span class="com" data-page-node-id="vwohcIwYryShxRcMzPhikQ"># 训练循环骨架：每个 batch 内对每张图单独匹配</span>
+<span class="kw" data-page-node-id="mcvDw1bV5BFcIJtTiTLNQ0">def</span> <span class="fn" data-page-node-id="94pEmK4QM3nMB6JQXgnGjX">step</span>(model, images, targets):
+    outputs = model(images)                     <span class="com" data-page-node-id="vfaEbg3l3l9z0X4hv9XFvq"># (B, 100, 类别+框)</span>
+    loss = <span class="num" data-page-node-id="haOYvYxdPqeWz0KOziaQgN">0</span>
+    <span class="kw" data-page-node-id="kxT6NcwhdVicgBQ2T38ZF8">for</span> pred, tgt <span class="kw" data-page-node-id="O2jW8lMWqUqrhCCdB87qO3">in</span> <span class="fn" data-page-node-id="i4ACrSZ6DRUwNt5SubP4a0">zip</span>(outputs, targets):
+        <span class="com" data-page-node-id="5VYZyqIZHx2OGUqkk5N3zx"># 1) 构造匹配代价矩阵并按匈牙利算法求解分配</span>
+        cost = build_match_cost(pred, tgt)      <span class="com" data-page-node-id="kRXWzQxLyB8NozZWqFrDtT"># (100, M)</span>
+        src, dst = <span class="fn" data-page-node-id="fe8NGuWMB4yBsJ0jxmg2uP">hungarian_match</span>(cost)
+        <span class="com" data-page-node-id="K3hYGjW6N8FPRtCiXfwvK3"># 2) 按分配计算分类交叉熵 + L1 + GIoU</span>
+        loss = loss + detection_loss(pred, tgt, src, dst)
+    <span class="kw" data-page-node-id="3NgvDru25z9uqdBAulchch">return</span> loss
+</pre></div>
+</section>
+<section id="ch7" data-page-node-id="j46JxVtCSPSG3gHNEZjtvK"><h2 data-page-node-id="Apjp53sqRJYM1KJIpqLd2I"><span class="num" data-page-node-id="Q48kzLLBFBZNPDTnuDr6uD">7</span>未来方向</h2>
+<p data-page-node-id="Ewd6Oh3xeDNxhLYo1zbMbl">前面六章覆盖了视觉 Transformer 的架构、变体、内部机制与一个范式改变的案例。本章讨论仍在演进中的方向，重点说明<strong data-page-node-id="XFryFAzbuoXlsQbiHUSUF5">每个方向要解决的瓶颈是什么</strong>，而不是罗列名词。</p>
+<h3 data-page-node-id="yZJVDcK2C2sbDlRppljLvk">7.1 效率：把二次复杂度真正降下来</h3>
+<p data-page-node-id="ZFWpHEw3G5p4QRCOCMxICZ">Swin 用窗口注意力把复杂度降到线性，但代价是<strong data-page-node-id="pNF8FWnSc8jGHu96BEfidk">感受野需要多层才能扩散到全局</strong>。真正"既线性又全局"的方案是<strong data-page-node-id="bSBNGSqBwAbd9FkRFI91Ia">线性注意力</strong>：把 softmax 换成可核化的相似度函数 $\phi(\cdot)$，利用矩阵乘法结合律把 $O(n^2)$ 重排为 $O(n)$：</p>
+<div class="formula" data-eq="(26)" data-page-node-id="f8hgEWfobb3BVHjS04yZfC">$$\text{Attn}(Q,K,V)_i = \frac{\phi(q_i)^{\top}\sum_j \phi(k_j)\,v_j^{\top}}{\phi(q_i)^{\top}\sum_j \phi(k_j)}$$</div>
+<p data-page-node-id="v84VgJGvvucs00WGq1G4jX">关键变化在于 $\sum_j \phi(k_j)v_j^\top$ 与查询无关，可<strong data-page-node-id="LRl55Gb2vHm3ibxTC9ReBq">预先计算一次</strong>并被所有 token 复用，于是复杂度从"两两交互"变成"累加统计"。代价是表达能力下降——softmax 的尖锐选择性被削弱，实际精度常不如标准注意力，因此后续工作多采用"局部窗口 + 线性全局"的混合形式（如 FLatten、EfficientViT）。</p>
+<p data-page-node-id="Ea4cCrQiFerOVzXSKez5Xd">另一条路线来自序列建模领域：<strong data-page-node-id="afRsmgKjBygOwPMgwAoisq">状态空间模型</strong>（SSM），以 Mamba 为代表，用线性递推替代注意力：</p>
+<div class="formula" data-eq="(27)" data-page-node-id="uPShlCBMkN6cGv6xj9wW4W">$$h_t = \bar{A}\,h_{t-1} + \bar{B}\,x_t, \qquad y_t = C\,h_t$$</div>
+<p data-page-node-id="Fqclv07EuVHE020xvAyma4">它的优势是推理时每步代价恒定（与序列长度无关），适合高分辨率密集预测；把 2D 图像按扫描顺序展平为 1D 序列即可套用，视觉 Mamba 系列（Vim、VMamba）即由此而来。目前的开放问题是：<strong data-page-node-id="jmbMHE0pQ0MY5CkP7JxRHJ">扫描顺序破坏了图像的空间邻接</strong>，如何在保持线性复杂度的同时恢复二维结构，尚无公认最优解。</p>
+<h3 data-page-node-id="Rse2lIK8flXRqbIxBQLj26">7.2 统一骨干：一个模型做多种任务与模态</h3>
+<p data-page-node-id="D7n01vlXhVvyYmxmvRGevl">当前主流的视觉系统仍是"任务专用头 + 共享骨干"。统一化方向有两层含义：<em data-page-node-id="xPEHqf5uuCyQ7iKRQeZU0X">任务层面</em>，希望同一骨干（如 ViT 或 Swin）加不同轻量头即可覆盖分类、检测、分割、深度估计（论文标题里的"One Model, Many Tasks"即指此）；<em data-page-node-id="NKkZ8zabCvIUqChSQFCJcC">模态层面</em>，希望图像与文本、视频、点云共享同一套 Transformer 参数。</p>
+<p data-page-node-id="QMMVqQ0VkwwuQwj5YmZj3s">这一方向的推进依赖两件事：其一，表示本身足够通用——这也是自监督预训练价值所在，因为它不针对特定标注；其二，<strong data-page-node-id="cY6BA9LJVHxztgoSsghALq">输出的统一形式</strong>。DETR 的集合预测提供了一个范例：把"检测框、分割掩码、关键点"都表示成"输出槽位 + 属性"，就能共用一个解码头。</p>
+<h3 data-page-node-id="wwqLUuyniJIyCLpVgMzzQV">7.3 数据效率与自监督：还要不要标注</h3>
+<p data-page-node-id="Q1HQt6pN3caMzCr6tu3uNE">ViT 的原始结论是"要 3 亿张图"。目前已经用两条路绕开它：<em data-page-node-id="EzOH1t8Mp8ExHFwATSJisd">更强的正则与蒸馏</em>（DeiT 路线）与<em data-page-node-id="J1bLYDbVSSS3UbMYe6UMpM">自监督预训练</em>（MAE、DINO 路线）。但自监督本身也在遇到新问题：</p>
+<ul data-page-node-id="hkG1vjYlf0f8Hp7ZSUJidd">
+<li data-page-node-id="0VOcSS5BlGjjZFeFA37ERI"><strong data-page-node-id="uDF3KfkUdJeHgUcz64vYgL">重建目标的选择</strong>。BEiT 用离散 token、MAE 用像素、EVA 用 CLIP 特征。三者的分歧说明"什么才是好的重建目标"仍未定论。当前的经验倾向是：<strong data-page-node-id="RoVFDmX68ic9poATadfDsJ">目标越语义化，表示质量越好</strong>，但语义目标通常依赖一个已经训练好的教师模型，形成"鸡生蛋"。</li>
+<li data-page-node-id="GkPSH3yv2LQZpgupLDaS7Y"><strong data-page-node-id="63kH6Do83DQwcp3p8cNNlp">掩码策略</strong>。MAE 证明高掩码率（75%）优于低掩码率，但这是针对<em data-page-node-id="GqWGUQlvTgUZQHdMwdEwRk">重建</em>目标；若换成对比学习目标，最优掩码率可能完全不同。掩码率与目标的联合设计尚无理论指导。</li>
+<li data-page-node-id="qo9WWeAFhKbXTuJIakkBKm"><strong data-page-node-id="FY2J742Gi1dCD7fBnOKOcc">评估方式</strong>。"线性探针"与"微调"给出的排名经常不一致，说明我们还不完全清楚该用哪个指标衡量"表示好坏"。</li>
+</ul>
+<h3 data-page-node-id="j0o7AuHCMmEtDDLAZE9cI7">7.4 内部机制与可解释性</h3>
+<p data-page-node-id="A59GPCKrAZFu8nvgfd2PMT">第 5 章的 attention sink 与 registers 提示了一类更一般的研究方向：<strong data-page-node-id="U2kImG6AT5BXBCPIFESHqs">模型的许多行为由归一化、残差、softmax 这些"非语义约束"决定，而不是由注意力学到的语义模式决定</strong>。这类机制往往在规模放大后才显著，且对部署影响直接（token 剪枝、KV cache 压缩、量化）。</p>
+<p data-page-node-id="mqPNcNrygHoBCYc5j6xrXD">可解释性方面，ViT 的注意力图常被当作"解释"，但这一点需要谨慎：注意力权重高不等于因果贡献大（后续层的 value 变换、MLP 与残差都会重新混合信息）。更可靠的解释方法（如基于梯度的归因、消融式探针）在视觉 Transformer 上仍不成熟。DINO 那种"注意力自发形成分割"的现象虽然直观，但它是否等价于模型的"决策依据"，目前没有严格答案。</p>
+<h3 data-page-node-id="eJttFYBC8P6AAlUG0C49tu">7.5 与其他范式的融合</h3>
+<ul data-page-node-id="rn1GKdMXB3RFsxwdpj3thC">
+<li data-page-node-id="nmTyhsXc5SeHeKytDjZgMu"><strong data-page-node-id="tWHo6BdBtDPm3EXp2vdLjm">与扩散模型结合</strong>：扩散模型的去噪网络常直接以 ViT/Swin 为骨干，而"条件于文本或布局生成图像"可控生成，本质上是把结构约束（第 6 章 DETR 的思路）推广到像素生成。</li>
+<li data-page-node-id="P8QYBx98N3A6mmdN74lww7"><strong data-page-node-id="xG53azviL49BVNPNqMK2H2">与三维 / 视频结合</strong>：三维点云与视频都面临"序列更长"的问题，因此它们对线性注意力与 SSM 的兴趣远高于图像分类任务；视频还引入了时间轴上的因果性，可能需要"时间因果 + 空间双向"的混合注意力。</li>
+<li data-page-node-id="LNLZtHlParQ4yvTmoAjFG9"><strong data-page-node-id="JiQlZSZykLbn0HVY0AdxTt">与高效的推理系统结合</strong>：多模态大模型把视觉编码器当作"感知前端"，其输出 token 直接进入语言模型上下文。这使视觉编码器的<strong data-page-node-id="18ohAO2ldPu5F9nparyzix">输出 token 数</strong>成为新的瓶颈——一张高分辨率图像动辄产生数千 token，如何压缩视觉 token（如 Q-Former、Perceiver Resampler）成为一个独立研究点。</li>
+</ul>
+<h3 data-page-node-id="PMTQ3GXPw1VyB5Ai8fkmlD">7.6 尚未解决的开放问题</h3>
+<div class="table-wrap" data-page-node-id="0wyllTxLPuHMe7h6D8VEXz">
+<table data-page-node-id="CHOBWJHOODVXygMiNuwjMB">
+<tr data-page-node-id="zmxr8ejozXnB7aDb0AP7kw"><th data-page-node-id="PBC7pl1w43YiRaUlGmen1q">问题</th><th data-page-node-id="U4I8NtrGT5KqYsDMnP8Z88">为什么重要</th><th data-page-node-id="JbO1bficRdhRa98DmeaKmj">当前状态</th></tr>
+<tr data-page-node-id="qBmdhV87tzTpZIk4hKwEm9"><td data-page-node-id="P8eF2BjeDeAAzq6nC1ktHV">视觉是否存在"规模定律"</td><td data-page-node-id="KolMHXDvgxQSP9xADctkN7">决定该往大做还是往巧做</td><td data-page-node-id="wevnIlHtmYOfYwlghTvtxl">数据规模的收益已确认，模型规模的收益不如语言模型清晰</td></tr>
+<tr data-page-node-id="Y5Yu73y1kdXKZDNHc3B3K6"><td data-page-node-id="7qZFu8PFVZqBqFcSDFIwzV">最优注意力稀疏模式</td><td data-page-node-id="Hc0VxElID8IyPKhHbeTdOK">直接决定效率与精度的权衡</td><td data-page-node-id="s44qvy3jROoesT7HVRVhsQ">窗口、十字、邻域、可变形各有优势，无统一结论</td></tr>
+<tr data-page-node-id="GN1gVVWLITmg9KbUGICRCx"><td data-page-node-id="7Crc6HnO2xbjUaA1S6FFyO">自监督目标的语义性</td><td data-page-node-id="YvDdjdl9u7h814kJX24H9B">决定表示是否通用</td><td data-page-node-id="uHa8mO31xK5TSl6Asg03OU">需教师模型，存在循环依赖</td></tr>
+<tr data-page-node-id="XRMK1LhwI87YD26o0naLFB"><td data-page-node-id="Gh1n6kD1nEqvDt77TING6r">注意力能否作为解释</td><td data-page-node-id="hLAjfEeJHgGMnE8ESHVNJC">影响模型可信度与合规</td><td data-page-node-id="pS19GblxViAciolxwP32jd">已知注意力 ≠ 贡献，替代方法不成熟</td></tr>
+<tr data-page-node-id="ByfluUpFHpfXq5tKijGp1t"><td data-page-node-id="cMFJRrGcTs6xmg2luOaCEL">统一骨干的代价</td><td data-page-node-id="aTEBm3naqeHILXHv12ovD6">一模型多任务是否会牺牲单项最优</td><td data-page-node-id="LCslLv5yLILMCoOPqz2CHr">尚无系统性对照</td></tr>
+<tr data-page-node-id="4Ei2sxJIYmL7tuUcco5nvf"><td data-page-node-id="DuyW2ipkyAGcxbLzCH8Ezo">高分辨率下的显存瓶颈</td><td data-page-node-id="6nyQoBiMw2OWcC24Iw3FJO">分割、检测、医学影像的硬约束</td><td data-page-node-id="bEpRcr2he8CM0vCQcCHwjO">靠稀疏化与 token 压缩缓解，未根本解决</td></tr>
+</table>
+</div>
+<div class="callout" data-page-node-id="UorNhV0gEzrx9xNTAHEU5q"><div class="callout-title" data-page-node-id="ZGG3NMyJeiarCYoE3PRvyz">给读者的判断框架</div>
+<p data-page-node-id="fF35IoazV2bd6l50nXkSzC">面对新的视觉 Transformer 工作，建议按三个问题快速定位它：① <strong data-page-node-id="fqy5f7r06rEK2otjSY46ju">它解决的是"能不能"还是"贵不贵"</strong>（可行性 vs 效率）；② <strong data-page-node-id="VDs5nVJ1tgAlOgsTKX7ad7">它引入的归纳偏置是什么</strong>（窗口、卷积、稀疏模式、位置编码形式）；③ <strong data-page-node-id="jRcOXmMt7OmkU3vLlWcAmR">它把什么换成了什么</strong>（用数据换先验、用深度换感受野、用教师换语义、用稀疏换全局）。第 4 章的横评表就是按这三问组织的——这比记住结构细节更有长期价值。</p>
+</div>
+</section>
+
+<section id="ch8" data-page-node-id="ZCdODYS9wvuz9JLQxD4yqf"><h2 data-page-node-id="bmV5thA4rneBeywfhI6s38"><span class="num" data-page-node-id="OYsNZgG03FXhxhxYnqZRUN">8</span>知识体系总结</h2>
+<h3 data-page-node-id="RlrQGkFJI3znfAXWlBTR9G">8.1 发展时间线</h3>
+<div class="timeline" data-page-node-id="1SxCcix0xWW1omEEFk4tFL">
+<div class="timeline-item" data-page-node-id="g2hKvu94UMQANExluU6kA4"><div class="year" data-page-node-id="eIrXkESwHcdEAgEzt8SuTC">2020.05</div><div class="event" data-page-node-id="bHnHc5hDCaFdTZtjsIIsWT">DETR：集合预测取代 NMS</div><div class="desc" data-page-node-id="mTb6lvY2UvhNIeBUgVQQcn">Carion et al. 用 Transformer 解码器 + object queries 把检测建模为集合预测，二分图匹配替代后处理，首次实现无锚框、无 NMS 的端到端检测</div></div>
+<div class="timeline-item" data-page-node-id="wmAv5DS94SQtQ7QxHZhRHH"><div class="year" data-page-node-id="dZnzIAUwWzkR23SH0Ts4sk">2020.10</div><div class="event" data-page-node-id="x4fD93UGOEM7Iai44AtvDh">ViT：图像即序列</div><div class="desc" data-page-node-id="V7kC6lrbyn1fyljkdQymrP">Dosovitskiy et al. 用 16×16 patch 把图像转为 token 序列，证明纯注意力在 JFT-300M 预训练后超越 CNN，代价是必须大规模预训练</div></div>
+<div class="timeline-item" data-page-node-id="a32P2PMlLS5KEj2TWuPrvX"><div class="year" data-page-node-id="SsokBMwzw0U2xMiS1woYXP">2020.12</div><div class="event" data-page-node-id="dcrv2nr9qfxz8AZu00f9Gq">DeiT：摆脱大数据依赖</div><div class="desc" data-page-node-id="F4KeG0cBgImAucPVERUYRs">Touvron et al. 用蒸馏 token 与强增广，在 ImageNet-1k 上从零训好 ViT；并验证"用 CNN 当教师优于用 Transformer 教师"</div></div>
+<div class="timeline-item" data-page-node-id="coF88f2HkWDUu5pUptV3yL"><div class="year" data-page-node-id="vhqlhZE12rnx79J99X1MFK">2021.02</div><div class="event" data-page-node-id="9HLXNcaEZlAGWMrITEvEiu">PVT 与 CLIP</div><div class="desc" data-page-node-id="PPg8rjxXhgAvTlmJpq72vW">PVT 引入金字塔结构与稀疏 K/V，让 ViT 能做密集预测；CLIP 用 4 亿图文对比学习实现零样本分类，开启视觉-语言对齐方向</div></div>
+<div class="timeline-item" data-page-node-id="jnE6vWPhBHgHHyVSc71sNA"><div class="year" data-page-node-id="HaGzrV4RUK2OtM12iYu7dt">2021.03</div><div class="event" data-page-node-id="09n7teXpktW3o3oHKoRDDv">Swin：窗口 + 移位窗口</div><div class="desc" data-page-node-id="ihQbBHwbjtTJmxGnC63VXF">Liu et al. 用不重叠窗口注意力把复杂度降到线性，用移位窗口恢复跨窗口交互，用 Patch Merging 构建四级金字塔——成为检测/分割最常用的 ViT 骨干</div></div>
+<div class="timeline-item" data-page-node-id="g4EbIByG8VCwTGeWwirhOU"><div class="year" data-page-node-id="oIYOXmGfio98DPuFHcvuUI">2021.03</div><div class="event" data-page-node-id="4TrHB5A9HEeB9KxUEC4v7W">Deformable DETR</div><div class="desc" data-page-node-id="PX8UwZ6RbHUfyrofsz7HdI">Zhu et al. 让注意力只在参考点周围的少量采样点上进行，把 DETR 的收敛轮数降到约 1/10</div></div>
+<div class="timeline-item" data-page-node-id="3OwbMoa6rvVZMmGK5BPU3m"><div class="year" data-page-node-id="KQggPwbXAQVACwIYcW12oh">2021.04</div><div class="event" data-page-node-id="ySBZAlzsjdihH02cLdqadH">DINO：自监督的意外收获</div><div class="desc" data-page-node-id="1clJ7kKKtKMvysD1AzxaV9">Caron et al. 用自蒸馏 + 中心化锐化做无标签预训练，注意力图自发呈现物体分割，直接启发后续分割工作</div></div>
+<div class="timeline-item" data-page-node-id="5lDmLheDXNL7yUMIPTJ1JT"><div class="year" data-page-node-id="W6hyf3LIBupTomhT7kJcA7">2021.06</div><div class="event" data-page-node-id="cuMriVPB7uSxfiZXHlvSIS">BEiT：掩码视觉 token 预测</div><div class="desc" data-page-node-id="KK6vdWpNEZNuwEiv1rd7c8">Bao et al. 借鉴 BERT 做掩码 token 预测，视觉 token 由预训练 dVAE 提供，把预训练成本从"标注"换成"算力"</div></div>
+<div class="timeline-item" data-page-node-id="PNk9ZZIn9Feod8EMMaB8HK"><div class="year" data-page-node-id="ujM5yelat11RskTukAJfxb">2021.11</div><div class="event" data-page-node-id="gFAbpwaWrQ0qSzDCp05CHH">MAE 与 Swin v2</div><div class="desc" data-page-node-id="VpERCHSEkWE79TwgcHt2Cj">MAE 用 75% 高掩码率与非对称编解码器实现高效自监督；Swin v2 用后置归一化、余弦注意力、对数连续位置偏置把 Swin 推到 30 亿参数</div></div>
+<div class="timeline-item" data-page-node-id="nuH7vxXErLX9kBPMckbaur"><div class="year" data-page-node-id="HVZdz8gBI0w77jmfu5csVB">2022.03</div><div class="event" data-page-node-id="eTP8eKbbMxrvzRzpMMCAiz">DETR 系列成熟</div><div class="desc" data-page-node-id="smp6I4vmzlwiyw4WYyX5pl">DAB-DETR 把 query 显式定义为 4 维框坐标，DN-DETR 引入去噪训练，DINO-DETR 结合二者成为强基线</div></div>
+<div class="timeline-item" data-page-node-id="ZkOhcQdGuL1SNkzqoy37Vg"><div class="year" data-page-node-id="zCD6tsLyrupZcpscQ0MWDc">2023.02</div><div class="event" data-page-node-id="TDmpCfeLDfONPtE4uckcJ5">ViT-22B：规模规律</div><div class="desc" data-page-node-id="uo1HRr5b1ZjMZKid8IWoxQ">Dehghani et al. 解决大规模训练数值稳定问题（QK 归一化、并行层），训练出 220 亿参数视觉模型</div></div>
+<div class="timeline-item" data-page-node-id="jUR1WDOL1BlUp1ZUfA8tlH"><div class="year" data-page-node-id="lUCgD0kKORVok67ZLKeXu8">2023.09</div><div class="event" data-page-node-id="LeAgoUIw2ZRRl0FsIX9Yl5">Registers：给模型一个垃圾桶</div><div class="desc" data-page-node-id="qFLEyAofZoEgkXUHxtFcPC">Darcet et al. 发现高范数离群 token 集中在低信息背景区，加入 4 个 register token 吸收 attention sink 后，密集预测任务显著提升</div></div>
+</div>
+<h3 data-page-node-id="kSrLHmdV8XSGPUd13EhSkm">8.2 核心公式速查</h3>
+<div class="table-wrap" data-page-node-id="BDYRieFViclyf9oMjpbXbI">
+<table data-page-node-id="fzLKPIKwykj6HlpbSVNi4W">
+<tr data-page-node-id="kYAVBbmYHHml9PV0f9K9y0"><th data-page-node-id="3XFLg6TDH7OAoe1F4fbBxY">编号</th><th data-page-node-id="JwsuvwuBmfPK3SidlfzeCJ">公式含义</th><th data-page-node-id="5u1PZAF6ugn8CrEkjXW617">关键点</th></tr>
+<tr data-page-node-id="CM7gyG4PizVbBHZUSwtFXA"><td data-page-node-id="lOd0KmxHFwad084pmA93iR">(1)(2)</td><td data-page-node-id="ypLoYGObrWSB4xNOriO2cp">Patch 嵌入与序列构造</td><td data-page-node-id="LbchG9A1meyY0AvQXRu3Pz">$N=HW/P^2$，拼接 CLS 与位置编码</td></tr>
+<tr data-page-node-id="JsSs8mxPh58Jn8LEsJQSDP"><td data-page-node-id="VWAmZw3igpydgbVCKnFIvr">(3)(4)(5)(6)</td><td data-page-node-id="FJmcMijAtJ2EkjW33G6KLS">Pre-LN 编码器块与多头注意力</td><td data-page-node-id="9ZZD9TB5qKR5JLHeQDKUor">先归一化再进子层，梯度不被归一化阻断</td></tr>
+<tr data-page-node-id="ndCjMEONaKmxp7nDASAvsB"><td data-page-node-id="NXpB1uaFIAyonGQ2UDl6Q9">(7)</td><td data-page-node-id="xXxFytD0ztNRdyZsCR8iTC">分类输出</td><td data-page-node-id="GluHmjYz02SKFasPC72jsa">只取 CLS 位置，经 LN 与线性头</td></tr>
+<tr data-page-node-id="8HOIXJDg64HOjFaa9hTIf2"><td data-page-node-id="Mynt6SvF2STITGPrIxP2ft">(8)</td><td data-page-node-id="nagsxY80sbPXCO6PWsdFk5">位置编码二维插值</td><td data-page-node-id="t8tQuZYdmx33mUOFABeAfH">先 reshape 成二维网格再插值</td></tr>
+<tr data-page-node-id="6Cio3Fnojwnh3SfJyruus4"><td data-page-node-id="NDPhHR5lkHCN9mP2FAY8Pe">(9)</td><td data-page-node-id="u6li3QONq5Nm8O7vV3PloG">ViT 复杂度</td><td data-page-node-id="yFPS7YOPX3RQ82YiDZN7ir">注意力项 $O(N^2D)$ 在 $N$ 大时主导</td></tr>
+<tr data-page-node-id="n5AnTZByxs37rdJPpNxg0L"><td data-page-node-id="S4cqyz9tgfmfq12EXow3ax">(10)</td><td data-page-node-id="AiCnRY9Q4rNDtZE7MGbxUk">窗口注意力复杂度</td><td data-page-node-id="eTVVDqaVDs0Gcnwvtz2BqH">由 $(hw)^2 C$ 降为 $M^2hwC$，线性增长</td></tr>
+<tr data-page-node-id="FGYWJchj643XNkVCDFiCrc"><td data-page-node-id="PEba52VFuA0UTz65KRi5rR">(11)(12)</td><td data-page-node-id="hvr4eFudEx2Kw1XWTBcS1R">移位窗口与注意力掩码</td><td data-page-node-id="e1kYe6g68R8maCyJDZcPm1">偏移 $\lfloor M/2 \rfloor$，掩码填 $-\infty$</td></tr>
+<tr data-page-node-id="yaZd3lddh7sHfZrzgl6zYI"><td data-page-node-id="s9AEH0TAqB2vWLaCKpWmV2">(13)</td><td data-page-node-id="eR8dBmMoaYjThnPrPTjOE8">Patch Merging</td><td data-page-node-id="nYsSqD45U5FmcyaahIgsdd">空间减半、通道翻倍，构成金字塔</td></tr>
+<tr data-page-node-id="leyUg3wsNnvubRhIGtIffP"><td data-page-node-id="hfyIF1L4kXosb9B9vbEG6N">(14)</td><td data-page-node-id="wpyaxaX79mEqZ13GXB8KvN">相对位置偏置</td><td data-page-node-id="7nKXKLcOk6HMf1onLRV7V0">参数表 $\propto (2M-1)^2$，远小于 $M^4$</td></tr>
+<tr data-page-node-id="Le6n6yBJATLDCopLUFAuAu"><td data-page-node-id="BRYdn8WS4nA3KKki02Wij8">(15)(16)</td><td data-page-node-id="6Btamqu1Xkx0pdLQ77Pazi">DeiT 蒸馏与 LayerScale</td><td data-page-node-id="aF5gDak12c93CUOdb2vgCj">教师提供归纳偏置；小初值缩放稳住深层</td></tr>
+<tr data-page-node-id="lsuZykEJYOOZYF4595T6b9"><td data-page-node-id="dOCSWZEKGyE2uTquKyaEHL">(17)(18)</td><td data-page-node-id="oOShpyOyOFveRFHRs1vQET">MAE 与 DINO 损失</td><td data-page-node-id="L1EiI3jjqSkjzU47K20uHZ">仅在掩码处重建 vs 自蒸馏匹配分布</td></tr>
+<tr data-page-node-id="h76AGtjxWVE854MKvdK571"><td data-page-node-id="VMIz9491Hgs0UtWw6avB0U">(19)(20)</td><td data-page-node-id="UjaPhk79LLf27A9hGhtC2K">Attention sink</td><td data-page-node-id="3SvBrINg49B93EdjziEqyF">softmax 强制和为 1，质量必须流向某处</td></tr>
+<tr data-page-node-id="f4crnbuztupl1h4Fjt1Txt"><td data-page-node-id="epyUDT14j4oOwKeGlxFdhQ">(21)</td><td data-page-node-id="06y9wJxEIAUPKjjYGgPfbV">Registers</td><td data-page-node-id="YzqrdbAgTE8J2lzhQhUPQe">额外 4 个可学习 token 专门当 sink</td></tr>
+<tr data-page-node-id="uhonSlmUEACUKF640yroCC"><td data-page-node-id="HZ5lFe1BLN6xzrLilqAxMR">(22)(23)(24)(25)</td><td data-page-node-id="MVLmIjCVEKDggY682ZEBIB">DETR 集合预测与匹配损失</td><td data-page-node-id="QcBH3UC0JUPDNRQRyk4jAx">匈牙利一对一匹配，替代 NMS</td></tr>
+<tr data-page-node-id="vHlARAIvDK6HIAniSORj0b"><td data-page-node-id="O6hoCsXrqNPqVb4jDz0DFR">(26)(27)</td><td data-page-node-id="tcz02swclh9SiZxFZTraX3">线性注意力与 SSM</td><td data-page-node-id="Di8y2iWRE4EAP2T9h8N10a">把 $O(n^2)$ 交互重排为 $O(n)$ 累加</td></tr>
+</table>
+</div>
+<h3 data-page-node-id="kWHmDnaOxBu3histWSZwSY">8.3 选型决策表</h3>
+<div class="table-wrap" data-page-node-id="RTHKM6s8XrCqXZoIvMaLMj">
+<table data-page-node-id="ZIoAfUcA76h6DXdtVYvZUc">
+<tr data-page-node-id="O5NR1ABHlpRuz9NdyfJwgY"><th data-page-node-id="DBzEXw6BnHZBnJexT6Mqqi">你的场景</th><th data-page-node-id="E6ERHAp7H7auALtXGVGiWj">首选</th><th data-page-node-id="iikWjl25rGwUUvsmleUtG8">理由</th><th data-page-node-id="iTN8Jr1S07YPHpUZva6sMj">注意</th></tr>
+<tr data-page-node-id="R2gobtq3EiyW80FQ6RRTQ9"><td data-page-node-id="mdksgThJEuDaHoC3utJ2y9">固定分辨率图像分类，数据充足</td><td data-page-node-id="D91WjuxQ0eZETKCADUJRPu">ViT / DeiT</td><td data-page-node-id="z5BwWL2f1OUhiTB1tpdiPL">结构最简单，微调成本低</td><td data-page-node-id="C4r7alQFtkJz4tHoBvjq7e">小数据下不如 CNN，需蒸馏或强增广</td></tr>
+<tr data-page-node-id="aWJD7TsKbW6ddTAZipGe9x"><td data-page-node-id="N3lq9Mic9tlAFikgq1WHSv">检测 / 分割等密集预测</td><td data-page-node-id="E4AhvETpLB6N5Amn9YsBob">Swin / PVT / CSWin</td><td data-page-node-id="kFeQUnHeiCQouzGL2EM2Sy">四级金字塔可直接接 FPN</td><td data-page-node-id="uP4IIZuA3JdMqGlDVEp0Mh">跨窗口交互需要层数，浅层感受野小</td></tr>
+<tr data-page-node-id="VBupgd5xzGTPwhKidGN7dD"><td data-page-node-id="0HbFffiCbt2FJ0gRYj05H6">高分辨率输入（医学、遥感）</td><td data-page-node-id="Xow0l6dRqo5wvlEzPzeGkJ">Swin / 线性注意力 / 视觉 SSM</td><td data-page-node-id="BrGo2Hr2P9eISRuyDssUCG">复杂度随分辨率线性增长</td><td data-page-node-id="xKFdhsidNQmyZc6aUbe5CB">注意位置编码外推能力</td></tr>
+<tr data-page-node-id="bhxpewxh9QN097L5G6R8YU"><td data-page-node-id="BoLjGeq4CJBD1GGHLIjzga">标注少但无标注图多</td><td data-page-node-id="mqkDezQNNQiKL5KHaIAatg">MAE / DINO</td><td data-page-node-id="ReJ4DHmhmQq7LeDqCGWClB">自监督预训练不需标签</td><td data-page-node-id="27GFyhVpc8FdtxW0vBIRp0">MAE 重建偏像素级，DINO 更语义</td></tr>
+<tr data-page-node-id="LGx9kswjw5X88Kh0FbJmqa"><td data-page-node-id="l20a1aDr4bduOjnTFqkZKm">标注少且无额外数据</td><td data-page-node-id="gb1yEssAVNmwVF9rtx4kzR">DeiT / CLIP 零样本</td><td data-page-node-id="L9Y27ekgHVFLSyB5nxoxXI">前者不依赖预训练，后者不需下游标注</td><td data-page-node-id="LmJ3xvJ3wEAnO8wpqjUG1X">CLIP 定位精度弱，不适合密集任务</td></tr>
+<tr data-page-node-id="WGE1pr07cRCjfVBT2WtSAF"><td data-page-node-id="4GTly8xWWdCpCRavO1NayG">需要图文跨模态</td><td data-page-node-id="C0mw4OcUcJ77hMDohyRWx1">CLIP / SigLIP</td><td data-page-node-id="yOfNxT4nJNg5gEFFaD9Glr">共享嵌入空间，支持零样本</td><td data-page-node-id="rk9UB3VJl6ucV1DKxDb2p3">SigLIP 在小 batch 下更稳</td></tr>
+<tr data-page-node-id="blrl4W2h2mI79rcs3UArs1"><td data-page-node-id="QcqhaHnwsCKjN6qWWrcOST">端到端检测、不想调 NMS 阈值</td><td data-page-node-id="wc9euIUZvXTEhAbwhdbtx5">DETR 系列 / RT-DETR</td><td data-page-node-id="2QaDFp89G5pKqHNlfSCACZ">集合预测无需后处理</td><td data-page-node-id="S2Ysxi4MFLQXclOT53Bzyz">原版收敛慢，用 Deformable / DINO-DETR</td></tr>
+<tr data-page-node-id="2RWFyEuotIF8O2F6G7SK8t"><td data-page-node-id="xerjNSsP7UL7gQ0YoHAS7S">需要逐 patch 的干净特征</td><td data-page-node-id="QMtAA76p3WaFfmrxtjeLd2">加 Registers 的 ViT</td><td data-page-node-id="4nxXstAB15oOPUHNVcTAmH">消除背景区高范数离群点</td><td data-page-node-id="hcd4LXcVuF63T0qMaD0WgV">需重训，不是推理期补丁</td></tr>
+<tr data-page-node-id="symN0yHQMC3qZCs8zCip1Y"><td data-page-node-id="tifHRbV134t0gs8fpNdTRT">需要压缩视觉 token 数</td><td data-page-node-id="PDsr7D4RLV8vyrlhb7K1T1">Q-Former / Resampler 类</td><td data-page-node-id="EjeKxO9sm1eUcINFLdkmEk">多模态大模型上下文的硬约束</td><td data-page-node-id="Uf8eqwghY9bELTwdaR5gLC">压缩会损失细节定位能力</td></tr>
+</table>
+</div>
+<h3 data-page-node-id="gfUcRqHOpvWuPF0HhTnjVI">8.4 一页知识图谱</h3>
+<div class="svg-box" data-page-node-id="ITTVSChwIB71MQwhr4Aa6y">
+<svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" data-page-node-id="jhT5KEq3PrIzWFQnAsvD4R">
+  <text x="450" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="sdfh1aIZ6D2YyXasMyfd7x">视觉 Transformer 知识图谱</text>
+  <!-- center -->
+  <ellipse cx="450" cy="200" rx="96" ry="40" fill="#dbeafe" stroke="#2563eb" stroke-width="2.2" data-page-node-id="SXp3kRBRPIJvUse8G08EIa"/>
+  <text x="450" y="195" text-anchor="middle" font-size="14" fill="#1d4ed8" font-weight="700" data-page-node-id="mz5gyc67A5ALTgRu9XYvdK">视觉 Transformer</text>
+  <text x="450" y="215" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="b6Jn6yRaflqMF5jaA7xEfB">图像 → 序列 → 注意力</text>
+  <!-- 1 representation -->
+  <rect x="60" y="52" width="200" height="92" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" data-page-node-id="G0IKdnTzNn5nJxWnvBOt2s"/>
+  <text x="160" y="74" text-anchor="middle" font-size="12.5" fill="#1d4ed8" font-weight="700" data-page-node-id="GB4FH6miEJoHD6iWdtmN3L">① 表示（第 2 章）</text>
+  <text x="160" y="96" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="wXbi8Xbtm4TQn7X52OWWP9">Patch 切分 · 线性投影</text>
+  <text x="160" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="NGtWxRPDmTGZec05B37JzB">CLS token · 位置编码</text>
+  <text x="160" y="132" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="3yLPGR5Ey3A4Ojln9Sy7Gg">Pre-LN 编码器块</text>
+  <line x1="262" y1="118" x2="386" y2="176" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="2aFGirH6dSeDlFSLA0HJhc"/>
+  <!-- 2 backbone -->
+  <rect x="640" y="52" width="212" height="92" rx="9" fill="#ecfdf5" stroke="#059669" stroke-width="1.6" data-page-node-id="feoZjoVbfv1nhH7wlKlIdI"/>
+  <text x="746" y="74" text-anchor="middle" font-size="12.5" fill="#047857" font-weight="700" data-page-node-id="jt5eohEHc0WqjSDk88HPVR">② 骨干化（第 3、4 章）</text>
+  <text x="746" y="96" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="QErjJSM4fQtz0GAs4i497f">窗口注意力 · 移位窗口</text>
+  <text x="746" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="F9AE591LPca6ri4rgchxbu">Patch Merging 金字塔</text>
+  <text x="746" y="132" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="AXN1EogZuG4BGaL1sXxAWd">相对位置偏置 · Swin v2</text>
+  <line x1="638" y1="118" x2="514" y2="176" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="Aw1HzEHrqwCSVRlapJoMSU"/>
+  <!-- 3 training -->
+  <rect x="60" y="256" width="200" height="100" rx="9" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="MAnq6lQccz6HyMBdVw8piP"/>
+  <text x="160" y="278" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="700" data-page-node-id="kEwqg1Xjv7pQbrOPDSbAzn">③ 学习（第 4、5 章）</text>
+  <text x="160" y="300" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="yFTPaG7bUBv0Hn3u9YCBk0">有监督：DeiT 蒸馏 · LayerScale</text>
+  <text x="160" y="318" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="OIoOk8XgS4ItGvN0GYnrQL">自监督：BEiT · MAE · DINO</text>
+  <text x="160" y="336" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="k58H9h8SCHKvFDBrHOBmcV">稳定性：DropPath · EMA</text>
+  <line x1="262" y1="290" x2="386" y2="228" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="f8axWVEomHbldnz5UrUSoA"/>
+  <!-- 4 decoder -->
+  <rect x="640" y="256" width="212" height="100" rx="9" fill="#fff7ed" stroke="#ea580c" stroke-width="1.6" data-page-node-id="zepOaOk3O8hdM0OQwfsPMq"/>
+  <text x="746" y="278" text-anchor="middle" font-size="12.5" fill="#c2410c" font-weight="700" data-page-node-id="UVL1VSvJUP2D6I7oJskb7a">④ 角色扩展（第 6 章）</text>
+  <text x="746" y="300" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="n9lojEsEFaioNVVm17KBuu">DETR：连接器作解码器</text>
+  <text x="746" y="318" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="XTszP4azoYAyXFRXGqfCGl">object queries · 集合预测</text>
+  <text x="746" y="336" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="TOqb7w7kDzm7yKAFQw4oXs">匈牙利匹配替代 NMS</text>
+  <line x1="638" y1="290" x2="514" y2="228" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="Ab4DhtrAj8KsGmVqrthzdM"/>
+  <!-- 5 mechanism -->
+  <rect x="330" y="330" width="240" height="72" rx="9" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6" data-page-node-id="X6xv9ro9Y4IxmEUKV5msK0"/>
+  <text x="450" y="352" text-anchor="middle" font-size="12.5" fill="#b91c1c" font-weight="700" data-page-node-id="NReGnF0BONk6aCS4cr00dr">⑤ 内部机制（第 5 章）</text>
+  <text x="450" y="372" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="cnP3qsXNgkSDW7rtCWnsZI">softmax 约束 → attention sink</text>
+  <text x="450" y="390" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Ir7XlvFygDGDN0DWnRMDvK">registers 吸收离群 · 影响剪枝与量化</text>
+  <line x1="450" y1="328" x2="450" y2="244" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="U9ij2QMpKhbxfiSBBcxdyQ"/>
+  <!-- 6 future -->
+  <rect x="330" y="112" width="240" height="56" rx="9" fill="#f8fafc" stroke="#64748b" stroke-width="1.4" data-page-node-id="Spl6wrexBDXKnXwv5YGy2B"/>
+  <text x="450" y="134" text-anchor="middle" font-size="12" fill="#334155" font-weight="700" data-page-node-id="0BI1mUuoPGoPiEB8chqZ1B">⑥ 未来（第 7 章）</text>
+  <text x="450" y="154" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="wisRLA08lacMzB5aFkOCFy">线性注意力 · 视觉 SSM · 统一骨干</text>
+  <line x1="450" y1="168" x2="450" y2="158" stroke="#64748b" stroke-width="1.4" data-page-node-id="JQCUTpLsoIOt56x7ub2Wrh"/>
+</svg>
+</div>
+<div class="callout success" data-page-node-id="ho3pg8oY66b73KZHB9s0bS"><div class="callout-title" data-page-node-id="X15plvaNtVZBSaim2j9d06">一句话总结</div>
+<p data-page-node-id="zSwTvXEPPt4PLQZt5GyMDv">视觉 Transformer 的十年问题可以概括为<strong data-page-node-id="KRcH9Z0ANHlH0aI1gWrIYJ">四次"用什么换什么"</strong>：ViT 用<em data-page-node-id="5WqxLscJGY1b7sM0D2c2QF">数据</em>换掉卷积先验，Swin 用<em data-page-node-id="F6Cmmv2yhfqBnsCfNbaPZB">稀疏窗口</em>换掉全局注意力的代价，MAE / DINO 用<em data-page-node-id="AVpcikvrqEjDGMnwm4x9xz">算力</em>换掉标注依赖，DETR 用<em data-page-node-id="WLDvxoHnzRxOgVKW04hx2B">匹配损失</em>换掉 NMS 后处理。理解每一次交换的收益与代价，比记住任何一个结构都更有长期价值。</p>
+</div>
+</section>
+
+<section id="refs" data-page-node-id="EWtMJPFqzYHasuLjbERB9W"><h2 data-page-node-id="tGI5mdxTrz8zTUfe1Mcjpb">参考文献</h2>
+<ol data-page-node-id="nEAGSRsSXLoD9qB3iQa4vK">
+<li data-page-node-id="xADI4iVeavhDGAnQfSBbDF">Dosovitskiy, A. et al. (2021). An Image is Worth 16×16 Words: Transformers for Image Recognition at Scale. <em data-page-node-id="mrOd1QGuvb6i7kKg4QMa7y">ICLR</em>. arXiv:2010.11929.（ViT）</li>
+<li data-page-node-id="N9GMfwiSsjFpGKIbahtULJ">Liu, Z. et al. (2021). Swin Transformer: Hierarchical Vision Transformer using Shifted Windows. <em data-page-node-id="DgLKPsPAUHdNccqUQrnu79">ICCV</em>. arXiv:2103.14030.</li>
+<li data-page-node-id="QHc89VMaIv29d2WIX51M5p">Liu, Z. et al. (2022). Swin Transformer V2: Scaling Up Capacity and Resolution. <em data-page-node-id="DaLIVZYtJmHDNzacA1zScV">CVPR</em>. arXiv:2111.09883.</li>
+<li data-page-node-id="sS5e3kAz2TKoMSwfGuFQGA">Touvron, H. et al. (2021). Training Data-Efficient Image Transformers &amp; Distillation Through Attention. <em data-page-node-id="gG9G3GmfEUGC4nfr41nRGm">ICML</em>. arXiv:2012.12877.（DeiT）</li>
+<li data-page-node-id="dYsGhvOLeFTiXadcMiVAep">Touvron, H. et al. (2021). Going Deeper with Image Transformers. <em data-page-node-id="JZVMYlw5rUoymDJ6lMwNws">ICCV</em>. arXiv:2103.17239.（CaiT / LayerScale）</li>
+<li data-page-node-id="RcDMDKQXGBcebm45R6VzLX">Yuan, L. et al. (2021). Tokens-to-Token ViT: Training Vision Transformers from Scratch on ImageNet. <em data-page-node-id="YlK9Xp5seoNrW0y1LUXnh0">ICCV</em>. arXiv:2101.11986.</li>
+<li data-page-node-id="4RoxyZnefdiSQohUseXiqd">Wang, W. et al. (2021). Pyramid Vision Transformer: A Versatile Backbone for Dense Prediction without Convolutions. <em data-page-node-id="vyol6IXFEp43qg9vKTO5Ku">ICCV</em>. arXiv:2102.12122.（PVT）</li>
+<li data-page-node-id="jTdWdYSJEyTJmkn4IVCzXA">Chu, X. et al. (2021). Twins: Revisiting the Design of Spatial Attention in Vision Transformers. <em data-page-node-id="rTRVCxCBAlvs5wYr0o9S7d">NeurIPS</em>. arXiv:2104.13840.</li>
+<li data-page-node-id="K0731c2NCZC04ecWWXDkSC">Dong, X. et al. (2022). CSWin Transformer: A General Vision Transformer Backbone with Cross-Shaped Windows. <em data-page-node-id="g5vIqYKQAq5OtzY7Fh6GWo">CVPR</em>. arXiv:2107.00652.</li>
+<li data-page-node-id="zHCh9dkOVY0kDsqZxCkiiw">Hassani, A. et al. (2023). Neighborhood Attention Transformer. <em data-page-node-id="HKZqX2XJJdMP7IIUZ6cBfA">CVPR</em>. arXiv:2204.07143.</li>
+<li data-page-node-id="F6Anb1IDn87gNRQI7C7fei">d'Ascoli, S. et al. (2021). ConViT: Improving Vision Transformers with Soft Convolutional Inductive Biases. <em data-page-node-id="rTi2NyOm51mC8qKSAd4CR5">ICML</em>. arXiv:2103.10697.</li>
+<li data-page-node-id="1CLVu9JdaFVrcxR8aTOzaW">Wu, H. et al. (2021). CvT: Introducing Convolutions to Vision Transformers. <em data-page-node-id="listDCXON853EAXpQqPold">ICCV</em>. arXiv:2103.15808.</li>
+<li data-page-node-id="bUIcXuEuJte56HnQvqQ0kO">Radford, A. et al. (2021). Learning Transferable Visual Models From Natural Language Supervision. <em data-page-node-id="q52ZyKnI8DpWwtKa4ftAqv">ICML</em>. arXiv:2103.00020.（CLIP）</li>
+<li data-page-node-id="sU4aSJLFBcQ1rrwPyJReVL">Zhai, X. et al. (2023). Sigmoid Loss for Language Image Pre-Training. <em data-page-node-id="rND03uPKPHb98FX92lVRg2">ICCV</em>. arXiv:2303.15343.（SigLIP）</li>
+<li data-page-node-id="fJVrlS5lrqd7hybeqywX46">Bao, H. et al. (2022). BEiT: BERT Pre-Training of Image Transformers. <em data-page-node-id="EfI6NvuXBXyfQM2G5n5NAD">ICLR</em>. arXiv:2106.08254.</li>
+<li data-page-node-id="U51baxSFHJvCgu6jCpJ8eY">He, K. et al. (2022). Masked Autoencoders Are Scalable Vision Learners. <em data-page-node-id="Rdmk7fBzOSjJBL0vogYo2v">CVPR</em>. arXiv:2111.06377.（MAE）</li>
+<li data-page-node-id="AXVPui2QjjWP1uzLvQEALL">Caron, M. et al. (2021). Emerging Properties in Self-Supervised Vision Transformers. <em data-page-node-id="wiCCpvmkruSEzFg52AiMJn">ICCV</em>. arXiv:2104.14294.（DINO）</li>
+<li data-page-node-id="jJrWu7ed7RYNSEqfleO5pV">Fang, Y. et al. (2023). EVA: Exploring the Limits of Masked Visual Representation Learning at Scale. <em data-page-node-id="ATb07L8KHBH9bJByL1CVQu">CVPR</em>. arXiv:2211.07636.</li>
+<li data-page-node-id="HfgS5dgobTXL6RkJhX3leJ">Dehghani, M. et al. (2023). Scaling Vision Transformers to 22 Billion Parameters. <em data-page-node-id="77qZMuxoQ5mYq5ELqZFspZ">ICML</em>. arXiv:2302.05442.（ViT-22B）</li>
+<li data-page-node-id="8jtOmSQ79AGEfaIessmXtk">Carion, N. et al. (2020). End-to-End Object Detection with Transformers. <em data-page-node-id="8z4jpawOXUOUO9B8QWemmT">ECCV</em>. arXiv:2005.12872.（DETR）</li>
+<li data-page-node-id="CSDyqECEopxz5zGVo9N2WX">Zhu, X. et al. (2021). Deformable DETR: Deformable Transformers for End-to-End Object Detection. <em data-page-node-id="oL2tEQjIGwi6SqgzMcMu6R">ICLR</em>. arXiv:2010.04159.</li>
+<li data-page-node-id="lVRiLpNZuAcBJJz7riKjPR">Liu, S. et al. (2022). DAB-DETR: Dynamic Anchor Boxes are Better Queries for DETR. <em data-page-node-id="YN9isQIMtHbb4IJRo7z4si">ICLR</em>. arXiv:2201.12329.</li>
+<li data-page-node-id="IZY5d6oKtQRt2Q3SWyD6pY">Li, F. et al. (2022). DN-DETR: Accelerate DETR Training by Introducing Query DeNoising. <em data-page-node-id="wo1E64jzz5aod1BHJlOriZ">CVPR</em>. arXiv:2203.01305.</li>
+<li data-page-node-id="vH8yP4bHmkvENG3f94DYyz">Zhang, H. et al. (2023). DINO: DETR with Improved DeNoising Anchor Boxes for End-to-End Object Detection. <em data-page-node-id="uAyJ2eCcyGvujvUg9Eouac">ICLR</em>. arXiv:2203.03605.</li>
+<li data-page-node-id="lUlzvI23PnrISGSFmHN6QI">Zhao, Y. et al. (2024). DETRs Beat YOLOs on Real-time Object Detection. <em data-page-node-id="BoAJhOYsuHDL2CAZLwT89c">CVPR</em>. arXiv:2304.08069.（RT-DETR）</li>
+<li data-page-node-id="2G5JOL8VmXFztGNKij9TwR">Darcet, T. et al. (2024). Vision Transformers Need Registers. <em data-page-node-id="XkZDwVB36mkkNDUPCD2IdD">ICLR</em>. arXiv:2309.16588.</li>
+<li data-page-node-id="T5dtJKsF4v9ANmF4j2OE1u">Xiao, G. et al. (2024). Efficient Streaming Language Models with Attention Sinks. <em data-page-node-id="FMSJ4q6R1WKbzymQEkEoXV">ICLR</em>. arXiv:2309.17453.（StreamingLLM）</li>
+<li data-page-node-id="81hG7jUqMHFIcp7UzNN3AF">Katharopoulos, A. et al. (2020). Transformers are RNNs: Fast Autoregressive Transformers with Linear Attention. <em data-page-node-id="FfETdy3zYZVYiAC3RjWEx8">ICML</em>. arXiv:2006.16236.</li>
+<li data-page-node-id="hA6H6Gb9kZWyPgjMyKADvk">Gu, A., &amp; Dao, T. (2023). Mamba: Linear-Time Sequence Modeling with Selective State Spaces. arXiv:2312.00752.</li>
+<li data-page-node-id="uv4zaWRDAZ3mDvw6S9jwNB">Vaswani, A. et al. (2017). Attention Is All You Need. <em data-page-node-id="rQ9iVjKA4RgBTM1GrJZcIc">NeurIPS</em>. arXiv:1706.03762.</li>
+</ol>
+</section>
+
+</main>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" data-page-node-id="FIrQrywtfLvQsAzHnaroSW">&#8593;</button>
+
+<script>
+// Sidebar highlight
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var links = document.querySelectorAll('#sidebar nav a');
+  function highlight() {
+    var scrollY = window.scrollY;
+    var current = '';
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - 100) current = sections[i].id;
+    }
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+// Formula rendering
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

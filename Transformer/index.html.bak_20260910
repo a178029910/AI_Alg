@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transformer — 自注意力 · 多头机制 · 位置编码 · 工程部署完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>Transformer</h2>
+<nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、引言</a>
+    <a href="#ch2">二、整体架构</a>
+    <a href="#ch3">三、自注意力机制</a>
+    <a href="#ch4">四、多头注意力</a>
+    <a href="#ch5">五、位置编码</a>
+    <a href="#ch6">六、前馈网络与残差连接</a>
+    <a href="#ch7">七、训练与优化</a>
+    <a href="#ch8">八、工程部署与推理优化</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+<a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<section id="hero" class="hero">
+  <h1>Transformer</h1>
+  <div class="subtitle">Self-Attention · Multi-Head Attention · Positional Encoding · 工程部署</div>
+  <div class="tagline">缩放点积注意力 · 多头并行 · 正弦/旋转位置编码 · FFN 与残差 · KV Cache · FlashAttention · 量化推理</div>
+  <div class="badges">
+    <span class="badge">8 个章节</span>
+    <span class="badge">6 张 SVG 结构图</span>
+    <span class="badge">35 个公式</span>
+    <span class="badge">6 段 PyTorch 代码</span>
+    <span class="badge">15 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1"><h2><span class="num">1</span>引言</h2>
+<p>2017 年，Vaswani 等人在论文 "Attention is All You Need" 中提出了 <strong>Transformer</strong>——一种完全基于注意力机制的序列建模架构。它摒弃了 RNN 的循环结构和 CNN 的局部感受野，仅用自注意力实现全局依赖建模，凭借<em>完全并行化</em>的优势迅速取代 RNN 成为自然语言处理的支柱。</p>
+<p>Transformer 的核心思想是：<strong>序列中的每个位置都可以直接"看到"所有其他位置</strong>，通过注意力权重决定"关注谁"，从而一步到位地捕获长距离依赖。这与 RNN 必须逐词递推的方式形成鲜明对比——RNN 处理长度为 $n$ 的序列需要 $O(n)$ 的串行步，而 Transformer 可以在一步内并行处理整个序列。</p>
+<p>自诞生以来，Transformer 的影响早已超越 NLP。BERT 和 GPT 系列奠定了大语言模型的基础；ViT 将 Transformer 引入计算机视觉；GNN 领域出现了 Graphormer 等图 Transformer 架构；多模态领域 Flamingo、CLIP 等模型同样以 Transformer 为核心。可以说，Transformer 是当前深度学习最重要的通用架构。</p>
+
+<div class="callout success"><div class="callout-title">核心直觉：为什么自注意力比 RNN 更好？</div>
+<p>RNN 的信息流是一条链：$h_t = f(h_{t-1}, x_t)$，长距离信息在传递中不断衰减（梯度消失）。自注意力让位置 $i$ 和位置 $j$ 的路径长度变为 $O(1)$——无论 $i$ 和 $j$ 相隔多远，它们直接通过 $\text{softmax}(QK^T)$ 交换信息，路径长度恒为一步。</p></div>
+
+<h3>1.1 发展脉络</h3>
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="year">2014</div>
+    <div class="event">Bahdanau 等提出注意力机制</div>
+    <div class="desc">在神经机器翻译中引入对齐注意力，为自注意力奠定基础</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2017</div>
+    <div class="event">Vaswani 等发表 "Attention is All You Need"</div>
+    <div class="desc">Transformer 诞生，纯注意力架构，平行化训练，机器翻译 SOTA</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2018</div>
+    <div class="event">BERT（Google）与 GPT-1（OpenAI）</div>
+    <div class="desc">预训练 + 微调范式确立，Transformer 编码器/解码器分别大放异彩</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2020</div>
+    <div class="event">ViT（Google）、Scaling Laws（OpenAI）</div>
+    <div class="desc">Transformer 进入视觉领域；模型规模与性能的幂律关系被发现</div>
+  </div>
+  <div class="timeline-item">
+    <div class="year">2022-2023</div>
+    <div class="event">ChatGPT、GPT-4、LLaMA 系列</div>
+    <div class="desc">大语言模型时代，Transformer 成为基础设施</div>
+  </div>
+</div>
+
+<h3>1.2 本模块结构</h3>
+<p>本模块共 <strong>8 章</strong>：第 2 章介绍 Transformer 整体架构（Encoder-Decoder）；第 3 章深入自注意力机制；第 4 章讲解多头注意力；第 5 章讨论位置编码方案；第 6 章阐述前馈网络、残差连接与归一化；第 7 章覆盖训练优化技术；第 8 章聚焦工程部署与推理优化。每章配有公式推导、SVG 示意图和 PyTorch 代码，力求让读者对 Transformer 有全面而扎实的把握。</p>
+</section>
+
+<section id="ch2"><h2><span class="num">2</span>整体架构</h2>
+<p>Transformer 采用 <strong>Encoder-Decoder</strong> 结构。编码器将输入序列编码为连续表示，解码器基于编码器的输出和已生成的 token 自回归地生成输出序列。虽然现代大模型（GPT、LLaMA）通常只使用 Decoder，但理解完整的 Encoder-Decoder 架构是掌握所有 Transformer 变体的基础。</p>
+
+<div class="svg-box"><svg viewBox="0 0 720 860" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-body);font-size:12px">
+  <!-- Title -->
+  <text x="360" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Transformer 整体架构（Encoder-Decoder）</text>
+  <!-- Input embedding -->
+  <rect x="40" y="100" width="180" height="52" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="130" y="122" text-anchor="middle" fill="#1d4ed8" font-weight="600" font-size="12">Input Embedding</text>
+  <text x="130" y="139" text-anchor="middle" fill="#64748b" font-size="10">+ Positional Encoding</text>
+  <!-- Output embedding -->
+  <rect x="40" y="420" width="180" height="52" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="130" y="442" text-anchor="middle" fill="#ea580c" font-weight="600" font-size="12">Output Embedding</text>
+  <text x="130" y="459" text-anchor="middle" fill="#64748b" font-size="10">+ Pos. Enc. (shifted right)</text>
+  <!-- Encoder -->
+  <rect x="300" y="55" width="190" height="330" rx="10" fill="#f0f9ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="395" y="75" text-anchor="middle" fill="#2563eb" font-weight="700" font-size="13">Encoder × N</text>
+  <rect x="320" y="90" width="150" height="38" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="395" y="114" text-anchor="middle" fill="#7c3aed" font-weight="600" font-size="11">Multi-Head Self-Attn</text>
+  <text x="395" y="143" text-anchor="middle" fill="#64748b" font-size="10">+ Add &amp; LayerNorm</text>
+  <rect x="320" y="165" width="150" height="38" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="395" y="189" text-anchor="middle" fill="#059669" font-weight="600" font-size="11">Feed-Forward (FFN)</text>
+  <text x="395" y="218" text-anchor="middle" fill="#64748b" font-size="10">+ Add &amp; LayerNorm</text>
+  <line x1="395" y1="228" x2="395" y2="248" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+  <rect x="315" y="255" width="160" height="100" rx="6" fill="rgba(37,99,235,0.05)" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="395" y="308" text-anchor="middle" fill="#94a3b8" font-size="10">N 层重复堆叠</text>
+  <!-- Arrow input → encoder -->
+  <line x1="224" y1="125" x2="315" y2="125" stroke="#2563eb" stroke-width="1.5" marker-end="url(#ah)"/>
+  <!-- Decoder -->
+  <rect x="300" y="415" width="190" height="330" rx="10" fill="#fefce8" stroke="#ea580c" stroke-width="2"/>
+  <text x="405" y="435" text-anchor="middle" fill="#ea580c" font-weight="700" font-size="13">Decoder × N</text>
+  <rect x="320" y="450" width="150" height="38" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="395" y="474" text-anchor="middle" fill="#7c3aed" font-weight="600" font-size="11">Masked Self-Attn</text>
+  <text x="395" y="503" text-anchor="middle" fill="#64748b" font-size="10">+ Add &amp; LayerNorm</text>
+  <rect x="320" y="525" width="150" height="44" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="395" y="543" text-anchor="middle" fill="#7c3aed" font-weight="600" font-size="11">Cross-Attention</text>
+  <text x="395" y="559" text-anchor="middle" fill="#64748b" font-size="9">Q: decoder · K,V: encoder</text>
+  <text x="395" y="584" text-anchor="middle" fill="#64748b" font-size="10">+ Add &amp; LayerNorm</text>
+  <rect x="320" y="600" width="150" height="38" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="395" y="624" text-anchor="middle" fill="#059669" font-weight="600" font-size="11">Feed-Forward (FFN)</text>
+  <text x="395" y="653" text-anchor="middle" fill="#64748b" font-size="10">+ Add &amp; LayerNorm</text>
+  <line x1="395" y1="663" x2="395" y2="683" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="395" y="713" text-anchor="middle" fill="#94a3b8" font-size="10">N 层重复堆叠</text>
+  <!-- Arrow output emb → decoder -->
+  <line x1="224" y1="445" x2="315" y2="469" stroke="#ea580c" stroke-width="1.5" marker-end="url(#ah)"/>
+  <!-- Arrow encoder → decoder cross-attn (K, V) -->
+  <line x1="490" y1="385" x2="530" y2="385" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <line x1="530" y1="385" x2="530" y2="545" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <line x1="530" y1="545" x2="476" y2="545" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#ah)"/>
+  <text x="540" y="470" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600" transform="rotate(90 540 470)">K, V</text>
+  <!-- Output projection -->
+  <rect x="290" y="770" width="210" height="36" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="395" y="793" text-anchor="middle" fill="#dc2626" font-weight="600" font-size="12">Linear + Softmax</text>
+  <rect x="290" y="818" width="210" height="34" rx="8" fill="#fff1f2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="395" y="840" text-anchor="middle" fill="#dc2626" font-weight="600" font-size="12">Output Probabilities</text>
+  <line x1="395" y1="745" x2="395" y2="766" stroke="#dc2626" stroke-width="1.5" marker-end="url(#ah)"/>
+  <line x1="395" y1="806" x2="395" y2="814" stroke="#dc2626" stroke-width="1.5" marker-end="url(#ah)"/>
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg></div>
+
+<h3>2.1 输入处理：Embedding + Positional Encoding</h3>
+<p>输入 token 序列首先通过词嵌入矩阵映射为 $d_{\text{model}}$ 维向量：</p>
+<div class="formula" data-eq="(1)">$$\mathbf{X} = \text{Embedding}(\text{tokens}) \in \mathbb{R}^{L \times d_{\text{model}}}$$</div>
+<p>由于自注意力本身是排列不变的（对输入顺序不敏感），必须显式注入位置信息。Vaswani 等使用<strong>正弦位置编码</strong>（详见第 5 章）加到嵌入上：</p>
+<div class="formula" data-eq="(2)">$$\mathbf{X}_{\text{pos}} = \mathbf{X} + \mathbf{P}$$</div>
+<p>其中 $\mathbf{P} \in \mathbb{R}^{L \times d_{\text{model}}}$ 是位置编码矩阵。此外，嵌入通常乘以 $\sqrt{d_{\text{model}}}$ 进行缩放，使嵌入和位置编码的量级匹配。</p>
+
+<h3>2.2 编码器（Encoder）</h3>
+<p>编码器由 $N$ 个相同的层堆叠而成（原论文 $N=6$）。每层包含两个子层：</p>
+<ul>
+  <li><strong>多头自注意力</strong>（Multi-Head Self-Attention）：输入同时充当 Q、K、V，每个位置关注所有位置。</li>
+  <li><strong>前馈网络</strong>（Position-wise Feed-Forward Network）：对每个位置独立施加两层全连接 + 激活函数。</li>
+</ul>
+<p>每个子层外部包裹<strong>残差连接</strong>和<strong>层归一化</strong>：</p>
+<div class="formula" data-eq="(3)">$$\mathbf{X}' = \text{LayerNorm}(\mathbf{X} + \text{Sublayer}(\mathbf{X}))$$</div>
+<p>原论文采用 <strong>Post-LN</strong>（归一化在残差之后），现代实现常改用 <strong>Pre-LN</strong>（归一化在残差之前）以获得更稳定的训练（详见第 6 章）。</p>
+
+<h3>2.3 解码器（Decoder）</h3>
+<p>解码器同样由 $N$ 层堆叠，但每层包含<em>三个</em>子层：</p>
+<ul>
+  <li><strong>掩码多头自注意力</strong>（Masked Self-Attention）：防止位置 $i$ "偷看"位置 $i$ 之后的 token（因果掩码），确保自回归生成的正确性。</li>
+  <li><strong>交叉注意力</strong>（Cross-Attention）：Q 来自解码器上一层的输出，K 和 V 来自编码器的最终输出——这是解码器"看到"输入信息的唯一通道。</li>
+  <li><strong>前馈网络</strong>：与编码器相同。</li>
+</ul>
+
+<h3>2.4 输出层</h3>
+<p>解码器的最终输出经过一个线性层投影到词表大小的 logits，再通过 softmax 获得下一个 token 的概率分布：</p>
+<div class="formula" data-eq="(4)">$$P(y_t | y_{&lt;t}, \mathbf{X}) = \text{softmax}(\mathbf{W}_o\, \mathbf{h}_t + \mathbf{b}_o)$$</div>
+<p>其中 $\mathbf{W}_o \in \mathbb{R}^{|\mathcal{V}| \times d_{\text{model}}}$，$|\mathcal{V}|$ 为词表大小。</p>
+
+<h3>2.5 Encoder-Only 与 Decoder-Only 变体</h3>
+<div class="table-wrap"><table>
+  <tr><th>变体</th><th>代表模型</th><th>注意力类型</th><th>主要用途</th></tr>
+  <tr><td>Encoder-Only</td><td>BERT, RoBERTa</td><td>双向自注意力</td><td>文本理解（分类、NER、问答）</td></tr>
+  <tr><td>Decoder-Only</td><td>GPT, LLaMA</td><td>因果（掩码）自注意力</td><td>文本生成（对话、续写、推理）</td></tr>
+  <tr><td>Encoder-Decoder</td><td>T5, BART, 原始 Transformer</td><td>掩码自注意力 + 交叉注意力</td><td>Seq2Seq（翻译、摘要）</td></tr>
+</table></div>
+<div class="callout"><div class="callout-title">架构选择直觉</div>
+<p>Encoder-Only 允许每个位置看到全部上下文（双向），适合"理解"任务；Decoder-Only 严格自回归（单向），适合"生成"任务；Encoder-Decoder 介于两者之间，编码器双向理解输入、解码器自回归生成输出。当前大语言模型趋势以 Decoder-Only 为主的统一架构。</p></div>
+</section>
+
+<section id="ch3"><h2><span class="num">3</span>自注意力机制</h2>
+<p>自注意力（Self-Attention）是 Transformer 的核心。它让序列中的每个位置直接与所有其他位置交互，计算"应该关注谁"的权重，再据此聚合信息。本章从 Query-Key-Value 概念出发，推导缩放点积注意力公式，分析计算复杂度，并给出 PyTorch 实现。</p>
+
+<h3>3.1 Query、Key、Value</h3>
+<p>自注意力借鉴信息检索的思想：给定一个查询（Query），在键值对集合中根据键（Key）与查询的相关度检索值（Value）。在自注意力中，Q、K、V 均由输入 $\mathbf{X}$ 经线性投影得到：</p>
+<div class="formula" data-eq="(5)">$$\mathbf{Q} = \mathbf{X}\mathbf{W}_Q, \quad \mathbf{K} = \mathbf{X}\mathbf{W}_K, \quad \mathbf{V} = \mathbf{X}\mathbf{W}_V$$</div>
+<p>其中 $\mathbf{W}_Q \in \mathbb{R}^{d_{\text{model}} \times d_k}$，$\mathbf{W}_K \in \mathbb{R}^{d_{\text{model}} \times d_k}$，$\mathbf{W}_V \in \mathbb{R}^{d_{\text{model}} \times d_v}$。三种投影使模型可以学习"以不同视角看待同一序列"。</p>
+<div class="callout"><div class="callout-title">直觉：Q、K、V 的检索类比</div>
+<p>想象在图书馆找书：你心中的需求是 Query，每本书的标题是 Key，书的内容是 Value。计算 Query 与每个 Key 的相似度，找到最匹配的书（高权重），再按权重汇总 Value——这正是一个注意力计算周期。在自注意力中，序列里的每个 token 都同时扮演 Query 和 Key/Value 的角色。</p></div>
+
+<h3>3.2 缩放点积注意力</h3>
+<p>注意力的核心运算是 Query 和 Key 的点积，衡量两个位置的相似度。点积越大，相似度越高。对所有位置的相似度做 softmax 得到归一化权重，再加权求和 Value：</p>
+<div class="formula" data-eq="(6)">$$\text{Attention}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{softmax}\!\left(\frac{\mathbf{Q}\mathbf{K}^T}{\sqrt{d_k}}\right)\mathbf{V}$$</div>
+<p>这就是 Transformer 最核心的一个公式。除以 $\sqrt{d_k}$ 称为<strong>缩放</strong>（Scaling），其目的是控制点积的方差。</p>
+
+<div class="svg-box"><svg viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-body);font-size:12px">
+  <text x="250" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">缩放点积注意力（Scaled Dot-Product Attention）</text>
+  <!-- Q -->
+  <rect x="40" y="55" width="60" height="40" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="70" y="80" text-anchor="middle" fill="#1d4ed8" font-weight="700">Q</text>
+  <!-- K -->
+  <rect x="40" y="135" width="60" height="40" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="70" y="160" text-anchor="middle" fill="#1d4ed8" font-weight="700">K</text>
+  <!-- V -->
+  <rect x="40" y="295" width="60" height="40" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="70" y="320" text-anchor="middle" fill="#059669" font-weight="700">V</text>
+  <!-- MatMul QK^T -->
+  <circle cx="200" cy="115" r="28" fill="rgba(124,58,237,0.1)" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="200" y="113" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">MatMul</text>
+  <text x="200" y="127" text-anchor="middle" fill="#7c3aed" font-size="8">QKᵀ</text>
+  <line x1="100" y1="75" x2="172" y2="102" stroke="#64748b" stroke-width="1.2" marker-end="url(#ah2)"/>
+  <line x1="100" y1="155" x2="172" y2="125" stroke="#64748b" stroke-width="1.2" marker-end="url(#ah2)"/>
+  <!-- Scale -->
+  <rect x="160" y="185" width="80" height="30" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="200" y="205" text-anchor="middle" fill="#ea580c" font-weight="600" font-size="10">Scale (√dₖ)</text>
+  <line x1="200" y1="150" x2="200" y2="180" stroke="#64748b" stroke-width="1.2" marker-end="url(#ah2)"/>
+  <!-- Mask (optional) -->
+  <rect x="160" y="235" width="80" height="28" rx="6" fill="rgba(220,38,38,0.08)" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="200" y="253" text-anchor="middle" fill="#dc2626" font-size="10">Mask (opt.)</text>
+  <line x1="200" y1="215" x2="200" y2="230" stroke="#64748b" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#ah2)"/>
+  <!-- Softmax -->
+  <circle cx="200" cy="295" r="25" fill="rgba(37,99,235,0.1)" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="200" y="300" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="600">Softmax</text>
+  <line x1="200" y1="263" x2="200" y2="270" stroke="#64748b" stroke-width="1.2" marker-end="url(#ah2)"/>
+  <!-- MatMul attn·V -->
+  <circle cx="370" cy="250" r="32" fill="rgba(124,58,237,0.1)" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="370" y="248" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">MatMul</text>
+  <text x="370" y="262" text-anchor="middle" fill="#7c3aed" font-size="8">Attn·V</text>
+  <!-- Softmax → MatMul (clean, no crossing) -->
+  <line x1="225" y1="295" x2="342" y2="262" stroke="#64748b" stroke-width="1.2" marker-end="url(#ah2)"/>
+  <!-- V → MatMul (bottom path, avoids softmax) -->
+  <line x1="100" y1="315" x2="340" y2="252" stroke="#64748b" stroke-width="1.2" marker-end="url(#ah2)"/>
+  <!-- Output -->
+  <rect x="425" y="230" width="55" height="40" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="452" y="250" text-anchor="middle" fill="#7c3aed" font-weight="700" font-size="10">Output</text>
+  <text x="452" y="263" text-anchor="middle" fill="#64748b" font-size="8">Context</text>
+  <line x1="402" y1="250" x2="420" y2="250" stroke="#64748b" stroke-width="1.2" marker-end="url(#ah2)"/>
+  <defs>
+    <marker id="ah2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg></div>
+
+<h3>3.3 Softmax 归一化</h3>
+<p>Softmax 函数将任意实数向量映射为概率分布（非负且和为 1）：</p>
+<div class="formula" data-eq="(7)">$$\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{L} e^{z_j}}$$</div>
+<p>在注意力中，$z_i = \mathbf{q} \cdot \mathbf{k}_i / \sqrt{d_k}$，即查询与第 $i$ 个键的缩放点积。Softmax 保证了权重非负且总和为 1，使输出是 Value 向量的加权平均。</p>
+
+<h3>3.4 为什么需要缩放？</h3>
+<p>当 $d_k$ 较大时，点积 $\mathbf{q} \cdot \mathbf{k}$ 的方差与 $d_k$ 成正比——假设 $\mathbf{q}$ 和 $\mathbf{k}$ 的各分量独立标准正态分布，则 $\mathbf{q} \cdot \mathbf{k}$ 的方差为 $d_k$。大方差导致 softmax 的输入值过大，使梯度趋近于零（饱和区域），训练困难。除以 $\sqrt{d_k}$ 将方差缩放回 $O(1)$：</p>
+<div class="formula" data-eq="(8)">$$\text{Var}\!\left(\frac{\mathbf{q} \cdot \mathbf{k}}{\sqrt{d_k}}\right) = 1$$</div>
+<div class="callout warn"><div class="callout-title">数值算例</div>
+<p>设 $d_k = 512$。若 Q、K 各分量服从 $\mathcal{N}(0,1)$，则 $\mathbf{Q}\mathbf{K}^T$ 的元素方差约为 512，标准差约 22.6。Softmax 在输入值约 $\pm 22$ 时会极度尖锐，几乎只有最大值位置权重接近 1，其余趋于 0——梯度消失。除以 $\sqrt{512} \approx 22.6$ 后，标准差回到 1，Softmax 在正常范围工作。</p></div>
+
+<h3>3.5 注意力权重的直观理解</h3>
+<p>注意力矩阵 $\mathbf{A} = \text{softmax}(\mathbf{Q}\mathbf{K}^T / \sqrt{d_k}) \in \mathbb{R}^{L \times L}$ 是一个行随机矩阵（每行和为 1）。$A_{ij}$ 表示位置 $i$ 对位置 $j$ 的关注程度。输出 $\mathbf{A}\mathbf{V}$ 是按注意力权重对 Value 的加权平均：</p>
+<div class="formula" data-eq="(9)">$$\text{out}_i = \sum_{j=1}^{L} A_{ij}\, \mathbf{v}_j$$</div>
+
+<h3>3.6 计算复杂度分析</h3>
+<p>自注意力的计算涉及三个主要矩阵运算：</p>
+<div class="table-wrap"><table>
+  <tr><th>运算</th><th>时间复杂度</th><th>空间复杂度</th></tr>
+  <tr><td>$\mathbf{Q}\mathbf{K}^T$</td><td>$O(L^2 d_k)$</td><td>$O(L^2)$</td></tr>
+  <tr><td>$\text{softmax}$</td><td>$O(L^2)$</td><td>$O(L^2)$</td></tr>
+  <tr><td>$\mathbf{A}\mathbf{V}$</td><td>$O(L^2 d_v)$</td><td>$O(L d_v)$</td></tr>
+  <tr><td><strong>总计</strong></td><td>$O(L^2 d)$</td><td>$O(L^2 + Ld)$</td></tr>
+</table></div>
+<p>当 $d \ll L$ 时，瓶颈在 $O(L^2)$ 的注意力矩阵填充和存储。这正是长序列 Transformer 的主要瓶颈，催生了第 8 章的稀疏注意力和 FlashAttention 等技术。</p>
+
+<h3>3.7 PyTorch 实现</h3>
+<div class="code-block"><div class="code-header">self_attention.py — 缩放点积自注意力</div><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="kw">class</span> <span class="cls">ScaledDotProductAttention</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="fn">super</span>().__init__()
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, Q, K, V, mask=<span class="kw">None</span>):
+        <span class="com"># Q: (batch, L_q, d_k), K: (batch, L_k, d_k), V: (batch, L_k, d_v)</span>
+        d_k = Q.size(-<span class="num">1</span>)
+        scores = torch.matmul(Q, K.transpose(-<span class="num">2</span>, -<span class="num">1</span>)) / math.sqrt(d_k)
+        <span class="com"># scores: (batch, L_q, L_k)</span>
+
+        <span class="kw">if</span> mask <span class="kw">is not</span> <span class="kw">None</span>:
+            scores = scores.masked_fill(mask == <span class="num">0</span>, float(<span class="str">'-inf'</span>))
+
+        attn_weights = F.softmax(scores, dim=-<span class="num">1</span>)
+        <span class="com"># attn_weights: (batch, L_q, L_k)</span>
+
+        output = torch.matmul(attn_weights, V)
+        <span class="com"># output: (batch, L_q, d_v)</span>
+        <span class="kw">return</span> output, attn_weights</pre></div>
+</section>
+
+<section id="ch4"><h2><span class="num">4</span>多头注意力</h2>
+<p>单一注意力头只能学习一种"关注模式"。为了使模型能同时从多个表示子空间中捕获不同的依赖关系（如语法关系、语义关系、共指关系等），Transformer 引入了<strong>多头注意力</strong>（Multi-Head Attention）：将 Q、K、V 分成 $h$ 组，每组独立计算注意力，最后拼接并投影。</p>
+
+<div class="svg-box"><svg viewBox="0 0 660 400" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-body);font-size:11px">
+  <text x="330" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">多头注意力（Multi-Head Attention）</text>
+  <!-- V/K/Q -->
+  <rect x="20" y="70" width="50" height="34" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="45" y="92" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-size="11">V</text>
+  <rect x="20" y="130" width="50" height="34" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="45" y="152" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-size="11">K</text>
+  <rect x="20" y="190" width="50" height="34" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="45" y="212" text-anchor="middle" fill="#1d4ed8" font-weight="700" font-size="11">Q</text>
+  <!-- Linear projections -->
+  <rect x="95" y="70" width="60" height="34" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="125" y="92" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">Linear</text>
+  <rect x="95" y="130" width="60" height="34" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="125" y="152" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">Linear</text>
+  <rect x="95" y="190" width="60" height="34" rx="5" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="125" y="212" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">Linear</text>
+  <line x1="70" y1="87" x2="90" y2="87" stroke="#64748b" stroke-width="1"/>
+  <line x1="70" y1="147" x2="90" y2="147" stroke="#64748b" stroke-width="1"/>
+  <line x1="70" y1="207" x2="90" y2="207" stroke="#64748b" stroke-width="1"/>
+  <!-- Fan-out to all heads -->
+  <g stroke="#64748b" stroke-width="1" fill="none">
+    <!-- V (y=87) fan out to head1/head2/headh -->
+    <path d="M 155 87 L 195 87 L 195 100"/>
+    <path d="M 195 87 L 245 87 L 245 132"/>
+    <path d="M 195 87 L 295 87 L 295 164"/>
+    <!-- K (y=147) fan out -->
+    <path d="M 155 147 L 195 147 L 195 100"/>
+    <path d="M 195 147 L 245 147 L 245 132"/>
+    <path d="M 195 147 L 295 147 L 295 164"/>
+    <!-- Q (y=207) fan out -->
+    <path d="M 155 207 L 195 207 L 195 100"/>
+    <path d="M 195 207 L 245 207 L 245 132"/>
+    <path d="M 195 207 L 295 207 L 295 164"/>
+  </g>
+  <!-- Head boxes -->
+  <rect x="200" y="70" width="140" height="30" rx="5" fill="rgba(37,99,235,0.08)" stroke="#2563eb" stroke-width="1"/>
+  <text x="270" y="90" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="600">Head 1</text>
+  <rect x="200" y="117" width="140" height="30" rx="5" fill="rgba(37,99,235,0.08)" stroke="#2563eb" stroke-width="1"/>
+  <text x="270" y="137" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="600">Head 2</text>
+  <rect x="200" y="164" width="140" height="30" rx="5" fill="rgba(37,99,235,0.08)" stroke="#2563eb" stroke-width="1"/>
+  <text x="270" y="184" text-anchor="middle" fill="#2563eb" font-size="9" font-weight="600">Head h</text>
+  <text x="270" y="152" text-anchor="middle" fill="#94a3b8" font-size="13">⋮</text>
+  <text x="270" y="225" text-anchor="middle" fill="#64748b" font-size="9">每个头：Scaled Dot-Product Attention</text>
+  <text x="270" y="238" text-anchor="middle" fill="#94a3b8" font-size="9">h 个注意力头并行</text>
+  <!-- Heads → Concat -->
+  <line x1="340" y1="85" x2="385" y2="105" stroke="#64748b" stroke-width="1" marker-end="url(#ah3)"/>
+  <line x1="340" y1="132" x2="385" y2="115" stroke="#64748b" stroke-width="1" marker-end="url(#ah3)"/>
+  <line x1="340" y1="179" x2="385" y2="125" stroke="#64748b" stroke-width="1" marker-end="url(#ah3)"/>
+  <!-- Concat -->
+  <rect x="390" y="90" width="80" height="50" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="430" y="112" text-anchor="middle" fill="#059669" font-weight="600" font-size="10">Concat</text>
+  <text x="430" y="127" text-anchor="middle" fill="#64748b" font-size="8">拼接所有头</text>
+  <line x1="470" y1="115" x2="505" y2="115" stroke="#64748b" stroke-width="1" marker-end="url(#ah3)"/>
+  <!-- Linear -->
+  <rect x="510" y="92" width="60" height="46" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="540" y="112" text-anchor="middle" fill="#7c3aed" font-weight="600" font-size="10">Linear</text>
+  <text x="540" y="127" text-anchor="middle" fill="#64748b" font-size="8">W^O</text>
+  <line x1="570" y1="115" x2="595" y2="115" stroke="#64748b" stroke-width="1" marker-end="url(#ah3)"/>
+  <!-- Output -->
+  <rect x="600" y="92" width="50" height="46" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="625" y="112" text-anchor="middle" fill="#dc2626" font-weight="700" font-size="10">Output</text>
+  <text x="625" y="127" text-anchor="middle" fill="#64748b" font-size="8">MHA</text>
+  <!-- Bottom labels -->
+  <text x="125" y="260" text-anchor="middle" fill="#64748b" font-size="9">线性投影 + 分头</text>
+  <text x="270" y="260" text-anchor="middle" fill="#64748b" font-size="9">并行注意力</text>
+  <text x="430" y="260" text-anchor="middle" fill="#64748b" font-size="9">拼接</text>
+  <text x="540" y="260" text-anchor="middle" fill="#64748b" font-size="9">输出投影</text>
+  <defs>
+    <marker id="ah3" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg></div>
+
+<h3>4.1 多头注意力公式</h3>
+<p>对 $h$ 个注意力头，第 $i$ 个头的计算为：</p>
+<div class="formula" data-eq="(10)">$$\text{head}_i = \text{Attention}(\mathbf{Q}\mathbf{W}_i^Q,\; \mathbf{K}\mathbf{W}_i^K,\; \mathbf{V}\mathbf{W}_i^V)$$</div>
+<p>其中 $\mathbf{W}_i^Q \in \mathbb{R}^{d_{\text{model}} \times d_k}$，$\mathbf{W}_i^K \in \mathbb{R}^{d_{\text{model}} \times d_k}$，$\mathbf{W}_i^V \in \mathbb{R}^{d_{\text{model}} \times d_v}$，且 $d_k = d_v = d_{\text{model}} / h$。将所有头的输出拼接后做一次线性投影：</p>
+<div class="formula" data-eq="(11)">$$\text{MultiHead}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)\, \mathbf{W}^O$$</div>
+<p>其中 $\mathbf{W}^O \in \mathbb{R}^{(h \cdot d_v) \times d_{\text{model}}}$ 是输出投影矩阵。注意总参数量与单头注意力相同（因为 $h \times d_k = d_{\text{model}}$），计算量也相同——多头是在<em>同一计算预算</em>下让模型学习多视角的注意力模式。</p>
+
+<h3>4.2 多头的作用：多子空间表示</h3>
+<p>每个头独立学习一组投影矩阵，相当于在高维空间中投出 $h$ 条不同的"视线"。不同的头可能关注不同的模式：有的头关注局部依赖（相邻词），有的头关注长距离语法关系（主谓一致），有的头关注语义相似性。Transformer 的堆叠层让这些模式逐层组合，形成层次化的表示能力。</p>
+<div class="callout"><div class="callout-title">设计直觉：为什么是"缩小维度再拼接"而不是"多个全维度头"？</div>
+<p>如果每个头都使用全维度 $d_{\text{model}}$，则 $h$ 个头的总计算量和参数量是单头的 $h$ 倍。Transformer 选择让每个头只看 $d_{\text{model}}/h$ 维——相当于把信息切分到 $h$ 个子空间，每个头专注于一个子空间。拼接后恢复到 $d_{\text{model}}$ 维，总开销与单头相同。这是一种"分治"策略：在不变增加开销的前提下增加模型的表达多样性。</p></div>
+
+<h3>4.3 三种注意力使用方式</h3>
+<p>Transformer 在不同位置使用注意力的三种模式：</p>
+<div class="table-wrap"><table>
+  <tr><th>模式</th><th>Q 来源</th><th>K, V 来源</th><th>掩码</th><th>使用位置</th></tr>
+  <tr><td>自注意力</td><td>当前层</td><td>当前层</td><td>无（全部可见）</td><td>编码器</td></tr>
+  <tr><td>掩码自注意力</td><td>当前层</td><td>当前层</td><td>因果掩码（下三角）</td><td>解码器</td></tr>
+  <tr><td>交叉注意力</td><td>解码器</td><td>编码器最终输出</td><td>无</td><td>解码器</td></tr>
+</table></div>
+
+<h3>4.4 因果掩码</h3>
+<p>在解码器的掩码自注意力中，位置 $i$ 只能关注位置 $0, 1, \ldots, i$（不能"偷看"未来的 token）。这通过将注意力矩阵上三角部分填充 $-\infty$ 实现：</p>
+<div class="formula" data-eq="(12)">$$\text{mask}_{ij} = \begin{cases} 0, & j \leq i \ -\infty, & j &gt; i \end{cases}$$</div>
+<p>经过 softmax 后，$-\infty$ 位置的权重变为 0，实现了因果约束。</p>
+
+<h3>4.5 PyTorch 实现</h3>
+<div class="code-block"><div class="code-header">multi_head_attention.py — 多头注意力完整实现</div><pre><span class="kw">class</span> <span class="cls">MultiHeadAttention</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model=<span class="num">512</span>, num_heads=<span class="num">8</span>):
+        <span class="fn">super</span>().__init__()
+        <span class="kw">assert</span> d_model % num_heads == <span class="num">0</span>
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_k = d_model // num_heads
+
+        self.W_q = nn.Linear(d_model, d_model)
+        self.W_k = nn.Linear(d_model, d_model)
+        self.W_v = nn.Linear(d_model, d_model)
+        self.W_o = nn.Linear(d_model, d_model)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, q, k, v, mask=<span class="kw">None</span>):
+        batch_size = q.size(<span class="num">0</span>)
+
+        <span class="com"># 线性投影 + 分头</span>
+        Q = self.W_q(q).view(batch_size, -<span class="num">1</span>, self.num_heads, self.d_k).transpose(<span class="num">1</span>, <span class="num">2</span>)
+        K = self.W_k(k).view(batch_size, -<span class="num">1</span>, self.num_heads, self.d_k).transpose(<span class="num">1</span>, <span class="num">2</span>)
+        V = self.W_v(v).view(batch_size, -<span class="num">1</span>, self.num_heads, self.d_k).transpose(<span class="num">1</span>, <span class="num">2</span>)
+        <span class="com"># Q/K/V: (batch, num_heads, L, d_k)</span>
+
+        <span class="com"># 缩放点积注意力</span>
+        scores = torch.matmul(Q, K.transpose(-<span class="num">2</span>, -<span class="num">1</span>)) / math.sqrt(self.d_k)
+        <span class="kw">if</span> mask <span class="kw">is not</span> <span class="kw">None</span>:
+            scores = scores.masked_fill(mask == <span class="num">0</span>, float(<span class="str">'-inf'</span>))
+        attn = F.softmax(scores, dim=-<span class="num">1</span>)
+        context = torch.matmul(attn, V)
+        <span class="com"># context: (batch, num_heads, L, d_k)</span>
+
+        <span class="com"># 拼接 + 输出投影</span>
+        context = context.transpose(<span class="num">1</span>, <span class="num">2</span>).contiguous()
+        context = context.view(batch_size, -<span class="num">1</span>, self.d_model)
+        <span class="kw">return</span> self.W_o(context)</pre></div>
+</section>
+
+<section id="ch5"><h2><span class="num">5</span>位置编码</h2>
+<p>自注意力机制本身是排列不变的——打乱输入顺序，输出只相应打乱但不改变内容。这意味着 Transformer 不知道 token 的位置信息。位置编码（Positional Encoding）的作用就是将位置信息注入模型，使每个位置的表示不仅取决于"是什么"，还取决于"在哪里"。</p>
+
+<h3>5.1 正弦位置编码（Sinusoidal PE）</h3>
+<p>Vaswani 等在原论文中使用固定正弦/余弦函数生成位置编码。对位置 $pos$ 和维度 $i$：</p>
+<div class="formula multi" data-eq="(13)">$$PE_{(pos,\, 2i)} = \sin\!\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right)$$</div>
+<div class="formula multi" data-eq="(14)">$$PE_{(pos,\, 2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right)$$</div>
+<p>不同维度对应不同周期的正弦波——低维高频（短周期），高维低频（长周期）。这种设计使得模型可以学到相对位置关系，因为对于任意偏移 $k$，$PE_{pos+k}$ 可以表示为 $PE_{pos}$ 的线性函数。</p>
+
+<div class="svg-box"><svg viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-body);font-size:11px">
+  <text x="280" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">正弦位置编码：不同维度的频率（pos 0–40）</text>
+  <!-- Axes -->
+  <line x1="60" y1="250" x2="540" y2="250" stroke="#334155" stroke-width="1.5"/>
+  <line x1="60" y1="40" x2="60" y2="250" stroke="#334155" stroke-width="1.5"/>
+  <text x="540" y="268" text-anchor="middle" fill="#64748b" font-size="10">position (pos)</text>
+  <text x="24" y="42" text-anchor="middle" fill="#64748b" font-size="10">value</text>
+  <!-- Sine/cosine waves: exact data computed with Python -->
+  <!-- dim=0: sin, 最高频 (周期最短) -->
+  <polyline points="60.0,140.0 72.0,62.6 84.0,56.3 96.0,127.0 108.0,209.6 120.0,228.2 132.0,165.7 144.0,79.6 156.0,49.0 168.0,102.1 180.0,190.0 192.0,232.0 204.0,189.4 216.0,101.3 228.0,48.9 240.0,80.2 252.0,166.5 264.0,228.4 276.0,209.1 288.0,126.2 300.0,56.0 312.0,63.0 324.0,140.8 336.0,217.9 348.0,223.3 360.0,152.2 372.0,69.8 384.0,52.0 396.0,115.1 408.0,201.1 420.0,230.9 432.0,177.2 444.0,89.3 456.0,48.0 468.0,91.3 480.0,179.4 492.0,231.2 504.0,199.2 516.0,112.7 528.0,51.3 540.0,71.4" fill="none" stroke="#2563eb" stroke-width="1.8"/>
+  <!-- dim=1: cos -->
+  <polyline points="60.0,48.0 72.0,90.3 84.0,178.3 96.0,231.1 108.0,200.1 120.0,113.9 132.0,51.7 144.0,70.6 156.0,153.4 168.0,223.8 180.0,217.2 192.0,139.6 204.0,62.4 216.0,56.5 228.0,127.4 240.0,209.9 252.0,228.1 264.0,165.3 276.0,79.3 288.0,49.0 300.0,102.5 312.0,190.4 324.0,232.0 336.0,189.0 348.0,101.0 360.0,48.8 372.0,80.5 384.0,166.9 396.0,228.6 408.0,208.8 420.0,125.8 432.0,55.8 444.0,63.3 456.0,141.2 468.0,218.1 480.0,223.1 492.0,151.8 504.0,69.6 516.0,52.1 528.0,115.5 540.0,201.4" fill="none" stroke="#7c3aed" stroke-width="1.8"/>
+  <!-- dim=4: sin (低频) -->
+  <polyline points="60.0,140.0 72.0,77.3 84.0,48.2 96.0,68.4 108.0,127.0 120.0,192.5 132.0,229.9 144.0,219.1 156.0,165.8 168.0,98.7 180.0,53.7 192.0,55.1 204.0,102.0 216.0,169.3 228.0,220.9 240.0,229.1 252.0,189.5 264.0,123.4 276.0,66.2 288.0,48.6 300.0,80.0 312.0,143.7 324.0,205.3 336.0,232.0 348.0,209.2 360.0,149.4 372.0,84.5 384.0,49.4 396.0,62.9 408.0,117.8 420.0,184.6 432.0,227.5 444.0,223.4 456.0,174.7 468.0,107.3 480.0,57.5 492.0,51.9 504.0,93.6 516.0,160.2 528.0,216.0 540.0,231.0" fill="none" stroke="#059669" stroke-width="1.8"/>
+  <!-- dim=6: cos (最低频) -->
+  <polyline points="60.0,48.0 72.0,66.7 84.0,115.3 96.0,173.9 108.0,218.7 120.0,231.5 132.0,207.0 144.0,155.3 156.0,97.3 168.0,56.7 180.0,50.0 192.0,80.0 204.0,134.4 216.0,191.0 228.0,226.9 240.0,227.4 252.0,192.4 264.0,136.0 276.0,81.2 288.0,50.4 300.0,56.0 312.0,95.9 324.0,153.7 336.0,205.9 348.0,231.3 360.0,219.5 372.0,175.4 384.0,116.8 396.0,67.7 408.0,48.0 420.0,65.8 432.0,113.7 444.0,172.4 456.0,217.9 468.0,231.6 480.0,208.1 492.0,156.9 504.0,98.7 516.0,57.4 528.0,49.7 540.0,78.8" fill="none" stroke="#ea580c" stroke-width="1.8"/>
+  <!-- Center line -->
+  <line x1="60" y1="140" x2="540" y2="140" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2,2"/>
+  <!-- X-axis labels -->
+  <text x="60" y="266" text-anchor="middle" fill="#94a3b8" font-size="9">0</text>
+  <text x="180" y="266" text-anchor="middle" fill="#94a3b8" font-size="9">10</text>
+  <text x="300" y="266" text-anchor="middle" fill="#94a3b8" font-size="9">20</text>
+  <text x="420" y="266" text-anchor="middle" fill="#94a3b8" font-size="9">30</text>
+  <text x="540" y="266" text-anchor="middle" fill="#94a3b8" font-size="9">40</text>
+  <!-- Y-axis labels -->
+  <text x="50" y="48" text-anchor="end" fill="#94a3b8" font-size="9">+1</text>
+  <text x="50" y="144" text-anchor="end" fill="#94a3b8" font-size="9">0</text>
+  <text x="50" y="250" text-anchor="end" fill="#94a3b8" font-size="9">-1</text>
+  <!-- Legend (corrected: 低频→低频对应低维说明) -->
+  <g transform="translate(360, 0)">
+    <rect x="0" y="8" width="180" height="34" rx="4" fill="rgba(255,255,255,0.92)" stroke="#e2e8f0"/>
+    <line x1="8" y1="17" x2="28" y2="17" stroke="#2563eb" stroke-width="2"/>
+    <text x="32" y="20" fill="#334155" font-size="9">dim=0 (sin, 高频)</text>
+    <line x1="8" y1="32" x2="28" y2="32" stroke="#7c3aed" stroke-width="2"/>
+    <text x="32" y="35" fill="#334155" font-size="9">dim=1 (cos)</text>
+  </g>
+  <g transform="translate(360, 44)">
+    <rect x="0" y="0" width="180" height="34" rx="4" fill="rgba(255,255,255,0.92)" stroke="#e2e8f0"/>
+    <line x1="8" y1="12" x2="28" y2="12" stroke="#059669" stroke-width="2"/>
+    <text x="32" y="15" fill="#334155" font-size="9">dim=4 (sin, 低频)</text>
+    <line x1="8" y1="27" x2="28" y2="27" stroke="#ea580c" stroke-width="2"/>
+    <text x="32" y="30" fill="#334155" font-size="9">dim=6 (cos, 最低频)</text>
+  </g>
+</svg></div>
+
+<div class="callout"><div class="callout-title">直觉：为什么用正弦/余弦而不是直接编码位置？</div>
+<p>正弦函数有两个关键优势：(1) 每个位置的编码是唯一的；(2) 相对位置可用线性变换表达——$\sin(pos + k) = \sin(pos)\cos(k) + \cos(pos)\sin(k)$，模型可以通过学习 $\cos(k)$ 和 $\sin(k)$ 来关注相对偏移 $k$ 的位置。此外，正弦编码可以外推到训练时未见过的更长序列。</p></div>
+
+<h3>5.2 可学习位置编码（Learned PE）</h3>
+<p>与固定正弦编码不同，BERT、GPT 等模型使用<strong>可学习位置编码</strong>：定义一个可训练的嵌入矩阵 $\mathbf{P} \in \mathbb{R}^{L_{\max} \times d_{\text{model}}}$，直接加到 token 嵌入上：</p>
+<div class="formula" data-eq="(15)">$$\mathbf{X}_{\text{pos}} = \mathbf{X} + \mathbf{P}_{\text{pos}}$$</div>
+<p>可学习编码在训练数据覆盖的序列长度内通常表现更好，但<em>不具备外推能力</em>——超过 $L_{\max}$ 的位置没有对应编码。</p>
+
+<h3>5.3 相对位置编码（Relative PE）</h3>
+<p>绝对位置编码将位置信息加到输入上，而<strong>相对位置编码</strong>将位置差 $i - j$ 直接注入注意力计算中。Shaw 等（2018）提出在注意力分数中加入可学习的相对位置偏置：</p>
+<div class="formula" data-eq="(16)">$$e_{ij} = \frac{(\mathbf{q}_i)(\mathbf{k}_j + \mathbf{a}_{i-j}^K)^T}{\sqrt{d_k}}$$</div>
+<p>其中 $\mathbf{a}_{i-j}^K$ 是位置差 $i-j$ 对应的可学习偏置向量。相对位置编码的核心思想是：注意力更应依赖于两个 token 的<em>距离</em>而非<em>绝对位置</em>。</p>
+
+<h3>5.4 旋转位置编码（RoPE）</h3>
+<p>RoPE（Rotary Position Embedding，Su 等 2021）是当前大语言模型（LLaMA、GPT-NeoX、PaLM 等）的主流位置编码方案。它通过对 Query 和 Key 施加位置相关的旋转矩阵，使得它们的点积仅依赖于相对位置：</p>
+<div class="formula" data-eq="(17)">$$\mathbf{q}_m^T \mathbf{k}_n = (\mathbf{R}_m \mathbf{q})^T (\mathbf{R}_n \mathbf{k})$$</div>
+<p>其中 $\mathbf{R}_m$ 是位置 $m$ 对应的旋转矩阵。对二维 $(q_0, q_1)$ 一组，旋转角度 $\theta_m = m \cdot \theta_0$：</p>
+<div class="formula multi" data-eq="(18)">$$\mathbf{R}_m = \begin{pmatrix} \cos m\theta & -\sin m\theta \ \sin m\theta & \cos m\theta \end{pmatrix}$$</div>
+<p>RoPE 的优雅之处在于：它不修改注意力公式本身，而是在计算点积前隐式注入位置信息，且点积结果自动呈现相对位置依赖。RoPE 还支持通过调整旋转基 $\theta_0$ 实现长度外推。</p>
+
+<h3>5.5 ALiBi（线性偏置注意力）</h3>
+<p>ALiBi（Press 等 2022）提出一种更简洁的方案：不使用位置编码，而是在注意力分数中直接加上一个与距离成正比的线性偏置：</p>
+<div class="formula" data-eq="(19)">$$\text{score}_{ij} = \frac{\mathbf{q}_i \cdot \mathbf{k}_j}{\sqrt{d_k}} + m \cdot (i - j)$$</div>
+<p>其中 $m$ 是一个固定的斜率超参数（不同注意力头使用不同斜率）。当 $j &gt; i$（未来位置）时，偏置为负，自然抑制对未来的关注。ALiBi 不引入额外参数，且具有良好的长度外推能力。</p>
+
+<h3>5.6 位置编码对比</h3>
+<div class="table-wrap"><table>
+  <tr><th>方案</th><th>类型</th><th>可学习</th><th>外推能力</th><th>代表模型</th></tr>
+  <tr><td>正弦 PE</td><td>绝对</td><td>否（固定）</td><td>有</td><td>原始 Transformer</td></tr>
+  <tr><td>可学习 PE</td><td>绝对</td><td>是</td><td>无</td><td>BERT, GPT-2</td></tr>
+  <tr><td>相对 PE</td><td>相对</td><td>是</td><td>有限</td><td>T5, Transformer-XL</td></tr>
+  <tr><td>RoPE</td><td>旋转（隐式相对）</td><td>否</td><td>有（可调）</td><td>LLaMA, PaLM</td></tr>
+  <tr><td>ALiBi</td><td>线性偏置</td><td>否</td><td>强</td><td>BLOOM, MPT</td></tr>
+</table></div>
+
+<h3>5.7 PyTorch 实现（正弦位置编码）</h3>
+<div class="code-block"><div class="code-header">positional_encoding.py — 正弦位置编码</div><pre><span class="kw">import</span> math
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">PositionalEncoding</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model=<span class="num">512</span>, max_len=<span class="num">5000</span>, dropout=<span class="num">0.1</span>):
+        <span class="fn">super</span>().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(<span class="num">0</span>, max_len, dtype=torch.float).unsqueeze(<span class="num">1</span>)
+        div_term = torch.exp(torch.arange(<span class="num">0</span>, d_model, <span class="num">2</span>).float()
+                             * (-math.log(<span class="num">10000.0</span>) / d_model))
+        pe[:, <span class="num">0</span>::<span class="num">2</span>] = torch.sin(position * div_term)
+        pe[:, <span class="num">1</span>::<span class="num">2</span>] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(<span class="num">0</span>)  <span class="com"># (1, max_len, d_model)</span>
+        self.register_buffer(<span class="str">'pe'</span>, pe)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="com"># x: (batch, L, d_model)</span>
+        x = x + self.pe[:, :x.size(<span class="num">1</span>), :]
+        <span class="kw">return</span> self.dropout(x)</pre></div>
+</section>
+
+<section id="ch6"><h2><span class="num">6</span>前馈网络与残差连接</h2>
+<p>每个 Transformer 层除了注意力子层外，还包含一个<strong>逐位置前馈网络</strong>（Position-wise FFN）和<strong>残差连接</strong>。FFN 为模型提供非线性变换能力，残差连接和层归一化则保障深层网络的训练稳定性。</p>
+
+<h3>6.1 逐位置前馈网络</h3>
+<p>FFN 对序列中每个位置独立地施加两层线性变换，中间用激活函数：</p>
+<div class="formula" data-eq="(20)">$$\text{FFN}(\mathbf{x}) = \text{Linear}_2(\sigma(\text{Linear}_1(\mathbf{x}))) = \sigma(\mathbf{x}\mathbf{W}_1 + \mathbf{b}_1)\mathbf{W}_2 + \mathbf{b}_2$$</div>
+<p>其中 $\mathbf{W}_1 \in \mathbb{R}^{d_{\text{model}} \times d_{ff}}$，$\mathbf{W}_2 \in \mathbb{R}^{d_{ff} \times d_{\text{model}}}$。隐层维度 $d_{ff}$ 通常为 $d_{\text{model}}$ 的 4 倍（如 $d_{\text{model}}=512$ 时 $d_{ff}=2048$），使 FFN 成为参数量和计算量的主要来源。</p>
+<p>FFN 是"逐位置"的——每个 token 独立通过同一个 FFN，不同位置之间不共享信息（信息交互由注意力子层完成）。这种"先注意再变换"的分工是 Transformer 的设计精髓。</p>
+
+<h3>6.2 激活函数</h3>
+<p>原始 Transformer 使用 <strong>ReLU</strong> 作为 FFN 的激活函数。后续模型提出了多种替代：</p>
+<div class="formula" data-eq="(21)">$$\text{GELU}(x) = x \cdot \Phi(x) = x \cdot \frac{1}{2}\left[1 + \text{erf}\!\left(\frac{x}{\sqrt{2}}\right)\right]$$</div>
+<p>GELU（Gaussian Error Linear Unit）在 BERT、GPT 等模型中取代 ReLU，特点是平滑可微且在零点附近有更好的梯度性质。</p>
+<p>LLaMA 等模型进一步使用 <strong>SwiGLU</strong>（Swish-Gated Linear Unit）：</p>
+<div class="formula" data-eq="(22)">$$\text{SwiGLU}(\mathbf{x}) = \text{Swish}(\mathbf{x}\mathbf{W}_1) \otimes (\mathbf{x}\mathbf{W}_3)$$</div>
+<p>其中 $\text{Swish}(x) = x \cdot \sigma(x)$，$\otimes$ 为逐元素乘法，$\mathbf{W}_3$ 是额外的门控投影。SwiGLU 引入门控机制使 FFN 的非线性表达能力更强，代价是增加了一个投影矩阵（隐层维度需调整为 $\frac{2}{3} \times 4d_{\text{model}}$ 以保持参数量一致）。</p>
+
+<h3>6.3 残差连接</h3>
+<p>残差连接（Residual Connection）将子层的输入直接加到输出上：</p>
+<div class="formula" data-eq="(23)">$$\mathbf{y} = \mathbf{x} + \text{Sublayer}(\mathbf{x})$$</div>
+<p>残差连接解决了深层网络的梯度消失问题——梯度可以通过"捷径"直接回传到早期层。在 Transformer 中，每个子层（注意力和 FFN）都配有残差连接。</p>
+<div class="callout"><div class="callout-title">承接关系</div>
+<p>残差连接的思想来自 ResNet（残差网络模块）。Transformer 将这一思想应用到序列建模：如果没有残差连接，深层 Transformer 的训练将极不稳定。残差使信息在层间有"直达通道"，相当于让每一层只需学习"增量修正"而非完整变换。</p></div>
+
+<h3>6.4 层归一化</h3>
+<p>层归一化（Layer Normalization, LayerNorm）对每个样本在特征维度上做归一化：</p>
+<div class="formula" data-eq="(24)">$$\text{LayerNorm}(\mathbf{x}) = \gamma \cdot \frac{\mathbf{x} - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta$$</div>
+<p>其中 $\mu$ 和 $\sigma^2$ 分别是 $\mathbf{x}$ 在特征维度的均值和方差，$\gamma$ 和 $\beta$ 是可学习的缩放和偏移参数。LayerNorm 独立于批次大小，适合变长序列。</p>
+
+<h3>6.5 Pre-LN vs Post-LN</h3>
+<p>残差连接和 LayerNorm 的顺序有两种选择：</p>
+<div class="formula multi" data-eq="(25)">$$\text{Post-LN:} \quad \mathbf{y} = \text{LayerNorm}(\mathbf{x} + \text{Sublayer}(\mathbf{x}))$$</div>
+<div class="formula multi" data-eq="(26)">$$\text{Pre-LN:} \quad \mathbf{y} = \mathbf{x} + \text{Sublayer}(\text{LayerNorm}(\mathbf{x}))$$</div>
+<p>原论文使用 Post-LN，但它需要 <strong>warmup</strong> 才能稳定训练。Pre-LN 使残差路径上的梯度更通畅，训练更稳定，已成为现代大模型的默认选择。</p>
+
+<div class="svg-box"><svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-body);font-size:11px">
+  <text x="240" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Encoder Block（Pre-LN 结构）</text>
+  <!-- Input -->
+  <rect x="170" y="45" width="140" height="32" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="240" y="66" text-anchor="middle" fill="#1d4ed8" font-weight="600" font-size="10">x (from prev layer)</text>
+  <line x1="240" y1="77" x2="240" y2="88" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+  <!-- LayerNorm 1 -->
+  <rect x="170" y="93" width="140" height="30" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="240" y="114" text-anchor="middle" fill="#ea580c" font-weight="600" font-size="10">LayerNorm</text>
+  <line x1="240" y1="123" x2="240" y2="133" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+  <!-- Multi-Head Attention -->
+  <rect x="140" y="138" width="200" height="42" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="240" y="163" text-anchor="middle" fill="#7c3aed" font-weight="600">Multi-Head Self-Attention</text>
+  <line x1="240" y1="180" x2="240" y2="190" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+  <!-- Dropout -->
+  <rect x="190" y="195" width="100" height="26" rx="5" fill="rgba(220,38,38,0.08)" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="240" y="213" text-anchor="middle" fill="#dc2626" font-size="9">Dropout</text>
+  <!-- Residual 1 (left side) -->
+  <line x1="125" y1="61" x2="125" y2="231" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="125" y1="231" x2="210" y2="231" stroke="#059669" stroke-width="1.5" marker-end="url(#ah5)"/>
+  <text x="112" y="150" text-anchor="middle" fill="#059669" font-size="9" transform="rotate(-90 112 150)">残差连接</text>
+  <!-- Add 1 -->
+  <circle cx="240" cy="231" r="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="240" y="235" text-anchor="middle" fill="#059669" font-weight="700" font-size="11">+</text>
+  <line x1="240" y1="221" x2="240" y2="221" stroke="#64748b" stroke-width="1"/>
+  <line x1="240" y1="241" x2="240" y2="251" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+  <!-- LayerNorm 2 -->
+  <rect x="170" y="256" width="140" height="30" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="240" y="277" text-anchor="middle" fill="#ea580c" font-weight="600" font-size="10">LayerNorm</text>
+  <line x1="240" y1="286" x2="240" y2="296" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+  <!-- FFN -->
+  <rect x="150" y="301" width="180" height="52" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="240" y="321" text-anchor="middle" fill="#059669" font-weight="600">Feed-Forward Network (FFN)</text>
+  <text x="240" y="338" text-anchor="middle" fill="#64748b" font-size="9">Linear → GELU → Linear</text>
+  <line x1="240" y1="353" x2="240" y2="363" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+  <!-- Dropout 2 -->
+  <rect x="195" y="368" width="100" height="26" rx="5" fill="rgba(220,38,38,0.08)" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="240" y="386" text-anchor="middle" fill="#dc2626" font-size="9">Dropout</text>
+  <!-- Residual 2 (right side, clean) -->
+  <line x1="345" y1="61" x2="345" y2="404" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="345" y1="404" x2="260" y2="404" stroke="#059669" stroke-width="1.5" marker-end="url(#ah5)"/>
+  <text x="355" y="240" text-anchor="middle" fill="#059669" font-size="9" transform="rotate(90 355 240)">残差连接</text>
+  <!-- Add 2 -->
+  <circle cx="240" cy="404" r="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+  <text x="240" y="408" text-anchor="middle" fill="#059669" font-weight="700" font-size="11">+</text>
+  <line x1="240" y1="394" x2="240" y2="404" stroke="#64748b" stroke-width="1"/>
+  <!-- Output -->
+  <rect x="170" y="425" width="140" height="24" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="240" y="441" text-anchor="middle" fill="#1d4ed8" font-weight="600" font-size="9">→ next layer</text>
+  <line x1="240" y1="414" x2="240" y2="418" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+  <defs>
+    <marker id="ah5" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg></div>
+
+<h3>6.6 RMSNorm</h3>
+<p>RMSNorm（Root Mean Square Normalization）是 LayerNorm 的简化版，省略了均值中心和偏移参数，仅做缩放归一化：</p>
+<div class="formula" data-eq="(27)">$$\text{RMSNorm}(\mathbf{x}) = \gamma \cdot \frac{\mathbf{x}}{\sqrt{\frac{1}{d}\sum_{i=1}^{d} x_i^2 + \epsilon}}$$</div>
+<p>RMSNorm 计算更快（省去均值计算），效果与 LayerNorm 相当，已在 LLaMA、Qwen 等模型中广泛使用。</p>
+
+<h3>6.7 Encoder 层的组合</h3>
+<p>一个完整的 Pre-LN 编码器层的输出为：</p>
+<div class="formula multi" data-eq="(28)">$$\mathbf{X}' = \mathbf{X} + \text{MHA}(\text{LN}_1(\mathbf{X}))$$</div>
+<div class="formula multi" data-eq="(29)">$$\mathbf{X}'' = \mathbf{X}' + \text{FFN}(\text{LN}_2(\mathbf{X}'))$$</div>
+<p>解码器层类似，但注意力子层变为掩码自注意力 + 交叉注意力两个子层（共三个子层）。</p>
+
+<h3>6.8 PyTorch 实现</h3>
+<div class="code-block"><div class="code-header">encoder_layer.py — Pre-LN Encoder Block</div><pre><span class="kw">class</span> <span class="cls">EncoderLayer</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model=<span class="num">512</span>, num_heads=<span class="num">8</span>, d_ff=<span class="num">2048</span>, dropout=<span class="num">0.1</span>):
+        <span class="fn">super</span>().__init__()
+        self.ln1 = nn.LayerNorm(d_model)
+        self.attn = MultiHeadAttention(d_model, num_heads)
+        self.ln2 = nn.LayerNorm(d_model)
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(d_ff, d_model),
+        )
+        self.dropout = nn.Dropout(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, mask=<span class="kw">None</span>):
+        <span class="com"># Pre-LN: Normalize → Sublayer → Residual</span>
+        <span class="com"># Sublayer 1: Multi-Head Self-Attention</span>
+        attn_out = self.attn(self.ln1(x), self.ln1(x), self.ln1(x), mask)
+        x = x + self.dropout(attn_out)
+
+        <span class="com"># Sublayer 2: Feed-Forward Network</span>
+        ffn_out = self.ffn(self.ln2(x))
+        x = x + self.dropout(ffn_out)
+
+        <span class="kw">return</span> x</pre></div>
+</section>
+
+<section id="ch7"><h2><span class="num">7</span>训练与优化</h2>
+<p>Transformer 的训练涉及损失函数、学习率调度、优化器选择、正则化等多个方面。原论文设计的训练策略对后续大语言模型产生了深远影响。</p>
+
+<h3>7.1 损失函数：交叉熵</h3>
+<p>语言模型的训练目标是最大化已知上下文下目标 token 的对数似然，等价于最小化交叉熵损失：</p>
+<div class="formula" data-eq="(30)">$$\mathcal{L} = -\sum_{t=1}^{L} \log P(y_t \mid y_{&lt;t};\, \theta)$$</div>
+<p>其中 $P(y_t \mid y_{&lt;t};\, \theta)$ 是模型在参数 $\theta$ 下对第 $t$ 个 token 的预测概率。</p>
+
+<h3>7.2 标签平滑</h3>
+<p>原论文在训练中使用<strong>标签平滑</strong>（Label Smoothing）正则化技术。将 one-hot 标签 $y$ 替换为平滑标签：</p>
+<div class="formula" data-eq="(31)">$$\tilde{y}_k = \begin{cases} 1 - \epsilon + \frac{\epsilon}{K}, & k = \text{true class} \ \frac{\epsilon}{K}, & \text{otherwise} \end{cases}$$</div>
+<p>其中 $\epsilon$ 是平滑因子（原论文 $\epsilon = 0.1$），$K$ 是类别数（词表大小）。标签平滑防止模型对预测过于自信，提升 BLEU 分数和模型校准度。</p>
+<div class="callout"><div class="callout-title">直觉：为什么标签 smoothing 有效？</div>
+<p>不加 smoothing 时，模型倾向于将 logit 推到极大值以最小化交叉熵，导致过拟合。Smoothing 为"正确答案"保留少量概率给其他类别，相当于告诉模型"不要完全自信"，从而降低过拟合、提高泛化能力。</p></div>
+
+<h3>7.3 学习率调度：Warmup + Decay</h3>
+<p>原论文使用独特的 warmup-then-decay 学习率调度：</p>
+<div class="formula" data-eq="(32)">$$lr = d_{\text{model}}^{-0.5} \cdot \min(\text{step}^{-0.5},\; \text{step} \cdot \text{warmup\_steps}^{-1.5})$$</div>
+<p>在 warmup 阶段（前 warmup_steps 步），学习率线性增长；之后按 $\text{step}^{-0.5}$ 衰减。这一设计解决了 Post-LN Transformer 在初期训练不稳定的问题——初期梯度大、LayerNorm 参数未收敛，小的学习率避免发散；训练稳定后增大学习率加速收敛，最后衰减做精细调优。</p>
+<div class="callout"><div class="callout-title">Pre-LN 的影响</div>
+<p>当使用 Pre-LN 时（现代大模型的默认选择），训练本身已经很稳定，warmup 的需求大幅降低。许多 Pre-LN 模型使用简单的余弦退火（Cosine Annealing）或常数学习率配合线性 warmup 的简化方案。</p></div>
+
+<h3>7.4 优化器：Adam / AdamW</h3>
+<p>Transformer 使用 Adam 优化器（原论文 $\beta_1 = 0.9$，$\beta_2 = 0.98$，$\epsilon = 10^{-9}$）。$\beta_2$ 设为 0.98（而非默认 0.999）是因为注意力分数的方差较大，较小的 $\beta_2$ 使二阶矩估计更新更快。现代模型普遍使用 <strong>AdamW</strong>（解耦权重衰减的 Adam），将权重衰减与梯度更新解耦：</p>
+<div class="formula" data-eq="(33)">$$\theta_{t+1} = \theta_t - \beta\left(\frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} + \lambda \theta_t\right)$$</div>
+<p>其中 $\lambda$ 是权重衰减系数。AdamW 的权重衰减不经过动量累积，效果更好。</p>
+
+<h3>7.5 Dropout 正则化</h3>
+<p>Transformer 在多个位置使用 Dropout：(1) 注意力权重上——随机丢弃一些注意力连接；(2) 残差连接的子层输出上；(3) 嵌入层上。原论文使用 $p = 0.1$。</p>
+<div class="formula" data-eq="(34)">$$\text{Dropout}(x) = \begin{cases} x / (1-p), & \text{with prob } 1-p \ 0, & \text{with prob } p \end{cases}$$</div>
+<p>训练时启用 Dropout，推理时关闭。注意力的 Dropout 使模型不依赖某几条注意力路径，增强了鲁棒性。</p>
+
+<h3>7.6 权重初始化</h3>
+<p>Transformer 的初始化策略对训练稳定性至关重要。标准做法是：线性层使用 Xavier/Glorot 初始化（方差 $\text{Var}(W) = 1/\text{fan\_in}$），嵌入层用正态分布 $\mathcal{N}(0, d_{\text{model}}^{-1})$。对于深层模型，残差分支的最后一层常初始化为零，使初始时残差分支输出为零（恒等映射），训练初期完全靠残差捷径传信息。</p>
+
+<h3>7.7 梯度裁剪</h3>
+<p>为防止梯度爆炸，Transformer 训练常配合梯度裁剪：</p>
+<div class="formula" data-eq="(35)">$$\mathbf{g} \leftarrow \frac{\mathbf{g}}{\max(1, \|\mathbf{g}\| / c)} \cdot c$$</div>
+<p>当梯度的 $L^2$ 范数超过阈值 $c$ 时，按比例缩放回 $c$。原论文使用 $c = 1.0$。</p>
+
+<h3>7.8 推理：Beam Search</h3>
+<p>在推理阶段，解码器自回归地逐 token 生成输出。贪心搜索每步选概率最高的 token，容易陷入局部最优。<strong>Beam Search</strong> 维护 $k$ 个候选序列（beam），每步扩展所有候选并保留总分最高的 $k$ 个：</p>
+<div class="formula" data-eq="(36)">$$\text{score}(y_{1:t}) = \sum_{s=1}^{t} \log P(y_s \mid y_{&lt;s})$$</div>
+<p>Beam Search 在翻译、摘要等任务中比贪心搜索产出更流畅的结果。但现代大语言模型常使用简单的贪心或 top-k/top-p 采样，因为 beam search 在长文本生成中可能产生重复。</p>
+
+<h3>7.9 训练代码示例</h3>
+<div class="code-block"><div class="code-header">train_transformer.py — 带Warmup的Transformer训练</div><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+<span class="kw">from</span> torch.optim.lr_scheduler <span class="kw">import</span> LambdaLR
+
+<span class="kw">class</span> <span class="cls">WarmupScheduler</span>:
+    <span class="com">"""Noam warmup + inverse sqrt decay scheduler."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, optimizer, d_model, warmup_steps=<span class="num">4000</span>):
+        self.optimizer = optimizer
+        self.d_model = d_model
+        self.warmup_steps = warmup_steps
+        self.step_num = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">step</span>(self):
+        self.step_num += <span class="num">1</span>
+        lr = self.d_model ** (-<span class="num">0.5</span>) * min(
+            self.step_num ** (-<span class="num">0.5</span>),
+            self.step_num * self.warmup_steps ** (-<span class="num">1.5</span>))
+        <span class="kw">for</span> pg <span class="kw">in</span> self.optimizer.param_groups:
+            pg[<span class="str">'lr'</span>] = lr
+
+<span class="com"># Training loop</span>
+model = Transformer(d_model=<span class="num">512</span>, nhead=<span class="num">8</span>, num_layers=<span class="num">6</span>)
+optimizer = optim.AdamW(model.parameters(), lr=<span class="num">0.0</span>, betas=(<span class="num">0.9</span>, <span class="num">0.98</span>), eps=<span class="num">1e-9</span>)
+scheduler = WarmupScheduler(optimizer, d_model=<span class="num">512</span>, warmup_steps=<span class="num">4000</span>)
+criterion = nn.CrossEntropyLoss(label_smoothing=<span class="num">0.1</span>)
+
+<span class="kw">for</span> epoch <span class="kw">in</span> range(num_epochs):
+    <span class="kw">for</span> src, tgt <span class="kw">in</span> dataloader:
+        logits = model(src, tgt[:, :-<span class="num">1</span>])  <span class="com"># teacher forcing</span>
+        loss = criterion(logits.reshape(-<span class="num">1</span>, vocab_size), tgt[:, <span class="num">1</span>:].reshape(-<span class="num">1</span>))
+        
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=<span class="num">1.0</span>)
+        optimizer.step()
+        scheduler.step()</pre></div>
+</section>
+
+<section id="ch8"><h2><span class="num">8</span>工程部署与推理优化</h2>
+<p>Transformer 从论文到工业部署涉及大量工程优化。本章覆盖在实际部署中最关键的六项技术：KV Cache、Multi-Query / Grouped-Query Attention、FlashAttention、量化、PagedAttention 和投机解码。</p>
+
+<h3>8.1 KV Cache：自回归解码的核心优化</h3>
+<p>在自回归生成中，每生成一个新 token 需要计算它与之前所有 token 的注意力。如果不缓存，生成第 $t$ 个 token 需要重新计算前 $t-1$ 个 token 的 K 和 V，总共 $O(t^2)$ 的重复计算。<strong>KV Cache</strong> 将每一步的 K 和 V 存入缓存，后续步骤只需计算新 token 的 Q，并与缓存中的 K 做注意力：</p>
+<div class="formula" data-eq="(37)">$$\mathbf{K}_{1:t} = [\mathbf{K}_{1:t-1};\; \mathbf{k}_t], \quad \mathbf{V}_{1:t} = [\mathbf{V}_{1:t-1};\; \mathbf{v}_t]$$</div>
+<p>这使得每步生成从 $O(t^2)$ 降为 $O(t)$——只计算新 token 与所有旧 token 的注意力，旧-旧注意力不需要重算。</p>
+
+<div class="svg-box"><svg viewBox="0 0 620 380" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font-body);font-size:11px">
+  <text x="310" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">KV Cache 自回归解码：避免重复计算</text>
+  <!-- Step t-1 -->
+  <rect x="20" y="55" width="190" height="270" rx="10" fill="rgba(37,99,235,0.04)" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="115" y="78" text-anchor="middle" fill="#2563eb" font-weight="700" font-size="11">Step t-1（已缓存）</text>
+  <rect x="40" y="95" width="140" height="32" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1"/>
+  <text x="110" y="114" text-anchor="middle" fill="#1d4ed8" font-size="10" font-weight="600">tokens 1..t-1</text>
+  <rect x="30" y="142" width="160" height="26" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="110" y="160" text-anchor="middle" fill="#7c3aed" font-size="9">Self-Attn（Q=K=V=全部）</text>
+  <rect x="40" y="185" width="60" height="30" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="70" y="205" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">K cache</text>
+  <rect x="110" y="185" width="60" height="30" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="140" y="205" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">V cache</text>
+  <rect x="40" y="230" width="130" height="26" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="110" y="248" text-anchor="middle" fill="#059669" font-size="9">输出 token t-1</text>
+  <text x="110" y="288" text-anchor="middle" fill="#94a3b8" font-size="9">完整计算，K/V 存入缓存</text>
+  <!-- Arrow -->
+  <line x1="210" y1="200" x2="250" y2="200" stroke="#64748b" stroke-width="2" marker-end="url(#ah6)"/>
+  <text x="230" y="192" text-anchor="middle" fill="#64748b" font-size="9">缓存传递</text>
+  <!-- Step t -->
+  <rect x="260" y="42" width="200" height="270" rx="10" fill="rgba(234,88,12,0.04)" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="365" y="78" text-anchor="middle" fill="#ea580c" font-weight="700" font-size="11">Step t（仅处理新 token）</text>
+  <rect x="300" y="95" width="110" height="28" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="1"/>
+  <text x="355" y="114" text-anchor="middle" fill="#ea580c" font-size="10" font-weight="600">token t（仅 1 个）</text>
+  <rect x="290" y="142" width="140" height="26" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="360" y="160" text-anchor="middle" fill="#7c3aed" font-size="9">Self-Attn（Q=token_t）</text>
+  <rect x="290" y="185" width="65" height="30" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="322" y="199" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">K cache</text>
+  <text x="322" y="211" text-anchor="middle" fill="#64748b" font-size="8">+ 新 token</text>
+  <rect x="365" y="185" width="65" height="30" rx="4" fill="#ede9fe" stroke="#7c3aed" stroke-width="1"/>
+  <text x="397" y="199" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="600">V cache</text>
+  <text x="397" y="211" text-anchor="middle" fill="#64748b" font-size="8">+ 新 token</text>
+  <rect x="300" y="230" width="110" height="26" rx="4" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text x="355" y="248" text-anchor="middle" fill="#059669" font-size="9">输出 token t</text>
+  <text x="360" y="288" text-anchor="middle" fill="#ea580c" font-size="9" font-weight="600">仅增量计算：O(t)（累计）</text>
+  <!-- Contrast: Without cache -->
+  <rect x="500" y="42" width="110" height="270" rx="10" fill="rgba(220,38,38,0.03)" stroke="#dc2626" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="555" y="78" text-anchor="middle" fill="#dc2626" font-weight="700" font-size="11">无缓存</text>
+  <rect x="520" y="95" width="70" height="26" rx="4" fill="rgba(220,38,38,0.08)" stroke="#dc2626" stroke-width="1"/>
+  <text x="555" y="114" text-anchor="middle" fill="#dc2626" font-size="9">重新计算</text>
+  <rect x="520" y="142" width="70" height="26" rx="4" fill="rgba(220,38,38,0.08)" stroke="#dc2626" stroke-width="1"/>
+  <text x="555" y="161" text-anchor="middle" fill="#dc2626" font-size="9">1..t 全量</text>
+  <rect x="520" y="185" width="70" height="26" rx="4" fill="rgba(220,38,38,0.08)" stroke="#dc2626" stroke-width="1"/>
+  <text x="555" y="204" text-anchor="middle" fill="#dc2626" font-size="9">每步 O(t)</text>
+  <text x="555" y="248" text-anchor="middle" fill="#dc2626" font-size="9">总计 O(t²)</text>
+  <text x="555" y="275" text-anchor="middle" fill="#dc2626" font-size="13">✗</text>
+  <text x="555" y="292" text-anchor="middle" fill="#dc2626" font-size="8">重复计算全部 Q×K</text>
+  <defs>
+    <marker id="ah6" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg></div>
+
+<p>但 KV Cache 的内存开销随序列长度线性增长：每层每头需缓存 $L \times d_k$ 个 KV 值。对于长序列大模型，KV Cache 成为显存瓶颈（这正是 8.5 节 PagedAttention 的动机）。</p>
+
+<h3>8.2 Multi-Query Attention（MQA）</h3>
+<p>标准多头注意力中，每个头有独立的 Q、K、V 投影。KV Cache 存储所有头的 K 和 V，内存开销 $= N_{\text{layers}} \times N_{\text{heads}} \times L \times d_k \times 2$。<strong>MQA</strong>（Shazeer 2019）让所有头共享同一组 K 和 V（仅 Q 保持多头），将 KV Cache 缩小 $N_{\text{heads}}$ 倍：</p>
+<div class="formula" data-eq="(38)">$$\text{head}_i = \text{Attention}(\mathbf{Q}\mathbf{W}_i^Q,\; \mathbf{K}\mathbf{W}^K,\; \mathbf{V}\mathbf{W}^V)$$</div>
+<p>MQA 以轻微质量损失换取显著的推理加速和显存节省。</p>
+
+<h3>8.3 Grouped-Query Attention（GQA）</h3>
+<p>GQA（Ainslie 等 2023）是 MQA 和 MHA 的折中方案：将 $h$ 个 Query 头分成 $g$ 组（$1 \leq g \leq h$），每组共享一对 K/V 头。当 $g = h$ 时退化为 MHA，$g = 1$ 时退化为 MQA：</p>
+<div class="formula" data-eq="(39)">$$\text{head}_i = \text{Attention}(\mathbf{Q}\mathbf{W}_i^Q,\; \mathbf{K}\mathbf{W}_{\lfloor i/g 
+floor}^K,\; \mathbf{V}\mathbf{W}_{\lfloor i/g 
+floor}^V)$$</div>
+<p>GQA 在质量和效率之间取得最优平衡，已被 LLaMA-2/3、Mistral 等主流模型采用。</p>
+
+<h3>8.4 FlashAttention</h3>
+<p>FlashAttention（Dao 等 2022）通过<strong>分块计算</strong>（Tiling）和<strong>算子融合</strong>（Kernel Fusion）大幅优化注意力的 GPU 执行效率。标准注意力的瓶颈不在浮点运算量，而在 GPU 的 HBM（高带宽内存）读写：注意力矩阵 $L \times L$ 需要反复在 SRAM 和 HBM 之间搬运。FlashAttention 将 Q、K、V 分成小块在 SRAM 中完成注意力计算，避免中间结果落盘到 HBM：</p>
+<div class="formula" data-eq="(40)">$$\text{FlashAttn}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{tiling + online-softmax + kernel-fusion}$$</div>
+<p>FlashAttention 不改变注意力的数学结果，但将 HBM 读写从 $O(L^2)$ 降为 $O(L^2 d / M)$（$M$ 为 SRAM 大小），在长序列上实现 2-4 倍加速，且不增加显存使用（无需物化 $L \times L$ 的注意力矩阵）。</p>
+<div class="callout success"><div class="callout-title">FlashAttention 的核心洞察</div>
+<p>注意力是"内存带宽受限"而非"计算受限"的。一个 $4096 \times 4096$ 的注意力矩阵只需 67ms 就能算完（GPU 算力允许），但读写这个矩阵需要 134ms（HBM 带宽受限）。FlashAttention 用分块计算让中间矩阵只存在于高速 SRAM 中，用计算换访存——在 GPU 这种"算力远超带宽"的硬件上，这个交易非常划算。</p></div>
+
+<h3>8.5 PagedAttention（vLLM）</h3>
+<p>在批量推理中，不同请求的序列长度不同，简单分配最大长度的 KV Cache 造成大量显存碎片和浪费。<strong>PagedAttention</strong>（Kwon 等 2023，vLLM 系统）借鉴操作系统的虚拟内存分页机制，将 KV Cache 按<strong>固定大小的块</strong>（Block）分配，每个序列的 KV Cache 由一组不连续的块组成，通过页表映射：</p>
+<div class="formula" data-eq="(41)">$$\text{KVCache}(s) = \{\text{block}_1, \text{block}_2, \ldots, \text{block}_{\lceil L_s / B 
+ceil}\}$$</div>
+<p>其中 $B$ 是块大小（如 16 个 token）。PagedAttention 将 KV Cache 显存利用率从约 20-40% 提升到约 97%，显著提高批量推理吞吐量。</p>
+
+<h3>8.6 量化推理</h3>
+<p>模型量化将权重和/或激活从 FP16 降为 INT8 甚至 INT4，大幅降低显存和加速推理。<strong>线性量化</strong>公式：</p>
+<div class="formula" data-eq="(42)">$$x_{\text{quant}} = \text{round}\!\left(\frac{x}{s}\right), \quad x_{\text{dequant}} = x_{\text{quant}} \cdot s$$</div>
+<p>其中 $s$ 是量化缩放因子（scale）。对称量化使用 $s = \max(|x|) / (2^{b-1} - 1)$，$b$ 为量化位宽。常用方案：</p>
+<ul>
+  <li><strong>Weight-Only Quantization</strong>（如 GPTQ、AWQ）：仅量化权重为 INT4，激活保持 FP16。推理时实时反量化。此方案对质量影响最小。</li>
+  <li><strong>Weight + Activation Quantization</strong>：使用校准数据集确定激活的量化范围。LLM.int8() 将异常值保留 FP16，其余 INT8。</li>
+  <li><strong>FP8</strong>：新一代 GPU（H100）原生支持 FP8 格式，精度损失极小。</li>
+</ul>
+
+<h3>8.7 投机解码（Speculative Decoding）</h3>
+<p>自回归生成的瓶颈在于每步只生成一个 token 且必须串行。<strong>投机解码</strong>（Leviathan 等 2023）使用一个小模型（Draft Model）快速"猜测"多个候选 token，大模型（Target Model）一次性并行验证这些 token——如果猜测正确就接受，省去多轮推理：</p>
+<div class="formula" data-eq="(43)">$$\text{if } p_{\text{target}}(y_t) \geq p_{\text{draft}}(y_t): \text{accept } y_t;\; \text{else: reject and resample}$$</div>
+<p>投机解码在数学上与直接使用大模型<strong>完全等价</strong>（无损），在猜测命中率高时可实现 2-3 倍加速。</p>
+
+<h3>8.8 连续批处理（Continuous Batching）</h3>
+<p>传统静态批处理中，一个 batch 内所有序列必须同时完成才能开始下一批——短序列的资源被浪费。连续批处理（也称 In-Flight Batching）在每次迭代前动态调整 batch 组成：已完成的请求移出 batch，等待中的请求加入 batch，不同长度的请求可以在同一 batch 中并行处理。配合 PagedAttention，vLLM 实现了接近理想的 GPU 利用率。</p>
+
+<h3>8.9 KV Cache 代码实现</h3>
+<div class="code-block"><div class="code-header">kv_cache.py — KV Cache 生成推理</div><pre><span class="kw">class</span> <span class="cls">KVCache</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.k_cache = <span class="kw">None</span>  <span class="com"># (batch, num_heads, seq_len, d_k)</span>
+        self.v_cache = <span class="kw">None</span>
+
+    <span class="kw">def</span> <span class="fn">update</span>(self, k_new, v_new):
+        <span class="com"># k_new: (batch, num_heads, 1, d_k) — 当前新 token 的 K</span>
+        <span class="kw">if</span> self.k_cache <span class="kw">is</span> <span class="kw">None</span>:
+            self.k_cache = k_new
+            self.v_cache = v_new
+        <span class="kw">else</span>:
+            self.k_cache = torch.cat([self.k_cache, k_new], dim=<span class="num">2</span>)
+            self.v_cache = torch.cat([self.v_cache, v_new], dim=<span class="num">2</span>)
+        <span class="kw">return</span> self.k_cache, self.v_cache
+
+<span class="kw">def</span> <span class="fn">generate</span>(model, input_ids, max_new_tokens=<span class="num">100</span>):
+    <span class="com"># Phase 1: Prefill — 处理完整 prompt</span>
+    kv_cache = KVCache()
+    logits = model(input_ids, kv_cache)
+    next_token = sample(logits[:, -<span class="num">1</span>, :])
+    generated = [next_token]
+
+    <span class="com"># Phase 2: Decode — 逐 token 生成（仅处理新 token）</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> range(max_new_tokens - <span class="num">1</span>):
+        logits = model(next_token.unsqueeze(<span class="num">0</span>), kv_cache)  <span class="com"># 1 token</span>
+        next_token = sample(logits[:, -<span class="num">1</span>, :])
+        <span class="kw">if</span> next_token.item() == eos_token:
+            <span class="kw">break</span>
+        generated.append(next_token)
+
+    <span class="kw">return</span> torch.stack(generated)</pre></div>
+
+<div class="callout"><div class="callout-title">Prefill vs Decode 两阶段</div>
+<p>推理分两阶段：<strong>Prefill</strong>（预填充）阶段并行处理完整 prompt，初始化 KV Cache；<strong>Decode</strong>（解码）阶段逐 token 自回归生成，每步仅计算 1 个新 token。Prefill 是计算密集型（可充分利用 GPU 并行），Decode 是内存带宽密集型（单 token 的矩阵-向量乘效率低）。这两阶段的不同特性催生了 Continuous Batching、投机解码等优化技术。</p></div>
+
+<div class="table-wrap"><table>
+  <tr><th>技术</th><th>优化目标</th><th>加速来源</th><th>质量影响</th></tr>
+  <tr><td>KV Cache</td><td>减少重复计算</td><td>缓存历史 K/V</td><td>无损</td></tr>
+  <tr><td>MQA / GQA</td><td>减小 KV Cache</td><td>共享 K/V 头</td><td>轻微下降</td></tr>
+  <tr><td>FlashAttention</td><td>减少 HBM 读写</td><td>分块 + 算子融合</td><td>无损</td></tr>
+  <tr><td>PagedAttention</td><td>减少显存碎片</td><td>分页分配 KV Cache</td><td>无损</td></tr>
+  <tr><td>量化 (INT4/8)</td><td>减少显存和带宽</td><td>低位宽运算</td><td>轻微下降</td></tr>
+  <tr><td>投机解码</td><td>减少解码步数</td><td>小模型猜测 + 大模型验证</td><td>无损</td></tr>
+</table></div>
+</section>
+
+<section id="refs">
+<h2>参考文献</h2>
+<ol>
+  <li>Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). Attention is all you need. <em>Advances in Neural Information Processing Systems</em> (NeurIPS), 30. (Transformer 原始论文，自注意力/多头注意力/缩放点积/位置编码)</li>
+  <li>Bahdanau, D., Cho, K., & Bengio, Y. (2015). Neural machine translation by jointly learning to align and translate. <em>ICLR</em>. (注意力机制奠基论文，对齐注意力/编解码器)</li>
+  <li>Devlin, J., Chang, M. W., Lee, K., & Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>NAACL</em>. (BERT 模型，双向编码器/MLM 预训练)</li>
+  <li>Radford, A., Narasimhan, K., Salimans, T., & Sutskever, I. (2018). Improving language understanding by generative pre-training. <em>OpenAI Tech Report</em>. (GPT-1，自回归解码器/预训练范式)</li>
+  <li>Dosovitskiy, A., et al. (2021). An image is worth 16x16 words: Transformers for image recognition at scale. <em>ICLR</em>. (ViT，视觉 Transformer/Patch Embedding)</li>
+  <li>Su, J., Lu, Y., Pan, S., et al. (2021). RoFormer: Enhanced transformer with rotary position embedding. <em>arXiv:2104.09864</em>. (旋转位置编码 RoPE，相对位置/长度外推)</li>
+  <li>Press, O., Smith, N. A., & Lewis, M. (2022). Train short, test long: Attention with linear biases enables input length extrapolation. <em>ICLR</em>. (ALiBi，线性偏置注意力/长度外推)</li>
+  <li>Shaw, P., Uszkoreit, J., & Vaswani, A. (2018). Self-attention with relative position representations. <em>NAACL</em>. (相对位置编码，位置差偏置/相对距离)</li>
+  <li>Shazeer, N. (2019). Fast transformer decoding: One write-head is all you need. <em>arXiv:1911.02150</em>. (MQA，多查询注意力/共享 KV 头)</li>
+  <li>Ainslie, J., Lee-Thorp, J., de Jong, M., et al. (2023). GQA: Training generalized multi-query transformer models from multi-head checkpoints. <em>EMNLP</em>. (GQA，分组查询注意力/KV Cache 优化)</li>
+  <li>Dao, T., Fu, D., Ermon, S., et al. (2022). FlashAttention: Fast and memory-efficient exact attention with IO-awareness. <em>NeurIPS</em>. (FlashAttention，分块计算/算子融合/IO 感知)</li>
+  <li>Kwon, W., Li, Z., Zhuang, S., et al. (2023). Efficient memory management for large language model serving with PagedAttention. <em>SOSP</em>. (vLLM/PagedAttention，分页 KV Cache/连续批处理)</li>
+  <li>Leviathan, Y., Kalman, M., & Matias, Y. (2023). Fast inference from transformers via speculative decoding. <em>ICML</em>. (投机解码，小模型猜测/大模型验证/无损加速)</li>
+  <li>Xiong, R., Yang, Y., He, D., et al. (2020). On layer normalization in the transformer architecture. <em>ICML</em>. (Pre-LN vs Post-LN 分析，训练稳定性/梯度流)</li>
+  <li>Zhang, B., & Sennrich, R. (2019). Root mean square layer normalization. <em>NeurIPS</em>. (RMSNorm，均方根归一化/无中心化归一化)</li>
+</ol>
+</section>
+
+</main>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<script>
+// Sidebar highlight
+(function() {
+  var sections = document.querySelectorAll('section[ID]');
+  var links = document.querySelectorAll('#sidebar nav a');
+  function highlight() {
+    var scrollY = window.scrollY;
+    var current = '';
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - 100) current = sections[i].id;
+    }
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+// Formula rendering
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

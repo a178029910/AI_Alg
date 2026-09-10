@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视觉语言动作模型 — PaLM-E · RT-2 · OpenVLA · π 系列 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+.fig-cap { text-align: center; color: var(--c-text-soft); font-size: 13px; line-height: 1.75; margin: -16px auto 34px; max-width: 780px; }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>视觉语言动作模型</h2>
+<nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、从看懂到动手</a>
+    <a href="#ch2">二、PaLM-E</a>
+    <a href="#ch3">三、RT-2</a>
+    <a href="#ch4">四、OpenVLA</a>
+    <a href="#ch5">五、π 系列</a>
+    <a href="#ch6">六、π0.5</a>
+    <a href="#ch7">七、对比与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+<a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<section id="hero" class="hero">
+  <h1>视觉语言动作模型</h1>
+  <div class="subtitle">PaLM-E · RT-2 · OpenVLA · π 系列 · 从看懂到动手</div>
+  <div class="tagline">动作 token 化 · 共同微调 · 离散与连续之争 · 流匹配 · 动作专家 · 分层推理 · 开放世界泛化</div>
+  <div class="badges">
+    <span class="badge">7 个章节</span>
+    <span class="badge">3 张 SVG 结构图</span>
+    <span class="badge">2 个公式</span>
+    <span class="badge">1 段 PyTorch 代码</span>
+    <span class="badge">16 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1"><h2><span class="num">1</span>从"看懂"到"动手"，中间缺了什么</h2>
+
+<p>VLM 解决了"图像进语言模型"的问题，但模型输出的仍然只是词。要让它驱动机器人，还得跨过一道坎：<strong>输出空间得从词表扩展到动作</strong>。</p>
+
+<p>传统机器人系统把这件事交给三个独立模块串联：感知（检测框）→ 规划（路径）→ 控制（PID / MPC）。这条链有三个结构性缺陷：</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>缺陷</th><th>根因</th><th>表现</th></tr>
+<tr><td><strong>信息瓶颈</strong></td><td>感知输出只有几个浮点数，像素级纹理、姿态全部丢弃</td><td>遮挡场景成功率大幅下降</td></tr>
+<tr><td><strong>误差累积</strong></td><td>模块之间的接口是手工定义的语义抽象，没有跨模块梯度</td><td>定位误差逐级放大</td></tr>
+<tr><td><strong>分布脆弱</strong></td><td>接口是人工设计的，换场景即失效</td><td>新环境需要重新采集大量数据调参</td></tr>
+</table>
+</div>
+
+<p>VLA（Vision-Language-Action）的做法是用<strong>一个 Transformer 替掉三个模块</strong>，让损失函数从动作一路回传到像素。这条路线的演进可以概括为三次关键跃迁：</p>
+
+<ol>
+<li><strong>PaLM-E</strong>（2023.03）证明大语言模型可以被接上连续传感器输入，但它的输出还是文本计划，动作要靠外部的低层控制器执行。</li>
+<li><strong>RT-2</strong>（2023.07）把动作写成字符串塞进语言模型的词表，"VLA"这个词由此而来。</li>
+<li><strong>π 系列</strong>（2024–2025）把动作从离散 token 换回连续信号，用流匹配生成，并引入分层推理。</li>
+</ol>
+
+</section>
+
+<section id="ch2"><h2><span class="num">2</span>PaLM-E：具身语言模型的起点</h2>
+
+<p>PaLM-E（Google，2023）的核心主张是：<strong>把图像和机器人状态投影进语言模型的嵌入空间，让语言模型直接"读"传感器数据</strong>。</p>
+
+<p>最大的配置把 540B 的 PaLM 与 22B 的 ViT 拼在一起，总参数 562B。它能做规划、视觉问答和具身推理，在演示系统里由 PaLM-E 输出文本计划，再由 RT-1 执行动作。</p>
+
+<h3>2.1 它留下了什么</h3>
+
+<div class="callout"><div class="callout-title">范式转折点</div>
+<p>PaLM-E 之前，主流做法是从零训练一个小策略网络，语言模型（如果有）只当外部规划器。PaLM-E 之后，工业界的主流变成了：<strong>拿一个前沿 VLM，在多本体机器人数据上微调，让互联网预训练的正迁移去承担泛化的主要工作</strong>。它同时给了"通用智能体假设"第一个物理世界的实证——一个足够大的模型可以在多个任务和本体上超过各自的专家模型。</p></div>
+
+<h3>2.2 局限也很清楚</h3>
+
+<ul>
+<li><strong>推理太慢</strong>：562B 模型无法在机器人上以合理频率部署，实验中只当离线高层规划器用。</li>
+<li><strong>没有原生动作输出</strong>：输出的是文本计划而非关节指令。这一点正是 RT-2 要补的洞。</li>
+<li><strong>数据多样性有限</strong>：机器人数据相对互联网图文数据很小，部分结果被后续分析认为高度依赖底层的 SayCan 技能库。</li>
+<li><strong>未开源</strong>：权重从未公开，复现工作要等到 OpenVLA 和 Open X-Embodiment 出现。</li>
+</ul>
+
+</section>
+
+<section id="ch3"><h2><span class="num">3</span>RT-2：VLA 概念的诞生</h2>
+
+<p>RT-2（Google DeepMind，2023.07）做了两件事：提出"vision-language-action model"这个术语，以及给出让动作进入语言模型的<strong>具体办法</strong>。</p>
+
+<h3>3.1 动作即文本</h3>
+
+<p>核心手法极简：把 7 维动作的每一维均匀离散成 256 个桶，然后把整条动作写成一个数字串。例如：</p>
+
+<div class="formula" data-eq="(1)">$$\texttt{“1 128 91 241 5 101 127 217”}$$</div>
+
+<p>第一个数表示"继续还是终止"，后面 7 个数对应末端执行器的位置、旋转与夹爪开合。这串数字可以用标准文本分词器处理，于是<strong>机器人轨迹和网页图文数据共享同一个 next-token 预测目标</strong>——模型不需要为两种数据准备两套训练接口。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 400" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif" role="img">
+<text x="450" y="26" text-anchor="middle" font-size="14.5" fill="#0f172a" font-weight="700">RT-2 的关键一步：让动作以「文本 token」的身份进入语言模型</text>
+<rect x="24" y="56" width="120" height="92" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="84" y="76" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="700">相机图像</text>
+<rect x="40" y="82" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="55" y="82" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="70" y="82" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="85" y="82" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="100" y="82" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="115" y="82" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="40" y="97" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="55" y="97" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="70" y="97" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="85" y="97" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="100" y="97" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="115" y="97" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="40" y="112" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="55" y="112" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="70" y="112" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="85" y="112" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="100" y="112" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="115" y="112" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="40" y="127" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="55" y="127" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="70" y="127" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="85" y="127" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="100" y="127" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="115" y="127" width="13" height="13" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<text x="84" y="164" text-anchor="middle" font-size="10" fill="#94a3b8">机器人视角</text>
+<rect x="164" y="78" width="92" height="46" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="210" y="105.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="600">语言指令</text>
+<text x="210" y="142" text-anchor="middle" font-size="10" fill="#64748b">“捡起要掉的包”</text>
+<line x1="272" y1="102" x2="300" y2="102" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="300" y1="102" x2="292.2" y2="105.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="300" y1="102" x2="292.2" y2="98.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="304" y="62" width="150" height="82" rx="11" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="379" y="92" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">VLM 骨干</text>
+<text x="379" y="112" text-anchor="middle" font-size="10.5" fill="#64748b">PaLI-X / PaLM-E</text>
+<text x="379" y="164" text-anchor="middle" font-size="10" fill="#64748b">与网页图文共同微调</text>
+<line x1="458" y1="102" x2="486" y2="102" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="486" y1="102" x2="478.2" y2="105.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="486" y1="102" x2="478.2" y2="98.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="490" y="52" width="386" height="100" rx="11" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="683" y="72" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="700">模型输出：一串动作 token</text>
+<rect x="502" y="84" width="40" height="26" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+<text x="522" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">1</text>
+<rect x="548" y="84" width="40" height="26" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="568" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">128</text>
+<rect x="594" y="84" width="40" height="26" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="614" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">91</text>
+<rect x="640" y="84" width="40" height="26" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="660" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">241</text>
+<rect x="686" y="84" width="40" height="26" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="706" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">5</text>
+<rect x="732" y="84" width="40" height="26" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="752" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">101</text>
+<rect x="778" y="84" width="40" height="26" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="798" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">127</text>
+<rect x="824" y="84" width="40" height="26" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="844" y="101.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">217</text>
+<text x="683" y="128" text-anchor="middle" font-size="10.5" fill="#64748b">终止标志 + 7 个自由度各一个数</text>
+<text x="683" y="144" text-anchor="middle" font-size="10.5" fill="#94a3b8">token 可以直接被标准文本分词器处理</text>
+<rect x="24" y="196" width="852" height="100" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+<text x="450" y="220" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">每个数怎么来的：把连续的角度均匀切成 256 个桶</text>
+<text x="48" y="253" text-anchor="start" font-size="10.5" fill="#64748b">连续角度</text>
+<rect x="262" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="284" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="306" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="328" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="350" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="372" y="236" width="20" height="24" fill="#fee2e2" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="394" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="416" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="438" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="460" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="482" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<rect x="504" y="236" width="20" height="24" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2" rx="2"/>
+<text x="540" y="253" text-anchor="start" font-size="14" fill="#64748b">…</text>
+<text x="262" y="282" text-anchor="start" font-size="10.5" fill="#64748b">−180°</text>
+<text x="524" y="282" text-anchor="end" font-size="10.5" fill="#64748b">180°</text>
+<text x="852" y="253" text-anchor="end" font-size="11" fill="#dc2626" font-weight="600">索引 128 → 0°</text>
+<text x="450" y="326" text-anchor="middle" font-size="11.5" fill="#64748b">为什么是 256 而不是更细：论文消融显示 256 是性价比拐点，再往上精度收益递减、训练步数线性增长</text>
+<text x="450" y="348" text-anchor="middle" font-size="11.5" fill="#64748b">代价：量化误差约 1.4°/关节，末端执行器在 0.5 米臂长下最大偏差约 3 厘米——精细插拔够呛</text>
+<text x="450" y="374" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="600">收益：同一套 next-token 目标同时训练图文数据和机器人轨迹，互联网知识可以直接迁移到控制</text>
+</svg>
+</div>
+<p class="fig-cap">动作被写成字符串的直接后果是：图文数据和机器人轨迹可以在同一个损失函数下共同训练。这正是 RT-2 能让互联网知识迁移到控制任务的原因。</p>
+
+<h3>3.2 共同微调</h3>
+
+<p>RT-2 用 PaLI-X（55B）和 PaLM-E（562B）作为骨干，把网页规模的视觉语言任务与机器人轨迹混合微调。论文报告超过 6000 次真实机器人评估，最关键的结论是<strong>两类数据不会互相干扰，反而产生正迁移</strong>——这在当时并非显而易见。</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>能力类别</th><th>例子</th><th>为什么需要网页知识</th></tr>
+<tr><td>符号理解</td><td>"把香蕉移到二加一的结果上"</td><td>需要认识数字与算术，机器人数据里没有</td></tr>
+<tr><td>语义推理</td><td>"捡起快要掉下桌的包"</td><td>需要理解"快要掉下去"这种物理常识</td></tr>
+<tr><td>人物识别</td><td>"把饮料给那个看起来累了的人"</td><td>需要从外观推断状态</td></tr>
+</table>
+</div>
+
+<p>在未见场景上，成功率从 RT-1 的 32% 提升到 62%，约 3 倍。但物理技能仍被机器人数据里出现过的动作类型所限制——这也是所有 VLA 的共同边界：<strong>语义理解来自网页，运动技能只能来自真机数据</strong>。</p>
+
+<h3>3.3 延迟代价</h3>
+
+<p>用大型自回归骨干直接进控制回路的代价是推理速度：最大的模型只能跑 1–3 Hz，一个 5B 的变体约 5 Hz。这个限制直接催生了后面两条改进方向——压缩模型规模，或者改变动作的生成方式。</p>
+
+</section>
+
+<section id="ch4"><h2><span class="num">4</span>OpenVLA：7B 的开放基线</h2>
+
+<p>OpenVLA（2024.06）证明了一件事：<strong>VLA 不需要 55B</strong>。</p>
+
+<p>它用 Llama-2 7B 作为语言模型，视觉侧融合 DINOv2 与 SigLIP 两路特征，在 Open X-Embodiment 约 97 万条真实机器人演示上训练。与 RT-2 一样，它预测离散动作 token。</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>模型</th><th>参数量</th><th>训练数据</th><th>29 任务平均成功率</th></tr>
+<tr><td>RT-2-X</td><td>55B</td><td>OXE + WebLI</td><td>基准</td></tr>
+<tr><td>Octo-Base</td><td>93M</td><td>OXE</td><td>65%</td></tr>
+<tr><td><strong>OpenVLA</strong></td><td><strong>7B</strong></td><td>OXE（97 万条）</td><td><strong>比 RT-2-X 高约 16.5 个百分点</strong></td></tr>
+</table>
+</div>
+
+<p>三个值得记住的工程细节：</p>
+
+<ul>
+<li><strong>双视觉编码器</strong>：DINOv2 提供空间细节，SigLIP 提供语义对齐，拼接后一起送入 LLM。单用任一都明显更差。</li>
+<li><strong>LoRA 微调</strong>：消费级显卡就能在新机器人上适配，这是它被广泛采用的直接原因。</li>
+<li><strong>完全开源</strong>：权重、代码、数据管线齐备，让 VLA 从"几家大厂的能力"变成"可以复现的研究对象"。</li>
+</ul>
+
+</section>
+
+<section id="ch5"><h2><span class="num">5</span>π 系列：从离散 token 到连续流匹配</h2>
+
+<p>离散化有一个绕不过去的物理限制。7 自由度机械臂、256 个桶，最坏情况下每关节误差约 1.4°，累积起来末端执行器在 0.5 米臂长下偏差可达约 3 厘米。抓咖啡杯勉强够用，USB 插拔这种公差小于 1 毫米的任务完全不可行。</p>
+
+<p>π0（Physical Intelligence，2024.10）的方案是<strong>把动作当作连续信号来生成</strong>：用流匹配（flow matching）学习一个从噪声到目标动作的速度场，推理时数值积分 10 步得到动作序列。</p>
+
+<div class="formula" data-eq="(2)">$$\mathcal{L}_{\text{FM}} = \mathbb{E}_{t,\,x_0,\,x_1}\Big[\,\big\|\, v_\theta(x_t, t, o) - (x_1 - x_0) \,\big\|^2\,\Big], \qquad x_t = t\,x_1 + (1-t)\,x_0$$</div>
+
+<p>其中 $o$ 是视觉与语言条件，$x_0$ 是纯噪声，$x_1$ 是目标动作。训练目标是让预测的速度场逼近"从噪声指向动作"的直线方向。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 396" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif" role="img">
+<text x="450" y="26" text-anchor="middle" font-size="14.5" fill="#0f172a" font-weight="700">动作怎么生成：把动作当词，还是把动作当连续信号</text>
+<rect x="24" y="48" width="410" height="232" rx="14" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="6 5"/>
+<text x="229" y="67" text-anchor="middle" font-size="12" fill="#64748b" font-weight="700">路线一 · 离散动作 token（RT-2 / OpenVLA）</text>
+<rect x="48" y="84" width="100" height="34" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<text x="98" y="105.5" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="600">视觉 + 语言</text>
+<line x1="152" y1="101" x2="178" y2="101" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="178" y1="101" x2="170.2" y2="104.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="178" y1="101" x2="170.2" y2="97.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="182" y="78" width="118" height="46" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+<text x="241" y="105.5" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="600">VLM 骨干</text>
+<line x1="304" y1="101" x2="330" y2="101" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="330" y1="101" x2="322.2" y2="104.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="330" y1="101" x2="322.2" y2="97.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="334" y="84" width="76" height="34" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="372" y="105.5" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="600">LM Head</text>
+<text x="229" y="150" text-anchor="middle" font-size="11" fill="#64748b">一次前向，自回归吐出 256 进制动作 token</text>
+<rect x="48" y="168" width="362" height="26" rx="7" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+<text x="229" y="185.5" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="600">精度上限 ≈1.4°/关节，推理 1 次前向</text>
+<text x="229" y="216" text-anchor="middle" font-size="10.5" fill="#64748b">优点：直接复用 LLM 基础设施，训练简单</text>
+<text x="229" y="236" text-anchor="middle" font-size="10.5" fill="#64748b">缺点：量化误差天然存在，精细操作受限</text>
+<text x="229" y="258" text-anchor="middle" font-size="10.5" fill="#94a3b8">代表：RT-2（55B/562B）、OpenVLA（7B 开源）</text>
+<rect x="466" y="48" width="410" height="232" rx="14" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="6 5"/>
+<text x="671" y="67" text-anchor="middle" font-size="12" fill="#64748b" font-weight="700">路线二 · 连续动作流匹配（pi0）</text>
+<rect x="486" y="80" width="106" height="32" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<text x="539" y="100.5" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="600">PaliGemma 3B</text>
+<text x="602" y="100" text-anchor="start" font-size="9.5" fill="#94a3b8">视觉 + 语言编码</text>
+<rect x="486" y="118" width="106" height="32" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4"/>
+<text x="539" y="138.5" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="600">动作专家 300M</text>
+<text x="602" y="138" text-anchor="start" font-size="9.5" fill="#94a3b8">本体状态 + 噪声</text>
+<line x1="602" y1="166" x2="628" y2="166" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="628" y1="166" x2="620.2" y2="169.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="628" y1="166" x2="620.2" y2="162.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="632" y="149" width="104" height="34" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="684" y="170.5" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="600">流匹配去噪</text>
+<line x1="740" y1="166" x2="762" y2="166" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="762" y1="166" x2="754.2" y2="169.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="762" y1="166" x2="754.2" y2="162.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="766" y="149" width="86" height="34" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="809" y="170.5" text-anchor="middle" font-size="10.5" fill="#0f172a" font-weight="600">连续动作</text>
+<text x="560" y="200" text-anchor="middle" font-size="10" fill="#64748b">从纯噪声逐步积分到动作</text>
+<circle cx="500" cy="238" r="7.5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="527" cy="236.66666666666666" r="7.166666666666666" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="554" cy="235.33333333333334" r="6.833333333333334" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="581" cy="234" r="6.5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="608" cy="232.66666666666666" r="6.166666666666667" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="635" cy="231.33333333333334" r="5.833333333333333" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="662" cy="230" r="5.5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="689" cy="228.66666666666666" r="5.166666666666667" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="716" cy="227.33333333333334" r="4.833333333333334" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.4"/>
+<circle cx="743" cy="226" r="4.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="852" y="240" text-anchor="end" font-size="10" fill="#64748b">10 步积分</text>
+<rect x="490" y="246" width="362" height="24" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="671" y="262.5" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="600">精度浮点级，推理约 10 步积分</text>
+<text x="450" y="300" text-anchor="middle" font-size="11.5" fill="#64748b">pi0 的架构细节：VLM 专家与动作专家共享一个 Transformer，但各有一套权重，块状因果掩码控制信息流向</text>
+<text x="450" y="320" text-anchor="middle" font-size="11.5" fill="#64748b">训练配方照搬 LLM：先在海量多样数据上预训练，再在精选高质量数据上后训练——「先吃糙粮后吃细糠」</text>
+<text x="450" y="340" text-anchor="middle" font-size="11.5" fill="#94a3b8">这样做的直觉：只看高质量数据学不会从错误中恢复，只看低质量数据学不会高效稳健的行为</text>
+<text x="450" y="368" text-anchor="middle" font-size="11.5" fill="#64748b">数据规模：1 万小时以上机器人操作、8 种机器人构型、68 个任务，外加 Open X-Embodiment 开源数据</text>
+</svg>
+</div>
+<p class="fig-cap">左侧路线把动作当词，一次前向即可完成，但精度被离散化封顶；右侧路线把动作当连续信号，需要多步积分，换来浮点级精度。π0 的选择是后者，并把模型拆成 VLM 专家与动作专家两套权重。</p>
+
+<h3>5.1 两专家架构</h3>
+
+<p>π0 基于 PaliGemma 3B（SigLIP-400M 视觉编码器 + Gemma-2B 语言模型），额外加一个约 300M 的<strong>动作专家</strong>，总计约 3.3B。两套权重共享一个 Transformer，用一个块状因果掩码控制信息流向：VLM 块只能看自己，本体状态块能看自己与 VLM，动作块能看到全部。</p>
+
+<div class="callout"><div class="callout-title">为什么用流匹配而不是扩散</div>
+<p>扩散模型通常需要 20–50 步去噪，流匹配的 ODE 路径更接近直线，4–10 步即可达到同等质量。对 50 Hz 的控制回路来说，这个差别不是效率问题而是可行性问题——每步推理必须压进 20 毫秒以内。</p></div>
+
+<h3>5.2 训练配方照搬 LLM</h3>
+
+<p>π0 采用"预训练 + 后训练"的两段式：先在海量、多样、甚至包含失败样本的数据上预训练，再在高质量精选数据上后训练。这个组合的直觉值得记住：</p>
+
+<ul>
+<li>只在高质量数据上训练 → 学不到从错误中恢复，因为数据里几乎没有失败样本</li>
+<li>只在低质量数据上训练 → 学不到高效稳健的行为模式</li>
+<li><strong>两者结合</strong> → 模型努力模仿高质量行为，同时保留一定的纠错能力</li>
+</ul>
+
+<p>顺带一提 π0-FAST：它用离散余弦变换加 BPE 把动作序列压缩成离散 token，压缩率比传统动作 token 化高约一个数量级，训练速度比流匹配版快约 5 倍，代价是推理更慢。两种形式在 openpi 仓库里并存。</p>
+
+</section>
+
+<section id="ch6"><h2><span class="num">6</span>π0.5：分层推理与开放世界泛化</h2>
+
+<p>π0 的泛化基本局限在训练中见过的环境和物体配置。在真正没进过的房子里测试时性能明显下降。π0.5（2025.04）针对的正是这个"开放世界泛化"问题。</p>
+
+<h3>6.1 一个模型，两级推理</h3>
+
+<p>做法是把任务拆成两级，但<strong>用同一套权重完成</strong>：先预测高层的语义子任务（文本），再基于子任务预测低层动作序列。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 348" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif" role="img">
+<text x="450" y="26" text-anchor="middle" font-size="14.5" fill="#0f172a" font-weight="700">pi0.5 的分层推理：同一个模型，先预测「做什么」，再预测「怎么做」</text>
+<rect x="24" y="60" width="118" height="96" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="83" y="80" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="700">四个相机</text>
+<rect x="38" y="86" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="54" y="86" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="70" y="86" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="86" y="86" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="38" y="102" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="54" y="102" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="70" y="102" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="86" y="102" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="38" y="118" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="54" y="118" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="70" y="118" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<rect x="86" y="118" width="14" height="14" rx="2.5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+<text x="83" y="176" text-anchor="middle" font-size="10" fill="#64748b">前视 + 后视 + 双腕</text>
+<rect x="160" y="86" width="96" height="44" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="208" y="112.5" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="600">指令</text>
+<text x="208" y="150" text-anchor="middle" font-size="10" fill="#64748b">“把衣服收好”</text>
+<line x1="272" y1="108" x2="300" y2="108" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="300" y1="108" x2="292.2" y2="111.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="300" y1="108" x2="292.2" y2="104.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="304" y="56" width="220" height="104" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="414" y="82" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">① 高层：语义子任务</text>
+<rect x="320" y="100" width="188" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="414" y="121.5" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">“拿起衬衫”</text>
+<text x="414" y="150" text-anchor="middle" font-size="10" fill="#94a3b8">输出文本，推理很短</text>
+<line x1="530" y1="108" x2="558" y2="108" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="558" y1="108" x2="550.2" y2="111.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="558" y1="108" x2="550.2" y2="104.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="562" y="56" width="314" height="104" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="719" y="82" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">② 低层：动作序列</text>
+<rect x="578" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="602" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="626" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="650" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="674" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="698" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="722" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="746" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="770" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="794" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="818" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<rect x="842" y="96" width="20" height="22" fill="#dbeafe" stroke="#0f172a" stroke-width="1.3" rx="3"/>
+<text x="719" y="136" text-anchor="middle" font-size="10.5" fill="#64748b">一次预测 50 步动作（约 1 秒）</text>
+<text x="719" y="152" text-anchor="middle" font-size="10" fill="#94a3b8">输出连续动作，推理更长</text>
+<rect x="24" y="186" width="852" height="60" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+<text x="450" y="212" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">与「两个模型分工」的做法不同，这里高层的 VLM 和低层的策略是同一套权重</text>
+<text x="450" y="234" text-anchor="middle" font-size="11" fill="#64748b">形式上更接近思维链——区别在于高层推理的长度明显短于低层动作推理的长度</text>
+<text x="450" y="276" text-anchor="middle" font-size="11.5" fill="#64748b">开放世界泛化的关键：预训练阶段联合了机器人数据、网页图文、高层语义任务预测三类异质数据</text>
+<text x="450" y="296" text-anchor="middle" font-size="11.5" fill="#047857">一个反直觉的统计：预训练数据里 97.6% 来自非移动操作平台，模型却泛化到了移动家庭操作任务</text>
+<text x="450" y="322" text-anchor="middle" font-size="11.5" fill="#94a3b8">评测标准也更严：测试房屋是数据采集期间从未进入过的真实住宅，而不是训练同分布的留出集</text>
+</svg>
+</div>
+<p class="fig-cap">与"两个模型分工"的做法不同，这里高层 VLM 和低层策略是同一套权重。形式上更接近思维链——区别在于高层推理的长度明显短于低层动作推理的长度。</p>
+
+<h3>6.2 联合训练是泛化的关键</h3>
+
+<p>π0.5 在第一阶段用异质数据联合训练：机器人操作数据、网页图文（图像描述、目标检测等）、高层语义任务预测数据混在一起。预训练完之后，再做两阶段后训练——先训高层语义子任务，再在此基础上训低层动作。</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>观察</th><th>数值 / 事实</th><th>意味着什么</th></tr>
+<tr><td>非移动操作平台数据的占比</td><td>约 97.6%</td><td>主力数据来自其他机器人、网页图文和非移动操作设置</td></tr>
+<tr><td>评测标准</td><td>测试房屋是数据采集期间从未进入的真实住宅</td><td>比"同分布留出集"严格得多</td></tr>
+<tr><td>模型规模</td><td>约 3.3B</td><td>性能提升来自数据与训练方式，不是堆参数</td></tr>
+</table>
+</div>
+
+<div class="callout"><div class="callout-title">最有实践意义的一条结论</div>
+<p>如果训练数据足够多样，<strong>并不需要大量目标场景的机器人数据</strong>。97.6% 的预训练数据来自其他来源，模型仍然泛化到了移动家庭操作任务——这是这篇工作被讨论最多的一点。</p></div>
+
+</section>
+
+<section id="ch7"><h2><span class="num">7</span>对比、实现与总结</h2>
+
+<div class="table-wrap">
+<table>
+<tr><th>模型</th><th>时间</th><th>规模</th><th>动作形式</th><th>关键贡献</th></tr>
+<tr><td>PaLM-E</td><td>2023.03</td><td>562B</td><td>文本计划（无原生动作）</td><td>具身语言模型范式；正迁移的实证</td></tr>
+<tr><td>RT-2</td><td>2023.07</td><td>55B / 562B</td><td>256 进制离散 token</td><td>确立 VLA 概念；共同微调产生语义正迁移</td></tr>
+<tr><td>OpenVLA</td><td>2024.06</td><td>7B</td><td>离散 token</td><td>开放权重与代码；证明小模型足够</td></tr>
+<tr><td>π0</td><td>2024.10</td><td>3.3B</td><td>连续流匹配</td><td>两专家架构；跨本体泛化</td></tr>
+<tr><td>π0.5</td><td>2025.04</td><td>3.3B</td><td>分层：文本子任务 + 连续动作</td><td>开放世界泛化；异质数据联合训练</td></tr>
+</table>
+</div>
+
+<h3>7.1 一条清晰的收敛路径</h3>
+
+<p>把五个模型按时间排开，能看到三个同时发生的变化：</p>
+
+<ol>
+<li><strong>参数规模</strong>：562B → 55B → 7B → 3.3B。规模不再是瓶颈，数据与训练方式才是。</li>
+<li><strong>动作表示</strong>：文本计划 → 离散 token → 连续流匹配。精度上限被逐步打开。</li>
+<li><strong>数据来源</strong>：单机构自有数据 → Open X-Embodiment 共享 → 异质数据联合预训练。泛化的来源从"更多同类数据"转向"更多不同来源的数据"。</li>
+</ol>
+
+<h3>7.2 一个最小的动作头实现</h3>
+
+<p>无论上游 VLM 怎么变，动作头的形式可以抽象成两种。下面这个片段说明了它们的差别——一个走分类，一个走回归加迭代精修。</p>
+
+<div class="code-block"><div class="code-header">action_head.py — 离散 token vs 流匹配的两种动作头</div><pre>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+
+<span class="kw">class</span> <span class="cls">DiscreteActionHead</span>(nn.Module):
+    <span class="str">"""RT-2 / OpenVLA：把每一维动作当分类问题，输出 256 个桶上的分布"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, hidden=<span class="num">4096</span>, n_dims=<span class="num">7</span>, n_bins=<span class="num">256</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">self</span>.n_dims, <span class="kw">self</span>.n_bins = n_dims, n_bins
+        <span class="kw">self</span>.head = nn.<span class="cls">Linear</span>(hidden, n_dims * n_bins)       <span class="com"># 每维一个独立的 256 类分类器</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, h):
+        logits = <span class="kw">self</span>.<span class="fn">head</span>(h).<span class="fn">view</span>(-<span class="num">1</span>, <span class="kw">self</span>.n_dims, <span class="kw">self</span>.n_bins)
+        <span class="kw">return</span> logits
+
+    <span class="kw">def</span> <span class="fn">to_action</span>(<span class="kw">self</span>, logits):
+        <span class="str">"""连续角度到桶索引：floor(256 * (theta + pi) / (2*pi))"""</span>
+        idx = logits.<span class="fn">argmax</span>(dim=-<span class="num">1</span>)
+        <span class="kw">return</span> idx / <span class="kw">self</span>.n_bins * <span class="num">2</span> * torch.pi - torch.pi   <span class="com"># 离散精度封顶</span>
+
+
+<span class="kw">class</span> <span class="cls">FlowMatchingHead</span>(nn.Module):
+    <span class="str">"""pi0：预测速度场，推理时从噪声积分到动作，精度不受量化限制"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, hidden=<span class="num">1024</span>, action_dim=<span class="num">14</span>, chunk=<span class="num">50</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">self</span>.chunk, <span class="kw">self</span>.action_dim = chunk, action_dim
+        <span class="kw">self</span>.net = nn.<span class="cls">Sequential</span>(nn.<span class="cls">Linear</span>(action_dim + hidden, hidden), nn.<span class="cls">GELU</span>(), nn.<span class="cls">Linear</span>(hidden, action_dim))
+
+    <span class="kw">def</span> <span class="fn">velocity</span>(<span class="kw">self</span>, x_t, cond):
+        <span class="str">"""x_t: (B, chunk, action_dim) 带噪动作；cond: (B, hidden) 视觉语言条件"""</span>
+        c = cond.<span class="fn">unsqueeze</span>(<span class="num">1</span>).<span class="fn">expand</span>(-<span class="num">1</span>, x_t.<span class="fn">size</span>(<span class="num">1</span>), -<span class="num">1</span>)
+        <span class="kw">return</span> <span class="kw">self</span>.net(torch.<span class="fn">cat</span>([x_t, c], dim=-<span class="num">1</span>))
+
+    <span class="kw">def</span> <span class="fn">training_loss</span>(<span class="kw">self</span>, action, cond):
+        x1 = action                                        <span class="com"># 目标动作</span>
+        x0 = torch.<span class="fn">randn_like</span>(x1)                       <span class="com"># 纯噪声</span>
+        t = torch.<span class="fn">rand</span>(x1.<span class="fn">size</span>(<span class="num">0</span>), <span class="num">1</span>, <span class="num">1</span>, device=x1.device)
+        x_t = t * x1 + (<span class="num">1</span> - t) * x0                       <span class="com"># 直线插值路径</span>
+        target = x1 - x0                                   <span class="com"># 目标速度场</span>
+        <span class="kw">return</span> ((<span class="kw">self</span>.<span class="fn">velocity</span>(x_t, cond) - target) ** <span class="num">2</span>).<span class="fn">mean</span>()
+
+    <span class="kw">def</span> <span class="fn">sample</span>(<span class="kw">self</span>, cond, steps=<span class="num">10</span>):
+        <span class="str">"""推理：从 t=0 的噪声出发，用欧拉法积分到 t=1"""</span>
+        x = torch.<span class="fn">randn</span>(cond.<span class="fn">size</span>(<span class="num">0</span>), <span class="kw">self</span>.chunk, <span class="kw">self</span>.action_dim, device=cond.device)
+        dt = <span class="num">1.0</span> / steps
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(steps):
+            x = x + dt * <span class="kw">self</span>.<span class="fn">velocity</span>(x, cond)
+        <span class="kw">return</span> x
+</pre></div>
+
+<div class="callout warn"><div class="callout-title">控制频率是硬约束</div>
+<p>灵巧操作要求每秒约 50 次运动指令，也就是每步推理必须在几十毫秒内完成。<strong>任何"再来一次前向"的优化都要先算这笔时间账</strong>——这也是为什么 KV 缓存、动作分块（一次预测 50 步）这些工程手段在 VLA 里格外重要。</p></div>
+
+<h3>7.3 归纳</h3>
+
+<p>VLA 的演进可以读成一句话：<strong>先把动作变成语言的一部分（RT-2），再把动作从语言里救出来（π0）</strong>。前者解决了"知识迁移"，后者解决了"精度上限"。而 π0.5 的分层设计说明，下一步的瓶颈既不在参数也不在精度，而在<strong>如何让模型在没见过的世界里依然知道该先做什么</strong>。</p>
+
+</section>
+
+<section id="refs"><h2>参考文献</h2>
+<ol>
+<li>Driess, D., Xia, F., Sajjadi, M. et al. (2023). PaLM-E: An Embodied Multimodal Language Model. <em>ICML</em>. arXiv:2303.03378.（具身语言模型；562B 配置与正迁移实证）</li>
+<li>Brohan, A., Brown, N., Carbajal, J. et al. (2023). RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control. arXiv:2307.15818.（VLA 术语的出处；动作 token 化与共同微调）</li>
+<li>Open X-Embodiment Collaboration (2023). Open X-Embodiment: Robotic Learning Datasets and RT-X Models. arXiv:2310.08864.（22 个本体、百万级轨迹的共享数据集）</li>
+<li>Kim, M., Pertsch, K., Karamcheti, S. et al. (2024). OpenVLA: An Open-Source Vision-Language-Action Model. arXiv:2406.09246.（7B 开源 VLA；DINOv2 + SigLIP 双视觉编码器）</li>
+<li>Octo Model Team (2024). Octo: An Open-Source Generalist Robot Policy. arXiv:2405.12213.（开源通用策略，扩散动作头）</li>
+<li>Black, K., Brown, N., Driess, D. et al. (2024). π0: A Vision-Language-Action Flow Model for General Robot Control. arXiv:2410.24164.（流匹配动作生成；VLM 专家 + 动作专家）</li>
+<li>Pertsch, K., Stachowicz, K., Ichter, B. et al. (2025). FAST: Efficient Action Tokenization for Vision-Language-Action Models. arXiv:2501.09747.（DCT + BPE 的动作 token 化）</li>
+<li>Physical Intelligence (2025). π0.5: a Vision-Language-Action Model with Open-World Generalization. arXiv:2504.16054.（分层推理与异质数据联合训练）</li>
+<li>Reed, S., Zolna, K., Parisotto, E. et al. (2022). A Generalist Agent (Gato). arXiv:2205.06175.（统一序列模型承载异构任务行为的先驱）</li>
+<li>Brohan, A., Brown, N., Carbajal, J. et al. (2022). RT-1: Robotics Transformer for Real-World Control at Scale. arXiv:2212.06817.（RT-2 的机器人数据与基线来源）</li>
+<li>Zhao, T., Kumar, V., Levine, S., Finn, C. (2023). Learning Fine-Grained Bimanual Manipulation with Low-Cost Hardware (ACT). <em>RSS</em>.（动作分块与 CVAE 策略的对照基线）</li>
+<li>Chi, C., Feng, S., Du, Y. et al. (2023). Diffusion Policy: Visuomotor Policy Learning via Action Diffusion. <em>RSS</em>.（扩散动作头的代表工作）</li>
+<li>Liu, H., Li, C., Wu, Q., Lee, Y. (2023). Visual Instruction Tuning (LLaVA). <em>NeurIPS</em>.（第 4 章对照的 VLM 侧基线）</li>
+<li>Li, J., Li, D., Savarese, S., Hoi, S. (2023). BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. <em>ICML</em>.（第 3 章对照的 VLM 侧基线）</li>
+<li>Alayrac, J.-B., Donahue, J., Luc, P. et al. (2022). Flamingo: a Visual Language Model for Few-Shot Learning. <em>NeurIPS</em>.（交错图文训练与门控交叉注意力）</li>
+<li>Physical Intelligence (2025). openpi: Open-Source Models and Packages for Robotics. https://github.com/Physical-Intelligence/openpi.（π0 / π0-FAST / π0.5 的权重与训练配置）</li>
+</ol>
+</section>
+
+</main>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<script>
+// Sidebar highlight
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var links = document.querySelectorAll('#sidebar nav a');
+  function highlight() {
+    var scrollY = window.scrollY;
+    var current = '';
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - 100) current = sections[i].id;
+    }
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+// Formula rendering
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

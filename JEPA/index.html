@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JEPA 系列 — JEPA · I-JEPA · V-JEPA · LeJEPA 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+.fig-cap { text-align: center; color: var(--c-text-soft); font-size: 13px; line-height: 1.75; margin: -16px auto 34px; max-width: 780px; }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>JEPA 与表征预测</h2>
+<nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、为什么预测像素是错的</a>
+    <a href="#ch2">二、架构与坍缩问题</a>
+    <a href="#ch3">三、I-JEPA</a>
+    <a href="#ch4">四、V-JEPA 与 V-JEPA 2</a>
+    <a href="#ch5">五、LeJEPA</a>
+    <a href="#ch6">六、对比与 JEPA 家族</a>
+    <a href="#ch7">七、实现与总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+<a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<section id="hero" class="hero">
+  <h1>JEPA 系列：基于可预测性的目标与建模范式</h1>
+  <div class="subtitle">JEPA · I-JEPA · V-JEPA · V-JEPA 2 · LeJEPA</div>
+  <div class="tagline">联合嵌入预测 · 表征空间回归 · 隐变量 · 坍缩问题 · 各向同性高斯 · SIGReg · 世界模型</div>
+  <div class="badges">
+    <span class="badge">7 个章节</span>
+    <span class="badge">4 张 SVG 结构图</span>
+    <span class="badge">9 个公式</span>
+    <span class="badge">3 段 PyTorch 代码</span>
+    <span class="badge">16 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1"><h2><span class="num">1</span>动机：为什么"预测像素"是错的</h2>
+
+<h3>1.1 重建路线的信息论代价</h3>
+<p>第 2 个模块讲过，MAE 与 SimMIM 能让编码器学到很强的表征。但它们的训练目标里含有一个隐含的浪费：<strong>模型必须重建被遮像素的每一个细节，包括光照、纹理、噪声</strong>。这些细节对理解画面毫无帮助，却占掉了损失函数里很大一部分。</p>
+<p>LeCun 在 2022 年的立场论文里把这个观点推到了极致：他认为生成式建模（预测每一个像素）是一条<strong>方向错误</strong>的路——现实世界的信息量太大，而且大部分是不可预测的随机细节，模型不应该把容量花在还原它们上。</p>
+<div class="callout"><div class="callout-title">一个演示这个问题的经典例子</div>
+<p>假设一段视频里有一片树叶在随风抖动。要"预测下一帧的像素"，模型必须精确还原每一片叶子的位置——但这些位置本质上是<strong>混沌、不可预测</strong>的。如果强迫模型去预测，它只会在大量样本上学会输出一个模糊的平均值。而如果只预测<strong>表征</strong>（"这里是一片树冠"），不可预测的细节就被自然地过滤掉了。</p></div>
+
+<h3>1.2 核心主张：在表征空间做预测</h3>
+<p>JEPA（Joint-Embedding Predictive Architecture，联合嵌入预测架构）的全部主张可以浓缩成一句话：</p>
+<div class="callout success"><div class="callout-title">不要预测"会变成什么像素"，而是预测"会变成什么概念"</div>
+<p>把输入和输出都先映射到同一个<strong>表征空间</strong>，然后在这个空间里做预测。这样一来：低层的、不可预测的细节在编码阶段就被丢弃；需要预测的部分只剩下<strong>语义级的状态变化</strong>——而这恰恰是可预测、也值得预测的。</p></div>
+
+<h3>1.3 三条路线的定位</h3>
+<p>把自监督学习的三条主流路线放在一起，它们的差异集中在同一个问题上：<strong>预测发生在哪个空间？</strong></p>
+
+<div class="svg-box">
+<svg viewBox="0 0 880 430" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="j1-a" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#94a3b8"/></marker>
+</defs>
+<text x="440" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">三条路线的唯一区别：预测发生在哪个空间</text>
+
+<rect x="40" y="56" width="620" height="112" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<rect x="40" y="56" width="6" height="112" rx="3" fill="#2563eb"/>
+<text x="64" y="80" font-size="12.5" font-weight="700" fill="#1d4ed8">对比学习　SimCLR · MoCo · CLIP</text>
+<rect x="64" y="96" width="120" height="34" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="124" y="118" text-anchor="middle" font-size="11.5" fill="#1d4ed8">两张视图 A / B</text>
+<line x1="188" y1="113" x2="210" y2="113" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="214" y="96" width="110" height="34" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="269" y="118" text-anchor="middle" font-size="11.5" fill="#1d4ed8">编码器</text>
+<line x1="328" y1="113" x2="350" y2="113" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="354" y="96" width="140" height="34" rx="7" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+<text x="424" y="118" text-anchor="middle" font-size="11.5" fill="#3b82f6">两个嵌入向量</text>
+<line x1="498" y1="113" x2="520" y2="113" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="524" y="96" width="118" height="34" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4"/>
+<text x="583" y="118" text-anchor="middle" font-size="11.5" fill="#6d28d9">相似度比较</text>
+<text x="64" y="154" font-size="11.5" fill="#64748b">预测空间 = <tspan font-weight="700" fill="#1d4ed8">嵌入空间</tspan>；要判定的只是"两个视图是否匹配"，不预测任何具体内容</text>
+<rect x="676" y="90" width="164" height="44" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+<text x="758" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">嵌入空间</text>
+<text x="758" y="126" text-anchor="middle" font-size="10" fill="#3b82f6">需要负样本</text>
+
+<rect x="40" y="176" width="620" height="112" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<rect x="40" y="176" width="6" height="112" rx="3" fill="#059669"/>
+<text x="64" y="200" font-size="12.5" font-weight="700" fill="#047857">生成式重建　MAE · SimMIM · VideoMAE</text>
+<rect x="64" y="216" width="120" height="34" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="124" y="238" text-anchor="middle" font-size="11.5" fill="#047857">掩码后的图像</text>
+<line x1="188" y1="233" x2="210" y2="233" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="214" y="216" width="110" height="34" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="269" y="238" text-anchor="middle" font-size="11.5" fill="#047857">编码器 + 解码器</text>
+<line x1="328" y1="233" x2="350" y2="233" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="354" y="216" width="140" height="34" rx="7" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.4"/>
+<text x="424" y="238" text-anchor="middle" font-size="11.5" fill="#059669">重建像素</text>
+<line x1="498" y1="233" x2="520" y2="233" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="524" y="216" width="118" height="34" rx="7" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="583" y="238" text-anchor="middle" font-size="11.5" fill="#475569">逐像素比对</text>
+<text x="64" y="274" font-size="11.5" fill="#64748b">预测空间 = <tspan font-weight="700" fill="#047857">像素空间</tspan>；必须还原每一个被遮像素的数值，包括无关的纹理与噪声</text>
+<rect x="676" y="210" width="164" height="44" rx="8" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.5"/>
+<text x="758" y="230" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">像素空间</text>
+<text x="758" y="246" text-anchor="middle" font-size="10" fill="#059669">需要解码器</text>
+
+<rect x="40" y="296" width="620" height="112" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<rect x="40" y="296" width="6" height="112" rx="3" fill="#7c3aed"/>
+<text x="64" y="320" font-size="12.5" font-weight="700" fill="#6d28d9">JEPA　I-JEPA · V-JEPA · LeJEPA</text>
+<rect x="64" y="336" width="120" height="34" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4"/>
+<text x="124" y="358" text-anchor="middle" font-size="11.5" fill="#6d28d9">掩码后的图像</text>
+<line x1="188" y1="353" x2="210" y2="353" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="214" y="336" width="110" height="34" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4"/>
+<text x="269" y="358" text-anchor="middle" font-size="11.5" fill="#6d28d9">上下文编码器</text>
+<line x1="328" y1="353" x2="350" y2="353" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="354" y="336" width="140" height="34" rx="7" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.4"/>
+<text x="424" y="358" text-anchor="middle" font-size="11.5" fill="#7c3aed">预测器</text>
+<line x1="498" y1="353" x2="520" y2="353" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#j1-a)"/>
+<rect x="524" y="336" width="118" height="34" rx="7" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.4"/>
+<text x="583" y="358" text-anchor="middle" font-size="11.5" fill="#7c3aed">目标表征</text>
+<text x="64" y="394" font-size="11.5" fill="#64748b">预测空间 = <tspan font-weight="700" fill="#6d28d9">表征空间</tspan>；只预测"被遮区域应该是什么概念"，不问像素细节，也不需要负样本</text>
+<rect x="676" y="330" width="164" height="44" rx="8" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5"/>
+<text x="758" y="350" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">表征空间</text>
+<text x="758" y="366" text-anchor="middle" font-size="10" fill="#7c3aed">无需负样本</text>
+
+<text x="440" y="424" text-anchor="middle" font-size="11.5" fill="#94a3b8">三者都在做自监督，差别只在"损失落在哪个空间" —— 这决定了模型被迫学习什么</text>
+</svg>
+</div>
+<p class="fig-cap">对比学习只需要"判像不像"，重建要求"画出一模一样"，JEPA 则要求"说对是什么"。越靠下，损失越聚焦在语义层，模型越不必为无关细节浪费容量。</p>
+
+<h3>1.4 与模块 2 的衔接</h3>
+<p>回到模块 2 的公式 (1)——掩码建模的统一骨架。JEPA 复用了这个骨架的<strong>全部前半段</strong>（分块、掩码、只编码可见部分），只把最后一步换掉：</p>
+<div class="table-wrap">
+<table>
+<tr><th></th><th>MAE / SimMIM</th><th>JEPA</th></tr>
+<tr><td>掩码与可见块</td><td>相同</td><td>相同</td></tr>
+<tr><td>编码器只看可见块</td><td>相同（MAE）</td><td>相同</td></tr>
+<tr><td>被遮位置的目标</td><td>原始像素</td><td><strong>由另一个编码器（EMA）算出的表征</strong></td></tr>
+<tr><td>解码器</td><td>必需（浅层或线性）</td><td><strong>不需要</strong>——预测器在表征空间工作</td></tr>
+<tr><td>损失空间</td><td>像素空间</td><td>表征空间</td></tr>
+</table>
+</div>
+<p>这个改动看起来很小，却带来一个全新的问题：<strong>如果目标和预测都在同一个表征空间里，模型可以把所有输入都映射成同一个向量来"作弊"</strong>。这就是第 2 章要讲的坍缩问题，也是 JEPA 系列十余篇论文真正在解决的核心矛盾。</p>
+</section>
+
+<section id="ch2"><h2><span class="num">2</span>JEPA 的基本架构与它的软肋</h2>
+
+<h3>2.1 三件套与一个隐变量</h3>
+<p>JEPA 的形式化定义包含三个组件，外加一个常被忽略的<strong>隐变量</strong>：</p>
+<div class="table-wrap">
+<table>
+<tr><th>组件</th><th>作用</th></tr>
+<tr><td>上下文编码器 $E_\theta$</td><td>把可见部分 $x$ 编码成表征 $s_x = E_\theta(x)$</td></tr>
+<tr><td>目标编码器 $E_{\bar\theta}$</td><td>把完整输入 $y$ 编码成目标表征 $s_y = E_{\bar\theta}(y)$，参数由 $\theta$ 做指数滑动平均（EMA）得到</td></tr>
+<tr><td>预测器 $P_\phi$</td><td>给定 $s_x$ 与目标的位置信息 $z$，预测 $\hat{s}_y = P_\phi(s_x, z)$</td></tr>
+<tr><td>隐变量 $z$</td><td>表示"当前观测不到、但会影响未来走向"的潜在因素</td></tr>
+</table>
+</div>
+<div class="formula" data-eq="(1)">$$\mathcal{L}_{\text{JEPA}} = \Big\| P_\phi\big(E_\theta(x),\, z\big) \;-\; \operatorname{sg}\big(E_{\bar\theta}(y)\big) \Big\|$$</div>
+<p>其中 $\operatorname{sg}(\cdot)$ 表示 stop-gradient——目标分支不接收梯度。</p>
+
+<h3>2.2 隐变量 $z$ 为什么必需</h3>
+<p>这一点经常被跳过，但它是 JEPA 与 BYOL 这类"预测自己"的方法的本质区别。设想用 JEPA 预测视频的下一帧：即使看完了前面所有帧，未来仍然有多种可能（球可能被接住，也可能落地）。如果只有一个确定性预测器，模型只能输出这些可能性的<strong>平均值</strong>——而平均出来的东西既不是接住也不是落地，是毫无意义的。</p>
+<p>隐变量 $z$ 的作用就是把这部分<strong>固有的不可预测性</strong>显式地表示出来：给定不同的 $z$，预测器可以给出不同的合理未来。训练时 $z$ 通常从一个先验分布采样（或由目标编码器提供），模型因此学会"在不确定性下输出多个合理的预测"，而不是一个模糊的平均。</p>
+<div class="callout"><div class="callout-title">这也是 JEPA 与 MAE 在世界观上的差别</div>
+<p>MAE 隐含假设"缺失部分可以被唯一确定"，所以用回归损失逼模型给出一个答案；JEPA 承认"缺失部分可能本就不可唯一确定"，所以用隐变量承载这部分不确定性。前者在图像上还勉强成立（纹理可猜），到了视频与规划场景就完全站不住。</p></div>
+
+<h3>2.3 软肋：表征坍缩</h3>
+<p>把公式 (1) 的损失展开看，它只做了一件事：<strong>让预测的输出接近目标输出的表征</strong>。这里存在一个平凡的解法：</p>
+<div class="callout danger"><div class="callout-title">如果所有输入都映射成同一个常量向量，损失就是 0</div>
+<p>令 $E_\theta(x) = E_{\bar\theta}(y) = c$（常量），则预测器只需输出 $c$，损失恒为 0。此时模型什么都没学到，但优化目标"完美达成"。这就是<strong>表征坍缩（representation collapse）</strong>。更隐蔽的形式是<strong>维度坍缩</strong>——所有嵌入落在一个低维子空间上（比如一条直线），虽然不完全是常量，但可用信息量极少。</p></div>
+<p>BYOL、SimSiam、DINO、以及 JEPA 家族都在解决同一个问题。历史上出现过三类解法：</p>
+<div class="table-wrap">
+<table>
+<tr><th>解法</th><th>做法</th><th>代表</th><th>代价</th></tr>
+<tr><td>非对称结构</td><td>预测器分支加 stop-gradient，配合 EMA 目标</td><td>BYOL / SimSiam / I-JEPA / V-JEPA</td><td>为什么有效缺少严格解释，超参敏感</td></tr>
+<tr><td>隐式对比</td><td>用居中、锐化等方式间接制造排斥力</td><td>DINO / DINOv2</td><td>需要调温度、中心动量等多个超参</td></tr>
+<tr><td><strong>显式分布约束</strong></td><td>直接要求嵌入服从某个分布</td><td><strong>LeJEPA（SIGReg）</strong></td><td>需要设计可微且可扩展的分布检验</td></tr>
+</table>
+</div>
+<p>第 5 章的 LeJEPA 正是沿第三条路走到底的结果。<strong>它把"如何防止坍缩"从一个工程技巧问题，变成了一个统计学问题</strong>。</p>
+
+<h3>2.4 为什么目标编码器要用 EMA 而不是直接复制</h3>
+<p>一个自然的问题是：为什么目标编码器不直接用 $E_\theta$ 本身，或者每隔几步同步一次参数？</p>
+<ul>
+<li><strong>直接共用参数</strong>：目标和预测都来自同一个编码器，梯度会同时把两者推向同一个"塌缩点"，坍缩会迅速发生。</li>
+<li><strong>周期性硬同步</strong>：目标表征在同步点前后会发生突变，训练过程出现周期性震荡。</li>
+<li><strong>EMA（指数滑动平均）</strong>：目标编码器成为 $\theta$ 的历史轨迹的平滑版本，既提供了"稍微落后但更稳定"的目标，又不会突变。这也是 JEPA 系列从 I-JEPA 起就固定使用的做法。</li>
+</ul>
+</section>
+
+<section id="ch3"><h2><span class="num">3</span>I-JEPA：把 JEPA 落到图像上</h2>
+
+<h3>3.1 三件套的具体形态</h3>
+<p>I-JEPA（Assran et al., 2023）是 JEPA 从"概念蓝图"变成"可运行系统"的第一个节点。它沿用 ViT 骨干，把第 2 章的三件套具体化为：</p>
+<div class="svg-box">
+<svg viewBox="0 0 880 440" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="j2-a" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#94a3b8"/></marker>
+<marker id="j2-r" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto"><polygon points="0,0 9,3.5 0,7" fill="#dc2626"/></marker>
+</defs>
+<text x="440" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">JEPA 的三件套：两个编码器 + 一个预测器，梯度只走一半</text>
+
+<text x="94" y="60" text-anchor="middle" font-size="11" fill="#64748b">输入图像（4×4 patch）</text>
+<g>
+<rect x="50" y="70" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="72" y="70" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="94" y="70" width="22" height="22" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><rect x="116" y="70" width="22" height="22" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="50" y="92" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="72" y="92" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="94" y="92" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="116" y="92" width="22" height="22" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="50" y="114" width="22" height="22" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><rect x="72" y="114" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="94" y="114" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="116" y="114" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/>
+<rect x="50" y="136" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="72" y="136" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="94" y="136" width="22" height="22" fill="#dbeafe" stroke="#93c5fd"/><rect x="116" y="136" width="22" height="22" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/>
+</g>
+<rect x="50" y="170" width="11" height="11" fill="#dbeafe" stroke="#93c5fd"/>
+<text x="68" y="180" font-size="10.5" fill="#64748b">上下文块（可见）</text>
+<rect x="50" y="188" width="11" height="11" fill="#ddd6fe" stroke="#7c3aed"/>
+<text x="68" y="198" font-size="10.5" fill="#64748b">目标块（被遮）</text>
+
+<line x1="144" y1="90" x2="192" y2="90" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#j2-a)"/>
+<rect x="196" y="68" width="152" height="46" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+<text x="272" y="88" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">上下文编码器 E_θ</text>
+<text x="272" y="104" text-anchor="middle" font-size="9.5" fill="#3b82f6">只处理可见块</text>
+<line x1="352" y1="90" x2="378" y2="90" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#j2-a)"/>
+<rect x="382" y="76" width="88" height="28" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+<text x="426" y="95" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1d4ed8">s_x</text>
+
+<line x1="144" y1="134" x2="168" y2="134" stroke="#94a3b8" stroke-width="1.8"/>
+<line x1="168" y1="134" x2="168" y2="201" stroke="#94a3b8" stroke-width="1.8"/>
+<line x1="168" y1="201" x2="192" y2="201" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#j2-a)"/>
+<rect x="196" y="178" width="152" height="46" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="272" y="198" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">目标编码器 E_θ̄</text>
+<text x="272" y="214" text-anchor="middle" font-size="9.5" fill="#7c3aed">EMA 更新 · 不接收梯度</text>
+<line x1="352" y1="201" x2="378" y2="201" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#j2-a)"/>
+<rect x="382" y="187" width="88" height="28" rx="6" fill="#f5f3ff" stroke="#a78bfa" stroke-width="1.4"/>
+<text x="426" y="206" text-anchor="middle" font-size="11.5" font-weight="600" fill="#6d28d9">s_y</text>
+<text x="426" y="232" text-anchor="middle" font-size="9.5" fill="#dc2626">梯度到此为止</text>
+
+<line x1="472" y1="94" x2="500" y2="140" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#j2-a)"/>
+<rect x="504" y="130" width="140" height="48" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
+<text x="574" y="151" text-anchor="middle" font-size="12" font-weight="700" fill="#047857">预测器 P_φ</text>
+<text x="574" y="168" text-anchor="middle" font-size="9.5" fill="#059669">在表征空间做回归</text>
+<line x1="648" y1="154" x2="686" y2="154" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#j2-a)"/>
+<rect x="690" y="130" width="150" height="48" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+<text x="765" y="151" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">L2 损失</text>
+<text x="765" y="168" text-anchor="middle" font-size="9.5" fill="#dc2626">预测表征 vs 目标表征</text>
+
+<path d="M 472 201 L 490 201 L 490 248 L 765 248 L 765 182" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#j2-r)"/>
+<text x="620" y="266" text-anchor="middle" font-size="10" fill="#dc2626">目标表征只当"标准答案"，它的分支不产生梯度</text>
+
+<rect x="50" y="288" width="790" height="134" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<text x="70" y="314" font-size="12" font-weight="700" fill="#334155">这张图里每一处设计都在防同一件事：坍缩</text>
+<text x="70" y="340" font-size="11.5" fill="#475569">• 目标编码器不接梯度：如果它也接收梯度，编码器会同时把目标推向预测输出，两边一起塌成常量。</text>
+<text x="70" y="364" font-size="11.5" fill="#475569">• 目标编码器用 EMA：它提供"稍微落后但平滑"的目标，避免周期性硬同步带来的训练震荡。</text>
+<text x="70" y="388" font-size="11.5" fill="#475569">• 预测器故意做浅：预测器越强，编码器越可以偷懒输出低信息量的表征。</text>
+<text x="70" y="412" font-size="11.5" fill="#94a3b8">• 隐变量 z（I-JEPA 的图像版本未显式使用）：在视频与规划场景中用来吸收不可预测的因素。</text>
+</svg>
+</div>
+<p class="fig-cap">注意红色虚线：它是整张图的关键。目标表征前向传播，但梯度不回传——这让目标成为"固定靶"，而不是和预测器一起"互相追着跑"。</p>
+
+<h3>3.2 目标：$L_2$ 回归到目标表征</h3>
+<div class="formula" data-eq="(2)">$$\mathcal{L}_{\text{I-JEPA}} = \frac{1}{|\mathcal{B}|}\sum_{b \in \mathcal{B}} \Big\| P_\phi\big(E_\theta(x_{\text{ctx}}),\, \text{pos}(b)\big) - \operatorname{sg}\big(E_{\bar\theta}(y)\big)\big|_{b} \Big\|_2^{2}$$</div>
+<p>其中 $\mathcal{B}$ 是目标块集合，$\text{pos}(b)$ 是目标块的位置编码。注意损失是对<strong>每个目标块</strong>分别算的，而不是全局平均——这样不同位置的目标块获得同等权重的监督。</p>
+<div class="formula" data-eq="(3)">$$\bar\theta \leftarrow m\,\bar\theta + (1 - m)\,\theta, \qquad m \approx 0.996$$</div>
+<p>EMA 的动量 $m$ 通常取 0.996 附近，意味着目标编码器大约每 250 步"走完"跟随 $\theta$ 的 63%。</p>
+
+<h3>3.3 掩码策略：4 个大块 + 1 个上下文块</h3>
+<p>I-JEPA 的掩码设计与 MAE 有本质区别：<strong>它不是逐 patch 随机遮挡，而是采样若干个"块"</strong>。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 880 390" xmlns="http://www.w3.org/2000/svg">
+<text x="440" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">I-JEPA 的掩码：4 个"大块"当目标，1 个"挖了洞"的大块当上下文</text>
+<text x="160" y="60" text-anchor="middle" font-size="11" fill="#64748b">输入图像（8×8 patch）</text>
+<rect x="60" y="70" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="85" y="70" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="110" y="70" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="135" y="70" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="160" y="70" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="185" y="70" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="210" y="70" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="235" y="70" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="60" y="95" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="85" y="95" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="110" y="95" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="135" y="95" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="160" y="95" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="185" y="95" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="210" y="95" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="235" y="95" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="60" y="120" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="85" y="120" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="110" y="120" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="135" y="120" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="160" y="120" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="185" y="120" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="210" y="120" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="235" y="120" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="60" y="145" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="85" y="145" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="110" y="145" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="135" y="145" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="160" y="145" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="185" y="145" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="210" y="145" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="235" y="145" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="60" y="170" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="85" y="170" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="110" y="170" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="135" y="170" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="160" y="170" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="185" y="170" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="210" y="170" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="235" y="170" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="60" y="195" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="85" y="195" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="110" y="195" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="135" y="195" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="160" y="195" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="185" y="195" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="210" y="195" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="235" y="195" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="60" y="220" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="85" y="220" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="110" y="220" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="135" y="220" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="160" y="220" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="185" y="220" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="210" y="220" width="25" height="25" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.5"/><rect x="235" y="220" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="60" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="85" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="110" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="135" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="160" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="185" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="210" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/><rect x="235" y="245" width="25" height="25" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+<rect x="60" y="284" width="12" height="12" fill="#dbeafe" stroke="#93c5fd"/>
+<text x="78" y="294" font-size="11" fill="#64748b">上下文块（可见，送进编码器）</text>
+<rect x="270" y="284" width="12" height="12" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/>
+<text x="288" y="294" font-size="11" fill="#64748b">目标块（被遮，作为预测目标）</text>
+
+<text x="470" y="96" font-size="12.5" font-weight="700" fill="#6d28d9">目标块 × 4</text>
+<text x="470" y="118" font-size="11.5" fill="#475569">各占 15%–20% 面积，长宽比随机</text>
+<text x="470" y="140" font-size="11.5" fill="#475569">由 EMA 目标编码器编码，提供预测目标</text>
+
+<text x="470" y="184" font-size="12.5" font-weight="700" fill="#1d4ed8">上下文块 × 1</text>
+<text x="470" y="206" font-size="11.5" fill="#475569">占 85%–100% 面积，比例方正</text>
+<text x="470" y="228" font-size="11.5" fill="#475569">与目标块重叠的部分被严格剔除（即"挖洞"）</text>
+<text x="470" y="250" font-size="11.5" fill="#475569">剔除后的区域才是真正送进编码器的可见块</text>
+
+<rect x="40" y="318" width="800" height="60" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<text x="60" y="342" font-size="12" font-weight="700" fill="#334155">为什么必须用"大块"而不是零散 patch？</text>
+<text x="60" y="366" font-size="11.5" fill="#475569">零散 patch 能靠局部插值补上，模型学不到语义；大块内部远离任何可见像素，只能靠对全局结构的理解来推断。</text>
+</svg>
+</div>
+<p class="fig-cap">与 MAE 的"逐 patch 均匀随机"不同，I-JEPA 用少量<strong>大尺度块</strong>同时充当目标与上下文。这个改动把"补纹理"变成了"推语义"，也让它不需要任何数据增强。</p>
+
+<div class="callout"><div class="callout-title">为什么必须是"大块"</div>
+<p>如果按 MAE 的方式逐 patch 随机遮挡，模型可以通过局部插值完成预测——它甚至不需要理解画面内容。I-JEPA 用<strong>大尺度目标块</strong>把这个捷径堵死：一个占 15%–20% 面积的块，其内部远离任何可见像素，模型只能依赖对全局语义的理解。这与模块 2 中 SimMIM 的 AvgDist 洞察是同一个道理，只是 I-JEPA 换了个维度来实现它。</p></div>
+
+<h3>3.4 一个结构性优势：不需要数据增强</h3>
+<p>这是 I-JEPA 相对对比学习最重要的差异点。对比学习（SimCLR、MoCo）高度依赖"什么算同一张图的两个视图"——裁剪、颜色抖动、翻转。这些增强策略本身携带了很强的归纳偏置，而且换到医学影像、遥感等领域往往需要重新设计。</p>
+<p>I-JEPA <strong>不使用任何数据增强</strong>（只做最基本的 resize 与归一化），因为它的监督信号不来自"两个视图之间的一致性"，而来自"从上下文块预测目标块"。这消除了对增强策略的依赖，也让迁移到新领域时少了一个需要重调的环节。</p>
+
+<h3>3.5 结果与效率</h3>
+<div class="table-wrap">
+<table>
+<tr><th>项目</th><th>结果</th></tr>
+<tr><td>骨干</td><td>ViT-H/14</td></tr>
+<tr><td>预训练数据</td><td>仅 ImageNet-1K（不含外部数据）</td></tr>
+<tr><td>训练成本</td><td>16 张 A100 上不到 1200 GPU 小时</td></tr>
+<tr><td>效果</td><td>线性探针在 ImageNet 上达到同规模方法的领先水平；在低标签量微调与稠密预测任务上优势明显</td></tr>
+<tr><td>特点</td><td>不需要负样本、不需要数据增强、不需要 tokenizer</td></tr>
+</table>
+</div>
+<p>这里值得注意的是训练成本量级。I-JEPA 用一个相对小的预算，证明了"在表征空间预测"这条路在图像上完全可行——这为后面的 V-JEPA 铺平了道路。</p>
+</section>
+
+<section id="ch4"><h2><span class="num">4</span>V-JEPA 与 V-JEPA 2：走向视频与世界模型</h2>
+
+<h3>4.1 为什么视频更适合表征预测</h3>
+<p>把 JEPA 搬到视频上不是"顺手的扩展"，而是<strong>这条路线的天然领域</strong>。原因在于：视频里的不可预测部分远多于图像。</p>
+<div class="table-wrap">
+<table>
+<tr><th></th><th>图像</th><th>视频</th></tr>
+<tr><td>缺失部分的可确定性</td><td>纹理有一定规律，多数场合可合理猜测</td><td>运动与未来发展本质上是<strong>多可能</strong>的</td></tr>
+<tr><td>像素级重建的代价</td><td>可接受</td><td>时空维度叠加，计算量急剧上升</td></tr>
+<tr><td>模式层面的可预测性</td><td>静态语义</td><td><strong>物体如何运动、状态如何演化</strong>——这些是真正值得学的</td></tr>
+</table>
+</div>
+<p>用 LeCun 的说法：视频里真正有价值的监督信号是<strong>"世界如何变化"</strong>，而不是"下一个像素是什么颜色"。这正好是表征预测擅长的。</p>
+
+<h3>4.2 V-JEPA：$L_1$ 损失与三维掩码</h3>
+<p>V-JEPA（Bardes et al., 2024）在 I-JEPA 基础上做了三处关键改动：</p>
+<ol>
+<li><strong>时空 token</strong>。视频被切成 $2 \times 16 \times 16$ 的 tubelet（2 帧 × 16×16 像素），直接形成三维 token 序列。</li>
+<li><strong>损失从 $L_2$ 改为 $L_1$</strong>。论文指出在视频任务中 $L_1$ 回归更稳定。</li>
+<li><strong>掩码率提高到 90%，并采用管状掩码</strong>，机制与 VideoMAE 相同——这是视频掩码的通用要求。</li>
+</ol>
+<div class="formula" data-eq="(4)">$$\mathcal{L}_{\text{V-JEPA}} = \frac{1}{|\mathcal{M}|}\sum_{i \in \mathcal{M}} \big\| \hat{s}_i - \operatorname{sg}(s_i) \big\|_1$$</div>
+<p>V-JEPA 的掩码采样混合了两种尺度：<strong>短程掩码</strong>（8 个小块，各占约 15% 面积）与<strong>长程掩码</strong>（2 个大块，各占约 70% 面积）。混合的目的是让模型同时面对"局部细节要补"与"大范围结构要推"两类任务——单一尺度会让模型只擅长其中一种。</p>
+<div class="table-wrap">
+<table>
+<tr><th>层面</th><th>VideoMAE</th><th>V-JEPA</th></tr>
+<tr><td>骨干规模</td><td>ViT-H</td><td>ViT-L（约 3 亿参数）</td></tr>
+<tr><td>预训练数据</td><td>Kinetics-400 等</td><td>VideoMix2M（约 200 万段视频）</td></tr>
+<tr><td>预测目标</td><td>像素</td><td><strong>表征</strong></td></tr>
+<tr><td>损失</td><td>MSE（像素）</td><td>$L_1$（表征空间）</td></tr>
+<tr><td>训练速度</td><td>基准</td><td>约快 2 倍（无需解码像素）</td></tr>
+<tr><td>标签效率</td><td>—</td><td>仅用 5%–10% 标注即可稳定微调</td></tr>
+</table>
+</div>
+<p>在冻结骨干的评估协议下，V-JEPA 在 Something-Something v2（71.2%）这类<strong>高度依赖动作理解</strong>的任务上明显超过此前的视频掩码模型，也拉开了与 DINOv2 这类图像基础模型的距离——后者缺乏时序建模能力。</p>
+
+<h3>4.3 V-JEPA 2：从表征学习到世界模型</h3>
+<p>V-JEPA 2（Assran et al., 2025）把规模与目标同时推高，是这条路线目前最重要的里程碑。</p>
+<div class="table-wrap">
+<table>
+<tr><th>维度</th><th>V-JEPA</th><th>V-JEPA 2</th></tr>
+<tr><td>骨干</td><td>ViT-L（约 3 亿）</td><td>ViT-g（约 10 亿）</td></tr>
+<tr><td>数据</td><td>VideoMix2M</td><td>VideoMix22M（约 2200 万段视频、100 万小时以上）</td></tr>
+<tr><td>训练技巧</td><td>—</td><td>渐进式分辨率训练（先短低分辨率，再长高分辨率）</td></tr>
+<tr><td>位置编码</td><td>—</td><td>三维 RoPE，可适配任意分辨率与时长</td></tr>
+<tr><td>SSv2（冻结）</td><td>71.2</td><td><strong>77.3</strong></td></tr>
+<tr><td>K400（冻结）</td><td>82.1</td><td>约 83</td></tr>
+<tr><td>Epic-Kitchens-100 动作预判</td><td>—</td><td>R@5 = 39.7</td></tr>
+</table>
+</div>
+<p>渐进式分辨率训练在工程上很关键：全分辨率训练的等效成本约 60 GPU-年，而渐进式策略把它压到了约 7 GPU-年，同时保持性能——这让十亿参数的视频自监督从"理论可行"变成"实际可做"。</p>
+
+<h3>4.4 V-JEPA 2-AC：动作条件的潜在世界模型</h3>
+<p>V-JEPA 2 最重要的贡献不是刷榜，而是把<strong>同一个表征空间</strong>从"理解"扩展到了"行动"。做法是：冻结预训练好的 V-JEPA 2 编码器，只训练一个新的、动作条件的预测器。</p>
+<div class="formula" data-eq="(5)">$$\hat{z}_{t+1} = P_\psi\big(z_t,\ a_t,\ q_t\big), \qquad \mathcal{L}_{\text{AC}} = \big\| \hat{z}_{t+1} - \operatorname{sg}\big(E(z_{t+1})\big) \big\|_1$$</div>
+<p>其中 $z_t$ 是当前帧表征，$a_t$ 是机器人动作，$q_t$ 是末端执行器的位姿状态。注意它<strong>预测的仍然是表征</strong>，不是 RGB 像素。</p>
+<p>训练上用了两种损失配合：<strong>teacher forcing</strong>（每步都喂入真实的上一帧表征）稳定但存在分布偏移；<strong>rollout loss</strong>（把模型自己的预测再喂回去）用于训练多步预测，减少误差累积。预测器使用 time-causal 注意力——每个时间步只能看到当前与过去。</p>
+<p>规划时不需要生成任何视频，而是在<strong>表征空间里比较距离</strong>：</p>
+<div class="formula" data-eq="(6)">$$a_{1:T}^{*} = \arg\min_{a_{1:T}} \big\| \hat{z}_T\big(a_{1:T}\big) - E(x_{\text{goal}}) \big\|_1$$</div>
+<p>用交叉熵方法（CEM）搜索动作序列：采样多条动作轨迹、保留表现最好的若干条、更新高斯分布、重复若干轮，最后只执行第一个动作再重新规划（滚动时域控制）。</p>
+<div class="callout success"><div class="callout-title">这条结果的意义</div>
+<p>V-JEPA 2-AC 只用了约 <strong>62 小时无标注机器人视频</strong>（Droid 数据集），就能在未见过的环境中完成抓取与放置，零样本成功率约 65%–80%。<strong>没有奖励工程、没有动作标注、没有仿真到真实的迁移</strong>。它证明了：一个纯靠"看视频"学到的表征空间，本身就包含了可用来规划的动作后果信息。</p></div>
+
+<h3>4.5 一个中间结论</h3>
+<p>从 I-JEPA 到 V-JEPA 2，路线是清晰的：<strong>先把"在表征空间预测"这件事在图像上验证（I-JEPA），再扩展到时空（V-JEPA），最后接上动作变量变成世界模型（V-JEPA 2）</strong>。但这条路上始终悬着一个问题——所有防坍缩的手段都是<strong>启发式的</strong>：EMA、stop-gradient、预测器要浅、掩码块要大。为什么是这些？能不能换成别的方法？</p>
+<p>第 5 章的 LeJEPA 正面回答了这个问题。</p>
+</section>
+
+<section id="ch5"><h2><span class="num">5</span>LeJEPA：把启发式全部删掉</h2>
+
+<h3>5.1 问题的重新表述</h3>
+<p>LeJEPA（Balestriero &amp; LeCun, 2025）换了个提问方式。之前的工作都在问"<strong>怎么防止坍缩</strong>"，答案是一堆技巧。LeJEPA 问的是：</p>
+<div class="callout success"><div class="callout-title">如果坍缩的反面不是"不坍缩"，而是"服从某个特定分布"呢？</div>
+<p>坍缩的本质是"嵌入分布的形态退化"——所有点挤在一个点上，或挤在一条线上。既然如此，与其用一堆技巧去间接阻止它，不如<strong>直接指定嵌入应该服从的目标分布</strong>，然后把这个分布匹配写进损失函数。</p></div>
+<p>接下来的问题是：<strong>哪个分布才是"好的"？</strong> LeJEPA 给出了一个可证明的答案——<strong>各向同性高斯分布（isotropic Gaussian）</strong>。</p>
+
+<h3>5.2 为什么是各向同性高斯</h3>
+<p>论文从下游预测风险出发推导：在冻结编码器上用线性探针或核方法评估时，若要让任意下游任务的预测风险最小，嵌入应当服从均值任意、协方差为单位矩阵的高斯分布。</p>
+<div class="formula" data-eq="(7)">$$p(z) = \frac{1}{(2\pi)^{d/2}} \exp\!\left(-\frac{1}{2}\|z - \mu\|_2^{2}\right), \qquad \Sigma = I_d$$</div>
+<p>直观理解这个结论：</p>
+<ul>
+<li><strong>协方差为单位矩阵</strong>意味着每个维度有相同的方差、且维度之间不相关 → <strong>没有冗余维度，也没有被压扁的维度</strong>。这正好排除了"维度坍缩"。</li>
+<li><strong>高斯分布的各向同性</strong>意味着嵌入在球面上均匀铺开，任意方向的信息量对等 → 下游客任务无论从哪个方向读取，都不会因为该方向被压缩而吃亏。</li>
+<li>这也是信息论意义上"给定方差约束下熵最大"的分布——<strong>在容量约束内保留最多的信息</strong>。</li>
+</ul>
+<div class="callout"><div class="callout-title">为什么各向异性会出问题</div>
+<p>如果嵌入分布是各向异性的（比如在一个方向上摊得很开、另一个方向压得很扁），那么下游线性探针在"压扁"的方向上做判断时，方差估计的波动会大得多。论文用二分类任务做了模拟：各向异性嵌入下的决策边界在不同采样上的抖动明显更大——<strong>泛化更差</strong>。</p></div>
+
+<h3>5.3 SIGReg：把分布匹配写成一个损失</h3>
+<p>知道了目标分布，还要有一个能用的正则项。直接去估计高维分布的密度是不可能的（维度灾难），所以论文把分布匹配重新表述为一个<strong>统计假设检验</strong>：</p>
+<div class="callout"><div class="callout-title">零假设 $H_0$：嵌入的分布 $P_\theta$ 等于目标分布 $Q$（各向同性高斯）</div>
+<p>于是问题变成"构造一个检验统计量，它在 $P_\theta = Q$ 时取值小、偏离时取值大"。SIGReg（Sketched Isotropic Gaussian Regularization）选取的是 <strong>Epps–Pulley 检验</strong>——它比较两个分布的特征函数，通过随机投影（sketching）把高维问题降成一维问题逐个处理，从而避开维度灾难。</p></div>
+<div class="formula" data-eq="(8)">$$\text{SIGReg}(Z) = \frac{1}{M}\sum_{m=1}^{M} T\Big(\big\langle Z,\, u_m \big\rangle,\; \mathcal{N}(0,1)\Big), \qquad u_m \sim \mathcal{S}^{d-1}$$</div>
+<p>其中 $u_m$ 是从单位球面随机采样的投影方向，$T(\cdot, \mathcal{N}(0,1))$ 是"把一维投影样本与标准正态做 Epps–Pulley 检验"得到的统计量。若嵌入在<strong>每一个随机方向上的投影都接近标准正态</strong>，那么原分布就接近各向同性高斯——这就是把高维分布匹配分解为一维检验的巧妙之处。</p>
+<p>这个设计带来几个论文强调的性质：</p>
+<div class="table-wrap">
+<table>
+<tr><th>性质</th><th>意义</th></tr>
+<tr><td>可微</td><td>梯度与曲率有界，能直接反传</td></tr>
+<tr><td>线性时间与内存</td><td>与批量大小线性相关，不是平方</td></tr>
+<tr><td>可扩展</td><td>天然支持多 GPU 分布式，随机投影方向可以各卡独立采样</td></tr>
+<tr><td>避开维度灾难</td><td>把 $d$ 维问题拆成 $M$ 个一维检验，$M$ 与 $d$ 无关</td></tr>
+</table>
+</div>
+
+<h3>5.4 最终的损失：只有一个超参数</h3>
+<div class="formula" data-eq="(9)">$$\mathcal{L}_{\text{LeJEPA}} = \underbrace{\big\| P_\phi\big(E_\theta(x),\, z\big) - \operatorname{sg}(E_{\bar\theta}(y)) \big\|^{2}}_{\text{JEPA 预测损失}} \;+\; \lambda \cdot \underbrace{\text{SIGReg}\big(Z\big)}_{\text{分布匹配}}$$</div>
+<p>整个方法<strong>只有 $\lambda$ 一个需要调的超参数</strong>。而被删掉的启发式包括：</p>
+<div class="table-wrap">
+<table>
+<tr><th>被删掉的机制</th><th>为什么不再需要</th></tr>
+<tr><td>stop-gradient</td><td>坍缩由分布约束直接阻止，不需要靠阻断梯度来间接防</td></tr>
+<tr><td>teacher–student / EMA 目标编码器</td><td>目标不再需要一个"滞后的版本"来提供稳定性</td></tr>
+<tr><td>超参数调度器（学习率、动量预热等）</td><td>论文报告在不同超参与架构间表现稳定</td></tr>
+<tr><td>非对称结构设计</td><td>架构可以自由选择，ResNet / ViT / ConvNet 都能直接套</td></tr>
+</table>
+</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 880 400" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="j4-a" markerWidth="11" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0,0 11,4 0,8" fill="#7c3aed"/></marker>
+</defs>
+<text x="440" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">LeJEPA 的思路：不再"堵坍缩"，而是直接规定嵌入该长成什么分布</text>
+
+<rect x="80" y="66" width="280" height="170" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<line x1="96" y1="220" x2="344" y2="86" stroke="#fecaca" stroke-width="1.4" stroke-dasharray="5 4"/>
+<circle cx="117.0" cy="215.9" r="5" fill="#dc2626" opacity="0.75"/><circle cx="125.6" cy="206.7" r="5" fill="#dc2626" opacity="0.75"/><circle cx="143.3" cy="203.9" r="5" fill="#dc2626" opacity="0.75"/><circle cx="151.9" cy="194.7" r="5" fill="#dc2626" opacity="0.75"/><circle cx="162.6" cy="191.8" r="5" fill="#dc2626" opacity="0.75"/><circle cx="179.2" cy="180.8" r="5" fill="#dc2626" opacity="0.75"/><circle cx="192.9" cy="175.3" r="5" fill="#dc2626" opacity="0.75"/><circle cx="201.5" cy="171.5" r="5" fill="#dc2626" opacity="0.75"/><circle cx="217.2" cy="160.5" r="5" fill="#dc2626" opacity="0.75"/><circle cx="225.8" cy="157.7" r="5" fill="#dc2626" opacity="0.75"/><circle cx="243.5" cy="148.5" r="5" fill="#dc2626" opacity="0.75"/><circle cx="253.1" cy="145.6" r="5" fill="#dc2626" opacity="0.75"/><circle cx="264.8" cy="138.3" r="5" fill="#dc2626" opacity="0.75"/><circle cx="282.4" cy="128.2" r="5" fill="#dc2626" opacity="0.75"/><circle cx="291.1" cy="123.5" r="5" fill="#dc2626" opacity="0.75"/><circle cx="306.7" cy="120.6" r="5" fill="#dc2626" opacity="0.75"/><circle cx="315.4" cy="109.7" r="5" fill="#dc2626" opacity="0.75"/><circle cx="331.0" cy="106.8" r="5" fill="#dc2626" opacity="0.75"/>
+<text x="220" y="262" text-anchor="middle" font-size="12.5" font-weight="700" fill="#dc2626">无分布约束</text>
+<text x="220" y="284" text-anchor="middle" font-size="11.5" fill="#64748b">嵌入挤在一条线上 → 维度坍缩，可用信息极少</text>
+
+<line x1="376" y1="151" x2="506" y2="151" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#j4-a)"/>
+<text x="441" y="134" text-anchor="middle" font-size="12.5" font-weight="700" fill="#6d28d9">SIGReg</text>
+<text x="441" y="172" text-anchor="middle" font-size="10.5" fill="#7c3aed">分布匹配</text>
+
+<rect x="520" y="66" width="280" height="170" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<ellipse cx="660" cy="151" rx="76" ry="55" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.4" stroke-dasharray="5 4"/>
+<circle cx="668.7" cy="151.0" r="5" fill="#059669" opacity="0.75"/><circle cx="648.8" cy="158.4" r="5" fill="#059669" opacity="0.75"/><circle cx="661.7" cy="137.0" r="5" fill="#059669" opacity="0.75"/><circle cx="674.1" cy="164.2" r="5" fill="#059669" opacity="0.75"/><circle cx="634.2" cy="147.7" r="5" fill="#059669" opacity="0.75"/><circle cx="684.4" cy="139.8" r="5" fill="#059669" opacity="0.75"/><circle cx="651.8" cy="172.9" r="5" fill="#059669" opacity="0.75"/><circle cx="644.4" cy="129.4" r="5" fill="#059669" opacity="0.75"/><circle cx="693.8" cy="159.9" r="5" fill="#059669" opacity="0.75"/><circle cx="624.8" cy="161.5" r="5" fill="#059669" opacity="0.75"/><circle cx="677.0" cy="124.9" r="5" fill="#059669" opacity="0.75"/><circle cx="672.5" cy="179.8" r="5" fill="#059669" opacity="0.75"/><circle cx="622.2" cy="135.2" r="5" fill="#059669" opacity="0.75"/><circle cx="704.3" cy="144.0" r="5" fill="#059669" opacity="0.75"/><circle cx="633.0" cy="178.7" r="5" fill="#059669" opacity="0.75"/><circle cx="653.8" cy="116.3" r="5" fill="#059669" opacity="0.75"/><circle cx="698.4" cy="174.3" r="5" fill="#059669" opacity="0.75"/><circle cx="608.4" cy="152.5" r="5" fill="#059669" opacity="0.75"/><circle cx="697.6" cy="124.0" r="5" fill="#059669" opacity="0.75"/><circle cx="657.5" cy="190.2" r="5" fill="#059669" opacity="0.75"/><circle cx="624.2" cy="120.1" r="5" fill="#059669" opacity="0.75"/><circle cx="716.7" cy="156.5" r="5" fill="#059669" opacity="0.75"/><circle cx="611.9" cy="175.1" r="5" fill="#059669" opacity="0.75"/><circle cx="673.1" cy="109.0" r="5" fill="#059669" opacity="0.75"/><circle cx="690.4" cy="189.2" r="5" fill="#059669" opacity="0.75"/><circle cx="600.6" cy="137.4" r="5" fill="#059669" opacity="0.75"/><circle cx="717.7" cy="131.8" r="5" fill="#059669" opacity="0.75"/><circle cx="635.0" cy="194.0" r="5" fill="#059669" opacity="0.75"/><circle cx="637.7" cy="106.3" r="5" fill="#059669" opacity="0.75"/><circle cx="719.4" cy="173.5" r="5" fill="#059669" opacity="0.75"/><circle cx="594.1" cy="163.5" r="5" fill="#059669" opacity="0.75"/><circle cx="697.5" cy="109.0" r="5" fill="#059669" opacity="0.75"/><circle cx="671.9" cy="201.0" r="5" fill="#059669" opacity="0.75"/><circle cx="603.5" cy="119.5" r="5" fill="#059669" opacity="0.75"/>
+<text x="660" y="262" text-anchor="middle" font-size="12.5" font-weight="700" fill="#047857">SIGReg 约束下</text>
+<text x="660" y="284" text-anchor="middle" font-size="11.5" fill="#64748b">嵌入铺满整个球面 → 各向同性高斯，每维都有效</text>
+
+<rect x="60" y="304" width="760" height="82" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.4"/>
+<text x="80" y="330" font-size="12.5" font-weight="700" fill="#6d28d9">总损失 = JEPA 预测损失 + λ · SIGReg</text>
+<text x="80" y="354" font-size="11.5" fill="#475569">只有 λ 一个超参数；不需要 stop-gradient、teacher-student 或超参调度器；时间与内存均为线性复杂度。</text>
+<text x="80" y="376" font-size="11.5" fill="#475569">做法：把高维分布匹配拆成 M 个随机方向上的正态性检验（Epps–Pulley），从而避开维度灾难。</text>
+</svg>
+</div>
+<p class="fig-cap">左边是坍缩的样子，右边是理想形态。LeJEPA 的贡献在于给出了"理想形态"的可证明答案（各向同性高斯），并把它变成一个可微、可扩展、只有一个超参数的损失项。</p>
+
+<div class="callout warn"><div class="callout-title">需要看清的一点</div>
+<p>论文报告的实现约 50 行代码、跨 60 多种架构稳定，这些是可验证的工程结论。但"各向同性高斯是最优分布"这个核心命题的<strong>推导依赖于一组关于嵌入空间与损失形式的假设</strong>——这是该方法最需要被后续工作检验的地方。把它当作"已被完全证明"来引用是不准确的。</p></div>
+
+<h3>5.5 结果</h3>
+<div class="table-wrap">
+<table>
+<tr><th>项目</th><th>结果</th></tr>
+<tr><td>ImageNet-1K 线性评估（ViT-H/14）</td><td>79%（冻结骨干）</td></tr>
+<tr><td>架构覆盖</td><td>ResNet、ViT、ConvNet 等 60 多种架构、8 个模型家族</td></tr>
+<tr><td>数据覆盖</td><td>10 多个数据集，含 Galaxy10 等专业领域</td></tr>
+<tr><td>领域迁移</td><td>在 Galaxy10 上无需调参即可预训练，表现优于 DINOv2 / DINOv3 / I-JEPA</td></tr>
+<tr><td>代码量</td><td>核心实现约 50 行</td></tr>
+</table>
+</div>
+<p>Galaxy10 这个结果值得注意：一个理论驱动、实现极简的方法，在专业领域数据上超过了用海量自然图像训练的大型基础模型。这意味着<strong>"换到自己的数据域上直接预训练"这一操作的门槛被显著降低了</strong>——不需要庞大的算力预算，也不需要重新搜索一整套超参数。</p>
+</section>
+
+<section id="ch6"><h2><span class="num">6</span>三者对比与 JEPA 家族</h2>
+
+<h3>6.1 横向对比</h3>
+<div class="table-wrap">
+<table>
+<tr><th>维度</th><th>I-JEPA（2023）</th><th>V-JEPA / V-JEPA 2（2024 / 2025）</th><th>LeJEPA（2025）</th></tr>
+<tr><td>模态</td><td>图像</td><td>视频 → 视频 + 动作</td><td>通用（图像为主）</td></tr>
+<tr><td>骨干</td><td>ViT-H/14</td><td>ViT-L → ViT-g（10 亿）</td><td>任意（ViT / ResNet / ConvNet）</td></tr>
+<tr><td>预测损失</td><td>$L_2$</td><td>$L_1$</td><td>$L_2$</td></tr>
+<tr><td>防坍缩手段</td><td>EMA + stop-grad</td><td>EMA + stop-grad</td><td><strong>分布约束（SIGReg）</strong></td></tr>
+<tr><td>超参数数量</td><td>多个（动量、掩码尺度、预测器深度）</td><td>多个</td><td><strong>一个（$\lambda$）</strong></td></tr>
+<tr><td>是否用数据增强</td><td>不用</td><td>不用</td><td>不用</td></tr>
+<tr><td>是否用负样本</td><td>不用</td><td>不用</td><td>不用</td></tr>
+<tr><td>核心贡献</td><td>证明图像上可行</td><td>时空扩展；接入动作变成世界模型</td><td>把防坍缩变成分布匹配问题</td></tr>
+</table>
+</div>
+
+<h3>6.2 与 MAE / 对比学习的三方对照</h3>
+<div class="table-wrap">
+<table>
+<tr><th>对照项</th><th>对比学习</th><th>掩码重建（MAE）</th><th>JEPA</th></tr>
+<tr><td>预测空间</td><td>嵌入相似度</td><td>像素空间</td><td><strong>表征空间</strong></td></tr>
+<tr><td>需要负样本</td><td>需要</td><td>不需要</td><td>不需要</td></tr>
+<tr><td>需要数据增强</td><td>强依赖</td><td>不需要</td><td>不需要</td></tr>
+<tr><td>需要解码器</td><td>不需要</td><td>需要</td><td>不需要</td></tr>
+<tr><td>是否建模不可预测性</td><td>隐式（靠增强不变性）</td><td>不建模（假设可唯一确定）</td><td><strong>显式（隐变量 $z$）</strong></td></tr>
+<tr><td>典型代表</td><td>SimCLR、MoCo、CLIP</td><td>MAE、SimMIM、VideoMAE</td><td>I-JEPA、V-JEPA、LeJEPA</td></tr>
+</table>
+</div>
+
+<h3>6.3 JEPA 家族的版图</h3>
+<p>JEPA 已经从单一架构发展成一个覆盖多种模态与任务的家族。按扩展方向归类：</p>
+<div class="table-wrap">
+<table>
+<tr><th>方向</th><th>代表工作</th><th>扩展了什么</th></tr>
+<tr><td>理论起点</td><td>JEPA / H-JEPA</td><td>提出"在表征空间预测"与分层、多时间尺度的构想</td></tr>
+<tr><td>图像</td><td>I-JEPA</td><td>首次工程落地，多块掩码 + EMA</td></tr>
+<tr><td>视频</td><td>V-JEPA、V-JEPA 2、V-JEPA 2.1</td><td>时空管掩码、规模扩展、密集特征与深度自监督</td></tr>
+<tr><td>动作与规划</td><td>ACT-JEPA、V-JEPA 2-AC</td><td>把动作变量接入，构成可规划的世界模型</td></tr>
+<tr><td>其他模态</td><td>Audio-JEPA（频谱图）、Point-JEPA / 3D-JEPA（点云与三维）</td><td>验证"表征预测"是跨感官的通用法则</td></tr>
+<tr><td>运动与内容</td><td>MC-JEPA</td><td>在共享编码器中联合学习运动与内容特征</td></tr>
+<tr><td>因果与对象</td><td>Causal-JEPA</td><td>把掩码从 patch 升级到对象级别，诱发干预推理</td></tr>
+<tr><td>理论统一</td><td>LeJEPA</td><td>用分布约束取代全部启发式</td></tr>
+<tr><td>端到端极简</td><td>LeWorldModel</td><td>仅靠"下一步特征预测 + 高斯正则"从原始像素端到端稳定训练</td></tr>
+</table>
+</div>
+
+<h3>6.4 三个仍未解决的问题</h3>
+<div class="callout warn"><div class="callout-title">① 目标分布的选择是否唯一</div>
+<p>LeJEPA 论证了各向同性高斯在给定假设下最优。但这些假设（嵌入空间的形式、评估方式、损失类型）在更一般的情形下是否成立，仍待检验。若假设松动，最优分布可能不同。</p></div>
+<div class="callout warn"><div class="callout-title">② 隐变量的训练信号从哪里来</div>
+<p>隐变量 $z$ 理论上承载"不可预测的因素"，但在实际实现中，$z$ 往往只是从先验里采样或干脆省略（例如 I-JEPA 的图像版本）。如何让 $z$ 真正学到有意义的结构，仍是一个开放问题。</p></div>
+<div class="callout warn"><div class="callout-title">③ 与语言的对齐</div>
+<p>JEPA 目前是纯视觉（或多模态感知）的路线，与语言模型几乎没有交集。而当前主流的多模态系统几乎都是"视觉编码器 + 语言模型"的组合。JEPA 的表征空间如何与语言空间对接——既是一个工程问题，也可能暴露"纯预测式表征"在语义标注上的短板。</p></div>
+</section>
+
+<section id="ch7"><h2><span class="num">7</span>工程实现与知识体系总结</h2>
+
+<h3>7.1 JEPA 的核心前向与损失</h3>
+<div class="code-block"><div class="code-header">jepa_core.py — 三件套、EMA 与表征空间损失</div><pre>
+<span class="kw">import</span> copy
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+
+<span class="kw">class</span> <span class="cls">JEPA</span>(nn.Module):
+    <span class="str">"""最小可运行的 JEPA：上下文编码器 + EMA 目标编码器 + 预测器"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, encoder, predictor, ema_momentum=<span class="num">0.996</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">self</span>.context_encoder = encoder
+        <span class="kw">self</span>.target_encoder = <span class="fn">copy</span>.<span class="fn">deepcopy</span>(encoder)   <span class="com"># 目标编码器的初始参数与上下文一致</span>
+        <span class="kw">self</span>.predictor = predictor
+        <span class="kw">self</span>.m = ema_momentum
+
+        <span class="kw">for</span> p <span class="kw">in</span> <span class="kw">self</span>.target_encoder.<span class="fn">parameters</span>():
+            p.requires_grad = <span class="kw">False</span>                       <span class="com"># 关键：目标分支不接收梯度</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, x_context, x_full, target_pos):
+        s_x = <span class="kw">self</span>.context_encoder(x_context)         <span class="com"># 只编码可见块</span>
+        <span class="kw">with</span> torch.<span class="fn">no_grad</span>():                          <span class="com"># 目标表征：前向但不建图</span>
+            s_y = <span class="kw">self</span>.target_encoder(x_full)
+        s_hat = <span class="kw">self</span>.<span class="fn">predictor</span>(s_x, target_pos)         <span class="com"># 在表征空间做预测</span>
+        <span class="kw">return</span> (s_hat - s_y).<span class="fn">pow</span>(<span class="num">2</span>).<span class="fn">mean</span>()                <span class="com"># 回归到目标表征，不是像素</span>
+
+    <span class="fn">@torch.no_grad</span>()
+    <span class="kw">def</span> <span class="fn">update_target</span>(<span class="kw">self</span>):
+        <span class="str">"""EMA：目标编码器缓慢跟随上下文编码器"""</span>
+        <span class="kw">for</span> p_c, p_t <span class="kw">in</span> <span class="fn">zip</span>(<span class="kw">self</span>.context_encoder.<span class="fn">parameters</span>(),
+                              <span class="kw">self</span>.target_encoder.<span class="fn">parameters</span>()):
+            p_t.<span class="fn">mul_</span>(<span class="kw">self</span>.m).<span class="fn">add_</span>(p_c, alpha=<span class="num">1</span> - <span class="kw">self</span>.m)
+</pre></div>
+<div class="callout"><div class="callout-title">三处细节决定成败</div>
+<p>① <code>requires_grad = False</code> 必须设，且前向要包在 <code>torch.no_grad()</code> 里，否则显存会被白白占用；② EMA 更新必须用 <code>@torch.no_grad()</code> 装饰，否则会污染计算图；③ 损失是<strong>表征之间</strong>的均方误差，不是像素误差——这是整个 JEPA 与 MAE 的分界线。</p></div>
+
+<h3>7.2 I-JEPA 的多块掩码采样</h3>
+<div class="code-block"><div class="code-header">block_masking.py — 采样大块目标块与一个上下文块</div><pre>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+
+<span class="kw">def</span> <span class="fn">sample_block</span>(H, W, scale, aspect_ratio):
+    <span class="str">"""采样一个面积占比在 scale 区间、长宽比在 aspect_ratio 区间的块"""</span>
+    area = H * W * np.random.<span class="fn">uniform</span>(*scale)
+    log_r = np.random.<span class="fn">uniform</span>(*np.<span class="fn">log</span>(aspect_ratio))
+    h = <span class="fn">int</span>(<span class="fn">round</span>(np.<span class="fn">sqrt</span>(area / np.<span class="fn">exp</span>(log_r))))
+    w = <span class="fn">int</span>(<span class="fn">round</span>(np.<span class="fn">sqrt</span>(area * np.<span class="fn">exp</span>(log_r))))
+    top  = np.random.<span class="fn">randint</span>(<span class="num">0</span>, H - h)
+    left = np.random.<span class="fn">randint</span>(<span class="num">0</span>, W - w)
+    <span class="kw">return</span> top, left, h, w
+
+
+<span class="kw">def</span> <span class="fn">ijepa_masks</span>(H, W, n_target=<span class="num">4</span>):
+    <span class="str">"""4 个目标块（各 15%-20% 面积，随机长宽比）+ 1 个上下文块（85%-100%，比例方正）"""</span>
+    targets = [<span class="fn">sample_block</span>(H, W, (<span class="num">0.15</span>, <span class="num">0.20</span>), (<span class="num">0.75</span>, <span class="num">1.5</span>))
+               <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_target)]
+    ctx = <span class="fn">sample_block</span>(H, W, (<span class="num">0.85</span>, <span class="num">1.00</span>), (<span class="num">1.0</span>, <span class="num">1.0</span>))
+
+    <span class="com"># 关键：从上下文块中剔除与任何目标块重叠的部分（"挖洞"）</span>
+    mask_ctx = np.<span class="fn">zeros</span>((H, W), dtype=<span class="kw">bool</span>)
+    t, l, h, w = ctx
+    mask_ctx[t:t + h, l:l + w] = <span class="kw">True</span>
+    <span class="kw">for</span> t, l, h, w <span class="kw">in</span> targets:
+        mask_ctx[t:t + h, l:l + w] = <span class="kw">False</span>          <span class="com"># 挖掉重叠区域</span>
+    <span class="kw">return</span> mask_ctx, targets
+</pre></div>
+<p>最后那三行是 I-JEPA 与"简单掩码"的分界：上下文块<strong>不是</strong>一个完整矩形，而是被目标块"挖了洞"的形状。若不剔除重叠，预测任务会因为上下文里已含答案而失效。</p>
+
+<h3>7.3 SIGReg 的随机投影检验</h3>
+<div class="code-block"><div class="code-header">sigreg.py — 把高维分布匹配拆成一维投影上的正态检验</div><pre>
+<span class="kw">import</span> torch
+
+
+<span class="kw">def</span> <span class="fn">sigreg</span>(embeddings, n_projections=<span class="num">256</span>, n_points=<span class="num">17</span>):
+    <span class="str">"""SIGReg 的骨架：随机方向投影 + 与标准正态做特征函数距离比较
+
+    embeddings: (N, d) 的嵌入；返回一个标量正则项
+    """</span>
+    N, d = embeddings.shape
+
+    <span class="com"># 1) 在单位球面上采样 M 个随机投影方向</span>
+    u = torch.<span class="fn">randn</span>(d, n_projections, device=embeddings.device)
+    u = u / u.<span class="fn">norm</span>(dim=<span class="num">0</span>, keepdim=<span class="kw">True</span>)
+
+    <span class="com"># 2) 投影到一维：(N, M)</span>
+    proj = embeddings @ u
+
+    <span class="com"># 3) 与标准正态做 Epps-Pulley 特征函数距离（这里给出结构骨架）</span>
+    t = torch.<span class="fn">linspace</span>(<span class="num">0.2</span>, <span class="num">2.0</span>, n_points, device=embeddings.device)
+    emp_cos = torch.<span class="fn">cos</span>(proj.<span class="fn">unsqueeze</span>(<span class="num">1</span>) * t).<span class="fn">mean</span>(dim=<span class="num">0</span>)   <span class="com"># 经验特征函数</span>
+    emp_sin = torch.<span class="fn">sin</span>(proj.<span class="fn">unsqueeze</span>(<span class="num">1</span>) * t).<span class="fn">mean</span>(dim=<span class="num">0</span>)
+    ref_cos = torch.<span class="fn">exp</span>(-<span class="num">0.5</span> * t ** <span class="num">2</span>)                       <span class="com"># 标准正态的特征函数</span>
+    ref_sin = torch.<span class="fn">zeros_like</span>(t)                            <span class="com"># 标准正态为偶函数，sin 项为 0</span>
+
+    diff = (emp_cos - ref_cos) ** <span class="num">2</span> + (emp_sin - ref_sin) ** <span class="num">2</span>
+    <span class="kw">return</span> diff.<span class="fn">mean</span>()                                        <span class="com"># 越小 = 越接近各向同性高斯</span>
+</pre></div>
+<p>核心思想就一句话：<strong>如果嵌入在每一个随机方向上的投影都是标准正态，那它就是各向同性高斯</strong>。于是 $d$ 维分布匹配被拆成 $M$ 个一维检验，既避开了维度灾难，也天然可并行。</p>
+
+<h3>7.4 三条路线的适用判断</h3>
+<div class="table-wrap">
+<table>
+<tr><th>你的场景</th><th>优先考虑</th><th>理由</th></tr>
+<tr><td>需要做图文检索 / 零样本分类</td><td>对比学习</td><td>对齐后的嵌入空间可直接支持检索，无需下游训练</td></tr>
+<tr><td>下游是检测 / 分割等稠密预测</td><td>掩码重建</td><td>像素级目标保留了空间细节，对稠密任务更友好</td></tr>
+<tr><td>数据无标注且域特殊（医疗、遥感）</td><td>掩码重建 或 JEPA</td><td>都不需要增强与负样本，可直接在域内预训练</td></tr>
+<tr><td>需要动作规划 / 世界模型</td><td>JEPA</td><td>表征空间预测天然适合建模状态演化，且已有 V-JEPA 2-AC 验证</td></tr>
+<tr><td>算力有限、想快速得到稳定基线</td><td>LeJEPA 类方法</td><td>超参数少、跨架构稳定、实现极简</td></tr>
+</table>
+</div>
+
+<h3>7.5 知识体系总结</h3>
+<div class="table-wrap">
+<table>
+<tr><th>环节</th><th>关键概念</th><th>它解决什么</th></tr>
+<tr><td>预测空间</td><td>表征空间 vs 像素空间 vs 嵌入相似度</td><td>决定模型被迫学习什么层次的信号</td></tr>
+<tr><td>结构</td><td>上下文编码器 / 目标编码器 / 预测器</td><td>把"预测"从生成任务变成回归任务</td></tr>
+<tr><td>不可预测性</td><td>隐变量 $z$</td><td>允许模型输出多个合理未来，而不是平均值</td></tr>
+<tr><td>坍缩</td><td>EMA、stop-gradient → 各向同性高斯约束</td><td>从工程技巧走向有理论依据的分布匹配</td></tr>
+<tr><td>扩展</td><td>时空管掩码、渐进式分辨率、动作条件预测器</td><td>把同一范式推到视频、十亿参数与机器人规划</td></tr>
+<tr><td>开放问题</td><td>目标分布的唯一性、隐变量训练、与语言对齐</td><td>决定这条路能否从感知走向通用智能</td></tr>
+</table>
+</div>
+
+<div class="callout success"><div class="callout-title">一句话收束</div>
+<p>JEPA 系列的全部主张可以压成一个提问方式的转变：从"<strong>模型能不能还原它没看到的东西</strong>"，变成"<strong>模型能不能理解它没看到的东西应该是什么</strong>"。前者要求还原每一个像素，后者只要求说对概念——而后者，才是让模型真正学到世界结构的方式。</p></div>
+</section>
+
+<section id="refs"><h2>参考文献</h2>
+<ol>
+<li>LeCun, Y. (2022). A Path Towards Autonomous Machine Intelligence. <em>OpenReview</em>.（JEPA / H-JEPA 的理论起点与自主智能体架构构想）</li>
+<li>Assran, M., Duval, Q., Misra, I. et al. (2023). Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture. <em>CVPR</em>. arXiv:2301.08243.（I-JEPA，多块掩码与 EMA 目标编码器）</li>
+<li>Bardes, A., Garrido, Q., Ponce, J. et al. (2024). Revisiting Feature Prediction for Learning Visual Representations from Video. arXiv:2404.08471.（V-JEPA，视频特征预测与 $L_1$ 损失）</li>
+<li>Assran, M., Bardes, A., Fan, D. et al. (2025). V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning. arXiv:2506.09985.（十亿参数视频模型与动作条件世界模型）</li>
+<li>Balestriero, R., &amp; LeCun, Y. (2025). LeJEPA: Provable and Scalable Self-Supervised Learning Without the Heuristics. arXiv:2511.08544.（各向同性高斯最优性与 SIGReg）</li>
+<li>Grill, J.-B., Strub, F., Altché, F. et al. (2020). Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning. <em>NeurIPS</em>.（BYOL，非对称结构与 EMA 的来源）</li>
+<li>Chen, X., &amp; He, K. (2021). Exploring Simple Siamese Representation Learning. <em>CVPR</em>.（SimSiam，stop-gradient 作为核心机制的极简验证）</li>
+<li>Caron, M., Touvron, H., Misra, I. et al. (2021). Emerging Properties in Self-Supervised Vision Transformers. <em>ICCV</em>.（DINO，居中与锐化的隐式对比路线）</li>
+<li>Zbontar, J., Jing, L., Misra, I. et al. (2021). Barlow Twins: Self-Supervised Learning via Redundancy Reduction. <em>ICML</em>.（用冗余削减替代负样本的另一种思路）</li>
+<li>He, K., Chen, X., Xie, S. et al. (2022). Masked Autoencoders Are Scalable Vision Learners. <em>CVPR</em>.（MAE，作为 JEPA 的直接对照路线）</li>
+<li>Muckley, M., Sinha, K., Garrido, Q. et al. (2025). V-JEPA 2.1: Unlocking Dense Features and Deep Self-Supervision. arXiv.（密集预测损失与层级自监督）</li>
+<li>Chen, X., Saining, X., &amp; He, K. (2022). Masked Feature Prediction for Visual Self-Supervised Pre-Training. <em>CVPR</em>.（MaskFeat，在特征空间做掩码预测的早期尝试）</li>
+<li>Sobal, V., Ponce, J., &amp; LeCun, Y. (2022). Joint Embedding Predictive Architectures Focus on Slow Features. arXiv.（表征预测偏向慢变特征的分析）</li>
+<li>Bardes, A., Ponce, J., &amp; LeCun, Y. (2023). MC-JEPA: A Joint-Embedding Predictive Architecture for Self-Supervised Learning of Motion and Content Features. arXiv:2307.12698.（运动与内容的联合预测）</li>
+<li>Garrido, Q., Balestriero, R., Najman, L., &amp; LeCun, Y. (2023). RankMe: Assessing the Downstream Performance of Pretrained Self-Supervised Representations. <em>CVPR</em>.（嵌入秩的度量，用于诊断维度坍缩）</li>
+<li>Epps, T. W., &amp; Pulley, L. B. (1983). A Test for Normality Based on the Empirical Characteristic Function. <em>Biometrika</em>, 70(3).（SIGReg 所用的正态性检验）</li>
+</ol>
+</section>
+
+</main>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<script>
+// Sidebar highlight
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var links = document.querySelectorAll('#sidebar nav a');
+  function highlight() {
+    var scrollY = window.scrollY;
+    var current = '';
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - 100) current = sections[i].id;
+    }
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+// Formula rendering
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

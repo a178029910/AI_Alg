@@ -73,10 +73,16 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 /* Category colors */
 .cat-deep { background: linear-gradient(135deg, #dbeafe, #ede9fe); }
 .cat-deep svg { color: #2563eb; }
+.cat-cv { background: linear-gradient(135deg, #d1fae5, #ecfdf5); }
+.cat-cv svg { color: #059669; }
+.cat-nlp { background: linear-gradient(135deg, #ffedd5, #fff7ed); }
+.cat-nlp svg { color: #ea580c; }
 .cat-ml { background: linear-gradient(135deg, #fee2e2, #fef2f2); }
 .cat-ml svg { color: #dc2626; }
 .cat-graph { background: linear-gradient(135deg, #ede9fe, #f5f3ff); }
 .cat-graph svg { color: #7c3aed; }
+.cat-prob { background: linear-gradient(135deg, #e0f2fe, #f0f9ff); }
+.cat-prob svg { color: #0284c7; }
 .cat-math { background: linear-gradient(135deg, #fef3c7, #fefce8); }
 .cat-math svg { color: #d97706; }
 
@@ -106,7 +112,10 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
   <button class="filter-btn active" data-cat="all" data-page-node-id="ajvM6ChZSH3SO37MeBT1TC">全部</button>
   <button class="filter-btn" data-cat="math" data-page-node-id="TVajCBX5bhzM6Ijr2DD0Aa">数学基础</button>
   <button class="filter-btn" data-cat="ml" data-page-node-id="1WRpuw3tj7qgPPDTAFcxe4">机器学习</button>
+  <button class="filter-btn" data-cat="prob" data-page-node-id="D9lFFgf2Q5FUADVImN1H3r">随机过程</button>
   <button class="filter-btn" data-cat="deep" data-page-node-id="U51wFPADfsuYmN4a7ReP7o">深度学习</button>
+  <button class="filter-btn" data-cat="cv" data-page-node-id="7ScLfRLNW0ABVG1mh9MHUc">计算机视觉</button>
+  <button class="filter-btn" data-cat="nlp" data-page-node-id="5qKgJFrzOr7GOzIz6WNJWo">自然语言处理</button>
   <button class="filter-btn" data-cat="graph" data-page-node-id="Zebt0dkp6HTCDrIx2FEtlw">图学习</button>
   <button class="filter-btn" data-cat="rl" data-page-node-id="JDPixdUvoyMYcHpP6Zg0bi">强化学习</button>
 </nav>
@@ -204,8 +213,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- MarkovChain -->
-    <a class="card" href="MarkovChain/index.html" data-cat="ml" data-name="马尔科夫链 Markov Chain 转移矩阵 平稳分布 HMM MCMC PageRank" data-page-node-id="kSjZBIHPRnfj8GA98sHATi">
-      <div class="icon cat-ml" data-page-node-id="pynFDMgcGDYfrURxvUHRVZ">
+    <a class="card" href="MarkovChain/index.html" data-cat="prob" data-name="马尔科夫链 Markov Chain 转移矩阵 平稳分布 HMM MCMC PageRank" data-page-node-id="kSjZBIHPRnfj8GA98sHATi">
+      <div class="icon cat-prob" data-page-node-id="pynFDMgcGDYfrURxvUHRVZ">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="OlG3KFKKkSmIOy4rR6ENoO"><circle cx="5" cy="12" r="2" data-page-node-id="hWYo5YUwPvO7UvPyXzyNeL"/><circle cx="12" cy="6" r="2" data-page-node-id="troQ0ROahpdLw8GAEv7xxr"/><circle cx="12" cy="18" r="2" data-page-node-id="lx50s9anGr8XzLyXl7vNkP"/><circle cx="19" cy="12" r="2" data-page-node-id="SItZqxex6rGhK9Akze4wMS"/><path d="M7 11l3-3M7 13l3 3M14 7l3 3M14 17l3-3" data-page-node-id="HLVrlR4F8FfIWtvSky5uQN"/></svg>
       </div>
       <h3 data-page-node-id="qFXGLiXZPJnWJPGx5DaCCF">马尔科夫链</h3>
@@ -216,8 +225,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- PGM -->
-    <a class="card" href="PGM/index.html" data-cat="ml" data-name="PGM 概率图模型 Probabilistic Graphical Models 贝叶斯网络 马尔可夫随机场 因子图 信念传播 变分推断 MCMC" data-page-node-id="eKNrsEJ7LxCdIFhElSOkl5">
-      <div class="icon cat-ml" data-page-node-id="sHIQb6xDi8NuTYnjXFOhu4">
+    <a class="card" href="PGM/index.html" data-cat="prob" data-name="PGM 概率图模型 Probabilistic Graphical Models 贝叶斯网络 马尔可夫随机场 因子图 信念传播 变分推断 MCMC" data-page-node-id="eKNrsEJ7LxCdIFhElSOkl5">
+      <div class="icon cat-prob" data-page-node-id="sHIQb6xDi8NuTYnjXFOhu4">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="sXqP9XAksxorAUfdhzO2GB"><circle cx="6" cy="5" r="2" data-page-node-id="50cSorN9VD30bdlqZBy0cR"/><circle cx="18" cy="5" r="2" data-page-node-id="wVIuwaGcko1yHspwkrnX1z"/><circle cx="12" cy="12" r="2" data-page-node-id="h7G1ESXNcNcAHScFVtqxQE"/><circle cx="6" cy="19" r="2" data-page-node-id="aLXzrsYGD3QrAx9zD9DR9a"/><circle cx="18" cy="19" r="2" data-page-node-id="CJPxCMzMExDmsNO7qbJEhy"/><path d="M8 6l2 4M16 6l-2 4M10 14l-2 3M14 14l2 3M8 5h8" data-page-node-id="ESpTUNbkWRWDTm36hRtSGo"/></svg>
       </div>
       <h3 data-page-node-id="wt1KrZEEx4Iiw1C1ALml0Y">概率图模型</h3>
@@ -228,8 +237,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- CRF -->
-    <a class="card" href="CRF/index.html" data-cat="ml" data-name="CRF 条件随机场 Conditional Random Field 序列标注 判别式 线性链 Viterbi 前向后向 NER" data-page-node-id="vJlAzJfhF1dJMPBNu5dYfI">
-      <div class="icon cat-ml" data-page-node-id="wCFTfE1xaO8rjGz4BuSkg7">
+    <a class="card" href="CRF/index.html" data-cat="prob" data-name="CRF 条件随机场 Conditional Random Field 序列标注 判别式 线性链 Viterbi 前向后向 NER" data-page-node-id="vJlAzJfhF1dJMPBNu5dYfI">
+      <div class="icon cat-prob" data-page-node-id="wCFTfE1xaO8rjGz4BuSkg7">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="3USsRMhY6AJ5wHc65O7QdF"><circle cx="5" cy="8" r="2" data-page-node-id="1DsZpNsyE9ZUuThx9W1M1k"/><circle cx="12" cy="8" r="2" data-page-node-id="H9qrZXNNJdnqlG8SYEWeE3"/><circle cx="19" cy="8" r="2" data-page-node-id="FAYMOfsTnbFkWSPwWd35eo"/><path d="M7 8h3M14 8h3" data-page-node-id="ET0DhewwAzEAzqqb9mUDGa"/><path d="M5 10v8M12 10v8M19 10v8" stroke-dasharray="3 2" data-page-node-id="JHMKObUhWNp57Lzdf1mH5y"/><circle cx="5" cy="18" r="2" data-page-node-id="ddkenoziMxSLcomzc7E31l"/><circle cx="12" cy="18" r="2" data-page-node-id="NavgfogEljPQLYgRdcDJMH"/><circle cx="19" cy="18" r="2" data-page-node-id="eOaBesA5hDAbInCrtsjMdR"/></svg>
       </div>
       <h3 data-page-node-id="QrTPe6YX7w2rEDCjZ4WLwg">条件随机场</h3>
@@ -348,8 +357,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- 视觉 Transformer -->
-    <a class="card" href="VisionTransformer/index.html" data-cat="deep" data-name="ViT 视觉Transformer Vision Transformer Swin 窗口注意力 移位窗口 变体 DeiT MAE DINO DETR 集合预测 registers attention sink 图像分类 检测 分割" data-page-node-id="m2Q1jzJN90gcHtsaobvBYQ">
-      <div class="icon cat-deep" data-page-node-id="rOsGY8HOrZ5soLuEbbCMSU">
+    <a class="card" href="VisionTransformer/index.html" data-cat="cv" data-name="ViT 视觉Transformer Vision Transformer Swin 窗口注意力 移位窗口 变体 DeiT MAE DINO DETR 集合预测 registers attention sink 图像分类 检测 分割" data-page-node-id="m2Q1jzJN90gcHtsaobvBYQ">
+      <div class="icon cat-cv" data-page-node-id="rOsGY8HOrZ5soLuEbbCMSU">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="feBCNyQGQknR3mRAaUhTBv"><rect x="3" y="3" width="18" height="18" rx="2" data-page-node-id="8rmVfHWjbcpROUJ5bCzWFF"/><circle cx="8.5" cy="8.5" r="1.5" data-page-node-id="F4l7SHr0T7LfX1Oy7T0ZKN"/><path d="M21 15l-5-5L5 21" data-page-node-id="JN63Yl2gtq5jG8i10iwDvD"/></svg>
       </div>
       <h3 data-page-node-id="EzVNvfFcAMMkhRcERLjZhT">视觉 Transformer</h3>
@@ -360,8 +369,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- MAE -->
-    <a class="card" href="MAE/index.html" data-cat="deep" data-name="掩码建模 重建自监督 MAE Masked Autoencoder SimMIM VideoMAE 掩码自编码器 非对称编解码 管状掩码 Tube Masking 双重掩码 AvgDist 平均预测距离 像素重建 BEiT masked image modeling">
-      <div class="icon cat-deep">
+    <a class="card" href="MAE/index.html" data-cat="cv" data-name="掩码建模 重建自监督 MAE Masked Autoencoder SimMIM VideoMAE 掩码自编码器 非对称编解码 管状掩码 Tube Masking 双重掩码 AvgDist 平均预测距离 像素重建 BEiT masked image modeling">
+      <div class="icon cat-cv">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" opacity="0.3"/><path d="M9 12h6M12 9v6"/></svg>
       </div>
       <h3>掩码与重建自监督</h3>
@@ -371,8 +380,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
       <div class="meta"><span class="count">8 公式 / 4 SVG / 4 代码</span><span class="arrow">&#8594;</span></div>
     </a>
     <!-- JEPA -->
-    <a class="card" href="JEPA/index.html" data-cat="deep" data-name="JEPA 联合嵌入预测架构 Joint-Embedding Predictive Architecture I-JEPA V-JEPA V-JEPA 2 LeJEPA SIGReg 各向同性高斯 表征空间预测 世界模型 表征坍缩 EMA stop-gradient 自监督">
-      <div class="icon cat-deep">
+    <a class="card" href="JEPA/index.html" data-cat="cv" data-name="JEPA 联合嵌入预测架构 Joint-Embedding Predictive Architecture I-JEPA V-JEPA V-JEPA 2 LeJEPA SIGReg 各向同性高斯 表征空间预测 世界模型 表征坍缩 EMA stop-gradient 自监督">
+      <div class="icon cat-cv">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h5v5H4z"/><path d="M15 13h5v5h-5z"/><path d="M9 8.5h4a2 2 0 0 1 2 2v4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg>
       </div>
       <h3>JEPA 表征预测</h3>
@@ -383,8 +392,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- CLIP -->
-    <a class="card" href="CLIP/index.html" data-cat="deep" data-name="多模态对齐 CLIP SigLIP BLIP 对比学习 图文匹配 Contrastive Language-Image Pre-training Sigmoid 损失 InfoNCE 温度参数 零样本 Zero-shot MED CapFilt Q-Former BLIP-2 视觉语言">
-      <div class="icon cat-deep">
+    <a class="card" href="CLIP/index.html" data-cat="cv" data-name="多模态对齐 CLIP SigLIP BLIP 对比学习 图文匹配 Contrastive Language-Image Pre-training Sigmoid 损失 InfoNCE 温度参数 零样本 Zero-shot MED CapFilt Q-Former BLIP-2 视觉语言">
+      <div class="icon cat-cv">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8l4-4 4 4M4 16l4 4 4-4M8 4v16M14 8h6M14 12h6M14 16h6"/></svg>
       </div>
       <h3>多模态表征对齐</h3>
@@ -395,8 +404,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- VLM -->
-    <a class="card" href="VLM/index.html" data-cat="deep" data-name="视觉语言模型 VLM Vision Language Model Flamingo BLIP-2 LLaVA 门控交叉注意力 Perceiver Resampler Q-Former 信息瓶颈 视觉指令微调 多模态 Few-Shot 图文对齐">
-      <div class="icon cat-deep">
+    <a class="card" href="VLM/index.html" data-cat="cv" data-name="视觉语言模型 VLM Vision Language Model Flamingo BLIP-2 LLaVA 门控交叉注意力 Perceiver Resampler Q-Former 信息瓶颈 视觉指令微调 多模态 Few-Shot 图文对齐">
+      <div class="icon cat-cv">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="9" width="8" height="7" rx="1.5"/><path d="M11 7.5h2M11 12.5h2"/></svg>
       </div>
       <h3>视觉语言模型</h3>
@@ -407,8 +416,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- VLA -->
-    <a class="card" href="VLA/index.html" data-cat="deep" data-name="视觉语言动作模型 VLA Vision Language Action PaLM-E RT-2 OpenVLA pi0 pi0.5 具身智能 机器人 动作token化 共同微调 流匹配 Flow Matching 动作专家 分层推理 开放世界泛化">
-      <div class="icon cat-deep">
+    <a class="card" href="VLA/index.html" data-cat="cv" data-name="视觉语言动作模型 VLA Vision Language Action PaLM-E RT-2 OpenVLA pi0 pi0.5 具身智能 机器人 动作token化 共同微调 流匹配 Flow Matching 动作专家 分层推理 开放世界泛化">
+      <div class="icon cat-cv">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h6v5H4z"/><path d="M14 14h6v5h-6z"/><path d="M10 7.5h2a2 2 0 0 1 2 2v4"/><circle cx="7" cy="16" r="2.5"/></svg>
       </div>
       <h3>视觉语言动作模型</h3>
@@ -419,8 +428,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- MLLM -->
-    <a class="card" href="MLLM/index.html" data-cat="deep" data-name="原生多模态大模型 Monolithic MLLM Fuyu Chameleon EVE 无编码器 Encoder-Free 早融合 Early Fusion VQ码本 统一词表 混合模态生成 patch直入 信息瓶颈 隐私边界">
-      <div class="icon cat-deep">
+    <a class="card" href="MLLM/index.html" data-cat="cv" data-name="原生多模态大模型 Monolithic MLLM Fuyu Chameleon EVE 无编码器 Encoder-Free 早融合 Early Fusion VQ码本 统一词表 混合模态生成 patch直入 信息瓶颈 隐私边界">
+      <div class="icon cat-cv">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18" opacity="0.5"/></svg>
       </div>
       <h3>原生多模态大模型</h3>
@@ -431,8 +440,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- BERT -->
-    <a class="card" href="BERT/index.html" data-cat="deep" data-name="BERT 双向编码器 Bidirectional Encoder MLM NSP 预训练 语言模型" data-page-node-id="PbFHqdosalvpZD81j981H8">
-      <div class="icon cat-deep" data-page-node-id="v61qMMBGl7yUJkeF7FFaV2">
+    <a class="card" href="BERT/index.html" data-cat="nlp" data-name="BERT 双向编码器 Bidirectional Encoder MLM NSP 预训练 语言模型" data-page-node-id="PbFHqdosalvpZD81j981H8">
+      <div class="icon cat-nlp" data-page-node-id="v61qMMBGl7yUJkeF7FFaV2">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="GzrrzpzpXocqcJ1DJpJWp9"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" data-page-node-id="XkZHxXQjS85M9VrY1jBhD1"/><path d="M10 7h4M10 17h4M7 10v4M17 10v4" data-page-node-id="kobkO4DxV3kT3TjGB7UZP8"/></svg>
       </div>
       <h3 data-page-node-id="ZSXdB2BjAaaNcHquFfPwCS">BERT</h3>
@@ -443,8 +452,8 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
     </a>
 
     <!-- GPT -->
-    <a class="card" href="GPT/index.html" data-cat="deep" data-name="GPT 生成式预训练 Transformer 自回归 语言模型 decoder 预训练 In-Context Learning ChatGPT GPT-4 RLHF PPO Scaling Laws 涌现能力" data-page-node-id="FjLzVucbi4yJ6zhHac5wKB">
-      <div class="icon cat-deep" data-page-node-id="3Otm8MsUtwp3qDyI7xRRhF">
+    <a class="card" href="GPT/index.html" data-cat="nlp" data-name="GPT 生成式预训练 Transformer 自回归 语言模型 decoder 预训练 In-Context Learning ChatGPT GPT-4 RLHF PPO Scaling Laws 涌现能力" data-page-node-id="FjLzVucbi4yJ6zhHac5wKB">
+      <div class="icon cat-nlp" data-page-node-id="3Otm8MsUtwp3qDyI7xRRhF">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-page-node-id="0NVYHCCvWaSbwPkpEfxCMm"><path d="M4 5h16M4 12h10M4 19h7" data-page-node-id="8wAnbH8Q9RGhAjeOI5tw5j"/><circle cx="18" cy="12" r="2" data-page-node-id="Yh4fDLHgKqQyk155hcsMVw"/><path d="M18 14v5" data-page-node-id="B6rAcKMQlgD5FJggaMVBcG"/></svg>
       </div>
       <h3 data-page-node-id="rEg9YfLkQChlUiRSzQsTre">GPT 生成式预训练</h3>
@@ -466,7 +475,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 const filterBtns = document.querySelectorAll('.filter-btn');
 const cards = document.querySelectorAll('.card');
 const resultTitle = document.getElementById('resultTitle');
-  const catNames = { all: '全部算法', math: '数学基础', ml: '机器学习', deep: '深度学习', graph: '图学习', rl: '强化学习' };
+  const catNames = { all: '全部算法', math: '数学基础', ml: '机器学习', prob: '随机过程', deep: '深度学习', cv: '计算机视觉', nlp: '自然语言处理', graph: '图学习', rl: '强化学习' };
 
 filterBtns.forEach(btn => {
   btn.addEventListener('click', () => {

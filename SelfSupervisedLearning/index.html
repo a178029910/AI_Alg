@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="XMx5LPtANCoa5dsA7ko6a8">
+<head data-page-node-id="GEifOAIWXiMKSRwv6uQP6e">
+<meta charset="UTF-8" data-page-node-id="g6rKCXHp2fmE5iDTdqyq28">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="HtjWgV9NHV4XGQlVxKmqX1">
+<title>自监督学习 — 代理任务 · 对比学习 · DINO 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png" data-page-node-id="acSTqCNml1xxyWcVPtOLVd">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" data-page-node-id="jF6EMVhgeuWLs7yWBy8Jnc">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+</style>
+</head>
+
+<body data-page-node-id="bFRAb3sVMqUxSaX4PrUBuw">
+<div id="progress-bar" data-page-node-id="2HHv3cQu9Np1XkyfsY1pa9"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')" data-page-node-id="SVxbgBxNpscSDMX9E2AzAk">&#9776; 目录</div>
+<aside id="sidebar" data-page-node-id="ZB1zxqq1XzaRLbYmVncpTL">
+  <h2 data-page-node-id="rNZx6lO9kdBCb48jeiXHOc">自监督学习</h2>
+<nav data-page-node-id="MVq8D5lYAHCXIjHrG7d4eo">
+    <a href="#hero" data-page-node-id="juqGFFXUVipf1jHWrdkAGh">封面</a>
+    <a href="#ch1" data-page-node-id="BHHPq6Gp3PY1xFdoRv4YRh">一、概念与目的</a>
+    <a href="#ch2" data-page-node-id="flaTsmIlAqLNiEJm1nOSFz">二、早期代理任务</a>
+    <a href="#ch3" data-page-node-id="6qmjd073YMqxBVcURJF7w6">三、对比学习（上）SimCLR 与 MoCo</a>
+    <a href="#ch4" data-page-node-id="IHqfDkxlV2uYkbxfjxKZGY">四、对比学习（下）BYOL 与 SimSiam</a>
+    <a href="#ch5" data-page-node-id="P3Yf9eUtkudrhSejOz6Kfv">五、DINO v1/v2/v3</a>
+    <a href="#ch6" data-page-node-id="c5wH68RgNm7jnYLLIWRhim">六、知识体系总结</a>
+    <a href="#refs" data-page-node-id="Xkd9VGv1J5mQPT98F4bEBa">参考文献</a>
+  </nav>
+<a class="back-link" href="../index.html" data-page-node-id="aTZDQANgEkCuwYGWW93NEK"><span class="arrow" data-page-node-id="215K5EeTxfg8z9iA5eSJbd">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main" data-page-node-id="kiRFV8A7L7IpC1BhMV2Ry5">
+
+<section id="hero" class="hero" data-page-node-id="6OYw24YtxQdzq6HzCoCPqx">
+  <h1 data-page-node-id="94zLTOP3hX9e4cH6QANJnG">自监督学习</h1>
+  <div class="subtitle" data-page-node-id="OamGzuM7SlTz5Mjkv0Ayr3">Self-Supervised Learning · 代理任务 · 对比学习 · DINO 系列</div>
+  <div class="tagline" data-page-node-id="csVJ9ZCEr4B0Hr8CVZEfoV">Pretext Tasks · InfoNCE · SimCLR · MoCo · BYOL · SimSiam · DINO v1/v2/v3</div>
+  <div class="badges" data-page-node-id="PM9ilCgQETu7TLXMHs9YE1">
+    <span class="badge" data-page-node-id="YDHwGXcNZabeNAbf4h8kLT">6 个章节</span>
+    <span class="badge" data-page-node-id="cGtv4jTEHahKjuLh6XTIAe">10 张 SVG 结构图</span>
+    <span class="badge" data-page-node-id="2jD6rB0mfADjNS60GI5pr7">19 个公式</span>
+    <span class="badge" data-page-node-id="1buRlDXGL05sd5yjIXYnkk">4 段 PyTorch 代码</span>
+    <span class="badge" data-page-node-id="aCZnELKVxlGG6bRaLJoHHH">26 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1" data-page-node-id="QeaTWl3R3X0avBr9C6XFi4"><h2 data-page-node-id="D0BCqIMt1b8356wLWOwKlQ"><span class="num" data-page-node-id="pFqGjNJGKIUfZFE6GjWust">1</span>自监督学习：概念与目的</h2>
+<h3 data-page-node-id="SdEnWCchp6BqnFG0urrJqC">1.1 监督学习的两个硬约束</h3>
+<p data-page-node-id="GGYDOFsihstsbi8liRoSex">深度学习的成功长期建立在标注数据之上。标准的有监督学习优化</p>
+<div class="formula" data-eq="(1)" data-page-node-id="zVcUxe690DVHFomToXfGYs">$$\min_{\theta}\; \mathbb{E}_{(x,y)\sim\mathcal{D}}\Big[\;\ell\big(f_\theta(x),\; y\big)\Big]$$</div>
+<p data-page-node-id="acStzNAOntIEbOGWTxs8g9">其中 $y$ 是人工标注的目标。这个范式有两个绕不开的代价：</p>
+<ul data-page-node-id="qzkUCHzXr8De5JAFxInlT1">
+<li data-page-node-id="XC5ymzrh2pwOB29ZJqnFnQ"><strong data-page-node-id="9lrO49N3XaLqIVC0Uh7DLX">标注昂贵且不可扩展</strong>。ImageNet 的 128 万张标注花了约两年；医学影像、卫星遥感等领域更是需要领域专家逐张判读。当数据规模迈向十亿级时，人工标注在成本上已经不可行。</li>
+<li data-page-node-id="laDCGnuNiroZiZ517tGjLh"><strong data-page-node-id="fO22k4vYB1Gl9INz7icR80">监督信号与任务强绑定</strong>。为分类训练的表示未必适合分割，为分割训练的又未必适合深度估计。每换一个任务，就要重新准备一套标注、重新训练一次。这使模型无法积累"通用视觉常识"。</li>
+</ul>
+<p data-page-node-id="BDwgIYwcCi3r9cyQyxnjgz">反观语言模型：文本本身就是离散符号序列，<em data-page-node-id="zycSGAKjh61iyEQJdYg8Tk">"预测下一个词"这个目标不需要任何人工标注</em>，于是可以吃下整个互联网。视觉缺少这样天然的监督信号——图像是连续像素，没有"下一个像素"这种有意义的预测目标。这正是自监督学习要解决的问题。</p>
+<h3 data-page-node-id="Ezy5AO2hGeSDKdBlYLrLlJ">1.2 核心思想：让数据自己出题</h3>
+<p data-page-node-id="T3IH98U0PHNaepFicbgksd">自监督学习（Self-Supervised Learning, SSL）的基本策略是<strong data-page-node-id="PuAiawkd7iQSHnBXEksYAJ">从数据本身构造监督信号</strong>：保留一部分信息作为"输入"，另一部分作为"答案"，让模型去还原或预测。这个人为设计的任务称为<strong data-page-node-id="l4xv1GnawMsPM1R3STbgi4">代理任务</strong>（pretext task），它提供的标签称为<strong data-page-node-id="GxogM3eEJe0FdG3yElyGlJ">伪标签</strong>（pseudo-label）。</p>
+<div class="formula" data-eq="(2)" data-page-node-id="1BtWYpfrEHbAMepGgktLsz">$$\min_{\theta}\; \mathbb{E}_{x\sim\mathcal{D}}\Big[\;\mathcal{L}\Big(\,f_\theta\big(\tau_1(x)\big),\; h\big(\tau_2(x)\big)\Big)\Big]$$</div>
+<p data-page-node-id="ewY26MVKlsOyuylypGOg9W">这里 $\tau_1,\tau_2$ 是对同一张图施加的两种变换（着色、遮挡、旋转、裁剪……），$h$ 把另一种"视角"转成监督目标。整个式子只用到 $\mathcal{D}$ 中的原始图像，不涉及任何人工标签。式中的两个"视角"是理解后续全部内容的关键——<strong data-page-node-id="AzHgNgYVr3LexVXuzkxaAE">代理任务的差别，本质上就是"选什么视角、怎么定义二者的一致"</strong>。</p>
+<div class="svg-box" data-page-node-id="gk6r11RENcwHegFJfiWM2Q">
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="hwp7x0sxpZ7MtQR7unkOYZ">
+  <defs data-page-node-id="fE1gPoTbR7p18ullSslNDC"><marker id="ssl-ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" data-page-node-id="Y5LSRwkJXiUnsuJkEBRskh"><polygon points="0 0, 8 3, 0 6" fill="#94a3b8" data-page-node-id="l4UoqCSEC2UFbqVVAkistf"/></marker></defs>
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="aT1DU1bs2fo1BmeuGOgl3L">自监督如何"造标签"：三种典型构造方式</text>
+  <!-- row 1: pretext -->
+  <text x="90" y="76" font-size="12" fill="#2563eb" font-weight="700" text-anchor="end" data-page-node-id="9TNyEuHmGFkjC0LxhLBSGZ">代理任务</text>
+  <rect x="100" y="52" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="DDmxUDYR7AsJGoF2BWOkWI"/>
+  <text x="155" y="80" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="bbkq6CGUrUdTDGpDBIBVGN">原图 x</text>
+  <line x1="214" y1="74" x2="252" y2="74" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="cyHUYUhN8z9POTWQYfRAwj"/>
+  <rect x="256" y="52" width="140" height="44" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="5higGBcdmoPJrMAx4CGyDF"/>
+  <text x="326" y="72" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="bKomIQXkQ03BBjvh5fO4mU">人工变换</text>
+  <text x="326" y="88" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="EgcQemUffXt9l16Dl6dOjz">灰度 / 打乱 / 旋转</text>
+  <line x1="400" y1="74" x2="438" y2="74" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="8qZLtfmoUHj6ss0CeU9R1T"/>
+  <rect x="442" y="52" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="GLDLB4xgRGbCb6kuSF3agu"/>
+  <text x="517" y="72" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="Te16SpxpycnsnRUNiE97YI">预测被改动的量</text>
+  <text x="517" y="88" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="m5cPCDMnbo8I7JTOp8x6VP">颜色 / 顺序 / 角度</text>
+  <text x="640" y="78" font-size="11" fill="#64748b" data-page-node-id="FcE6eEHXjn7XbHk2L687ag">← 第 2 章</text>
+  <!-- row 2: contrastive -->
+  <text x="90" y="160" font-size="12" fill="#ea580c" font-weight="700" text-anchor="end" data-page-node-id="S82lai8nDCJ3Aj2VhDrsmb">对比学习</text>
+  <rect x="100" y="136" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="98ZuC5I6zIxjwv8ry7BQnq"/>
+  <text x="155" y="164" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="VMWa2fqC1rAumvoH5mpEoh">原图 x</text>
+  <line x1="214" y1="158" x2="252" y2="158" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="bQZ3B4rYIVUjNC60KGBh7n"/>
+  <rect x="256" y="136" width="140" height="44" rx="7" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" data-page-node-id="SL2swhnD1zY0284fOL3mgy"/>
+  <text x="326" y="156" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="LvBIaejmuvzKt8DCVy1HzU">两次随机增广</text>
+  <text x="326" y="172" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="79ipaDwAtucc5NEU5LGtNP">裁剪 + 颜色抖动</text>
+  <line x1="400" y1="158" x2="438" y2="158" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="SyM1ck8FWXEqS3NafxWVii"/>
+  <rect x="442" y="136" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="EuhzbF5uJJuEz3QTB6cf9o"/>
+  <text x="517" y="156" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="3R4EFsrotkz6SdqdzuDFqB">两个视角表示一致</text>
+  <text x="517" y="172" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="3fENGBjjnyNPY1Pk6dLXNM">（并与其他样本区分）</text>
+  <text x="640" y="162" font-size="11" fill="#64748b" data-page-node-id="fMR1iAtiDPLjt6XNAVQA1r">← 第 3、4 章</text>
+  <!-- row 3: self-distill -->
+  <text x="90" y="244" font-size="12" fill="#7c3aed" font-weight="700" text-anchor="end" data-page-node-id="rj8KHMyEuUg4YENcAABXQv">自蒸馏</text>
+  <rect x="100" y="220" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="pWvyLpusLmgvbAU3UcHSBt"/>
+  <text x="155" y="248" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="EgnDURgX3wtSi9BRt5Ji3B">原图 x</text>
+  <line x1="214" y1="242" x2="252" y2="242" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="rqNHLxgGi9t8fVmT98Os2T"/>
+  <rect x="256" y="220" width="140" height="44" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="50fOwuK8kpRqaZrFlqXqaf"/>
+  <text x="326" y="240" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="YD5gNGjl2N4HiS6KhHBG90">多尺度裁剪</text>
+  <text x="326" y="256" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="qkKfBBkin1RfnOngk3Xhjg">全局 2 + 局部 6</text>
+  <line x1="400" y1="242" x2="438" y2="242" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="xXZoxaDtblYCA8DjJcADfs"/>
+  <rect x="442" y="220" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="d33ZAO20GiH5Bnzww43Tkw"/>
+  <text x="517" y="240" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="9TCQD0NUhKneFA6h5HHz8j">学生匹配教师分布</text>
+  <text x="517" y="256" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Qg1XuHdPcrQo5oPaumM7qc">教师 = 学生的滑动平均</text>
+  <text x="640" y="246" font-size="11" fill="#64748b" data-page-node-id="k5MGtdSiF4hKCjpeRO49MH">← 第 5 章</text>
+</svg>
+</div>
+<h3 data-page-node-id="LDvcLcYV57yLGCpS71ucPG">1.3 三条技术主线</h3>
+<p data-page-node-id="gWzrw0VWTqnxwvJbZ2xkO6">自监督视觉表示学习的发展可以归为三条主线，它们之间是<strong data-page-node-id="qg6ur6VtCQhEKi2VBmEER6">依次纠错</strong>的关系，而不是并行竞争：</p>
+<div class="svg-box" data-page-node-id="FsWfiGTKxzYocQbBipixHV">
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="4RBqGUQDXhxlVjDOHJ7QXv">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="VT6iGgR7gcPiOEDwvGdKKi">自监督视觉表示学习的三条主线</text>
+  <!-- line 1 -->
+  <rect x="40" y="52" width="180" height="72" rx="9" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.7" data-page-node-id="riW110lcLFhXFHbWDD1nv7"/>
+  <text x="130" y="76" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="700" data-page-node-id="Ga8NzUU0VlfJKqJlhui7lW">① 代理任务</text>
+  <text x="130" y="96" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="EsbDovwJMiWLuLvkYBxVa2">着色 · 拼图 · 旋转</text>
+  <text x="130" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="tOgZBZdHtv8l8v7vflM6qG">2014 – 2019</text>
+  <rect x="240" y="52" width="230" height="72" rx="9" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6" data-page-node-id="BJTVJczMdh11mIO77fr2CB"/>
+  <text x="355" y="76" text-anchor="middle" font-size="12" fill="#b91c1c" font-weight="700" data-page-node-id="fRCzrihL57Ib7phXsvcZ5X">问题：任务与语义脱钩</text>
+  <text x="355" y="96" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="5olMsAHIkYPaeStqYmshCc">模型学到"捷径解"</text>
+  <text x="355" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Tmn1bBVceVlo5dOPOI1bEq">为任务定制的特征迁移性差</text>
+  <line x1="470" y1="88" x2="506" y2="88" stroke="#dc2626" stroke-width="2" marker-end="url(#ssl-ar)" data-page-node-id="YyNJoRoR8q2ft9OtB0mGLj"/>
+  <rect x="510" y="56" width="330" height="64" rx="9" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6" data-page-node-id="y1W0g45azIIDc8f122excw"/>
+  <text x="675" y="80" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="C8RedQ6D6H4oElqcq8Ka4e">转向"任务无关"的目标：</text>
+  <text x="675" y="100" text-anchor="middle" font-size="11" fill="#475569" data-page-node-id="5Dp6pHbmY2q1RWNWE1zQRH">同一个样本的不同视角应当一致 —— 对比学习</text>
+  <!-- line 2 -->
+  <rect x="40" y="152" width="180" height="72" rx="9" fill="#ffedd5" stroke="#ea580c" stroke-width="1.7" data-page-node-id="smkpEU8sD6WudgbPZWL9hH"/>
+  <text x="130" y="176" text-anchor="middle" font-size="12.5" fill="#c2410c" font-weight="700" data-page-node-id="fEFL0bXFjB8QAFK1SrFnhu">② 对比学习</text>
+  <text x="130" y="196" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="bweV8hVxiPxVLDD31FxOOd">正样本拉近 / 负样本推远</text>
+  <text x="130" y="214" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="zZAhOf2GiKtgvUjbmYOv1Z">2020 – 2021</text>
+  <rect x="240" y="152" width="230" height="72" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" data-page-node-id="yUg48koZW2dkRugENyKnY8"/>
+  <text x="355" y="176" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="700" data-page-node-id="c5LpobHrGdVWQrbAuAa78D">演进：负样本由多到无</text>
+  <text x="355" y="196" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="m9LkNDMdxvlI2oo6xKY2ah">SimCLR / MoCo → BYOL / SimSiam</text>
+  <text x="355" y="214" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="zcNTxfDlYw3fwlZcSjXFow">发现：只有正样本也能学会</text>
+  <line x1="470" y1="188" x2="506" y2="188" stroke="#2563eb" stroke-width="2" marker-end="url(#ssl-ar)" data-page-node-id="7zSfVcqCUXZqQT4Ls9XZqP"/>
+  <rect x="510" y="156" width="330" height="64" rx="9" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="TDViFKf0ZdWAWnSAWxkl7n"/>
+  <text x="675" y="180" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="BBwFKgQb4xiIPyRsHAAGEn">关键机制被识别出来：</text>
+  <text x="675" y="200" text-anchor="middle" font-size="11" fill="#475569" data-page-node-id="szp9ZUwV3FDPyTUI4CbVCx">stop-gradient 与非对称结构才是防坍缩的核心</text>
+  <!-- line 3 -->
+  <rect x="40" y="252" width="180" height="42" rx="9" fill="#dbeafe" stroke="#2563eb" stroke-width="1.7" data-page-node-id="PdabcH3n7b2LmN1A0QJkrd"/>
+  <text x="130" y="279" text-anchor="middle" font-size="12.5" fill="#1d4ed8" font-weight="700" data-page-node-id="DF8QpJUbGoUgZZPwQEsbMq">③ 自蒸馏与规模化</text>
+  <rect x="240" y="246" width="230" height="54" rx="9" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" data-page-node-id="RfHXRSFHZks4wU0oXNELR3"/>
+  <text x="355" y="268" text-anchor="middle" font-size="11.5" fill="#334155" font-weight="700" data-page-node-id="sYurd5kWOPZITYE9YotwJ3">DINO v1 / v2 / v3</text>
+  <text x="355" y="287" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="ETB9P3ED6IOtbecngRjwp6">从方法 → 视觉基础模型</text>
+  <line x1="470" y1="272" x2="506" y2="272" stroke="#2563eb" stroke-width="2" marker-end="url(#ssl-ar)" data-page-node-id="KSRBicDAsV18wluxxguZ4T"/>
+  <rect x="510" y="244" width="330" height="58" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5" data-page-node-id="QGdPtsYZw63IeWs7VSx6k1"/>
+  <text x="675" y="266" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700" data-page-node-id="heyO9U21ZsRqC2sqmyqfNL">冻结骨干即可跨任务使用</text>
+  <text x="675" y="286" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="QEXd4YNLBrJA4VIy1gEn2X">数据 17 亿 · 参数 67 亿 · 覆盖 60+ 基准</text>
+</svg>
+</div>
+<h3 data-page-node-id="LCHVKM2RVAr7s4lqCHeSOn">1.4 如何判断"学得好不好"</h3>
+<p data-page-node-id="IjKj9Wr5RBCDnRtt6v7l4q">自监督没有标签，因此不能用训练损失判断表示质量——损失低只说明代理任务做得好。业界用三种<strong data-page-node-id="JIlypjl8jE0AAHpm5pgxAv">下游评估协议</strong>，各自回答不同问题：</p>
+<div class="table-wrap" data-page-node-id="X2Ea7nefmExaipYBeYFZOm">
+<table data-page-node-id="oGthAUkKUldqJ08IazYzMc">
+<tr data-page-node-id="fs1OkL3mACjxfIsNWDAzm9"><th data-page-node-id="zguzZWwG6WoThqFvrWGElQ">协议</th><th data-page-node-id="HwA5ppZtCkeC9GXornUy4X">做法</th><th data-page-node-id="TCt5Uz9akefKhciELSYnZk">回答的问题</th><th data-page-node-id="ZpUsCXTZZxL74Uwe7S6T49">特点</th></tr>
+<tr data-page-node-id="ZeQeKkcQwY2MB6iPiCC9gq"><td data-page-node-id="aI7WMB0TnbH1BA4k7ZdEf8"><strong data-page-node-id="3hEN2BN5bUaZVCuudFlBg8">线性探针</strong><br data-page-node-id="q0HJ0KfPl6nM2ZfTdLKRUl">Linear Probe</td><td data-page-node-id="58YzsmAanTGkylsvLkO8nB">冻结编码器，只训练一层线性分类器：$\min_W \mathbb{E}[\ell(Wf_\theta(x), y)]$</td><td data-page-node-id="9VgLy0jmykZTvecBf9OO4P">特征本身是否<em data-page-node-id="pay6K8AFjathxMMrD0Uw7x">线性可分</em></td><td data-page-node-id="hzDS0NwoEDbecnBxLvtd9g">最标准的协议；完全隔离了编码器的贡献</td></tr>
+<tr data-page-node-id="4Hbo1ziqpdo1WdvXXBcrd2"><td data-page-node-id="1akslA2az41bt411cQUnub"><strong data-page-node-id="AxbYRYUhqxVuGOUsIS7VU7">kNN</strong></td><td data-page-node-id="jZzGWWfUEDrxP7lvbLq7JR">冻结特征直接做最近邻检索</td><td data-page-node-id="gs6JWE6m70pbI3xnuR3MFb">特征空间的<em data-page-node-id="WrWQD1RLB3HqeQRKcNAGuc">度量结构</em>是否合理</td><td data-page-node-id="nsqmGYRwJIEJ9gyp1eSfdd">无需训练，反映特征的紧致程度</td></tr>
+<tr data-page-node-id="TlsEdyb0awoWWQldKjM7Ww"><td data-page-node-id="gHPpKoFTCloO85fo5WHDue"><strong data-page-node-id="QPKTvdivdCmluSUbpARvOf">微调</strong><br data-page-node-id="GJBeLWFVzvxAUD3MdIrGk0">Fine-tune</td><td data-page-node-id="IHmHc86MLsvUxY6SoUwFb9">整套参数在下游数据上继续训练</td><td data-page-node-id="Q741ADUulx0jalyikPdo4d">特征的<em data-page-node-id="AjEF0sIQDqHPG8pRLYwqAl">可塑性</em>与上限</td><td data-page-node-id="dTItaxeugD20ugoBHLeqtf">精度最高，但混入了下游训练的作用</td></tr>
+</table>
+</div>
+<p data-page-node-id="ZtpM4Q47hpaBVfuy3PsYzO">三种协议给出的方法排名<strong data-page-node-id="4wAr2WEJjDJ2v08RgF1WSL">经常不一致</strong>。例如某些方法线性探针强但微调提升有限，另一些相反。这不是评估的缺陷，而是它们确实衡量了不同能力。阅读论文时需要先确认用的是哪一种——本模块后续凡提到精度，均标注协议与配置。</p>
+<div class="callout" data-page-node-id="epL7I6HycHyMWq3z2hE6K6"><div class="callout-title" data-page-node-id="0jOAbrnQsggGXAMRek0KIx">为什么线性探针是主流</div>
+<p data-page-node-id="nMIPK5opsTrHS2pGp5fztt">线性探针把编码器完全冻结，只用一层线性映射去适配下游任务。这样得到的精度<strong data-page-node-id="Sfz34jHXCDh6DxgXyM0SAe">几乎完全归功于预训练特征的质量</strong>，而不是下游训练的技巧。它也隐含了一个较强的期望：好特征应当是"线性可读"的。这一期望并不总成立（有些特征需要非线性头才能读出语义），所以它并非万能指标。</p>
+</div>
+<h3 data-page-node-id="GTpE5fo0CWTayRDhd5imat">1.5 本模块的推进顺序</h3>
+<p data-page-node-id="DIArVTUnwzDPcsSIu5E4a0">接下来四章按"依次纠错"的历史顺序展开：第 2 章讲早期代理任务与它们失败的原因；第 3 章讲对比学习如何用"正负样本"取代人工任务；第 4 章讲负样本如何被一步步去掉，以及去掉之后为什么模型仍不坍缩；第 5 章讲自蒸馏路线如何把自监督从"一种训练方法"做成"视觉基础模型"。最后第 6 章汇总时间线、公式与方法对照。</p>
+</section>
+
+<section id="ch2" data-page-node-id="NAbGM1phsfALA6hnKQzfJm"><h2 data-page-node-id="lMkH5wom2KkU7mpRSQqG5T"><span class="num" data-page-node-id="FBtOFn1PRoOeUIAifGArY3">2</span>早期代理任务：无标签特征学习的初始探索</h2>
+<h3 data-page-node-id="bsntUFnklglijXUkSXyVCX">2.1 出发点：标签从数据内部来</h3>
+<p data-page-node-id="yAa9YNkUxawA6bRwisTTRX">2014–2019 年间的思路非常朴素：既然人工标注贵，那就<strong data-page-node-id="MXbvAEuhMSHS4fnXJPwX6R">把图像里本来存在的结构当成标签</strong>。灰度图里丢失了颜色，就让模型预测颜色；图像块被打乱了，就让模型还原顺序；图像被旋转了，就让模型判断转了多少度。这些任务的"答案"都由构造方式预先知道，不需要人标注。</p>
+<div class="svg-box" data-page-node-id="oJkold5v36q275DVOkSjA5">
+<svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" data-page-node-id="L3OPq4zZFmDW2U3SOZXWH4">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="I9LEdvJ8xGnNAJ6HALrzgq">四个代表性的代理任务</text>
+  <!-- 1 colorization -->
+  <rect x="30" y="50" width="196" height="230" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="N9knw8Nt8A9K9itTUf9zTB"/>
+  <text x="128" y="74" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="700" data-page-node-id="GdUInMcaGTnE4AtuFQKLz4">① 图像着色</text>
+  <text x="128" y="92" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="YnQDSrl9cCOHCs5CB8orZy">Colorization (2016)</text>
+  <rect x="58" y="104" width="60" height="60" rx="4" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.2" data-page-node-id="A7EnEaPKMUuVelbZdQKVO2"/>
+  <text x="88" y="140" text-anchor="middle" font-size="10.5" fill="#6b7280" data-page-node-id="xcvJpJFCEuS5V6YiTjYsBH">灰度</text>
+  <line x1="122" y1="134" x2="142" y2="134" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="3cAyNXC2w7ovYtIFQJ9mVW"/>
+  <rect x="146" y="104" width="60" height="60" rx="4" fill="#fde68a" stroke="#d97706" stroke-width="1.2" data-page-node-id="EyDMvXxsWFSkMV2gELAr1V"/>
+  <text x="176" y="140" text-anchor="middle" font-size="10.5" fill="#92400e" data-page-node-id="M5Md34m0FctWF0V2KpK4Ru">着色</text>
+  <text x="128" y="186" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="4HC8rZ7tAwcBCHsCfSu11e">标签：颜色量化成 313 类</text>
+  <text x="128" y="206" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="k51hr5kUaHGyp9RlPYDHGC">损失：逐像素交叉熵</text>
+  <text x="128" y="234" text-anchor="middle" font-size="10.5" fill="#7c3aed" font-weight="700" data-page-node-id="0Lg9G8VEYUuYMWd6kfmZeI">学到：物体级语义</text>
+  <text x="128" y="254" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="Y4iZEUXc2tteBlxtTYQfvZ">草是绿的、天是蓝的</text>
+  <!-- 2 jigsaw -->
+  <rect x="238" y="50" width="196" height="230" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.6" data-page-node-id="6cpRDlORRxfmFbNFObV3ke"/>
+  <text x="336" y="74" text-anchor="middle" font-size="12.5" fill="#047857" font-weight="700" data-page-node-id="ApN19hZi9iOXPvujyrcsY1">② 拼图还原</text>
+  <text x="336" y="92" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="bXShF10rjEfaxXDQjdhGpP">Jigsaw (2016)</text>
+  <g data-page-node-id="I4Cw73PIWhfmF4vcm8avLX">
+    <rect x="266" y="104" width="42" height="42" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2" data-page-node-id="NjBiDAg1FFtgCGOijEUima"/>
+    <rect x="312" y="104" width="42" height="42" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2" data-page-node-id="EgWM3M4OZ33IN6xBke9eIL"/>
+    <rect x="358" y="104" width="42" height="42" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2" data-page-node-id="W1ipuk6FKp0ZqT9jvQGOz4"/>
+    <rect x="266" y="150" width="42" height="42" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2" data-page-node-id="luEBSTP8VhXSqelI9uQAvv"/>
+    <rect x="312" y="150" width="42" height="42" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2" data-page-node-id="RcnOYxtqpeCEvytA0fiEsb"/>
+    <rect x="358" y="150" width="42" height="42" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2" data-page-node-id="mJ3logayKy17TsaZu0QaB4"/>
+  </g>
+  <text x="336" y="214" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Af5JhHOy8ts4MgySbUHGsn">标签：3×3 块的排列序号</text>
+  <text x="336" y="234" text-anchor="middle" font-size="10.5" fill="#047857" font-weight="700" data-page-node-id="ErYj6TfrCbRFiHqGEED5mx">学到：部件与空间关系</text>
+  <text x="336" y="254" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="5STwDP2w62gzwfcASzg2M4">9! = 362880 种排列</text>
+  <!-- 3 rotation -->
+  <rect x="446" y="50" width="196" height="230" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" data-page-node-id="iuYaL4VVM9A0D15TO5KSuY"/>
+  <text x="544" y="74" text-anchor="middle" font-size="12.5" fill="#1d4ed8" font-weight="700" data-page-node-id="8A0vY29aTTz0ZymUmDrhGI">③ 旋转预测</text>
+  <text x="544" y="92" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="IzPveHbdLrd0zpXAHd8puA">Rotation (2018)</text>
+  <g data-page-node-id="ABHr0tXAJ2SFa02g5TOLU5">
+    <rect x="470" y="104" width="34" height="34" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2" data-page-node-id="XNVU0VcaRovSaOphPfPXn7"/>
+    <rect x="508" y="104" width="34" height="34" rx="3" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.2" transform="rotate(90 525 121)" data-page-node-id="HGROZ7j4Nt1kXM1MMdLb6l"/>
+    <rect x="546" y="104" width="34" height="34" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2" transform="rotate(180 563 121)" data-page-node-id="lmMlUyYl0vQoc8EoVItRkG"/>
+    <rect x="584" y="104" width="34" height="34" rx="3" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.2" transform="rotate(270 601 121)" data-page-node-id="Xx8S6oa1BFXUbHUznWZu4d"/>
+  </g>
+  <text x="544" y="164" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="jGEPFVq9RjHIwYU0HJH07K">标签：0° / 90° / 180° / 270°</text>
+  <text x="544" y="184" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="1p3UrvBFDd14naVkX1HM6U">损失：4 分类交叉熵</text>
+  <text x="544" y="214" text-anchor="middle" font-size="10.5" fill="#1d4ed8" font-weight="700" data-page-node-id="mVtYCgn5TS2HxN6Fws0AuC">学到：物体朝向与姿态</text>
+  <text x="544" y="234" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="I2paJrpOLooCYjdVXjQmkK">实现最简单，成为常用基线</text>
+  <!-- 4 inpainting -->
+  <rect x="654" y="50" width="196" height="230" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="1.6" data-page-node-id="nBsUV7jV4AJ1AECg5AhYbS"/>
+  <text x="752" y="74" text-anchor="middle" font-size="12.5" fill="#c2410c" font-weight="700" data-page-node-id="9xIeEP7OiPAzTiHUHUM8bh">④ 图像修复</text>
+  <text x="752" y="92" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="xIAk0tOGDmzIQdJDA1BGN6">Context Encoder (2016)</text>
+  <rect x="682" y="104" width="140" height="86" rx="4" fill="#fed7aa" stroke="#ea580c" stroke-width="1.2" data-page-node-id="c1m4xWudwjOV3zQolXoEcg"/>
+  <rect x="722" y="126" width="60" height="42" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,3" data-page-node-id="caLtkAvMaPHpNV7RvqWYFK"/>
+  <text x="752" y="152" text-anchor="middle" font-size="10.5" fill="#6b7280" data-page-node-id="7K3CUrQuWwwKDwiIEXn8nD">挖空</text>
+  <text x="752" y="214" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="DF2pLkHQBajxf2ud7ZICKK">标签：被遮挡区域的原像素</text>
+  <text x="752" y="234" text-anchor="middle" font-size="10.5" fill="#c2410c" font-weight="700" data-page-node-id="VDNqtbIojAMsZrUlZak0cU">学到：上下文补全能力</text>
+  <text x="752" y="254" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="1vkap4I4lYs9r8jQE5VnYG">重建 + 对抗损失</text>
+</svg>
+</div>
+<h3 data-page-node-id="Jli5IGeYsnz1aLjGRKB1zl">2.2 三个代表性任务的细节</h3>
+<h4 data-page-node-id="wqzBEHFjKWAk9dUjzE7sgO">图像着色（Colorization）</h4>
+<p data-page-node-id="8JXhPJvNoNVqBsrTbpl3Vl">把图像转到 Lab 色彩空间，丢掉 $a$、$b$ 两个色度通道，让模型根据灰度 $L$ 预测色度。关键设计是<strong data-page-node-id="RIycoOqkwQONuQy3CTKV0i">把颜色量化成离散类别</strong>而非回归连续值——因为同一灰度可能对应多种合理颜色（一件衣服可以是红也可以是蓝），直接回归会得到灰扑扑的平均色。量化后训练一个逐像素的交叉熵分类器：</p>
+<div class="formula" data-eq="(3)" data-page-node-id="aSQ3nHVX4MUaBa0Hpp0Fq6">$$\mathcal{L}_{\text{color}} = -\sum_{h,w}\log p\big(\hat{q}_{h,w} = q_{h,w} \,\big|\, L\big), \qquad q \in \{1,2,\dots,Q\}, \; Q \approx 313$$</div>
+<p data-page-node-id="QeUezEizeL8DU73wvA9iOU">这个任务之所以有效，是因为<strong data-page-node-id="LrGivsiLhwEMeufKvuCiFE">要猜对颜色必须识别物体</strong>——知道那是天空、草地还是草莓，才能给出合理的色度。因此它学到的是物体级语义。后续工作（Split-Brain Autoencoder）把同一思路扩展到同时预测颜色与亮度，效果更好。</p>
+<h4 data-page-node-id="6vN84SboGbnBdd2c0SMz7Q">拼图还原（Jigsaw）</h4>
+<p data-page-node-id="RlUyowRRUBJC419lLcaGby">把图像切成 $3\times3$ 的九块，随机打乱后让模型预测原来的排列序号。可能的排列有 $9! = 362880$ 种，直接把每种排列当成一个类别太多，因此只从里面挑一个子集：</p>
+<div class="formula" data-eq="(4)" data-page-node-id="k2cEfh84M6WxMpTUGA1HO5">$$|\mathcal{P}| = 9! = 362880 \;\gg\; |\mathcal{P}_{\text{train}}|, \qquad \mathcal{P}_{\text{train}} \subset \mathcal{P} \text{（Hamming 距离最大的一个子集）}$$</div>
+<p data-page-node-id="RZ5skC9XeBn00KXhBF1Naf">挑选依据是<strong data-page-node-id="7ArtdCytx16RSDKFqZwMxV">排列之间的 Hamming 距离</strong>：两个排列如果只差一对互换，模型很难区分，属于"无意义"的类别。选距离大的子集能让分类任务更清晰。这个任务强迫模型理解部件之间的空间关系，比如"轮子应当在车下方"。</p>
+<h4 data-page-node-id="eHWoDDlhDvxLSruZkeW6kO">旋转预测（Rotation）</h4>
+<p data-page-node-id="rYsj3KlJHgLqy37zSpEghq">把整图旋转 $0°/90°/180°/270°$ 后送入网络，让它判断转了多少度——本质是一个 4 分类问题：</p>
+<div class="formula" data-eq="(5)" data-page-node-id="p5TYLKu7qQaPvxu2tqPGJV">$$\mathcal{L}_{\text{rot}} = -\frac{1}{4}\sum_{r=0}^{3}\log p\big(\hat{r} = r \,\big|\, \text{rot}(x, r)\big)$$</div>
+<p data-page-node-id="CANQ8esfRzeoenIRDKRWo4">它的优点是实现极简、不需特殊网络结构，因此成为后来几乎所有对比学习论文的对照基线。要判断朝向，模型必须认出物体的常规姿态（人脸、车头、四足动物的方向），因此学到的是与物体类别相关的特征。</p>
+<h4 data-page-node-id="vnFIoWw85970SWyTHoEJS3">实现：旋转预测（30 行以内）</h4>
+<p data-page-node-id="UlXNHa3Pjqp8BBN2RbJRlD">旋转预测的代码极其简洁，也正因此成为最常用的代理任务基线。它的全部"技巧"就是用 <code data-page-node-id="0SOQKca77zDGOXgTZGcQ6v">rot90</code> 生成四个候选，然后把任务当成四分类：</p>
+<div class="code-block" data-page-node-id="wTnqHVZsKfwtk0TYHgVqau"><div class="code-header" data-page-node-id="tfNGksf3MJbUb0rJNdKWhf">rotation_pretext.py — 旋转预测代理任务</div><pre data-page-node-id="7SaqxcTQFIhvtUFVzYLquH">
+<span class="kw" data-page-node-id="LQeM9BiPACIZQMj6zN4sY9">import</span> torch
+<span class="kw" data-page-node-id="p4ZsAEkpHUt6RkUgmbBaSi">import</span> torch.nn <span class="kw" data-page-node-id="CIeQZZSjv342ZCBVBNGs4N">as</span> nn
+
+<span class="kw" data-page-node-id="PTwXXHElqShWxYIrPNF5Cc">class</span> <span class="cls" data-page-node-id="10jnQntpNzDCSlE4ElkGvB">RotationPretext</span>(nn.Module):
+    <span class="str" data-page-node-id="rqSbTGVqczMkfokl2PrKhG">"""把同一批图像旋转 0/90/180/270 度，做 4 分类 —— 标签由旋转角自动给出"""</span>
+    <span class="kw" data-page-node-id="V0Y2NgtupzbnVJw0rtNHgr">def</span> <span class="fn" data-page-node-id="OflWpqjAbJHS0iJr6Sd4Bu">__init__</span>(<span class="kw" data-page-node-id="pou7LNMzVpPyv4pjaHFnzW">self</span>, backbone, feat_dim=<span class="num" data-page-node-id="9kEu3i4RODSWTtMBmxu5ff">2048</span>):
+        <span class="fn" data-page-node-id="TZ43XEWKb2OPIX3y3GzhwF">super</span>().<span class="fn" data-page-node-id="1wJM0TMWBxjM3DFy540yMp">__init__</span>()
+        <span class="kw" data-page-node-id="vEs7gZGgS97fSPVRWZp1jD">self</span>.backbone = backbone              <span class="com" data-page-node-id="EzyrFcTDDjLbW54TCSnbdy"># 任意编码器，输出池化后的特征</span>
+        <span class="kw" data-page-node-id="1v4IoQDVGLMf7O74DcVCvW">self</span>.head = nn.Linear(feat_dim, <span class="num" data-page-node-id="WQw8XBC4bE7HZLYjbtOorO">4</span>)    <span class="com" data-page-node-id="NG66GLYlrZtkMhUQYiC7Co"># 4 个类别对应 4 个旋转角</span>
+
+    <span class="kw" data-page-node-id="rkRGvd04P5eV4Eu83PjVRz">def</span> <span class="fn" data-page-node-id="PKzL3ftwYbnjGVwMRadB7V">forward</span>(<span class="kw" data-page-node-id="6R7uavGh0O4jnXasaTEzr0">self</span>, x):
+        <span class="com" data-page-node-id="w5qKojlxIEnxy88eNMxr2d"># 对同一批图像生成 4 个旋转版本并拼接：(4B, 3, H, W)</span>
+        xs = torch.cat([torch.rot90(x, k, dims=(<span class="num" data-page-node-id="MbIobv5CGZXdldM0vhFij6">2</span>, <span class="num" data-page-node-id="8jyo5bBv2BUeEREQZggCGf">3</span>)) <span class="kw" data-page-node-id="f1clutRn2aO4AFKEHYG2TL">for</span> k <span class="kw" data-page-node-id="FtHb4RyC1frak3MgkywGAk">in</span> <span class="fn" data-page-node-id="JsAAFx7Euup8tuNUIDagIZ">range</span>(<span class="num" data-page-node-id="yo21clNcrGYHEI5a1QONfS">4</span>)], dim=<span class="num" data-page-node-id="AWtRSFiH6uZdctCYtja0GP">0</span>)
+        <span class="com" data-page-node-id="QUuncdWThUwAbKeHGWX9Vv"># 伪标签：每个样本的旋转次数 k 就是它的类别</span>
+        labels = torch.arange(<span class="num" data-page-node-id="GGWOMNZFFP3iMap82d5Qzq">4</span>).repeat_interleave(x.size(<span class="num" data-page-node-id="Q6Pe7xlqBMZI8aGbbul3qK">0</span>)).to(x.device)
+        logits = <span class="kw" data-page-node-id="I0Y4UfBYUvgjGH3CqOrUWL">self</span>.head(<span class="kw" data-page-node-id="vvtqFtZWbnrq46tuDzWwDD">self</span>.backbone(xs))   <span class="com" data-page-node-id="4rF9FJokYY6qeyCMyGhoAW"># (4B, 4)</span>
+        <span class="kw" data-page-node-id="n2e3BzMFofBCBDu9EHFIJ0">return</span> logits, labels
+
+<span class="com" data-page-node-id="eSj5CFC5k0VDGkrgedGJpD"># 训练：就是一个普通的多分类任务，全程不需要任何人工标注</span>
+<span class="com" data-page-node-id="d0xdRppqDEPzdk2i8ePkCn"># criterion = nn.CrossEntropyLoss()</span>
+<span class="com" data-page-node-id="KoHZHnumWtLE2FIs9aChE6"># logits, labels = model(images);  loss = criterion(logits, labels)</span>
+<span class="com" data-page-node-id="TmCkEe9guxF94ay2OYQTGs"># 学到的编码器再去掉 head，接线性分类器评估下游任务</span>
+</pre></div>
+<div class="callout warn" data-page-node-id="lEyLvx4BXl1IFHjdhccYM7"><div class="callout-title" data-page-node-id="IRCXX66OW7GYYD5WpAMDyh">为什么"绕过 head"这一步很重要</div>
+<p data-page-node-id="SL6Kz8YAHCpA0WFOEfvE9g">代理任务训练时模型有 <code data-page-node-id="1iQ3JhNbRQV3TqPy7t0yqI">head</code>，但下游评估时<strong data-page-node-id="sQ11rSc6I2uDVDzcllmKGo">必须去掉它</strong>，只保留 <code data-page-node-id="KwWEAP6c5wfsD7Us8EB6FR">backbone</code> 学到的特征。这一步的用意是隔离：如果保留 head，评估测的就是"代理任务做得好不好"；去掉 head 后只接一层线性分类器，测的才是"特征本身有没有语义"。这个约定从代理任务时代一直沿用至今，成为所有自监督评估的默认做法。</p>
+</div>
+<h3 data-page-node-id="GZkUuRpAMeh0do1shgjLcs">2.3 为什么代理任务最终没能走通</h3>
+<p data-page-node-id="IQrBB6ZQbBIQ2gYFHqxlMp">代理任务在 AlexNet 级别的网络、"预训练 + 微调"的评估协议下确实带来了提升，但在 2019–2020 年遇到了明确的天花板，被对比学习全面取代。原因有三，且都不是工程问题：</p>
+<ul data-page-node-id="Ff3GPj8aEmIXkyBNv2r6kR">
+<li data-page-node-id="9kii0O0h2Z1ZUuEWtgLUYi"><strong data-page-node-id="YbMny8LrR5KSj8lMOvXmsD">代理任务与语义之间存在"捷径"</strong>。以拼图为例，模型可能只靠<em data-page-node-id="0By2WVgOe1QNzSWy7h4A0c">相邻块的边缘连续性</em>（低级线索）就能把大部分排列猜对，而不需要理解图像内容。旋转预测同样有捷径：纹理的统计各向异性足以让模型分辨 $0°$ 与 $90°$，不必识别物体。<strong data-page-node-id="TAxCR6LHFUYthBDK7krnUB">任务被解掉了，语义没学到。</strong></li>
+<li data-page-node-id="bma1lkSZH3GtGfRz3FPBKv"><strong data-page-node-id="1QcSQlFOLozcs5popzZPtz">优化目标与我们要的东西不是同一个</strong>。用互信息可以把这个缺口写清楚：</li>
+</ul>
+<div class="formula" data-eq="(6)" data-page-node-id="QhLuLQ7dvhpAMaafH1yvP0">$$\max_{\theta}\; I\big(f_\theta(X);\, Y_{\text{pretext}}\big) \;\;\not\Rightarrow\;\; \max_{\theta}\; I\big(f_\theta(X);\, Y_{\text{semantic}}\big)$$</div>
+<p data-page-node-id="aqiUvaf53xTd2GMjoq9yYU">代理任务最大化的是特征与<em data-page-node-id="rC1BaVMlyZmQwAaEObsL2Z">伪标签</em>的互信息，而伪标签只是语义的一个<strong data-page-node-id="c1gCslFH2OJ1aufpRwPKU6">有噪代理</strong>。两者并不等价，甚至可能负相关——把特征的全部容量用来编码"旋转角度"，反而挤占了编码"物体类别"的空间。</p>
+<ul data-page-node-id="kL1oFexHK7cxKYwtpKVHcg">
+<li data-page-node-id="iTIy40DUPbNOUI729gQfnk"><strong data-page-node-id="FiBdWeAVm3rhN5h6mcgNrY">特征与任务强耦合，迁移性差</strong>。为着色学到的特征偏重纹理与颜色统计，为拼图学到的偏重边缘与局部几何。换一个下游任务时，这些"定制特征"可利用的部分有限。而人类希望得到的是<strong data-page-node-id="uFc3PMBKDdm1gY99ABXBU1">任务无关</strong>的通用表示。</li>
+</ul>
+<div class="svg-box" data-page-node-id="vP2pePd2t33Q9rM3boesr9">
+<svg viewBox="0 0 880 240" xmlns="http://www.w3.org/2000/svg" data-page-node-id="C1wJKqzKxZq4q8wDkGwF2q">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="9mptfC2SZAZq4LkJJPoqyY">代理任务的"捷径解"问题：任务被解掉，语义没学到</text>
+  <!-- shortcut path -->
+  <rect x="50" y="70" width="150" height="52" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="H1Q5ByDmbndO1FGwXKfXuV"/>
+  <text x="125" y="101" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="IeJGVpwhyVxBds2xH9aTTZ">输入图像</text>
+  <line x1="204" y1="96" x2="272" y2="96" stroke="#dc2626" stroke-width="2.2" marker-end="url(#ssl-ar)" data-page-node-id="59GkqODx3hPm1DjmNKeb9U"/>
+  <text x="238" y="88" text-anchor="middle" font-size="9.5" fill="#dc2626" font-weight="700" data-page-node-id="qF6OAyIYOLFWhW6lnsQnvL">捷径</text>
+  <rect x="276" y="70" width="200" height="52" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6" data-page-node-id="wbuIHsQYUzrIxubvJ5Tx4m"/>
+  <text x="376" y="92" text-anchor="middle" font-size="11.5" fill="#b91c1c" font-weight="700" data-page-node-id="Cx16YaC3AA44LFBrzfsQr0">低级线索</text>
+  <text x="376" y="110" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="t2WTF5SYB8EFqixO2DaCle">边缘连续性 / 纹理各向异性</text>
+  <line x1="480" y1="96" x2="548" y2="96" stroke="#dc2626" stroke-width="2.2" marker-end="url(#ssl-ar)" data-page-node-id="eW0Hhrp61EEp9F7nE8P8w1"/>
+  <rect x="552" y="70" width="260" height="52" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="4VgoI4EHAvpchHYiCYPpmL"/>
+  <text x="682" y="92" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="hDPSRqMvKfmnDgFjoebSPS">代理任务被解掉</text>
+  <text x="682" y="110" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="YOcKS15CsOCnLnX2VRkvDQ">损失降得很低，但没有语义</text>
+  <!-- desired path -->
+  <line x1="125" y1="126" x2="125" y2="172" stroke="#94a3b8" stroke-width="1.6" data-page-node-id="tCs8v2LOjBXGA8QW7NrPi4"/>
+  <line x1="125" y1="172" x2="272" y2="172" stroke="#2563eb" stroke-width="2.2" marker-end="url(#ssl-ar)" data-page-node-id="kxTCqy3SA8JE8lKkLlHLke"/>
+  <text x="200" y="190" text-anchor="middle" font-size="9.5" fill="#2563eb" font-weight="700" data-page-node-id="WfVFSr6KOj9I2r2oUgKnET">我们想要的</text>
+  <rect x="276" y="146" width="200" height="52" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" data-page-node-id="Pt0K4q9JgpfXHIB9fq9Cpr"/>
+  <text x="376" y="168" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="SBpvFVO18snIO5pYJMZShQ">语义理解</text>
+  <text x="376" y="186" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="LsJdyKxjPHiPIrgngyIhk2">物体类别 / 部件 / 关系</text>
+  <line x1="480" y1="172" x2="548" y2="172" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,4" data-page-node-id="zM5xNH4FroyPwdo7cr3lRS"/>
+  <rect x="552" y="146" width="260" height="52" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5,4" data-page-node-id="ZgE1DpHUW88tSOvsElIQfM"/>
+  <text x="682" y="168" text-anchor="middle" font-size="11.5" fill="#64748b" font-weight="700" data-page-node-id="PdP6yfRb48Mjr7DSf7hJqi">未被这条路径优化</text>
+  <text x="682" y="186" text-anchor="middle" font-size="10.5" fill="#94a3b8" data-page-node-id="Yq3WiGGghphT7LO4fbpkje">模型没有义务走这条路</text>
+  <text x="440" y="226" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="QyTYFA5UpsPd5qdDJbOOxt">教训：需要设计一个"任务无关"、且不给捷径留空间的目标</text>
+</svg>
+</div>
+<h3 data-page-node-id="nHvPqUuRUTH3oLmk3TCVoT">2.4 生成式路线的经验</h3>
+<p data-page-node-id="ooI8zQdABBfo2t13U6HnX7">与代理任务并行的是生成式路线：自编码器（Autoencoder）压缩重建、生成对抗网络（GAN）生成逼真图像。这些模型的编码器是否学到了可用的特征？</p>
+<p data-page-node-id="URu4Pjw9JzhHC4CE0svakF">结论是<strong data-page-node-id="i17Nye2QDeoBuEb5X0KZbl">部分可用，但效率不如代理任务</strong>。DCGAN 等工作发现，把判别器的中间层特征取出、接一个线性分类器，能取得远高于随机初始化的精度——说明对抗训练确实逼出了有语义的特征。但问题在于：</p>
+<ul data-page-node-id="5YidD6yonLZi9s97DmaNTp">
+<li data-page-node-id="LAKShrgdA1Yae4LC39NcQm"><strong data-page-node-id="FHQsDBd7salxXEjhfYUvd0">自编码器的重建目标迫使其保留全部细节</strong>，包括对语义无用的高频噪声，特征冗余度高；</li>
+<li data-page-node-id="io5X6KSne7NyeurTEP4Asf"><strong data-page-node-id="V3UdnTcm30SNw7Xa6QHeFA">GAN 的训练不稳定</strong>，生成质量与特征质量之间没有可靠的对应关系；</li>
+<li data-page-node-id="iq5B1RbI4U3fBhVEDCMKVP">两者的目标仍是"生成像素"，与"判别语义"隔着一段距离。</li>
+</ul>
+<p data-page-node-id="bxFvZjakJThJfBlQkoyG2g">这条路线后来在 MAE（掩码自编码）中得到修正：把重建目标限制在被遮挡区域、并大幅提高遮挡比例，使重建<strong data-page-node-id="isFtDbzJfTtdgJQ5DpLVti">必须依赖语义推理</strong>而不能靠复制邻近像素。这是"生成式目标 + 代理任务思路"的融合，也是第 5 章要讲的现代自监督的重要一支。</p>
+</section>
+<section id="ch3" data-page-node-id="s4iqdJEXIetd2V12nFW5bz"><h2 data-page-node-id="fH2SIuT6uFn7Iql7a2ix82"><span class="num" data-page-node-id="bJtF7CPKvwJqp6oDENxexQ">3</span>对比学习（上）：负样本时代 —— SimCLR 与 MoCo</h2>
+<h3 data-page-node-id="DBIoQS8o20MMpZSDs4mrX2">3.1 核心思想：不用人造任务，用"一致性"作目标</h3>
+<p data-page-node-id="pYT6Sw8H1PSATb7RgizHcy">代理任务的教训是：<em data-page-node-id="3PGLEXN7uRCK7ALN4t4DLQ">任务与语义脱钩，模型会找捷径</em>。那么能不能设计一个<strong data-page-node-id="06jU2uOHpwSU6vxoWWsGhM">没有捷径可走</strong>的目标？对比学习给出的答案是：<strong data-page-node-id="oTWCOPI4OsX41PlKLJ5jct">不预测任何具体内容，只要求同一张图的不同视角在特征空间里足够接近，同时与其他样本足够远离。</strong></p>
+<div class="formula" data-eq="(7)" data-page-node-id="2O1bzb7UmAkAnhajSNjMPo">$$\max_{\theta}\; \text{sim}\big(z_i,\; z_i^{+}\big) \qquad \text{且} \qquad \min_{\theta}\; \text{sim}\big(z_i,\; z_k^{-}\big), \qquad z = \frac{g\big(f_\theta(x)\big)}{\big\|g(f_\theta(x))\big\|}$$</div>
+<p data-page-node-id="YC1287R4w2K4wiasyCSWw2">这里 $z_i^+$ 是同一张图的另一个增广视图（正样本），$z_k^-$ 是其他图像（负样本），$\text{sim}$ 通常取余弦相似度。注意 $g$ 是<strong data-page-node-id="wWoMQCF8OXkGab2LKa3Q5r">投影头</strong>（projection head）：最终用于下游任务的特征取 $f_\theta$ 的输出，而对比损失作用在 $g$ 的输出上。这个设计看似细节，实则重要——它让编码器不必为了对比损失而牺牲信息。</p>
+<div class="callout warn" data-page-node-id="SGswhwuLAPDT75VJyDTQA4"><div class="callout-title" data-page-node-id="9cz87vAvG9AJg3pnjBRRRE">为什么必须有负样本：坍缩问题</div>
+<p data-page-node-id="mpS73IEDW5tic4lC2udveR">如果只保留"正样本拉近"这一项，模型会立刻发现一个<strong data-page-node-id="gVeb0CsIBbfrDJMzCVqZZ4">平凡解</strong>：把所有输入都映射成同一个常数向量。此时任意两个视角的特征完全相同，正样本损失降到零，但特征毫无信息量。这个现象称为<strong data-page-node-id="xkY46W91RtXGVNYhA3ZX8U">表征坍缩</strong>（representation collapse）。防止坍缩有两条路线：<em data-page-node-id="WCwmWdowAMMS9U0VojFCJl">用负样本把不同样本推开</em>（SimCLR、MoCo），或<em data-page-node-id="TJ6w454A7G0Lw5V6TTLlsV">用非对称结构实现"自己教自己"</em>（BYOL、SimSiam，见第 4 章）。<strong data-page-node-id="xEFsmKcuYfXvl9SwzmLhhg">第 3 章与第 4 章的区别，本质就是这两条防坍缩路线之争。</strong></p>
+</div>
+<div class="svg-box" data-page-node-id="cnlo8qMbl2r8Gk91LghuSR">
+<svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" data-page-node-id="9dTXgVbjxuzXhIqcQHOt8q">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="HiL5mRmKsLFJKqvLY8GmVh">对比学习框架：正样本拉近，负样本推远</text>
+  <!-- one image -->
+  <rect x="40" y="56" width="96" height="72" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="7fxTJCVbKaSfKHdBzTiRra"/>
+  <text x="88" y="98" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="5qWHefMBcoYIltYQE2djZW">图像 x</text>
+  <line x1="140" y1="76" x2="188" y2="76" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="qOWxrYbzsAZUbLZ5jE9utA"/>
+  <line x1="140" y1="108" x2="188" y2="108" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="DbegHhouwDtmR3dU7f18Bb"/>
+  <text x="164" y="70" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="TW0AiPE53CAB5H2Xo4MJUk">τ₁</text>
+  <text x="164" y="124" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="YRDwN8xLiSRrLFAkfFgAtC">τ₂</text>
+  <rect x="192" y="52" width="66" height="48" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4" data-page-node-id="vf88JoRXuo9rF2DbfeooHI"/>
+  <text x="225" y="81" text-anchor="middle" font-size="10.5" fill="#1d4ed8" data-page-node-id="TwiGaY7Euok9cciVuUxwaG">视图 1</text>
+  <rect x="192" y="112" width="66" height="48" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4" data-page-node-id="RHOwjHduo124vkOMrbYP7a"/>
+  <text x="225" y="141" text-anchor="middle" font-size="10.5" fill="#1d4ed8" data-page-node-id="Rl1DBpz6PfCNh2Z7xT34KU">视图 2</text>
+  <line x1="262" y1="76" x2="300" y2="94" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="dJJTd8B2jr7kdAOCXEoGVr"/>
+  <line x1="262" y1="136" x2="300" y2="118" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="TYlpYi4foMF5UKTNcz6TU8"/>
+  <!-- encoder -->
+  <rect x="304" y="70" width="96" height="72" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="K2XceR7hPt1Uy5WpbPjzFs"/>
+  <text x="352" y="100" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="lUue8gSaibc43AtUuMuXvr">编码器 f</text>
+  <text x="352" y="120" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="NqTX2cnHjPonj49moqFLCW">+ 投影头 g</text>
+  <line x1="404" y1="106" x2="442" y2="106" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="XUfPVK6BK7EwyhKwUUPofy"/>
+  <!-- embedding space -->
+  <rect x="446" y="46" width="240" height="140" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" data-page-node-id="A6OUXrViviWaMtOB0VblXA"/>
+  <text x="566" y="66" text-anchor="middle" font-size="11" fill="#475569" font-weight="700" data-page-node-id="qE3zi49KgDFViWYBCaG255">特征空间</text>
+  <circle cx="536" cy="106" r="12" fill="#2563eb" data-page-node-id="eZ3Nh2LhGmuUpLepBGjmMF"/>
+  <text x="536" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" data-page-node-id="N9n9AV8D1kIJAq2H7DM6xX">z₁</text>
+  <circle cx="566" cy="118" r="12" fill="#60a5fa" data-page-node-id="wTJUjrmzNTnoVXQDA8FDWZ"/>
+  <text x="566" y="123" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" data-page-node-id="0hqDQlfHDJeo7Y2aeNChm1">z₂</text>
+  <line x1="546" y1="112" x2="556" y2="114" stroke="#059669" stroke-width="3" data-page-node-id="XN1W2Q73JLH0vGApAWEgHB"/>
+  <text x="566" y="90" text-anchor="middle" font-size="9.5" fill="#059669" font-weight="700" data-page-node-id="I00bhVG5g6okVm8L9cWB87">拉近</text>
+  <circle cx="636" cy="86" r="11" fill="#fca5a5" data-page-node-id="S3oA6rDW1ElDgxudCZhwy9"/>
+  <text x="636" y="90" text-anchor="middle" font-size="8.5" fill="#7f1d1d" font-weight="700" data-page-node-id="rFB0DGlBmoZSWyRBe8qmfF">z⁻</text>
+  <circle cx="654" cy="140" r="11" fill="#fca5a5" data-page-node-id="R90TMRPO2iqiDDwoEs4rDF"/>
+  <text x="654" y="144" text-anchor="middle" font-size="8.5" fill="#7f1d1d" font-weight="700" data-page-node-id="IGA3HpOgGPAU8A63KIrfA8">z⁻</text>
+  <circle cx="606" cy="156" r="11" fill="#fca5a5" data-page-node-id="zoMLFkybXp9Mjq0gG0UUts"/>
+  <text x="606" y="160" text-anchor="middle" font-size="8.5" fill="#7f1d1d" font-weight="700" data-page-node-id="gPQcBHRZbkoXrYh8RLGBQN">z⁻</text>
+  <line x1="562" y1="112" x2="628" y2="92" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="xo40s7u0tx0xcHLDyVIoZI"/>
+  <line x1="566" y1="126" x2="648" y2="136" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="vGgvUpNtQ6D8xYBGRCiAXy"/>
+  <text x="700" y="106" font-size="10.5" fill="#dc2626" font-weight="700" text-anchor="middle" data-page-node-id="edK2rVquiTFTjiSkbxR5PU">推远</text>
+  <text x="700" y="124" font-size="9.5" fill="#94a3b8" text-anchor="middle" data-page-node-id="SbKUvMl8dEX9OsONRSuBGQ">其他图像</text>
+  <!-- loss -->
+  <line x1="690" y1="116" x2="740" y2="116" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="43pVZsE6C4fdQ1DiF7xfV6"/>
+  <rect x="744" y="76" width="110" height="80" rx="9" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6" data-page-node-id="AmBb7A8zPSByh9vMjCmkIU"/>
+  <text x="799" y="102" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="Q7tBR3cC0DHfSdhwtx9kRa">InfoNCE</text>
+  <text x="799" y="122" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="KBrPoPu8hA8IjJZuCXxgvp">softmax 形式</text>
+  <text x="799" y="140" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="YRDzOMbJbFIlr7F1sRUxYY">分母含全部负样本</text>
+  <text x="440" y="232" text-anchor="middle" font-size="11.5" fill="#64748b" data-page-node-id="RgzdtQ11Obt4LfUKui1bdU">关键问题：负样本从哪里来、要多少 —— 这正是 SimCLR 与 MoCo 的分歧点</text>
+  <text x="440" y="262" text-anchor="middle" font-size="11" fill="#94a3b8" data-page-node-id="P26ZbdaMJy6sUhG8AsWrLh">SimCLR：同一 batch 内互相充当负样本（需要极大 batch）</text>
+  <text x="440" y="284" text-anchor="middle" font-size="11" fill="#94a3b8" data-page-node-id="4OepkoO5psQl9vqqG7PTL4">MoCo：用一个队列把过去若干 batch 的特征存起来（需要极小 batch 即可）</text>
+</svg>
+</div>
+<h3 data-page-node-id="D4TCfmbUxrDMaUwm4QyEj6">3.2 InfoNCE：把"拉近推远"写成一个损失</h3>
+<p data-page-node-id="ytWyGoe6pjnFcPw4DJ9EDC">对比目标需要一个可微的损失函数。通用做法是把问题转成<strong data-page-node-id="EDjOWgUjGUzKhGoLAo5qCx">一个多分类问题</strong>：给定锚点 $z_i$，在"一个正样本 + $K$ 个负样本"共 $K+1$ 个候选中，把正样本识别出来。这正是一个 softmax 分类，其交叉熵损失称为 <strong data-page-node-id="8F0BR9gwLKjolWJ5WF5Llb">InfoNCE</strong>：</p>
+<div class="formula" data-eq="(8)" data-page-node-id="3q5IHpQ989yE7DQTbendNU">$$\mathcal{L}_{i} = -\log \frac{\exp\big(\text{sim}(z_i, z_i^{+})/\tau\big)}{\exp\big(\text{sim}(z_i, z_i^{+})/\tau\big) + \sum_{k=1}^{K}\exp\big(\text{sim}(z_i, z_k^{-})/\tau\big)}$$</div>
+<p data-page-node-id="eSF32nUa6PFrXSBaWDIpmg">三个要点：</p>
+<ul data-page-node-id="Nh89pjWGdR6OhSunXXINNq">
+<li data-page-node-id="rl0SDCRoBtDUjTFtRjiH6D"><strong data-page-node-id="jpnPFJTuLBxaNGFl5aESRb">分子只有正样本</strong>，因此最大化它等价于把正样本拉近；<strong data-page-node-id="r592EbP7a0ZiSHqO4DG4s6">分母含全部负样本</strong>，因此最大化它也等价于把负样本推远。一个式子同时表达了两个方向。</li>
+<li data-page-node-id="KOQ2UF4h75gUuvNWBpCkLK"><strong data-page-node-id="KPDEhsEUHzXGF4DAGxOTU9">温度 $\tau$ 控制"尖锐度"</strong>。$\tau$ 越小，softmax 越尖锐，模型对困难负样本（相似度高的负样本）的惩罚越重。SimCLR 的实验显示 $\tau$ 对精度影响显著——它决定了模型是"关注那些容易被混淆的负样本"还是"均匀地推开所有负样本"。</li>
+<li data-page-node-id="LF3RaL3DHTXSx6jQtEIfsl">InfoNCE 同时是互信息的一个下界（$I(z_i;z_i^+)\ge \log(K+1)-\mathcal{L}_i$），这解释了它为什么能学到有信息的表示：<strong data-page-node-id="n52rq5ZiLsQF7BxrarOG0L">负样本越多，下界越紧</strong>。这一点直接预示了下一节 SimCLR 对大批次的依赖。</li>
+</ul>
+<h3 data-page-node-id="4bvje7Nr5AtY82XdXxdtBH">3.3 SimCLR：极简框架，代价是大批次</h3>
+<p data-page-node-id="unW5CWMu8BQ867S4oOKopd">SimCLR（2020.02）的价值在于<strong data-page-node-id="hoqdZ4r3pY8xI2yH2ZF3tb">把对比学习简化到只剩必要组件</strong>，并系统地做了消融实验，回答"到底哪些设计是关键的"。它的框架极简：同一张图做两次随机增广得到两个视图，分别过同一个编码器与投影头，用对称的 NT-Xent 损失训练：</p>
+<div class="formula" data-eq="(9)" data-page-node-id="ji0FOcGXBSq9XgmgUXAsvf">$$\mathcal{L} = \frac{1}{2N}\sum_{i=1}^{N}\Big[\;\ell\big(i,\, j(i)\big) + \ell\big(j(i),\, i\big)\Big], \qquad \ell(i,j) = -\log\frac{\exp\big(\text{sim}(z_i,z_j)/\tau\big)}{\sum_{k\ne i}\exp\big(\text{sim}(z_i,z_k)/\tau\big)}$$</div>
+<p data-page-node-id="Nl3gPslGqoMUwyN2rQUVue">SimCLR 的四个结论，每一个都影响了后续所有工作：</p>
+<div class="table-wrap" data-page-node-id="bAsuYqQ3yrOQV8UMx5PXnA">
+<table data-page-node-id="vYRRniuaAnWMmUL5e912au">
+<tr data-page-node-id="9BTJd1REpaL8Fi8DZ1G6bk"><th data-page-node-id="CByd3nkDnNQ7S1odO08idz">结论</th><th data-page-node-id="uxq5HpinCnmGHvNrDq4HpN">具体发现</th><th data-page-node-id="crcJFQqjLPc5DoS2B60HD8">后续影响</th></tr>
+<tr data-page-node-id="JYem1b4DXH9heD4VgpWzbM"><td data-page-node-id="kDb51iEUWHmF3Q95RS6DUM"><strong data-page-node-id="KVSqJh4Kwg2NVxqgCq6a1M">增广组合最关键</strong></td><td data-page-node-id="xxZshC0tG9aVmLJrBu54XZ">单个增广效果有限；<em data-page-node-id="WMuY09wEqfuoQBy6e6Vv5K">随机裁剪 + 颜色抖动</em>的组合远优于其他搭配</td><td data-page-node-id="5PHH1SiwjDuJDS18CXQQ1Z">确立了"颜色抖动不可省"这一经验，直到 BYOL 仍在沿用</td></tr>
+<tr data-page-node-id="YFUlPEMaNpyqS3qoHcPLJe"><td data-page-node-id="vHN155PQrgm4ophaDrfPWu"><strong data-page-node-id="aAU8ja1AtHlqsDVQrITmKH">投影头不可省</strong></td><td data-page-node-id="PjqelbsafJsLAsLACBvSVw">在投影头输出上算损失、在编码器输出上做下游任务；去掉投影头精度明显下降</td><td data-page-node-id="iZ7TSYaPykFfOeXgXTwQjz">成为标准设计（BYOL、SimSiam、DINO 均沿用）</td></tr>
+<tr data-page-node-id="P06g4dRQ6y9GKPl1PgTJ3n"><td data-page-node-id="ULuSbKn4CGqcPtrGKcpM3D"><strong data-page-node-id="eBWHiHKOuvJ5XoY3uHbVnT">负样本越多越好</strong></td><td data-page-node-id="89fJbUwx8Hq24AWlHGeldM">batch 从 256 增到 8192，精度持续上升</td><td data-page-node-id="KchF4s1ARXUI9D28xAvNKx">暴露了"负样本来自当前 batch"这一根本限制</td></tr>
+<tr data-page-node-id="AbFvx4SK2CUoF2eCCF268F"><td data-page-node-id="IsASbRZBrwUdIJudRp9BPd"><strong data-page-node-id="8137G3kVW82wbmdVhGlU5d">训练越久越好</strong></td><td data-page-node-id="zfMcrDwOdV0nvERfVMUtOq">100 → 1000 epoch 仍有提升，需配合更大 $\tau$ 与更深投影头</td><td data-page-node-id="vf3IOujqc9T8trfiXkCqIH">自监督的训练成本从此进入"千 epoch"时代</td></tr>
+</table>
+</div>
+<p data-page-node-id="SFO23TaaQQHqQrnKLDew3x">但"负样本越多越好"也带来一个硬约束：<strong data-page-node-id="SDeF4F0xyvqexmC7CsMXXS">负样本取自当前 batch，因此 batch 必须足够大</strong>。SimCLR 用 batch 4096（甚至 8192）、配合 LARS 优化器与 TPU 才能训起来。这使它在中小实验室难以复现，也直接催生了 MoCo。</p>
+<h4 data-page-node-id="FcTv43GJJFuXUyxaZqwUmG">实现：对比损失 NT-Xent（SimCLR）</h4>
+<p data-page-node-id="RMi3NFDjfPZ8ASglBXrZAJ">SimCLR 的损失实现有一个容易写错的地方：要把 $2N$ 个特征拼在一起算相似度矩阵，然后<strong data-page-node-id="ygwmk8aTZwbHzAMEu4L3t0">屏蔽对角线</strong>（样本与自己相似度恒为 1，会污染分母），并让第 $i$ 个样本的目标指向第 $i+N$ 个（即它的正样本）：</p>
+<div class="code-block" data-page-node-id="gRV1ld9qV83Ceby5Kx6c6H"><div class="code-header" data-page-node-id="BCpHC9PI6yPkZFEGOJLkBH">nt_xent.py — SimCLR 的 NT-Xent 损失</div><pre data-page-node-id="SKkfKh5htYuW9cYzlKi95Y">
+<span class="kw" data-page-node-id="Qtj3rsGmggP2ZwcALWyz1a">import</span> torch
+<span class="kw" data-page-node-id="8jKKH2gmXGwNA8JKd1DBAz">import</span> torch.nn.functional <span class="kw" data-page-node-id="Ku0DIFbZRLBdc7t25ZKR7e">as</span> F
+
+<span class="kw" data-page-node-id="0EqQ2VZ8S81xUAvX3LWe3C">def</span> <span class="fn" data-page-node-id="OHGjHC0sYKff8Du1slVNfB">nt_xent</span>(z1, z2, temperature=<span class="num" data-page-node-id="l4FWU1SIMCTFBtFz7COoXu">0.5</span>):
+    <span class="str" data-page-node-id="rBOOQ0DBFDQN0MMVtyHN6E">"""z1, z2: (N, D) —— 同一批图像的两种增广视图经投影头后的输出"""</span>
+    N = z1.size(<span class="num" data-page-node-id="tabNdBmoOeKANhDVgot3WW">0</span>)
+    <span class="com" data-page-node-id="x8qNNmKJZvKXePBQ7tvKrt"># 1) L2 归一化后拼接，相似度退化为点积</span>
+    z = F.normalize(torch.cat([z1, z2], dim=<span class="num" data-page-node-id="pAFes2KmUsIKAbOnYUIsck">0</span>), dim=<span class="num" data-page-node-id="CvAhquYfGr5RFcjVXfR6Bw">1</span>)   <span class="com" data-page-node-id="H81lCd1R48ZpovqV8qis57"># (2N, D)</span>
+    sim = z @ z.t() / temperature                       <span class="com" data-page-node-id="8Hp9tCPv0fy2Q2clbqJ6iD"># (2N, 2N)</span>
+    <span class="com" data-page-node-id="g40lu4pYWkM9Rkb0S59xpn"># 2) 屏蔽对角线：自己与自己不应进入分母</span>
+    mask = torch.eye(<span class="num" data-page-node-id="24WxXVnJwsTFFJSm2MdRRs">2</span> * N, dtype=torch.bool, device=z.device)
+    sim = sim.masked_fill(mask, <span class="fn" data-page-node-id="jRZczETmtj2imU437GaGu4">float</span>(<span class="str" data-page-node-id="CG8T1AFHZIy5Q9XM3mV5Pr">'-inf'</span>))      <span class="com" data-page-node-id="MzfIs74kTQC8NaXkFkQEym"># 需用 = 而非原地操作以避免破坏计算图</span>
+    <span class="com" data-page-node-id="oAxfPySNC4HTHqxjI6oEIj"># 3) 正样本索引：i 的正样本是 i+N，反之亦然</span>
+    targets = torch.arange(<span class="num" data-page-node-id="MpxFB1WxWHmVCSA0haQ9Bw">2</span> * N, device=z.device)
+    targets = (targets + N) % (<span class="num" data-page-node-id="kKTRswuULvRTQ2Yk7y2Il8">2</span> * N)
+    <span class="com" data-page-node-id="AbpbOP7Oz5PGwquKWl0nNe"># 4) 这一行 softmax 交叉熵同时实现了"拉近正样本"与"推远所有负样本"</span>
+    <span class="kw" data-page-node-id="BTHrzbeJMyHHGc67pGeGt6">return</span> F.cross_entropy(sim, targets)
+</pre></div>
+<p data-page-node-id="Fr8N5Sd5vBIJ5ImpYlnBo2">注意第 3 步：<strong data-page-node-id="NM9H2zbtqxcZyj9nw9rehz">整个 batch 内除自己以外的 $2N-2$ 个样本都充当负样本</strong>。这就是 SimCLR 需要大 batch 的直接原因——batch 越大，分母里的负样本越多，InfoNCE 下界越紧，表示质量越好。</p>
+<h3 data-page-node-id="fbJOhdVJSCVtxlG3BNX06X">3.4 MoCo：把负样本"存"起来</h3>
+<p data-page-node-id="2jaUFDXSDHsmICimct5jjv">MoCo（2020.03）的动机一句话就能说清：<strong data-page-node-id="Mj81Xp2URDlAHppoYUBJIR">负样本的"数量"和 batch 的"大小"本来不必绑在一起</strong>。SimCLR 之所以需要大 batch，只是因为负样本必须来自同一个 batch。MoCo 的做法是维护一个<strong data-page-node-id="FKOx4lkRmeqtMl5zxW6dLP">特征队列</strong>：每个 batch 的编码结果入队，最老的特征出队，队列长度远大于 batch（默认 65536 对 256）。</p>
+<p data-page-node-id="DVbKZkZYSCDYHBbZPicAvK">但直接把历史特征当负样本会有一个问题：编码器参数在更新，队列里的旧特征来自<strong data-page-node-id="euDq4w4Z58NDSFIGGI4ZWV">不同的编码器</strong>，与当前特征不可比。MoCo 的解法是引入<strong data-page-node-id="SlR65Gm53cmYdOKHTJWHVs">动量编码器</strong>——它不参与梯度更新，而是缓慢跟随主编码器：</p>
+<div class="formula" data-eq="(10)" data-page-node-id="8BBLHzpjidS30aQtkcp8TA">$$\theta_k \;\leftarrow\; m\,\theta_k + (1-m)\,\theta_q, \qquad m = 0.999$$</div>
+<p data-page-node-id="nsi3WASF7YCnmnapotLJDo">动量系数 $m=0.999$ 意味着动量编码器每步只移动 0.1%，在数千步内近似不变。<strong data-page-node-id="uYj0TiLTBBMpAx67YIePv7">队列提供"数量"，动量提供"一致性"</strong>——这两点合起来，使 MoCo 用 batch 256 就超过了 SimCLR 用 batch 4096 的效果。MoCo v2 进一步吸收 SimCLR 的经验（加投影头 MLP、加强增广），把 ResNet-50 的线性探针精度从 60.6% 提升到 71.1%。</p>
+<div class="svg-box" data-page-node-id="SMU61fyLzif7HPKsFHg3JL">
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="9I2YvR3THWNRPOpCPX8Toe">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="EqG6wTDUp0eLawmQPjQJo5">SimCLR 与 MoCo：负样本来源的两种方案</text>
+  <!-- SimCLR -->
+  <text x="215" y="56" text-anchor="middle" font-size="12.5" fill="#2563eb" font-weight="700" data-page-node-id="QWZHsNVh2XwfHR1rTAkEGG">SimCLR：负样本 = 同 batch 内的其他样本</text>
+  <rect x="50" y="72" width="330" height="128" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" data-page-node-id="WFD03s4kedEmCkheBiKAGS"/>
+  <text x="215" y="94" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700" data-page-node-id="yTiNxSwcFLa8p4BHNP7OJq">一个 batch（需极大，如 4096）</text>
+  <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.1" data-page-node-id="jbdeoyjwvfsXs8qzkDPmGa">
+    <rect x="70" y="106" width="42" height="30" rx="4" data-page-node-id="j1iPf79DntMp3HeRK0aVag"/><rect x="118" y="106" width="42" height="30" rx="4" data-page-node-id="Y8yB9uMI6wP2wuD38FUHgj"/><rect x="166" y="106" width="42" height="30" rx="4" data-page-node-id="4u9zXWXsOEJyyXxMiXeIl8"/><rect x="214" y="106" width="42" height="30" rx="4" data-page-node-id="TgFNXoQoncLPpXKfbInOVw"/>
+    <rect x="262" y="106" width="42" height="30" rx="4" data-page-node-id="NHuWWr7VByMVvoyExfZBdP"/><rect x="310" y="106" width="42" height="30" rx="4" data-page-node-id="rhsb6ILUCygzp8VvgbzDL1"/>
+  </g>
+  <text x="228" y="127" text-anchor="middle" font-size="11" fill="#1e3a5f" font-weight="700" data-page-node-id="q1tZoSJCIEFIBkJQtnGZKy">. . .</text>
+  <text x="215" y="160" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="cXrJaWzvvb28mKED3P2XKW">所有样本互为负样本</text>
+  <text x="215" y="180" text-anchor="middle" font-size="10.5" fill="#dc2626" font-weight="700" data-page-node-id="dH9iJXKyspsEHNAdownBQ3">约束：必须一次性放进显存</text>
+  <text x="215" y="222" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="UM6LHMLclzlyrPPPksC3VY">优点：负样本与当前编码器严格同步</text>
+  <text x="215" y="244" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="J5BlqFgkwzdyu5ZYqEfGUo">缺点：显存墙限制负样本数量上限</text>
+  <!-- divider -->
+  <line x1="440" y1="50" x2="440" y2="270" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6,4" data-page-node-id="gIlw0RIIoKidtuvTISTf17"/>
+  <!-- MoCo -->
+  <text x="665" y="56" text-anchor="middle" font-size="12.5" fill="#059669" font-weight="700" data-page-node-id="KNNhhGAyLaE2OikkACeR6w">MoCo：负样本 = 特征队列</text>
+  <rect x="500" y="72" width="330" height="128" rx="9" fill="#ecfdf5" stroke="#059669" stroke-width="1.6" data-page-node-id="yNJkcOFIM97fIPPBZuwOJo"/>
+  <text x="665" y="94" text-anchor="middle" font-size="11" fill="#047857" font-weight="700" data-page-node-id="XCQ95SDHR4dr2OFR41zTBM">小 batch（256）</text>
+  <g fill="#d1fae5" stroke="#059669" stroke-width="1.1" data-page-node-id="L9wwg63dzG6vor5Ssu2f7h">
+    <rect x="530" y="104" width="46" height="30" rx="4" data-page-node-id="BA01gIj4x3KrCV3A1DU33Y"/><rect x="584" y="104" width="46" height="30" rx="4" data-page-node-id="mSUv4kwdguU3ECTRLLNdmL"/>
+  </g>
+  <text x="665" y="124" text-anchor="middle" font-size="10.5" fill="#064e3b" data-page-node-id="bXsYz1miLVsTA3IVbq5Zuf">↓ 入队</text>
+  <rect x="530" y="138" width="270" height="38" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" data-page-node-id="H3K7JtG69iFL51dDvD8iCs"/>
+  <text x="665" y="162" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700" data-page-node-id="9u972CXMgDrWeSGKQVU3hG">特征队列（长度 65536）· 先进先出</text>
+  <text x="665" y="222" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="OeZ0vy6HFhO3CetqSN0Ly8">动量编码器使队列内特征"缓慢演化、彼此可比"</text>
+  <text x="665" y="244" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="2BUIhBvTo4D39Al5ScGPau">负样本数量与 batch 大小解耦 ⇒ 小显存也能训</text>
+</svg>
+</div>
+<h3 data-page-node-id="dFX02g94fk6XIwFuD5vicz">3.5 同期的其他思路</h3>
+<p data-page-node-id="IBW7MdD26RHSyBNn9buMLz">2020–2022 年间还有若干方法从不同角度绕开"负样本"，值得一并了解，因为它们与第 4 章的问题同源：</p>
+<ul data-page-node-id="4UqwjCz33sbidzKiaJzjUm">
+<li data-page-node-id="TAnDc7c9Inmgji8ySdC5x1"><strong data-page-node-id="VGZXvpur4UE9ZhDOeDjAfQ">SwAV</strong>（2020.06）：先在线聚类出若干"原型"（prototypes），再让同一张图的两个视图互相预测对方的<em data-page-node-id="goZoS6eL4XSYq35lEBwR4B">聚类分配</em>（swapped prediction）。它不显式比较样本对，而是通过聚类间接实现了"推开不同样本"的效果。</li>
+<li data-page-node-id="cFaTpwVWV47di0wUEBxcJ7"><strong data-page-node-id="DoPp4fnZrsRU3xFUe7GiHN">Barlow Twins</strong>（2021.03）：完全不做样本间对比，改为让两个视图特征间的<strong data-page-node-id="CfAw6I7AQnwxsabfg07ADH">互相关矩阵接近单位阵</strong>——对角线项鼓励不变性，非对角线项鼓励去冗余。结构上没有负样本、也没有动量编码器。</li>
+<li data-page-node-id="fm45nstaFfpG7gx8SrFARe"><strong data-page-node-id="yQI92f096EwWlyFtcojLdt">VICReg</strong>（2022.01）：把 Barlow Twins 的思路显式拆成三项——<em data-page-node-id="Azk4dx7LL0zmVjtYWhpXb2">不变性</em>（两视图特征接近）、<em data-page-node-id="smTIc9d3gz12mQpa8qiUaf">方差</em>（每个维度维持足够方差）、<em data-page-node-id="YW51EMBlKHaH7YkfsU1KwW">协方差</em>（维度间去相关）。三项都是纯正则项，不含任何样本间交互。</li>
+</ul>
+<p data-page-node-id="pEd6QwwhOsoKUr4Z5Wi4IS">这三者说明"防坍缩"其实可以完全不靠负样本，而用<strong data-page-node-id="jafrRpFDSByvFziEHZJRgh">对特征分布本身的约束</strong>来实现。这为第 4 章铺平了道路。</p>
+<h3 data-page-node-id="LPWtX9jN7ei8deQg9JMJdn">3.6 负样本路线的共同瓶颈</h3>
+<p data-page-node-id="gdpS9jgLHSiqyfZk4g7oZk">把 SimCLR、MoCo、SwAV 放在一起看，负样本路线有三个共性成本：</p>
+<ul data-page-node-id="y3ohvt2YYV5hCkThgRxmxY">
+<li data-page-node-id="XCLcjts6amOYXrfVAWP7kC"><strong data-page-node-id="t5rFtyQyxA4v2hDhv88KSi">算力与显存</strong>。SimCLR 要 4096 的 batch；MoCo 虽然降到 256，但队列本身与动量编码器增加了工程复杂度。</li>
+<li data-page-node-id="tbBnYnOVYtfg0jAR5Y3sDK"><strong data-page-node-id="BMgfYutFWVvWbZpPPwFnUw">负样本的"质量"难以保证</strong>。随机取到的负样本可能语义上与锚点相同（如同一类别的另一只狗），却被强行推远，这引入了<strong data-page-node-id="dowKKnBHF4KL5sbHfx1O4f">假负样本</strong>的问题。InfoNCE 对此没有区分能力。</li>
+<li data-page-node-id="z0juGguHuMyYqvjOhkBGmt"><strong data-page-node-id="xnh8dWTGBjCQzIWn9jXJWf">目的与手段之间存在张力</strong>。我们要的是"特征不变且不退化"，而对比学习实现它的手段是"样本两两比较"。手段带来了实现负担，能不能绕开手段直接约束目的？</li>
+</ul>
+<p data-page-node-id="FPUqGWUBAsD99JEktCgJYj">第 4 章给出答案：可以。</p>
+</section>
+
+<section id="ch4" data-page-node-id="oiIOGtXZ4bdIwcGBRh7t89"><h2 data-page-node-id="rJPe0ADAYOuISN21pd7vBe"><span class="num" data-page-node-id="DWugcnOsBqPPfZ5UjiGj1O">4</span>对比学习（下）：只用正样本 —— BYOL 与 SimSiam</h2>
+<h3 data-page-node-id="RXmcd6MYYdrbeL6E6PeCSc">4.1 一个反直觉的结果</h3>
+<p data-page-node-id="nKEwfiMwMMacpIDNqVuw9B">2020 年年中，BYOL 的论文提出了一个在当时看来不合常理的主张：<strong data-page-node-id="20GFWyJ5DQYCck1MF9tH75">完全不用负样本，只用同一张图的两个视图，也能学到强表示，而且不会坍缩。</strong>这与前一章"必须有负样本防坍缩"的共识直接冲突，因此最初受到不少质疑。但结果很快被复现：BYOL 用 ResNet-50 在 1000 epoch 下达到 74.3% 的线性探针精度，超过了同期需要大量负样本的方法。</p>
+<p data-page-node-id="WQYn25TvaKyhSu3WCqU1mx">更反直觉的是第二年：SimSiam 进一步把 BYOL 的组件逐个拆掉——去掉动量编码器、去掉 EMA、去掉大批次要求——<strong data-page-node-id="IvvMFTgxuuzGPAc6ObqAnl">只剩"一个预测器 + stop-gradient"</strong>，仍然不坍缩、仍然有效。这说明之前归因给"动量"或"负样本"的功劳，其实另有归属。</p>
+<h3 data-page-node-id="wKgvbNBsom3KgQwxzyASxy">4.2 BYOL：在线网络 + 目标网络 + 预测器</h3>
+<p data-page-node-id="YlT07Rm4KD2a5KR3uGoPKG">BYOL 的结构包含两路。上方是<strong data-page-node-id="Q0PnGEvxaUvbBbm1hpTHAa">在线网络</strong>（online network，参数 $\theta$），含编码器、投影头和一个额外的<strong data-page-node-id="8zge1csLj8P2vMh5FNSq5l">预测器</strong> $q_\theta$；下方是<strong data-page-node-id="MLG9QabOTnKj3KXpHGauis">目标网络</strong>（target network，参数 $\xi$），结构与在线网络相同但<em data-page-node-id="7ktsj11XZraaRtOZGnUUmC">不含预测器</em>。两路接收同一张图的两个视图：</p>
+<div class="formula" data-eq="(11)" data-page-node-id="DXoCsOpXy3c6fmPQRA7PSn">$$\mathcal{L}_{\text{BYOL}} = \Big\| \overline{q_\theta(z_\theta)} \;-\; \overline{z'_\xi} \Big\|_2^2 = 2 - 2\cdot\frac{\big\langle q_\theta(z_\theta),\; z'_\xi \big\rangle}{\big\|q_\theta(z_\theta)\big\|\,\big\|z'_\xi\big\|}$$</div>
+<p data-page-node-id="HWpS4pV9VTjNqzpfKiF080">其中 $\overline{\cdot}$ 表示 $\ell_2$ 归一化。目标网络的参数<strong data-page-node-id="XxJXlFxxgQhvZJiRcK1nVA">不通过梯度更新</strong>，而是对在线网络做指数滑动平均：</p>
+<div class="formula" data-eq="(12)" data-page-node-id="vD19A5XdjcOOTqmazp7coW">$$\xi \;\leftarrow\; \tau\,\xi + (1-\tau)\,\theta, \qquad \tau: 0.996 \to 1.0 \text{（训练过程逐渐增大）}$$</div>
+<p data-page-node-id="q5YTbp3oS2x5VH2Wwk2BQI">整条训练流程里，梯度只从在线网络回传，目标网络那一侧被<strong data-page-node-id="D2rmEaGI0h8ooOn7TkoE3w">完全切断</strong>。BYOL 论文把"不坍缩"归因于两点：<em data-page-node-id="aNV8XZE53X0p4NjyHZ6GoR">预测器</em>与<em data-page-node-id="hOurSgMXc2m4AYPcLkwjsw">缓慢移动的目标网络</em>共同构成的非对称性。</p>
+<div class="svg-box" data-page-node-id="C2awzlkmhcrNAbmTfn5Lvw">
+<svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" data-page-node-id="0r7Hf3xqZigWFLLrAqrtei">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="r8ICM5yGyJSiBqFszqUrlH">BYOL 架构：非对称双路 + 预测器 + 动量目标</text>
+  <!-- input -->
+  <rect x="30" y="140" width="94" height="66" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="vubsEdLYd4MxKqMHyRVjrB"/>
+  <text x="77" y="178" text-anchor="middle" font-size="11.5" fill="#6d28d9" font-weight="700" data-page-node-id="0AVf0DGieqJHt4MgjV7yzV">图像 x</text>
+  <!-- two augment branches -->
+  <line x1="128" y1="158" x2="176" y2="106" stroke="#94a3b8" stroke-width="1.7" marker-end="url(#ssl-ar)" data-page-node-id="YvwlKFuhCQMm5oKLVoRaZN"/>
+  <line x1="128" y1="188" x2="176" y2="240" stroke="#94a3b8" stroke-width="1.7" marker-end="url(#ssl-ar)" data-page-node-id="q9eS8Cq2svAHghdXpmePFL"/>
+  <rect x="180" y="76" width="72" height="46" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4" data-page-node-id="vQwqnagCMB8vSnUwPpHNNo"/>
+  <text x="216" y="104" text-anchor="middle" font-size="10.5" fill="#1d4ed8" data-page-node-id="gve3mfTuoZSnpn2yXvdhXt">视图 1</text>
+  <rect x="180" y="214" width="72" height="46" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4" data-page-node-id="5YEYfTmFW32psv0lLaVnQ9"/>
+  <text x="216" y="242" text-anchor="middle" font-size="10.5" fill="#1d4ed8" data-page-node-id="h5SJoFg03IO7r1zOn5X9JH">视图 2</text>
+  <!-- online branch -->
+  <line x1="256" y1="99" x2="292" y2="99" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="GSypXNNpvisChXQY122bBq"/>
+  <rect x="296" y="66" width="104" height="66" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="EyQyZnAu4LQitlXHVr2Tip"/>
+  <text x="348" y="90" text-anchor="middle" font-size="11" fill="#047857" font-weight="700" data-page-node-id="EaAh4aMVTSxA01n3capLHo">在线网络 θ</text>
+  <text x="348" y="110" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="LzoQoxv8FHA0lxJbXnZhsZ">编码器+投影</text>
+  <line x1="404" y1="99" x2="440" y2="99" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="MQHkCLjMfhGReatWUYmUjJ"/>
+  <rect x="444" y="66" width="104" height="66" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.8" data-page-node-id="qJNvsnAlCXonXWT3OWDF70"/>
+  <text x="496" y="90" text-anchor="middle" font-size="11.5" fill="#92400e" font-weight="700" data-page-node-id="7Doc5v3RCdQpSCVMUYTGK2">预测器 q_θ</text>
+  <text x="496" y="110" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="YUNucXHy6iW1M42gbzhhqr">仅在线侧有</text>
+  <!-- target branch -->
+  <line x1="256" y1="237" x2="292" y2="237" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="FG1pM5XkeZqXwmvtgHhqoN"/>
+  <rect x="296" y="204" width="104" height="66" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" data-page-node-id="kdGcoxGxl5dDcxPqckUclG"/>
+  <text x="348" y="228" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700" data-page-node-id="w6uDnB6lBgxxMDTzuDN22q">目标网络 ξ</text>
+  <text x="348" y="248" text-anchor="middle" font-size="10" fill="#475569" data-page-node-id="68rQqOW95gg5N3RhhtRrVY">编码器+投影</text>
+  <line x1="404" y1="237" x2="440" y2="237" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="3B7gJoxrl7aK1PEImW7WTt"/>
+  <rect x="444" y="204" width="104" height="66" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="5,4" data-page-node-id="tZXuDnvJh3jS3NVn8YJvB5"/>
+  <text x="496" y="228" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700" data-page-node-id="vIiW3I0phVr8j8nTZy0Ekl">无预测器</text>
+  <text x="496" y="248" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="lhKurITw4suViJZTbhlGEb">（非对称的关键）</text>
+  <!-- EMA arrow -->
+  <path d="M348 270 C 348 300, 348 300, 348 300" fill="none" data-page-node-id="8OpEGrX6jJT2apVABSlIVF"/>
+  <line x1="348" y1="200" x2="348" y2="136" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#ssl-ar)" data-page-node-id="FlSSKNhIlIMVLOJKD58zbP"/>
+  <text x="392" y="176" font-size="10.5" fill="#7c3aed" font-weight="700" data-page-node-id="FDB8HvEwuZ2A9IFBYEz4rv">EMA 更新 ξ ← τξ+(1−τ)θ</text>
+  <text x="392" y="192" font-size="9.5" fill="#94a3b8" data-page-node-id="BOHe15CUzCeIMGI8UdbLrC">不接收梯度</text>
+  <!-- loss -->
+  <line x1="552" y1="99" x2="594" y2="150" stroke="#94a3b8" stroke-width="1.6" data-page-node-id="RB36RaLgtfMdCzHi5TWyTV"/>
+  <line x1="552" y1="237" x2="594" y2="186" stroke="#94a3b8" stroke-width="1.6" data-page-node-id="91bQygLYxt6heyAambEgwR"/>
+  <circle cx="620" cy="168" r="26" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8" data-page-node-id="24DNRblf0Deaxfuy3MeYS9"/>
+  <text x="620" y="165" text-anchor="middle" font-size="10.5" fill="#c2410c" font-weight="700" data-page-node-id="6BICcxiSE6VdZCI083pLIN">归一化</text>
+  <text x="620" y="180" text-anchor="middle" font-size="10.5" fill="#c2410c" font-weight="700" data-page-node-id="QTXeWBe5u6wf6bFtqC0eiA">MSE</text>
+  <line x1="650" y1="168" x2="690" y2="168" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="E4ULp5P1qgbSvxpr5BJPhG"/>
+  <rect x="694" y="140" width="160" height="58" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="sk8v6a25q32x7gxXG5dOt3"/>
+  <text x="774" y="164" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="MfbKGOyCpHDuGjpEG001rN">损失只回传到 θ</text>
+  <text x="774" y="184" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="usjgPxgUCZt64bnTdNpnXD">ξ 一侧梯度被切断</text>
+  <text x="440" y="320" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="1ARJl15HXiq9qypQZyJmZa">全程没有任何负样本 —— 防坍缩靠的是"非对称性"，而不是"把别人推开"</text>
+</svg>
+</div>
+<h3 data-page-node-id="aDD9zPjkBrfDullAu7LEW5">4.3 为什么不会坍缩：三种解释与它们的证据</h3>
+<p data-page-node-id="Z8YvIeKWS1GXgxyx3npBwf">BYOL 为什么有效，在它发表后引发了持续数年的讨论。整理下来有三种解释，且它们的证据强度不同——这一点值得注意，因为它是"自监督理论落后于实践"的一个典型例子。</p>
+<div class="table-wrap" data-page-node-id="CizKB7TvQvlPoOyy5ANTs1">
+<table data-page-node-id="6CnKrfwiw6p8FX6WDoonMy">
+<tr data-page-node-id="lCTfyuREynuDyxHgpxUYRU"><th data-page-node-id="beVb02BoHPtuveFi2GX81Y">解释</th><th data-page-node-id="Kf5mg7S63AypfcCqAqsZSA">核心主张</th><th data-page-node-id="d9WYCHKocHe0IKsFT7Nx3A">支持证据</th><th data-page-node-id="KhYHfcOpcXZSiSvSRcH13J">当前评价</th></tr>
+<tr data-page-node-id="Kgi2pBT3qmOsQraaPl3uoC"><td data-page-node-id="1EcpMS3Z0S9l0tZzZE5EOW"><strong data-page-node-id="xfKyu3aHcDEGPjMqloQcFz">动量 + 预测器</strong></td><td data-page-node-id="7bXfaqqMiDYPYCwmUXxHKp">BYOL 论文的原始归因：缓慢移动的目标网络提供了一个"稳定的学习目标"，预测器则让两路不对称</td><td data-page-node-id="kxBEfg9sWHruCl4CRbCbux">去掉预测器或把 $\tau$ 设为 0.9（太快）会明显变差</td><td data-page-node-id="Mcw6ydWCca6x2NESzKMx88">部分正确，但把功劳过多归给了 EMA</td></tr>
+<tr data-page-node-id="jHlYBrndHNuie1rf87avhX"><td data-page-node-id="7uSiESxefGC1e9Lm7LxM1W"><strong data-page-node-id="dGbDbd5OoSP5fEA9bQoLxr">停止梯度</strong></td><td data-page-node-id="m42HikTeBDSj1rlYSybGjV">关键在于目标一侧<em data-page-node-id="OoIRIcb1GQC3QXl31xjXNA">不接收梯度</em>——这才是打破"同时把两边拉平到常数"这一平凡解的机制</td><td data-page-node-id="uAXx6WCkJbgyaXC5DyA9h0">SimSiam 去掉 EMA 后仍不坍缩；SimSiam 去掉 stop-gradient 后<strong data-page-node-id="rplL4Lpzw6Vv0qlYZQ9LK0">立刻坍缩</strong></td><td data-page-node-id="2VgRiMQydKU3oGLfSLAcNV">目前证据最强</td></tr>
+<tr data-page-node-id="7F7IQwLqg6CsIpFqgLEU9Y"><td data-page-node-id="FuFh7iMguWwg02DcoAt3X7"><strong data-page-node-id="KYONTQ2TjTtp6B8h5zAo72">批归一化</strong></td><td data-page-node-id="Cx90Tyofnt39K4lj2nUQEK">BN 在批内对特征做标准化，隐含地起到了"防止所有样本塌到同一点"的作用</td><td data-page-node-id="dPISqctXyueQroMFV7YbIg">有工作（Richemond 等）证明 BYOL 去掉 batch 统计后仍能工作</td><td data-page-node-id="3NYADvUBM1v12brjUHHBBa">不是必要条件，但确实有辅助作用</td></tr>
+</table>
+</div>
+<div class="callout" data-page-node-id="kgNqDV0AGu0q3H4uOXG5f9"><div class="callout-title" data-page-node-id="LCxKcAU32RYm9KroZUwrK1">一个值得记住的科学方法观察</div>
+<p data-page-node-id="kg4EaV1q9sQDx6TonZhF7R">这场讨论的走向很有教育意义：BYOL 的原始解释（EMA + 预测器）来自<strong data-page-node-id="xVG8tekmoLNUeCO9eqyIBu">消融实验</strong>——去掉某组件变差，就归因给它。但 SimSiam 通过<strong data-page-node-id="cP4APJohlQRs1KZOWDqRlU">构造一个反例</strong>（去掉 EMA 依然有效）证明这个归因不成立。这说明：<em data-page-node-id="Olyk6e00yDSej2XEOkMtAk">消融实验能证明"必要"，却不足以证明"充分"或"是核心机制"</em>。在自监督领域，理论解释常常滞后于经验发现，读论文时应对"归因"保持审慎。</p>
+</div>
+<h3 data-page-node-id="x1beqDtNRyUvqhusSR8aEY">4.4 SimSiam：拆到最小的骨架</h3>
+<p data-page-node-id="T1bTon5j2OIrc2AEeqlena">SimSiam（2021.01）的目标是把"孪生网络 + 正样本"这条路拆到不能再拆，看看最少需要什么。它的最终形式极其简洁：<strong data-page-node-id="S16VaB4F2t0vIotqSKgyLP">共享权重的孪生网络 + 一个预测器 + stop-gradient</strong>。没有负样本、没有动量编码器、没有 EMA、不需要大 batch。</p>
+<div class="formula" data-eq="(13)" data-page-node-id="fcJBEFgoCG5ccoagDN4ngv">$$\mathcal{L}_{\text{SimSiam}} = \frac{1}{2}\,\mathcal{D}\big(p_1,\; \texttt{sg}(z_2)\big) + \frac{1}{2}\,\mathcal{D}\big(p_2,\; \texttt{sg}(z_1)\big), \qquad \mathcal{D}(p,z) = -\frac{\big\langle p,\, z \big\rangle}{\big\|p\big\|\,\big\|z\big\|}$$</div>
+<p data-page-node-id="19K2vGmEYYBTfnDBbKOwO5">其中 $p = q_\theta(f_\theta(\tau(x)))$ 是预测器输出，$z = f_\theta(\tau'(x))$ 是另一视图的投影输出，$\texttt{sg}(\cdot)$ 表示 <strong data-page-node-id="TEFJ8rrVfFrxkRC6gCLV1b">stop-gradient</strong>——对括号内的量不计算梯度。两路共享同一个编码器 $f_\theta$，只是各自在对方一侧施加了 $\texttt{sg}$。</p>
+<h3 data-page-node-id="mybs6cioHGEKaUPBpSq9N0">4.5 关键机制：stop-gradient 才是防坍缩的核心</h3>
+<p data-page-node-id="R0srvxOZ6oKg86tHYm2KK4">SimSiam 的消融实验给出了整个领域最干脆的一组对照：</p>
+<div class="table-wrap" data-page-node-id="toNnRDxMGgpGDARCbefa3y">
+<table data-page-node-id="APkgLRao9WteVAO5kqunAS">
+<tr data-page-node-id="FYX4mTuzy8rEeDqutuudoy"><th data-page-node-id="j17rCpExeAYcmiyqaOLSF3">配置</th><th data-page-node-id="9nX5IzwEwIRY5fe3yYGl7G">结果</th><th data-page-node-id="cJBv3pxA8GcH0aHIlCwpM0">结论</th></tr>
+<tr data-page-node-id="c2OyAVnoYNZxml2I1HRF6J"><td data-page-node-id="DoeGSplhUCZfXHMQ6uXH2I">完整 SimSiam</td><td data-page-node-id="h0p04sm9WoSBBLaajW5pMR">正常训练，线性探针可达 68.1%（100 epoch，ResNet-50）</td><td data-page-node-id="j1U5JFijuo31D0AJXSL5Hh">基线</td></tr>
+<tr data-page-node-id="9MUqAXjEDA3cFqfoUfTXVZ"><td data-page-node-id="pAOHLDvrRI98Z6PfSS2Kik"><strong data-page-node-id="Q0RBuAgFjA60J09WNesH0m">去掉 stop-gradient</strong></td><td data-page-node-id="CxCjKLtPWypTVhudGlgzq0">训练<strong data-page-node-id="4SBbvcHlJGo0aBk1qyYNOM">立刻坍缩</strong>，损失瞬间降到 $-1$（余弦相似度上界），精度降到随机水平</td><td data-page-node-id="cLayJfVQTRbJZ0JrixAieJ">stop-grad 是<strong data-page-node-id="B2yKb0hzuHhPTnjMdaeFnF">不可省</strong>的</td></tr>
+<tr data-page-node-id="bjt0C16MXYhuhOJ5MfgT7S"><td data-page-node-id="E0AfS9tZxNy0CCMcy9HTnW">去掉预测器 $q$</td><td data-page-node-id="o398zMEBiZGqsYZuPFby4c">训练不稳定，精度大幅下降</td><td data-page-node-id="ni7wcDcEMeI6OXI8lGWlXv">预测器也很重要，但原因是它引入了必要的非对称</td></tr>
+<tr data-page-node-id="bvxt4FHrE07JwatfJlbSw4"><td data-page-node-id="zKpclN2i9VPm0iRBnUzLEG">去掉 EMA、去掉大 batch</td><td data-page-node-id="IUJILT1pyNlN0IeFPRrKF1">基本无影响</td><td data-page-node-id="NCIPzJ9ObzsYaPrZ2APmxa">这两项并非必需（但 EMA 在大规模下仍有益）</td></tr>
+</table>
+</div>
+<p data-page-node-id="IWyplsXLqUAiGJC8S63hRR">为什么会这样？一个被广泛接受的解释是把 SimSiam 看作<strong data-page-node-id="AtQEdbW1vQ1pvsfYOkHT5N">一种交替优化（EM 式）过程</strong>：</p>
+<div class="formula" data-eq="(14)" data-page-node-id="aPjibXW2vkLOQdPMt5CzDj">$$\textbf{E 步：}\;\; \eta^{t} = \theta^{t} \qquad\qquad \textbf{M 步：}\;\; \theta^{t+1} = \arg\min_{\theta}\; \Big\|\; q_\theta\big(z_\theta\big) \;-\; \texttt{sg}\big(z_{\eta^{t}}\big) \;\Big\|^{2}$$</div>
+<p data-page-node-id="DHYNFYoJUyWXSuGryJRSNk">在这种解读下，被 $\texttt{sg}$ 冻结的那一侧充当<strong data-page-node-id="0VtLmHLqYhAvCYjZQuUFhG">当前轮次的目标</strong>（类似 EM 的 E 步确定隐变量），而在线侧则是<strong data-page-node-id="qEXiS9VXMYYO7hR4HQIDml">向目标靠拢的参数更新</strong>（M 步）。若两边同时更新、互相追逐，就会一起滑向"全部输出常数"这一平凡不动点；而固定住一侧，问题就退化为一个普通的回归任务，不存在那个平凡解。</p>
+<div class="svg-box" data-page-node-id="qDB7sL48vQLowYaaf2ZeqX">
+<svg viewBox="0 0 880 280" xmlns="http://www.w3.org/2000/svg" data-page-node-id="skLdfTf3ybNtRCL3iiIWZB">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="G5jaxd7mFQ4sbfvOVC580U">stop-gradient 的作用：有无对照</text>
+  <defs data-page-node-id="2uhE1vyN8DRd7W1qj1burX">
+    <marker id="ssl-ax" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" data-page-node-id="5GWMcXClzdAU6BZiPLnx46"><polygon points="0 0, 8 3, 0 6" fill="#94a3b8" data-page-node-id="mY8cLM0a0klDLoXzMKPlLR"/></marker>
+  </defs>
+  <!-- axis -->
+  <line x1="70" y1="230" x2="410" y2="230" stroke="#94a3b8" stroke-width="1.4" data-page-node-id="qyLxmw94BGwLGWojWdAYwk"/>
+  <line x1="70" y1="230" x2="70" y2="66" stroke="#94a3b8" stroke-width="1.4" data-page-node-id="TiBcaH8hzGNM8brn2sYMIG"/>
+  <text x="240" y="256" text-anchor="middle" font-size="11" fill="#475569" data-page-node-id="YaVdpcoo4POpy49sSHhWLn">训练迭代</text>
+  <text x="40" y="150" font-size="11" fill="#475569" transform="rotate(-90 40 150)" data-page-node-id="5IG63BJ7EPByBXVgnqQr39">损失</text>
+  <path d="M80 82 C 140 116, 200 148, 260 168 S 360 190, 398 196" fill="none" stroke="#059669" stroke-width="2.6" data-page-node-id="tbjiQKUkcwkAQ9y8z8IwwQ"/>
+  <text x="300" y="150" font-size="11" fill="#059669" font-weight="700" data-page-node-id="CumK8IfCoHdrCU61dpNUL5">有 stop-grad</text>
+  <text x="300" y="166" font-size="9.5" fill="#94a3b8" data-page-node-id="zqJ2m37ZZifwJsweOfzbAd">平稳收敛到有意义的解</text>
+  <path d="M80 96 C 92 168, 100 208, 112 224 C 140 228, 200 229, 398 229" fill="none" stroke="#dc2626" stroke-width="2.6" stroke-dasharray="7,4" data-page-node-id="GWJSdx7TrkEsszSCeYWWfO"/>
+  <text x="150" y="210" font-size="11" fill="#dc2626" font-weight="700" data-page-node-id="hJmJrO5zpy610CWUG7dC2k">去掉 stop-grad</text>
+  <text x="150" y="226" font-size="9.5" fill="#94a3b8" data-page-node-id="AogreiHSMc0L1kDavEC7tc">数步内坍缩到平凡解</text>
+  <!-- right: mechanism -->
+  <line x1="440" y1="50" x2="440" y2="252" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6,4" data-page-node-id="bA7nRHXO6bkTnnvTZZZmOv"/>
+  <text x="660" y="56" text-anchor="middle" font-size="12.5" fill="#7c3aed" font-weight="700" data-page-node-id="z5IK5kq4BMyTvyJRr8Pmcv">机制：冻结一侧 = 把"互相追逐"变成"单向回归"</text>
+  <rect x="480" y="78" width="340" height="70" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5" data-page-node-id="HKH1kBuRvgypv4XEgwqOJN"/>
+  <text x="650" y="100" text-anchor="middle" font-size="11.5" fill="#b91c1c" font-weight="700" data-page-node-id="Xc6z6xKCAf3IVQ0c0yv8b1">无 stop-grad：两侧同时更新</text>
+  <text x="650" y="120" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="fTkYWFMAxpJuhYV04F7STv">A 追 B、B 追 A ⇒ 一起滑向"全输出常数"</text>
+  <text x="650" y="138" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="5YQL7lhhlvM0r80IIvTFfz">这是该优化问题的平凡不动点</text>
+  <rect x="480" y="164" width="340" height="70" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="1.5" data-page-node-id="KTA1JfSErVUvjGAZ7oN15K"/>
+  <text x="650" y="186" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="nDkm3sOruYXxN3VC2E1rBE">有 stop-grad：一侧冻结为目标</text>
+  <text x="650" y="206" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="aXtyGLOrjElbvGvT93KNMb">另一侧向它做回归 ⇒ 平凡解被排除</text>
+  <text x="650" y="224" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="KnFuF04cGSn7wzHTue6Abv">与 EM 的交替优化结构同构</text>
+</svg>
+</div>
+<h4 data-page-node-id="prujC2sGklkKjVQwtpDnBu">实现：SimSiam 的完整损失（约 20 行核心代码）</h4>
+<p data-page-node-id="KlJnuJF0Jsutqs0NyyGX7A">下面这段是整个第 4 章的最小可运行骨架。值得对照体会：<strong data-page-node-id="2XxXeT3JtYW1TdwilfDDps">没有负样本、没有动量编码器、没有 EMA，只有 <code data-page-node-id="R9RnTSuKetojNTj62bBv31">detach()</code> 一行实现了 stop-gradient</strong>——而正是这一行决定了模型会不会坍缩。</p>
+<div class="code-block" data-page-node-id="FEAJFS8GCT3HRdRyG3LIgH"><div class="code-header" data-page-node-id="z8o9tix1oVFxsVbLA3lw5y">simsiam.py — 孪生网络 + 预测器 + stop-gradient</div><pre data-page-node-id="lGMzumwBA8JGXUsE6ic0lR">
+<span class="kw" data-page-node-id="D7Qw0cnhK9BioDAzFA9GAX">import</span> torch
+<span class="kw" data-page-node-id="iSCFY6kxo5RX7gjJ0qYghj">import</span> torch.nn <span class="kw" data-page-node-id="4SQhvGUGnlAqqodZiCXwJs">as</span> nn
+<span class="kw" data-page-node-id="nXkxcPnSau7OWBf6HisglU">import</span> torch.nn.functional <span class="kw" data-page-node-id="CafV3y7hzwwI9IVKBWibo5">as</span> F
+
+<span class="kw" data-page-node-id="Uj31usm7NmB69BItsSA940">class</span> <span class="cls" data-page-node-id="YpMgEdBqRghtfiGqxlzJZC">SimSiam</span>(nn.Module):
+    <span class="str" data-page-node-id="k6fHHQ0Fm88Qp9zdRX4lBT">"""SimSiam 最小骨架：共享编码器 + 投影头 + 预测器，损失用负余弦相似度"""</span>
+    <span class="kw" data-page-node-id="EsFE6Sbcmdc8bkV7NovVuB">def</span> <span class="fn" data-page-node-id="hZESIMDAud48Ew8ET2hAbt">__init__</span>(<span class="kw" data-page-node-id="xdBeFVyUhQj4lwIBqiz8WG">self</span>, backbone, feat_dim=<span class="num" data-page-node-id="LE59gauw0zqfUs3UogeYcE">2048</span>, pred_dim=<span class="num" data-page-node-id="stfynKsVrNvUeKpiiHFzCf">512</span>):
+        <span class="fn" data-page-node-id="gVJnen1WJlzDP04EnB0HPi">super</span>().<span class="fn" data-page-node-id="dOzl16qQ7NKDBq6UHGbauH">__init__</span>()
+        <span class="kw" data-page-node-id="uo3GgNCI3txCeKuQbKTnpK">self</span>.backbone = backbone
+        <span class="com" data-page-node-id="SFTAiH8XfK935TRqvPsM2X"># 投影头 g：3 层 MLP，最后一层不带 BN 与 ReLU（SimSiam 的细节）</span>
+        <span class="kw" data-page-node-id="Px3QU934MlLY3rHgu3e0Pv">self</span>.projector = nn.Sequential(
+            nn.Linear(feat_dim, <span class="num" data-page-node-id="9RVRhi6wEiUeEprb3x8aGn">2048</span>, bias=<span class="kw" data-page-node-id="8p7yEtJffHZYNX4m4PFIWR">False</span>), nn.BatchNorm1d(<span class="num" data-page-node-id="f13yK7CL1JFC4gKNzOKZq1">2048</span>), nn.ReLU(inplace=<span class="kw" data-page-node-id="pSQ5Q7X2SIO0rTLmFNvpBY">True</span>),
+            nn.Linear(<span class="num" data-page-node-id="ADHCeVR2OvRJTWBYr3f5qu">2048</span>, <span class="num" data-page-node-id="KrzqweoO9pbuAYUvBRPgIf">2048</span>, bias=<span class="kw" data-page-node-id="wV7rzECBMSaD3B1ESTHGTy">False</span>), nn.BatchNorm1d(<span class="num" data-page-node-id="ji6yBUhZeZGTZkFeIn44yv">2048</span>), nn.ReLU(inplace=<span class="kw" data-page-node-id="Cv54dRS7TuImmCRvTTVYAu">True</span>),
+            nn.Linear(<span class="num" data-page-node-id="HSX61HLymDP1BFPn1H0KQB">2048</span>, <span class="num" data-page-node-id="eCBre2eB9GZX3XBjTmiDGR">2048</span>, bias=<span class="kw" data-page-node-id="CS6Q5L68OyVFWUbyyHCpwo">False</span>), nn.BatchNorm1d(<span class="num" data-page-node-id="m5B54b49huPWOXQrk3dfiL">2048</span>, affine=<span class="kw" data-page-node-id="stR8iA2CDlnWdy6NFglZiv">False</span>))
+        <span class="com" data-page-node-id="eSq8D2Xy3OdRlydDgf1n5C"># 预测器 q：仅在线侧存在，是引入非对称性的关键</span>
+        <span class="kw" data-page-node-id="7NE3LviGEKErZj0BCeAACC">self</span>.predictor = nn.Sequential(
+            nn.Linear(<span class="num" data-page-node-id="FGmCyv1s2CAXGor4tiHl6t">2048</span>, pred_dim, bias=<span class="kw" data-page-node-id="MHUqdotfJDtU9IvF7Dszci">False</span>), nn.BatchNorm1d(pred_dim), nn.ReLU(inplace=<span class="kw" data-page-node-id="QFFkADcOsz6naHxyi9MScI">True</span>),
+            nn.Linear(pred_dim, <span class="num" data-page-node-id="gJWYrQ6K9BFsEK9kJLjo77">2048</span>))
+
+    <span class="kw" data-page-node-id="59xlQmfrrsVjYdzdXss0FW">def</span> <span class="fn" data-page-node-id="WSoRAkV7LB4O5YIuzfJcEw">forward</span>(<span class="kw" data-page-node-id="N6mVPCRmOqQxmEnPkYwyQa">self</span>, x1, x2):
+        <span class="com" data-page-node-id="JrDeCigu9GHiTSDLSBlRPn"># 两路共享同一个编码器（孪生网络）</span>
+        z1 = <span class="kw" data-page-node-id="GCdeXY7rmLBPhBAC0RnRDJ">self</span>.projector(<span class="kw" data-page-node-id="LQKlPeEDFkWTIoJ0chUVxD">self</span>.backbone(x1))
+        z2 = <span class="kw" data-page-node-id="i47Vtr1wFDFWC7mwwYpAlE">self</span>.projector(<span class="kw" data-page-node-id="wx6tN3JMRdVHoFjkf3bpth">self</span>.backbone(x2))
+        p1, p2 = <span class="kw" data-page-node-id="V8by7PMitryDIOGyUD7tqi">self</span>.predictor(z1), <span class="kw" data-page-node-id="N7AXDGub6jwsGhoGyUlhN1">self</span>.predictor(z2)
+        <span class="com" data-page-node-id="Q3iUZZQlHkkAnwanRPUseu"># 关键：对方一侧调用 detach()，即 stop-gradient</span>
+        <span class="com" data-page-node-id="8O6bvLzkXr7xrygUFiAQw4"># 若不写 detach()，模型会在数步内坍缩到平凡解（余弦相似度恒为 1）</span>
+        loss = -<span class="num" data-page-node-id="gVmNwqhXc67U1IfV6eCSKP">0.5</span> * (F.cosine_similarity(p1, z2.<span class="fn" data-page-node-id="BAhLiIDHilyesZjyI7X8qf">detach</span>(), dim=<span class="num" data-page-node-id="LwAaKQBIeSAknnKeit38EA">1</span>).mean()
+                       + F.cosine_similarity(p2, z1.<span class="fn" data-page-node-id="R1VbRTqTGf6Yi2nbhLs7AJ">detach</span>(), dim=<span class="num" data-page-node-id="nfdD9fPhLCYWacLBn4I8PL">1</span>).mean())
+        <span class="kw" data-page-node-id="vWneGVzwOX7X2MuSkAKh3Y">return</span> loss
+</pre></div>
+<div class="callout danger" data-page-node-id="rMLQwf9XWdVZG6EHePlTkv"><div class="callout-title" data-page-node-id="QD67vP4cqHgly6fvFmfDCj">把 detach() 去掉会立刻坍缩</div>
+<p data-page-node-id="XDwKB8KhJd5vAi6zNrnR1K">把上面两处 <code data-page-node-id="nZCUBOSE1PfeyrQx5ttPzj">.detach()</code> 删掉再训练，会看到损失在几个 step 内就从 $0$ 掉到 $-1$——此时所有样本的投影特征完全相同，模型输出常数，训练彻底失败。这不是"训练不稳定"，而是该优化问题的<strong data-page-node-id="gHxIuZufwXKzCpR6B3vQUA">平凡最优解被激活了</strong>。SimSiam 最重要的贡献正是把这个现象暴露出来并给出解释。</p>
+</div>
+<h3 data-page-node-id="joPqbvOu9SEgCTluOCv8sS">4.6 从"负样本"到"只用正样本"的演进对照</h3>
+<div class="table-wrap" data-page-node-id="oHOjQktbbAc1YOpEl42lJ7">
+<table data-page-node-id="4FHmQHesBYJgciRBm5V391">
+<tr data-page-node-id="StzpQSYdx2296BOBltEq7U"><th data-page-node-id="uM6GP6CLxJQppRdOo92AQl">方法</th><th data-page-node-id="wkTaJXwD7qj8BzLl0h1nBm">负样本</th><th data-page-node-id="YJ7c1ilZeLl4K2QL6mU3it">目标网络</th><th data-page-node-id="HAVF2Rx1cUShp7o04VqInZ">预测器</th><th data-page-node-id="u7ldUTNvjKkmZNSXsGTqaJ">防坍缩机制</th><th data-page-node-id="TlnILF3yujdeRLq3UsfCDL">ResNet-50 线性探针</th></tr>
+<tr data-page-node-id="H657VYfYFjTeCYE2FWoVfb"><td data-page-node-id="cxEgwtXLOxIfy47Bwago7k">SimCLR</td><td data-page-node-id="fUDgVkT0AxsPWqCvHWLZjx">需要（同 batch，4096+）</td><td data-page-node-id="XUt9Yc9c1RXlEdNtcQ8YsU">无</td><td data-page-node-id="JB7DvtVDSxHNEIfsp7KZ3p">投影头</td><td data-page-node-id="6OQvJ0V2i3CBZOsCEY2jiW">负样本推开</td><td data-page-node-id="XjjjHuViIOJ0wqm3Yu0DzB">76.5%（4× 宽度，1000 ep）</td></tr>
+<tr data-page-node-id="dWejFVDM2sLMgbv5fK7yPV"><td data-page-node-id="V30zXG4QbrqJPjzWSHhPtj">MoCo v2</td><td data-page-node-id="wxlaAQ7VUCvf4DxJ7TwmUH">需要（队列，65536）</td><td data-page-node-id="nEyZ2XnHMVzq8w2eS5kY8N">动量编码器</td><td data-page-node-id="MF4qEezoOtKVfwF8A36EPk">投影头</td><td data-page-node-id="IZ3k52CR9pBeN34bzsedGm">负样本推开 + 队列一致性</td><td data-page-node-id="YE5nwJwov82iBkTz69tiZy">71.1%（800 ep）</td></tr>
+<tr data-page-node-id="61iGxsjJxGlI8YtkpysPCB"><td data-page-node-id="pEscJQGsjFfFVQPFD4kVBe">SwAV</td><td data-page-node-id="ybyaBH3UGhPssoRZkR4yNi">不需要显式负样本</td><td data-page-node-id="vzo7WzJADAvFLoKgv18cyz">无</td><td data-page-node-id="UDCZ0bCPsgdr06pH3DwiNE">原型分配</td><td data-page-node-id="DH05iELVVlxnf4nr5lAmlD">聚类均衡约束</td><td data-page-node-id="PbaB2O9TRGr2yr0B7kPJ6J">75.3%（800 ep）</td></tr>
+<tr data-page-node-id="Ef5bub1C4pvfU4epfhdhKU"><td data-page-node-id="7rE2aRSiUVtHI7w8bHhqiZ">Barlow Twins</td><td data-page-node-id="4tacamjpM6Pvk4vMRktyDT">不需要</td><td data-page-node-id="xH08jCgZ4LBBUZ19C9LWS6">无</td><td data-page-node-id="G17jEDCD4G7vGqH91CtzRY">投影头</td><td data-page-node-id="3GFqYKC3DF6h5lFqxgDXqD">互相关矩阵趋近单位阵</td><td data-page-node-id="AYIzOlNOXTP8RFr75hEG4I">73.2%（1000 ep）</td></tr>
+<tr data-page-node-id="HVMkGlDitSvLdF7SEoA8p3"><td data-page-node-id="GRMewarNpFWUUCw1JnN9fL">BYOL</td><td data-page-node-id="Pg2iz0kgZCzQTJK4TT2TWl"><strong data-page-node-id="ZRR7sNipZ8yjR4jSa4CDkd">不需要</strong></td><td data-page-node-id="rMDuCLadpVCVQHPkLltn4y">EMA 目标网络</td><td data-page-node-id="CcPHyODqSLxPu22EifSYOi"><strong data-page-node-id="d2L4rVvFET0ZjbjGe5enFl">需要</strong></td><td data-page-node-id="ZlgypZP2My28yYNDfck3yD">非对称性 + stop-grad</td><td data-page-node-id="uJb1rpuZYcJKdBOP87ULNw">74.3%（1000 ep）</td></tr>
+<tr data-page-node-id="Ozo7RXBzOVKpUHv3iqLsDC"><td data-page-node-id="SEUDfOmEba0I5fFfTXG9c2">SimSiam</td><td data-page-node-id="KOyIAmu7KtHt5QJEG3wvCU"><strong data-page-node-id="UfUKCMRRmGHpbubBCluFwq">不需要</strong></td><td data-page-node-id="njgn4FQehbJLWuNDWMp8N9"><strong data-page-node-id="EvYei88KKnt1QlGEoMc5KO">不需要</strong></td><td data-page-node-id="mAMBP1irPZVdTmPohTG27j"><strong data-page-node-id="ziBOXDZIpMxGe3ob4GB1eu">需要</strong></td><td data-page-node-id="YTlS5BJhoxwSOu5dI0Te9N"><strong data-page-node-id="dYi3iCglxkewOFeE804nSP">stop-gradient</strong></td><td data-page-node-id="H0OLgetVNkEfpLmYBD2skM">71.3%（800 ep）</td></tr>
+<tr data-page-node-id="kTq9Zf2YmYwK7hEAzMCjs7"><td colspan="5" data-page-node-id="fgloNaIQ1nHQPCwfjIwIEK"><em data-page-node-id="9XyYrnXKNJxPhgYBm3S6PP">参照：</em>有监督训练 ResNet-50（ImageNet-1k 全监督 top-1）</td><td data-page-node-id="tzb9fjLMVCXvdh7t4g45lX"><em data-page-node-id="Nr1R7rofEbwMjHQBZSKXtA">76.5%</em></td></tr>
+</table>
+</div>
+<p data-page-node-id="9Z3lf6i6Jy7EH60o0vE3Yt"><em data-page-node-id="2hCHEsuvJsg59ebShDeVr1">注：表内精度为各论文报告值，配置（epoch 数、网络宽度）已标注；不同配置间不宜直接横向比较数值大小，应看方法族之间的相对趋势。</em></p>
+<h3 data-page-node-id="Q5biDFLtpDyuzAyWRjiD6O">4.7 这一章的结论</h3>
+<p data-page-node-id="vr0dTCHsCYgDVlSWcLdYAw">把第 3、4 章连起来看，演进链条非常清晰：</p>
+<ul data-page-node-id="W068ARy4zMYvGD9kGqLfNQ">
+<li data-page-node-id="4Yh1akJhSCndDfAydVWbxl"><strong data-page-node-id="MjYNrDE5h4BV18AaMGDGMs">SimCLR</strong> 证明"极简框架 + 强增广"可行，但把负样本数量与 batch 大小绑死；</li>
+<li data-page-node-id="LfHFIb2otdqDJDmcFqra8B"><strong data-page-node-id="DMkZrr14YjoRZ2csfdC4Ml">MoCo</strong> 用队列 + 动量解耦两者，降低显存门槛；</li>
+<li data-page-node-id="DhikzEDSb2J96FSMSTEYGJ"><strong data-page-node-id="QOLxUgyL4Xwhe1eJ2a2obt">BYOL</strong> 干脆取消负样本，发现非对称结构（预测器 + EMA 目标）也能防坍缩；</li>
+<li data-page-node-id="IvF20ywWSTjuFJ60O50ndh"><strong data-page-node-id="qFt4BYgtxQGiNFSttQdVq1">SimSiam</strong> 继续拆解，指出真正的核心是 <strong data-page-node-id="BvKdCgySV9iFDzhM5ITBZg">stop-gradient</strong>，EMA 与大批次都不是必需的。</li>
+</ul>
+<p data-page-node-id="NEZanJ86LcyOBxsOGRm21e">这个过程的意义不只是"省掉负样本"：它把防坍缩的机制从<strong data-page-node-id="b08fYtSxHX1Kq0Uk5G4Ran">数据层面</strong>（需要足够多、足够好的负样本）搬到了<strong data-page-node-id="KLNTV2YDvxyJlwH2MkKT5c">优化层面</strong>（对梯度的处理方式）。一旦机制被识别清楚，模型结构就可以大幅简化——这正是第 5 章 DINO 能把自监督推向基础模型规模的前提。</p>
+</section>
+<section id="ch5" data-page-node-id="F368J8purGKoI12j423p8d"><h2 data-page-node-id="rev7DaWKv5UVA2haovN3Cj"><span class="num" data-page-node-id="rnW2ht5XlLb2ndFgGh2lqh">5</span>DINO v1/v2/v3：从自监督方法到视觉基础模型</h2>
+<h3 data-page-node-id="xFDL8kIBukWvDi8iUUd89C">5.1 DINO v1：自蒸馏，并意外获得了物体分割</h3>
+<p data-page-node-id="5Z0ipzEm1e0hGdMivPJxow">DINO（2021.04，全称 self-<strong data-page-node-id="1uwegaOpaAR0o75ZCApZEE">DI</strong>stillation with <strong data-page-node-id="PGrMsBXBoMHFUArXvevUE7">NO</strong> labels）建立在前两章结论之上：既然负样本、动量、大批次都可以省，那么"自蒸馏"——<strong data-page-node-id="6v4xnKDCjVetTOZ4F0DfFL">让学生网络去匹配一个由自己演化而来的教师网络的输出分布</strong>——就足以支撑表示学习。它与 BYOL 的关系是：都采用"学生/教师 + EMA"的非对称结构，区别在于<strong data-page-node-id="6iZ1zxEoHxJXB2hGWftjGm">DINO 匹配的是概率分布而非特征向量，且教师只看全局视图、学生要看局部视图</strong>。</p>
+<p data-page-node-id="EV10ZKgfDeJTND4hrXz7jC">DINO 的损失是教师与学生在多个视图上的交叉熵：</p>
+<div class="formula" data-eq="(15)" data-page-node-id="MxNGYLgqd26v5jU5bA1QrD">$$\min_{\theta_s}\; \sum_{x \in \{x_1^{g},\,x_2^{g}\}} \;\sum_{\substack{x' \in V,\; x' \neq x}} H\Big(P_t(x),\; P_s(x')\Big), \qquad H(a,b) = -\sum_{k} a_k \log b_k$$</div>
+<p data-page-node-id="lYT1DMNksWKXcwwAp8BYHk">其中 $V$ 包含 2 个全局视图（$224^2$）与 6 个局部视图（$96^2$）：<strong data-page-node-id="JOv9siGIFKRBtCxqkuT72Y">教师只看全局视图，学生要看全部 8 个</strong>——这构成了一种"局部预测全局"的额外约束，迫使学生从局部块推断整体语义。两个网络的输出分布由温度控制，并在教师一侧加入中心化：</p>
+<div class="formula" data-eq="(16)" data-page-node-id="R3b6lpg58Ht1vAch6BETjY">$$P_s(x)^{(k)} = \frac{\exp\big(g_{\theta_s}(x)^{(k)} / \tau_s\big)}{\sum_{j}\exp\big(g_{\theta_s}(x)^{(j)} / \tau_s\big)}, \qquad P_t(x)^{(k)} = \frac{\exp\big(\big(g_{\theta_t}(x)^{(k)} - c^{(k)}\big) / \tau_t\big)}{\sum_{j}\exp\big(\big(g_{\theta_t}(x)^{(j)} - c^{(j)}\big) / \tau_t\big)}$$</div>
+<div class="formula" data-eq="(17)" data-page-node-id="SDesWMzsuNTlemOWQfJkbF">$$\theta_t \;\leftarrow\; \lambda\,\theta_t + (1-\lambda)\,\theta_s, \qquad \lambda: 0.996 \to 1.0$$</div>
+<div class="callout success" data-page-node-id="GjTEWx9LBAIqRbknatKNrN"><div class="callout-title" data-page-node-id="fNL3SRgsPSCjL1tWtvSvps">中心化与锐化：一对相互对抗的力</div>
+<p data-page-node-id="CJJxsuU1nI3pDcNwiCDlWB">DINO 防坍缩的关键是两项看似矛盾的机制。<strong data-page-node-id="NAtCofMJcT00vXLYs9G3ll">中心化</strong>（centering）从教师输出里减去一个滑动平均中心 $c$，作用是<em data-page-node-id="4j7EXnfF3GCOlbGgyqFkar">阻止某一维独占输出</em>（否则模型只需让所有样本在第 $k$ 维上都很高，就"骗过"了损失）；但单独用中心化又会把输出推向<strong data-page-node-id="GiDt4JA0se3ydK1W3rhGu5">均匀分布</strong>——这也是一种坍缩。<strong data-page-node-id="x0qCBYnoFJgFthRfF8Lk9L">锐化</strong>（sharpening）用低温 $\tau_t = 0.04$（学生用 $\tau_s = 0.1$）让分布变尖，正好把均匀化的趋势推回去。</p>
+<p data-page-node-id="IQWFTJkwvFiDF7t9BgG9W7">两者必须<strong data-page-node-id="YHTAuiz3PLr5oVynlaBqTE">配套使用并保持平衡</strong>：去掉中心化会维度坍缩，去掉锐化会均匀坍缩。这与第 4 章的"stop-gradient"一样，属于"看起来是超参数、实际上是机制"的设计。</p>
+</div>
+<p data-page-node-id="xXkY8DZCHMy5LeeZn8dvuI">DINO v1 最被广泛引用的成果，其实不在精度上，而在一个<strong data-page-node-id="7BDahy7wS45Om9QKBEXX7w">意外发现</strong>：训练完成后，模型的<strong data-page-node-id="LDPZFFnoCqBTrss23Ab011">自注意力图会自动勾勒出物体的轮廓</strong>——没有任何分割标签，也不需要任何微调。这个现象说明自监督 ViT 内部自发形成了物体级的空间组织结构，直接启发了后续大量分割工作（以及第 5.4 节要讲的基础模型化方向）。</p>
+<h4 data-page-node-id="8gRE5uEOMBGDMnpr1dhEFC">实现：DINO 损失（中心化 + 锐化）</h4>
+<p data-page-node-id="DPJRE5IqosxYKKBMFAPEaG">下面这段把公式 (15)(16) 落地。有两个细节容易写错：<strong data-page-node-id="JIstBQF3iPRdzW1gHG7Nx4">中心要用教师的 softmax 前输出更新</strong>（而非概率），且更新必须放在 <code data-page-node-id="oDtQshTx9mHlCSYyKlICnM">no_grad</code> 中——中心是统计量，不应携带梯度。</p>
+<div class="code-block" data-page-node-id="hjXFCIk8LGqqCGXQd3BUez"><div class="code-header" data-page-node-id="RDF9moQgs3x2GinT64s0Tt">dino_loss.py — DINO 自蒸馏损失</div><pre data-page-node-id="NhjMRvqk1T666W7HwrGP20">
+<span class="kw" data-page-node-id="vYmT3kw3GSggxPNwQtwZLy">import</span> torch
+<span class="kw" data-page-node-id="RUtkgJU0ZIOGBaRwKn0dPu">import</span> torch.nn <span class="kw" data-page-node-id="FFn4ozvAxU1paqyGwozYKU">as</span> nn
+<span class="kw" data-page-node-id="rizAtbmLsVhXFxZbcLRQ73">import</span> torch.nn.functional <span class="kw" data-page-node-id="Q1acXDCOzy2kkcWBDcUlun">as</span> F
+
+<span class="kw" data-page-node-id="2rRQ961AUGYbtVHRoq1mGD">class</span> <span class="cls" data-page-node-id="186K0XunxV37bLVDKVuZCj">DINOLoss</span>(nn.Module):
+    <span class="str" data-page-node-id="v2fB1tDi2swacD92oljSrJ">"""教师做 centering + sharpening，学生匹配教师的输出分布"""</span>
+    <span class="kw" data-page-node-id="rDMPSTfq9irPMYbFHVzuDZ">def</span> <span class="fn" data-page-node-id="EJxsH7FK2xhOcAyieA8XNH">__init__</span>(<span class="kw" data-page-node-id="OL2Z7acaxluKNlK8Q6RlmU">self</span>, out_dim=<span class="num" data-page-node-id="NBa5fH20EZhlKQzIwtOEZY">65536</span>, tau_s=<span class="num" data-page-node-id="VvfJZWLqBJ1LT9iXiFt8o2">0.1</span>, tau_t=<span class="num" data-page-node-id="rUo8dUdLZjdtW2CMNCWIIR">0.04</span>, m=<span class="num" data-page-node-id="sFqC2klene43k17Tq3rnZ2">0.9</span>):
+        <span class="fn" data-page-node-id="ksSIAUIrCS7yWfrEL3UUQj">super</span>().<span class="fn" data-page-node-id="ZpEa8IgKNepLuhtonCr4KW">__init__</span>()
+        <span class="kw" data-page-node-id="VUrjhdk4UFaxxnV0mY4c6T">self</span>.tau_s, <span class="kw" data-page-node-id="kEHMAEHtBBVVsH1plQm7E2">self</span>.tau_t, <span class="kw" data-page-node-id="IBc1D8AHAQAPBnpfrHa15s">self</span>.m = tau_s, tau_t, m
+        <span class="com" data-page-node-id="19iJBSB7TodyYQdhkBuU9B"># 中心 c：buffer 而非参数，不参与梯度更新</span>
+        <span class="kw" data-page-node-id="qTKwcmyg3nZ13ePLfP9NW1">self</span>.register_buffer(<span class="str" data-page-node-id="A8VnYIEF2zgAtmdb0FgBmr">'center'</span>, torch.zeros(<span class="num" data-page-node-id="ewITmAxvcIYtHzYjLI16Pd">1</span>, out_dim))
+
+    <span class="kw" data-page-node-id="TvD2Ow7heVWuzHHrkBFCpy">def</span> <span class="fn" data-page-node-id="u5P4LDzG4XZIjXk08fbEkP">forward</span>(<span class="kw" data-page-node-id="V1Urh6lSpsS7bMRa0u3pT0">self</span>, student_out, teacher_out):
+        <span class="com" data-page-node-id="3j0REOUEAN5AYVyqJlBd9f"># student_out / teacher_out: (B, K)，已过各自的投影头（K = 65536）</span>
+        t_logits = teacher_out.<span class="fn" data-page-node-id="PrTJquw0iWPwjmxVwOyxjI">detach</span>()                       <span class="com" data-page-node-id="Hp2eCZu7RfMAisdrVdKH1p"># 教师一侧不回传梯度</span>
+        <span class="com" data-page-node-id="pzmGnZUhHRfD7eSoI9xS8T"># 教师分布：先减中心（防某一维独占），再用低温 softmax（锐化）</span>
+        t = F.softmax((t_logits - <span class="kw" data-page-node-id="Hl0T5fBm0DnvGkKp3ttQqL">self</span>.center) / <span class="kw" data-page-node-id="1o8WYDSO1ML8Mxw4LUbR89">self</span>.tau_t, dim=-<span class="num" data-page-node-id="z9UPnD0jZPofRX6G3ecdFX">1</span>)
+        <span class="com" data-page-node-id="hEIM7aO7xlFVF9G5HJMO4I"># 学生分布：常温 log-softmax，用交叉熵匹配教师</span>
+        s = F.log_softmax(student_out / <span class="kw" data-page-node-id="juCHp97hEENfNzfl7Gk4Rw">self</span>.tau_s, dim=-<span class="num" data-page-node-id="EUB9QDirnVTEQ9qiwPv3Sp">1</span>)
+        loss = -(t * s).<span class="fn" data-page-node-id="H5cCEPDE0f8UJFIjACkv9s">sum</span>(dim=-<span class="num" data-page-node-id="xSwhWaa30JDpv5lpSTwJ5R">1</span>).mean()
+        <span class="com" data-page-node-id="JTBfbvC9wW847hdAqDhJpi"># 用教师的 softmax 前输出更新中心（滑动平均），全程 no_grad</span>
+        <span class="kw" data-page-node-id="FI0u7kG68mxD8fREB0DsoZ">with</span> torch.no_grad():
+            <span class="kw" data-page-node-id="V2czdJE0tnGgG24IfCA4Ps">self</span>.center.mul_(<span class="kw" data-page-node-id="Kzdej6lxvw2w56HjRoo3Hs">self</span>.m).add_(
+                t_logits.mean(dim=<span class="num" data-page-node-id="BUyBuGReEBaOrOunOrgFO5">0</span>, keepdim=<span class="kw" data-page-node-id="EWPufH1QtQV2sSlFen0SKH">True</span>) * (<span class="num" data-page-node-id="MeCtpFL80PQ0oHqanI6PPE">1</span> - <span class="kw" data-page-node-id="6FUVCg19AaaEp6PdJejYpv">self</span>.m))
+        <span class="kw" data-page-node-id="QXi9c7VAiOgpR7otvLSXcU">return</span> loss
+</pre></div>
+<div class="callout" data-page-node-id="mp9umKWc06MO9iMHFlUpT4"><div class="callout-title" data-page-node-id="XW8QQKIEPJ7WMgRGYfSaj6">工程提醒：教师网络的更新方式</div>
+<p data-page-node-id="QFRdtmajt9DIU4xAAAjiY0">DINO 的教师网络<strong data-page-node-id="i69kqYFE6JeU0mFVp4DcAN">不参与梯度更新</strong>，而是每步对学生的参数做 EMA（公式 17），动量系数 $\lambda$ 从 0.996 余弦递增到 1.0。实现上通常直接遍历参数做原地平均，并把教师的 BN 统计量一并同步。这一步写错的典型症状是：训练初期看似正常，但中后期教师"跟不上"学生，损失震荡不收敛。</p>
+</div>
+<h3 data-page-node-id="mXt5kXidbPA1GmuvDiilsK">5.2 DINO v2：把方法做成"基础设施"</h3>
+<p data-page-node-id="IZ5lGuhYmxlm3Njm54lq69">DINO v2（2023.04）要解决的问题已经不只是"训得更好"，而是<strong data-page-node-id="rdDMf9IjVjgKkk7oTyPnKH">把自监督做成可直接使用的视觉基础设施</strong>。它针对 v1 的三个不足逐一给出方案：</p>
+<div class="table-wrap" data-page-node-id="B7Y2G5jJpfKB3kpvEsUW4l">
+<table data-page-node-id="s0QTAN75aQdjoy0skRo3lf">
+<tr data-page-node-id="VdeAfd3Vx1o134beB2iHby"><th data-page-node-id="VR3dQ1h58k6OYqg3IRJjQ8">v1 的不足</th><th data-page-node-id="a8tBM3Pd5lKE21RJKH1fX0">v2 的方案</th><th data-page-node-id="VKeVo1yArAxFTC7DILsCVy">设计要点</th></tr>
+<tr data-page-node-id="VGaMQGxN68LygrJh2e9YoG"><td data-page-node-id="89DpaIEjf0UhwHfXd807mR">训练数据依赖 ImageNet 等有标注数据集</td><td data-page-node-id="JNYQSzHXAeRNnFPctalvwk"><strong data-page-node-id="8OROHkpKO2HvCWlfdQrQRC">LVD-142M 自动筛选</strong></td><td data-page-node-id="yJgDBwzq2RAqgL7UYnfQQY">从 12 亿张未标注图像中，用自监督特征做检索，筛出与若干"种子数据集"分布接近的 1.42 亿张——<em data-page-node-id="faRUHVtDKQ6h2uBhT5yGeC">不引入任何标签</em></td></tr>
+<tr data-page-node-id="3FiuCFKLfZGcYKHe7IK9A5"><td data-page-node-id="f2GhbJw8wfY0DYlkS253Dz">只有图像级特征，patch 级特征质量不足</td><td data-page-node-id="v5NCS5sCkAhOTbxHIk7wT7"><strong data-page-node-id="0dwS4D3k8jy4XVHXQdNHiA">DINO 损失 + iBOT 掩码建模损失</strong></td><td data-page-node-id="iaWRgsDVsBhzRwiLWpVBSE">图像级与 patch 级两个目标联合训练；两者<strong data-page-node-id="e0A6329K0PaGWlsEADykoz">解耦预测头权重</strong>，避免目标冲突</td></tr>
+<tr data-page-node-id="A7IGbCQODWOcG38FN8F1zw"><td data-page-node-id="v8b9vCBfX3CytGH8MIawuB">特征分布不均匀，存在离群维度</td><td data-page-node-id="JHfBOXvusi5W5VOBt84cyn"><strong data-page-node-id="82Y4sLr7X6yYJfGYLB0Mel">Sinkhorn 中心化 + KoLeo 正则</strong></td><td data-page-node-id="xROKnFI0Ji7pEu3k9SoYYd">KoLeo 惩罚每个样本与其最近邻距离的对数，使特征在空间中分布更均匀</td></tr>
+<tr data-page-node-id="WM4zahumNI15eFWiP9QJNK"><td data-page-node-id="7GfxyzMGenZIFMuBAWpgrv">高分辨率下特征退化</td><td data-page-node-id="6JBjHNecgr2GZvby3TX8nJ"><strong data-page-node-id="R1NKxUvqhd7KUj55kkK66o">高分辨率适配阶段</strong></td><td data-page-node-id="lpQsMtCiAbr9Invdlpe4RJ">先在 224 上预训练，再用较短时间在 518 上适配</td></tr>
+</table>
+</div>
+<p data-page-node-id="6S5ibMwpoEGPAGgqiznhwV">KoLeo 正则的形式很简洁，它直接作用于批内特征的最近邻距离：</p>
+<div class="formula" data-eq="(18)" data-page-node-id="JtS946uDMBGZHkbjX5Prre">$$\mathcal{L}_{\text{koleo}} = -\frac{1}{n}\sum_{i=1}^{n}\log\big(d_i\big), \qquad d_i = \min_{j \neq i}\big\| z_i - z_j \big\|$$</div>
+<p data-page-node-id="Z5CZmikkc6MjxkoH45ixOL">直观理解：若某些样本挤在一起（$d_i$ 很小），$-\log d_i$ 就会很大，损失促使其散开。这相当于对特征空间施加了一个<strong data-page-node-id="c9WrGWs8BOfvyeXgSGL28W">"均匀铺开"的软约束</strong>，与对比学习用负样本达到的效果相似，但不需要显式比较样本对。</p>
+<p data-page-node-id="rwVzTPpAYOmWsMMB7zMKfr">v2 的工程成果同样重要：它交付了 ViT-S/B/L/g 四个尺寸的模型，并<strong data-page-node-id="TCoCA1xuj70HpyEQddIyWc">把大模型蒸馏成小模型</strong>，使不同算力预算都能使用。其冻结特征在分类、分割、深度估计、检索等多类任务上超过了同期的 CLIP 类弱监督特征——这是"自监督特征能与语言监督特征正面竞争"的标志性结果。</p>
+<h3 data-page-node-id="bUT9gqF4LpNe8EdDWvgq9X">5.3 DINO v3：规模与"密集特征退化"问题</h3>
+<p data-page-node-id="438ezfqD54B8GnVB7wmqve">DINO v3（2025.08）把 DINO 的配方推到了一个新的量级：<strong data-page-node-id="nNyC02xCHjQrEpfT7m2FG6">ViT-7B/16（约 67 亿参数）、LVD-1689M 约 17 亿张图像</strong>，另有一套约 4.93 亿张的卫星遥感数据用于该领域。但真正值得学习的是它解决的那个<strong data-page-node-id="LmENonZuWEbf2IJw4fBkJ8">技术难题</strong>，因为它暴露了自监督在大规模训练下的一个结构性缺陷。</p>
+<p data-page-node-id="tQ8jI6HPMPW4rgLGsPAb9o"><strong data-page-node-id="mrSTsWfxpyqscIq3zV5deO">问题：全局特征在变好，密集特征却在退化。</strong>在超长训练过程中，图像级（全局）表示的指标持续上升，但 patch 级（密集）特征却逐渐"塌陷"——本应互相区分的不同图块开始变得相似。原因是训练目标主要由全局对比/蒸馏驱动，对 patch 之间<strong data-page-node-id="MfoJcM8zYrjZJtr534UMOW">相对关系</strong>的约束很弱。这直接影响分割、深度估计、检测这类需要逐像素输出的任务，而这恰恰是 DINO v2 相对弱于专用系统的领域。</p>
+<p data-page-node-id="jNFgcy5WbJ69p2uGilwhjH">解决方案是 <strong data-page-node-id="FgWYuAeyDkRgTBy5jFwGw8">Gram Anchoring</strong>（Gram 锚定）：不直接约束单个 patch 特征，而是约束 patch 特征之间的<strong data-page-node-id="WAhgGDXEyvsh4iaqfg4Upt">相似度结构</strong>。具体做法是把当前模型的 patch 特征 Gram 矩阵拉近一个较早、尚未退化的"Gram 教师"模型的 Gram 矩阵：</p>
+<div class="formula" data-eq="(19)" data-page-node-id="DZ4l5eqPVTqdhDcCiUIrjw">$$\mathcal{L}_{\text{Gram}} = \Big\|\, G_\theta(X) \;-\; G_{\theta_{\text{ref}}}(X) \,\Big\|_{F}^{2}, \qquad G_\theta(X) = \tilde{Z}_\theta \,\tilde{Z}_\theta^{\top}, \quad \tilde{Z} = \text{L2 归一化的 patch 特征}$$</div>
+<p data-page-node-id="N05Ir522hR5KE7xZkhzrWu">这个设计很巧妙：<strong data-page-node-id="OLTWxeugXbQzYBQIXmGHr3">约束的是相对结构，而非绝对取值</strong>。因此 patch 特征仍然可以自由演化（保留继续学习的空间），只要它们之间的相似度关系保持一致即可。论文报告在约百万次迭代后引入该正则，能快速"修复"已经退化的密集特征，在分割与深度估计上带来显著提升，同时不影响全局性能。</p>
+<div class="svg-box" data-page-node-id="vfFLLVPH7DiXUL1CiD0hsC">
+<svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" data-page-node-id="msycqDPPnaGAIF3QiYVcF2">
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="1UZURAMuKAGWnH9ohHL2pV">DINO v1 → v2 → v3：从方法到基础模型</text>
+  <!-- v1 -->
+  <rect x="30" y="52" width="250" height="240" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.7" data-page-node-id="dGhZrVgUm2RBp5vEdVSnmU"/>
+  <text x="155" y="78" text-anchor="middle" font-size="13.5" fill="#6d28d9" font-weight="700" data-page-node-id="D02gMcDe5pMHORaBHBPklO">DINO v1（2021.04）</text>
+  <text x="155" y="98" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="HQUPJklobZQwIGLPeKwVMz">自蒸馏 + 中心化锐化</text>
+  <line x1="52" y1="112" x2="258" y2="112" stroke="#ddd6fe" stroke-width="1.2" data-page-node-id="gBOsnbSRIeZJJCjJMSfuki"/>
+  <text x="52" y="136" font-size="11" fill="#475569" data-page-node-id="DTkUpw43zcVsS3bJoMTd3z">· 学生/教师双网络，教师 = EMA</text>
+  <text x="52" y="158" font-size="11" fill="#475569" data-page-node-id="y6GXVHoyJyqSKubpbi40Vl">· 2 全局 + 6 局部视图</text>
+  <text x="52" y="180" font-size="11" fill="#475569" data-page-node-id="cB1HJaTehAn8FkNcQtgjiX">· 输出 65536 维原型分布</text>
+  <text x="52" y="202" font-size="11" fill="#475569" data-page-node-id="kYrjfCchFyRHNbQKYuq4mS">· 无需负样本、无需大批次</text>
+  <text x="52" y="230" font-size="11" fill="#7c3aed" font-weight="700" data-page-node-id="gtTrzH4YGqKx4bfwLZMGeo">成果：注意力自动分割物体</text>
+  <text x="52" y="250" font-size="10.5" fill="#94a3b8" data-page-node-id="Xn36wPia3U8Iblqiv9aBdo">模型规模：ViT-S/B/…（< 100M）</text>
+  <text x="52" y="270" font-size="10.5" fill="#94a3b8" data-page-node-id="DYI8Dn2X5MqGdb8Q1yzNf5">数据：ImageNet-1k</text>
+  <!-- v2 -->
+  <rect x="310" y="52" width="250" height="240" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.7" data-page-node-id="c04hGSMIWqk5YX75Rm07ki"/>
+  <text x="435" y="78" text-anchor="middle" font-size="13.5" fill="#047857" font-weight="700" data-page-node-id="yvDQTLsKBPOdK0vFZxcwzo">DINO v2（2023.04）</text>
+  <text x="435" y="98" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="DaAl74afCeAcGBPy00IXWE">把方法做成基础设施</text>
+  <line x1="332" y1="112" x2="538" y2="112" stroke="#a7f3d0" stroke-width="1.2" data-page-node-id="bybTF35lKLezs9nHSShnXx"/>
+  <text x="332" y="136" font-size="11" fill="#475569" data-page-node-id="4irj5ZJFnJ3qdgLlwVsKNE">· LVD-142M 自动筛选数据集</text>
+  <text x="332" y="158" font-size="11" fill="#475569" data-page-node-id="CZQOYpO1ZsUdKhIbpBlHyr">· DINO + iBOT 双目标（解耦头）</text>
+  <text x="332" y="180" font-size="11" fill="#475569" data-page-node-id="myN4W4G0ilcvaM73sPohDL">· Sinkhorn 中心化 + KoLeo 正则</text>
+  <text x="332" y="202" font-size="11" fill="#475569" data-page-node-id="jPnxyRji7HaOi4WY2GMwen">· registers + 518 高分辨率适配</text>
+  <text x="332" y="230" font-size="11" fill="#047857" font-weight="700" data-page-node-id="HxOobPLmfZoGlkCwqJ7KBC">成果：冻结特征对标 CLIP</text>
+  <text x="332" y="250" font-size="10.5" fill="#94a3b8" data-page-node-id="FF3KCFamjPIdKxzm2BfHTx">规模：ViT-g/14（约 11 亿）</text>
+  <text x="332" y="270" font-size="10.5" fill="#94a3b8" data-page-node-id="dPJtyKLVUOB87KUwFHl42M">数据：1.42 亿张（无标注）</text>
+  <!-- v3 -->
+  <rect x="590" y="52" width="260" height="240" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.7" data-page-node-id="jqE1UtfLBacLztmlmcxzuG"/>
+  <text x="720" y="78" text-anchor="middle" font-size="13.5" fill="#1d4ed8" font-weight="700" data-page-node-id="uWEOkyrSANSq65Wa77FAsu">DINO v3（2025.08）</text>
+  <text x="720" y="98" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="ucEQ6USsX7hpNBpA4nWdlN">规模 + 修复密集特征退化</text>
+  <line x1="612" y1="112" x2="828" y2="112" stroke="#bfdbfe" stroke-width="1.2" data-page-node-id="CId8ib10CoOuWHI5zKP6Zx"/>
+  <text x="612" y="136" font-size="11" fill="#475569" data-page-node-id="YyEFmBMvsL1rPazze4BQYn">· <strong data-page-node-id="KtLKiuz0oEMXVOiDStBNpT">Gram Anchoring</strong> 约束 patch 相似度结构</text>
+  <text x="612" y="158" font-size="11" fill="#475569" data-page-node-id="UaYhK5YlufIyhWu7rS7g16">· RoPE 旋转位置编码</text>
+  <text x="612" y="180" font-size="11" fill="#475569" data-page-node-id="ChtlCvTqy5X6G4THlwpgSJ">· 恒定学习率 + 高分辨率适配</text>
+  <text x="612" y="202" font-size="11" fill="#475569" data-page-node-id="EnCArfHsCvM0udOCDt1WTb">· 蒸馏出 ViT 21M ~ 6.7B + ConvNeXt</text>
+  <text x="612" y="230" font-size="11" fill="#1d4ed8" font-weight="700" data-page-node-id="7yqLPA9KDMXxxfHHnleoJE">成果：冻结骨干在密集任务上</text>
+  <text x="612" y="248" font-size="11" fill="#1d4ed8" font-weight="700" data-page-node-id="f9WJxNGW46fmKG6kC3ptmL">超过专用模型</text>
+  <text x="612" y="270" font-size="10.5" fill="#94a3b8" data-page-node-id="K9vYeJAxKeTiXQ0dga9Ltz">规模：ViT-7B/16（约 67 亿）</text>
+</svg>
+</div>
+<h3 data-page-node-id="MgyXjcJAkPdoDNqlMhGCiG">5.4 基础模型化的三个标志</h3>
+<p data-page-node-id="QPTGN9e4dXcgcryqIg2UyK">从 v1 到 v3，自监督视觉模型的性质发生了实质变化。可以用三条标准来判断一个自监督方法是否已经变成"基础模型"：</p>
+<ul data-page-node-id="w9UKGNCUy5NQpwDoo5l7ic">
+<li data-page-node-id="8nyMCN3HIa3kRoJy6YsFX6"><strong data-page-node-id="D8exzL26Y48mZwDV6q6S0J">骨干可以冻结</strong>。v1/v2 时代仍需要在下游微调；v3 明确以"冻结骨干"为目标——不微调、只接轻量任务头（线性探针或小型 adapter）即可在检测、分割、深度估计、视频跟踪上达到领先水平。这使模型的复用成本大幅下降。</li>
+<li data-page-node-id="CKWZZtuApoDWkQiPBPzPoV"><strong data-page-node-id="VDd7whRTRllBxBwbJudkIp">数据的来源与规模独立于标注</strong>。v1 依赖 ImageNet-1k（有标签，虽只用来取图但引入了分布偏置）；v2 用 12 亿未标注图像经检索筛出 1.42 亿；v3 直接扩到约 17 亿，并额外提供了针对遥感领域的专用版本。数据瓶颈从"标注能力"转移到了"算力与筛选管线"。</li>
+<li data-page-node-id="PrhiRz28xBSd3CFuydCAB0"><strong data-page-node-id="6qlgNQjz3HX8VuoPwJ46Y2">交付物是一个模型族，而不是一篇论文</strong>。v3 蒸馏出从 2100 万到 67 亿参数的 ViT 序列与若干 ConvNeXt 变体，覆盖端侧到服务端。发布形态从"代码 + 权重"变成了"可直接集成的产品线"。</li>
+</ul>
+<div class="callout" data-page-node-id="925dEAm5G2EH77I1b0Q87C"><div class="callout-title" data-page-node-id="EKONjissi8zGe6Ye7hfE6C">从 DINO 这条线能学到的两件事</div>
+<p data-page-node-id="gceBxIK3X7TFV9czKHsgJf"><strong data-page-node-id="i3gb4U6qvHF9XgqXoFFLvS">其一，"简单方法 + 大规模"往往胜过"精巧方法 + 小规模"。</strong>DINO 的核心组件（双网络、EMA、中心化锐化）在 v1 就已定型，v2 与 v3 的进步主要来自数据管线、正则项与工程细节，而非颠覆性的架构改动。</p>
+<p data-page-node-id="vvNNHzp5L9CrmByIL8cKY0"><strong data-page-node-id="bH5pighLhaZ060cwjolAdK">其二，规模会暴露新的失效模式，而这些失效往往无法通过"调参"解决。</strong>v3 的核心贡献 Gram Anchoring 并非为了刷高分类精度，而是修复一个在长训练中<em data-page-node-id="U4va1MHmE4jzDn0gINkneK">才出现</em>的密集特征退化问题。这提示我们：当模型长大之后，"哪些性质会退步"本身就是一个需要被研究的问题。</p>
+</div>
+</section>
+
+<section id="ch6" data-page-node-id="skfgc3lJqRc0zsnT20u2GO"><h2 data-page-node-id="wMr7qTc34s8JffgltvBl3d"><span class="num" data-page-node-id="riOj6tSfVlgGfBCKwgS2fg">6</span>知识体系总结</h2>
+<h3 data-page-node-id="wTF3NQ9WXRnWc16sjQy4Jx">6.1 发展时间线</h3>
+<div class="timeline" data-page-node-id="dBok6SOlkTQBq68eHdw0QZ">
+<div class="timeline-item" data-page-node-id="AHw2dO3T9pbmimQvT7NZ6a"><div class="year" data-page-node-id="28ZAPKvBEQmzCFcdGwMvnf">2014</div><div class="event" data-page-node-id="Y9rFt7MNoyWhWy7PZECQTh">代理任务的起点</div><div class="desc" data-page-node-id="USpAXG7xr1A4EEmFGosAHY">Exemplar CNN 等早期工作提出"用变换构造伪类别"，首次系统尝试不依赖人工标签训练卷积特征</div></div>
+<div class="timeline-item" data-page-node-id="vWAz1AqHTZDEnV1E3a8q2z"><div class="year" data-page-node-id="D2N7KxF2SHYhHCLG3sDwLo">2015 – 2016</div><div class="event" data-page-node-id="n60dNjrrcc9mKUZjPVNOgM">代理任务百花齐放</div><div class="desc" data-page-node-id="ylclQX9GfADdBwhXQEqY9Z">Context Prediction（相对位置，2015）、Context Encoder（图像修复）、Colorization（图像着色）、Jigsaw（拼图还原）相继提出，线性探针精度从随机水平提升到 50% 区间</div></div>
+<div class="timeline-item" data-page-node-id="a62iolziSb2iuduJoBE9Mw"><div class="year" data-page-node-id="JZSB0iaLizdpAbFvnRmyNL">2018</div><div class="event" data-page-node-id="sNdrTDtqvaOIisHEQNrURG">旋转预测与代理任务的顶峰</div><div class="desc" data-page-node-id="UFwDgg1W7FKEfk9EBb3LOC">Rotation Prediction 以极简实现取得当时最好的迁移表现，成为此后所有对比学习论文的标准对照基线；同时也暴露了"捷径解"问题</div></div>
+<div class="timeline-item" data-page-node-id="dD4WbPGI5hNFdEh9FCJ0T5"><div class="year" data-page-node-id="47AsrRsjkeS4EvlfzAnxqe">2020.02</div><div class="event" data-page-node-id="V0WG2SvrFKegTqrxOXbcDC">SimCLR：极简框架 + 强增广</div><div class="desc" data-page-node-id="l6c29d5beSEGb4ny0QpmWQ">用 NT-Xent 与随机裁剪 + 颜色抖动组合，配合 batch 4096 与 LARS，把 ResNet-50(4×) 线性探针推到 76.5%——追平有监督 ResNet-50</div></div>
+<div class="timeline-item" data-page-node-id="Pj22CKLsYGjFmTB7en6pr9"><div class="year" data-page-node-id="WBoyCuLkrlr9ZE7OUMuIzU">2020.03</div><div class="event" data-page-node-id="QKmpOyD9Gxs6kENa4hmMr7">MoCo：队列 + 动量编码器</div><div class="desc" data-page-node-id="zo08dI5UwQtG34siPiwFVB">把负样本从"当前 batch"改为"特征队列"，用动量编码器保证队列内特征可比，使小显存也能训练（v2 达到 71.1%）</div></div>
+<div class="timeline-item" data-page-node-id="o6OzMbjp8uV6mAN6E4VjB2"><div class="year" data-page-node-id="MBGpjYAmpU3snk2i2GHkoi">2020.06</div><div class="event" data-page-node-id="Isu3XBNlj4qqFTKSvKCq8E">SwAV：用聚类替代样本对</div><div class="desc" data-page-node-id="TsniIOgcNdwZFU6UM7NETq">在线聚类 + 交换预测，不显式比较样本对也能防坍缩，暗示"负样本不是唯一出路"</div></div>
+<div class="timeline-item" data-page-node-id="pg5zAcXiyHIstPQKs80xTC"><div class="year" data-page-node-id="CJhd9mE3Lh5GbV3N7YFLzi">2020.06</div><div class="event" data-page-node-id="gJKeD55DxJJFS7MWgjDBbq">BYOL：取消负样本</div><div class="desc" data-page-node-id="MXNvOCD5LgfWsaKidYmesT">用在线/目标双网络 + 预测器 + EMA 实现"只用正样本"，ResNet-50 线性探针 74.3%，引发关于"为什么不会坍缩"的持续争论</div></div>
+<div class="timeline-item" data-page-node-id="4zPv8iT6FtVyzWXl9M6zhJ"><div class="year" data-page-node-id="Z32p3Ro6IWx9il1JSjLGT7">2021.01</div><div class="event" data-page-node-id="au4QQer3No3Cg4p1B5veUi">SimSiam：拆到最小骨架</div><div class="desc" data-page-node-id="fO2tavKR4FdClL3xxJBCTR">去掉 EMA 与大批次要求，只保留预测器 + stop-gradient；消融证明 stop-grad 是不可省的，EMA 并非关键</div></div>
+<div class="timeline-item" data-page-node-id="4vRP38g5C7bz5OB4ctoP1A"><div class="year" data-page-node-id="UjekYPkHX1tSmPd17DNDrj">2021.03 – 2021.04</div><div class="event" data-page-node-id="UFuY8sasoVZKBVQtrk1DYO">Barlow Twins / VICReg / DINO</div><div class="desc" data-page-node-id="UhDXE6AyF6rBGUIj4St7ip">Barlow Twins 用互相关矩阵趋近单位阵、VICReg 用方差-协方差正则，证明可完全不用负样本；DINO 提出自蒸馏 + 中心化锐化，并意外发现注意力能自动分割物体</div></div>
+<div class="timeline-item" data-page-node-id="PIz5f5hmstieibU9eHSCb8"><div class="year" data-page-node-id="KRXnB7L7aiMrGodZW1Hnq5">2023.04</div><div class="event" data-page-node-id="2ecPgRbWVZyTGFrSGuCDST">DINO v2：自监督成为基础设施</div><div class="desc" data-page-node-id="WPXinoFABecQpZzNpTHti1">LVD-142M 无标注数据自动筛选、DINO + iBOT 双目标、KoLeo 正则、registers、518 高分辨率适配；冻结特征在分类与密集任务上对标 CLIP 类弱监督模型</div></div>
+<div class="timeline-item" data-page-node-id="BwLNSlw5VicPh0b5GPDBct"><div class="year" data-page-node-id="9IFX5HpmH3wvCeRdaOI1uN">2025.08</div><div class="event" data-page-node-id="G8W241GLlyowaunE9FknDU">DINO v3：规模与新失效模式</div><div class="desc" data-page-node-id="1RFfljpMTHYbERPZK9QhDn">ViT-7B/16（约 67 亿参数）、约 17 亿张图像；提出 Gram Anchoring 修复长训练下的密集特征退化；冻结骨干在 60+ 基准上超过专用系统</div></div>
+</div>
+<h3 data-page-node-id="xwxd5kFaafXF3VhJGJIwDC">6.2 核心公式速查</h3>
+<div class="table-wrap" data-page-node-id="1vOjDrEfGwk8ICfN2rFuXu">
+<table data-page-node-id="282bSYNpVGMceLMDDh8BHn">
+<tr data-page-node-id="eAfFhscjjC5Ghoe4OmO3SM"><th data-page-node-id="w7Q27h8Fp3AaZnfdYGxUBT">编号</th><th data-page-node-id="HokpvFPxA4ld3DhWK8KcKi">公式</th><th data-page-node-id="sNXoHkuHdIUpbsmTt1CcCq">关键点</th></tr>
+<tr data-page-node-id="WYKLwHZgMF6Nt63e713csH"><td data-page-node-id="sJqcGdQqSWFUOJnQhyJZEv">(1)(2)</td><td data-page-node-id="etz4HEOQxoT6lZmDYXBbHb">有监督目标 / 自监督的一般形式</td><td data-page-node-id="kPTaglHgx48TFZE4zTEzWa">自监督用两个变换视角自造监督信号</td></tr>
+<tr data-page-node-id="ptApqhPtFkonG9AkOhUjZU"><td data-page-node-id="A6ebRBboq8MznU2IxAu1po">(3)(4)(5)</td><td data-page-node-id="ZfIyBOExvsIK3zMKKdVbqU">着色 / 拼图 / 旋转预测</td><td data-page-node-id="FS8NgSHWU8y7yIQy13ZSyL">代理任务的三类典型构造</td></tr>
+<tr data-page-node-id="DHPsZO4zTddE5ZZEsj1OQ9"><td data-page-node-id="ySFTWUMNc8GzIS9cK0IKmP">(6)</td><td data-page-node-id="FXLiTOGQHf2o8x2YI8ZrOo">代理任务的根本缺口</td><td data-page-node-id="mbDX0BdVhWcVIWoqPxYIUs">最大化与伪标签的互信息 ≠ 最大化与语义的互信息</td></tr>
+<tr data-page-node-id="op6PFaQgDqZAlQ5BBHQ8Wu"><td data-page-node-id="qfjoUzZ3NesuMH12kImAJz">(7)</td><td data-page-node-id="RRABul5Q8qFBR8lCw5naBp">对比目标</td><td data-page-node-id="3ihtQFABgELn2FceD3jqfR">正样本拉近、负样本推远，特征需 L2 归一化</td></tr>
+<tr data-page-node-id="UaLLlKU01ENE0icmAqHNKy"><td data-page-node-id="EpCwaELElHOvZuMPbxZ9km">(8)</td><td data-page-node-id="vyoEffHkCsv0pcgOVsxvwS">InfoNCE</td><td data-page-node-id="tFuWA5wQtxcHAHGAqch64d">softmax 形式，分母含全部负样本；$\tau$ 控制尖锐度</td></tr>
+<tr data-page-node-id="m4B6Sg14CqVZk0eJ06dxif"><td data-page-node-id="xV5f5WptreMV0trSAJiFEE">(9)</td><td data-page-node-id="GlG8j7ZGpZCLaQK7aQGruz">NT-Xent（SimCLR）</td><td data-page-node-id="czwaQ3t8yfoCcwyulNMGEZ">对称损失，负样本来自同 batch</td></tr>
+<tr data-page-node-id="7MF1iVXDtRNRDMFvquIv0H"><td data-page-node-id="bRdD8D90Yq1lfAtlxjPguY">(10)</td><td data-page-node-id="6JnyMdqWrEhDCToEZSSdfy">MoCo 动量更新</td><td data-page-node-id="WE13COA8gHfDeOKOxRzgIK">$m=0.999$，队列提供数量、动量提供一致性</td></tr>
+<tr data-page-node-id="CpJ8P7v2QBSemDjhJohUaz"><td data-page-node-id="AntiNkI99npovEhtiNU85p">(11)(12)</td><td data-page-node-id="yT2DfFkHiFOjkAyhSZRzs0">BYOL 损失与 EMA</td><td data-page-node-id="TDKg5bSypVnfC4Aww1wYWC">归一化 MSE；目标网络不接收梯度</td></tr>
+<tr data-page-node-id="WQ7LWpxmMYFwMJtRrdlVZh"><td data-page-node-id="igof3Y3ErynL5khiPMIqam">(13)(14)</td><td data-page-node-id="tl4b6sQdsAQfwZ9s1FYPAN">SimSiam 与 EM 视角</td><td data-page-node-id="XUMInEZPA5DVaB5xtur73R">stop-gradient 是防坍缩的核心</td></tr>
+<tr data-page-node-id="H4SqSPgRPxprlUqdAhu1YD"><td data-page-node-id="sKto4Fv0RgRlTdHO707sLX">(15)(16)(17)</td><td data-page-node-id="YWoCvvDD530c04Jne7w5A6">DINO 自蒸馏</td><td data-page-node-id="gkq4a9eucp7YVvObFpnX9P">教师只看全局、学生看全局+局部；中心化与锐化相互对抗</td></tr>
+<tr data-page-node-id="2HQIQL9T9hFIQsGrtShdfe"><td data-page-node-id="cKeqWS2kTTEilWAiwtQOCg">(18)</td><td data-page-node-id="wvGLXNHi9CAeO0kwOoySQP">KoLeo 正则</td><td data-page-node-id="A0BsCrqChia5ZseSmMdAyi">惩罚最近邻距离的对数，使特征均匀铺开</td></tr>
+<tr data-page-node-id="0iB5wtRitDUYMHXkin71AQ"><td data-page-node-id="sOAzKqPtANQLfIw14q8ovH">(19)</td><td data-page-node-id="sxtrrZ6zceb3LPog86u3bN">Gram Anchoring</td><td data-page-node-id="PF967QDbNXDDjOslv5PIPd">约束 patch 相似度结构，修复密集特征退化</td></tr>
+</table>
+</div>
+<h3 data-page-node-id="28hB5XOiKHNMIAPngAu7HL">6.3 方法对照表</h3>
+<div class="table-wrap" data-page-node-id="EtTtKEYjoPAqeApT9t2ZRB">
+<table data-page-node-id="M4wpUlpc8VlF7J0lgtGaUj">
+<tr data-page-node-id="ZQCqfWV4TZRs7kYEDZqJKU"><th data-page-node-id="C8Wi7vcDeNZpHPGlrbZf0H">方法</th><th data-page-node-id="7jLnNzqQNYKcNUgONFzan7">年份</th><th data-page-node-id="sEgWYxFGGCwwbb9tWxDAjD">监督信号来源</th><th data-page-node-id="0hq2hBLVANft3MPfjaHipT">是否需负样本</th><th data-page-node-id="hPkUTkQx2LQ0RwMMKHMHbK">防坍缩机制</th><th data-page-node-id="1cBM6pVCRQm7b7iRkVmVme">对后续的影响</th></tr>
+<tr data-page-node-id="ZLcAMRIGDmqgpiLRZoKVXY"><td data-page-node-id="rrEslDVwhegfKDFjSICeO5">Colorization / Jigsaw / Rotation</td><td data-page-node-id="ZyKnUGjOFd3PLf5A4vU7DT">2016 – 2018</td><td data-page-node-id="g3xkFoMuxego1A6qZZL6Hk">人工设计的代理任务</td><td data-page-node-id="hCbodMlxrrIDAGdUItiwmX">否</td><td data-page-node-id="F5HoyMnDfma06pgOZublJ8">任务本身有非平凡解</td><td data-page-node-id="55gQwHyWPiqM3AtYcI6R5O">确立"无标签预训练"可行性，但受限于捷径解</td></tr>
+<tr data-page-node-id="ePkbxFlA4QNZiC65BkNH70"><td data-page-node-id="wbtwi1vCPS2RW421HZRKDw">SimCLR</td><td data-page-node-id="plAcNo0HbGAvW70P3g9IFL">2020.02</td><td data-page-node-id="lENzH3hnTTTaD2Z77WGfFM">同图两视图一致性</td><td data-page-node-id="tXMkTfNo7c7ZCpECJJOIVw">是（同 batch）</td><td data-page-node-id="aoNFtC6RSp7u6t9cbf87tC">负样本推开</td><td data-page-node-id="2EOPoBpDvu0Orb18CRxHJs">确立强增广与投影头的标准地位</td></tr>
+<tr data-page-node-id="sfXiADZ31vYhcWPJe4LqrO"><td data-page-node-id="vcyXAzNxsuuAilMVMTLARI">MoCo / v2</td><td data-page-node-id="n027W9lAWhQcgfTrHnAQBR">2020.03</td><td data-page-node-id="CsSiNf5bEYoUik3KX70Esy">同图两视图一致性</td><td data-page-node-id="3Qz6DKYW9GFsmfCBGjf2Xj">是（队列）</td><td data-page-node-id="xD61w4aI1eSN8GJxOQliM3">负样本 + 动量一致性</td><td data-page-node-id="MoIcn4kwK2n8kJ9QndsUoN">解耦负样本数与 batch 大小</td></tr>
+<tr data-page-node-id="vpiMiLu3GhH2JBQo3xriqK"><td data-page-node-id="u1qJbuSHxPFp3s4VICwYTc">BYOL</td><td data-page-node-id="LDte4am7iWHsA0zWQCAv7x">2020.06</td><td data-page-node-id="yWxZdnsG38ahgmcUk9geZj">同图两视图一致性</td><td data-page-node-id="SyTZNgg6zC3IIcbsoxc2nb"><strong data-page-node-id="pFClr556FaQrgjJLoNpqy4">否</strong></td><td data-page-node-id="2SWPGFxUOoG7wBcyUPebxZ">非对称 + EMA</td><td data-page-node-id="lFfiqrac2bEAK0EpCg8CNM">打破"必须有负样本"的共识</td></tr>
+<tr data-page-node-id="kwN5GQeM2Vjr8lsUZHaW2s"><td data-page-node-id="TB12gw7C8wXhWeaiQ99vku">SimSiam</td><td data-page-node-id="U88zUZBGpjPt1F6zrf0EFi">2021.01</td><td data-page-node-id="zWA5ZywynnLmhIFLFiAn4t">同图两视图一致性</td><td data-page-node-id="SYGmsFSjXSjSL6G4Z0YMqD"><strong data-page-node-id="hLmgQvXPYHJ944oHQQ1ai2">否</strong></td><td data-page-node-id="KD3St8CRMwSbiVvSnCDjEw"><strong data-page-node-id="f1BmFXw4D95uvdWaSGVgDU">stop-gradient</strong></td><td data-page-node-id="BL4PEJrCTkIc9C8dBGA50Z">把防坍缩机制定位到优化层面</td></tr>
+<tr data-page-node-id="vIvqISLFDslQLXv6xGSZaT"><td data-page-node-id="Fr68r5eWiyikcaldfMfSLI">Barlow Twins / VICReg</td><td data-page-node-id="yZ2CvVqbinj4jJQcAgzaGE">2021 – 2022</td><td data-page-node-id="LzoFmEGzDX9E5XtANaR4Pq">同图两视图一致性</td><td data-page-node-id="atAL7eE7qCww1dmXGVJGit"><strong data-page-node-id="Bnsmry5SRZvWY7GlowHCAm">否</strong></td><td data-page-node-id="vrTZFaAkyMW7fxOACVS6EE">特征分布正则</td><td data-page-node-id="GR7sUCk9eDkfajknyQGNqq">证明可用纯正则替代负样本</td></tr>
+<tr data-page-node-id="cSXKjJGFz95ewyCEoJNDs9"><td data-page-node-id="GDSX5wAoBfz165QKPQgVZ9">DINO v1</td><td data-page-node-id="NXYLAqskU8aAQ7LasElxIl">2021.04</td><td data-page-node-id="cAn1AE271sqjPjTExlwFxW">多视图自蒸馏</td><td data-page-node-id="7TGN4oxhyoGGTZz0UfsoQn"><strong data-page-node-id="O5LCAZ0jf3CjAS7XlnK0qn">否</strong></td><td data-page-node-id="dFK0smYI5dFG5AepVGJW1p">中心化 + 锐化</td><td data-page-node-id="Ye6jdxKiv5gsaLLAZvEXYU">注意力自发分割；成为 v2/v3 的起点</td></tr>
+<tr data-page-node-id="JcvlLTVRQ57Aldng6ztFeb"><td data-page-node-id="0IAnu5EzVULYxAtYAFrnPR">DINO v2</td><td data-page-node-id="MRJ7AaDjAwsDRpLi14rJUv">2023.04</td><td data-page-node-id="4xFWP0UrJ0qIF8mFEu9vVX">多视图自蒸馏 + 掩码建模</td><td data-page-node-id="c8hOHqzYU2a2JTsTQA4tZu"><strong data-page-node-id="EsVAUUJWEYEO1ehvAyqMyH">否</strong></td><td data-page-node-id="ccMbeRuSCbHKvdjzEVMRAg">同上 + KoLeo + Sinkhorn</td><td data-page-node-id="WmDIGo2oeUq3mOsFSRRaA4">自监督特征成为通用基础设施</td></tr>
+<tr data-page-node-id="qf7CYgGER923kkCDYDsox4"><td data-page-node-id="QSNapDDvPBWSLzVQwknmzi">DINO v3</td><td data-page-node-id="HinqtpCAY9RQYtpXUmS3H7">2025.08</td><td data-page-node-id="adWqAtUrMT2VAIEY5a1P11">同上 + Gram 锚定</td><td data-page-node-id="kqUECcvxaKFkVIoQGzbJ0t"><strong data-page-node-id="MJ9dEb5bVK6T1AJQCxSd9U">否</strong></td><td data-page-node-id="OqBeKA2YBZ8ezCb7lxuTbA">同上 + Gram 正则</td><td data-page-node-id="XU3Y3vGwZAbOj9uGHHCCs4">规模到 67 亿参数；冻结骨干达 SOTA</td></tr>
+</table>
+</div>
+<h3 data-page-node-id="NHpRzGTyDyukbN0FatEAwH">6.4 一页知识图谱</h3>
+<div class="svg-box" data-page-node-id="jk0DTZacajBIdjAi7YS8wQ">
+<svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" data-page-node-id="G4e5VBCFDVhgXwJHCSSMQS">
+  <text x="450" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="k3AEEgt67vJinns7g61jYg">自监督学习知识图谱</text>
+  <ellipse cx="450" cy="200" rx="104" ry="42" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.2" data-page-node-id="IKet72dnmW8EiOsbTgm2a2"/>
+  <text x="450" y="194" text-anchor="middle" font-size="14" fill="#6d28d9" font-weight="700" data-page-node-id="42FawUA5nDFbySNxaGDqBW">自监督学习</text>
+  <text x="450" y="214" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="YWr5H4eWxZFAHfem8qf063">从数据本身构造监督信号</text>
+  <!-- 1 -->
+  <rect x="48" y="52" width="212" height="96" rx="9" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="AI54BWRqAoIAODVXiqFt8c"/>
+  <text x="154" y="74" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="700" data-page-node-id="xEemVo8sKcXVieZcYdl8Qo">① 代理任务（第 2 章）</text>
+  <text x="154" y="96" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="m8ZyXQNygLhNxdzki0CkHc">着色 · 拼图 · 旋转 · 修复</text>
+  <text x="154" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="hhHT3Tg06lOq3ZK97Fw7tz">构造伪标签，无需人工标注</text>
+  <text x="154" y="136" text-anchor="middle" font-size="10.5" fill="#dc2626" font-weight="700" data-page-node-id="CslXKKDZZAAPqpQ8ANOIWf">短板：捷径解，任务与语义脱钩</text>
+  <line x1="262" y1="118" x2="388" y2="176" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="F8sULkUpqtID3vOACrLpJh"/>
+  <!-- 2 -->
+  <rect x="640" y="52" width="212" height="96" rx="9" fill="#fff7ed" stroke="#ea580c" stroke-width="1.6" data-page-node-id="CHfGEKiQFqlvjw482BTaQu"/>
+  <text x="746" y="74" text-anchor="middle" font-size="12.5" fill="#c2410c" font-weight="700" data-page-node-id="6YmpsZhfGQzkvdJk2DjgPk">② 对比学习（第 3 章）</text>
+  <text x="746" y="96" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="LbQ7jiOrF6MYQCWTsrJHX3">InfoNCE · SimCLR · MoCo</text>
+  <text x="746" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="qxavkXdiLYH5rtRZmo5yHL">正样本拉近、负样本推远</text>
+  <text x="746" y="136" text-anchor="middle" font-size="10.5" fill="#dc2626" font-weight="700" data-page-node-id="RS4Eyfftz8x6CeA7IQfvOH">短板：负样本依赖显存与算力</text>
+  <line x1="638" y1="118" x2="514" y2="176" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="g3pcfKKMND2UNTYhxBMNnG"/>
+  <!-- 3 -->
+  <rect x="48" y="250" width="212" height="106" rx="9" fill="#ecfdf5" stroke="#059669" stroke-width="1.6" data-page-node-id="aT6dQYiFSUsmShqLEMFXmB"/>
+  <text x="154" y="272" text-anchor="middle" font-size="12.5" fill="#047857" font-weight="700" data-page-node-id="63QF6PEPCVOZIlcFz8AiTa">③ 只用正样本（第 4 章）</text>
+  <text x="154" y="294" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="ZWPaUUzSnzz0dCAcVJK2lV">BYOL · SimSiam · Barlow Twins</text>
+  <text x="154" y="312" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="aO2FqthXBIrPcOGAV0egCU">非对称结构 + stop-gradient</text>
+  <text x="154" y="334" text-anchor="middle" font-size="10.5" fill="#047857" font-weight="700" data-page-node-id="s19Pc7joJTgE6bKDlzJpMO">突破：机制从数据层移到优化层</text>
+  <line x1="262" y1="290" x2="388" y2="228" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="fWrP7K5PEmjkNCpFl5dh3X"/>
+  <!-- 4 -->
+  <rect x="640" y="250" width="212" height="106" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" data-page-node-id="VcRWRhgvKRt0CwXKYDctlf"/>
+  <text x="746" y="272" text-anchor="middle" font-size="12.5" fill="#1d4ed8" font-weight="700" data-page-node-id="YMpcqummN5CWmsRKU238PB">④ 自蒸馏与规模化（第 5 章）</text>
+  <text x="746" y="294" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="XD6RnYdqhujpBOH8s0PH2v">DINO v1 / v2 / v3</text>
+  <text x="746" y="312" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="51urdHcnD8a7DkB4MFiTnE">中心化锐化 · LVD 数据 · Gram 锚定</text>
+  <text x="746" y="334" text-anchor="middle" font-size="10.5" fill="#1d4ed8" font-weight="700" data-page-node-id="eauQ3No1ZAqWBWVm7QuwvJ">结果：冻结骨干即基础模型</text>
+  <line x1="638" y1="290" x2="514" y2="228" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="Jkn5Cn5OfAloXDJkAURy7e"/>
+  <!-- bottom -->
+  <rect x="300" y="352" width="300" height="54" rx="9" fill="#f8fafc" stroke="#64748b" stroke-width="1.4" data-page-node-id="TMfSI51Fwl5V8ei3Z4gnh5"/>
+  <text x="450" y="374" text-anchor="middle" font-size="11.5" fill="#334155" font-weight="700" data-page-node-id="SNJvPGsRezNUj66evUyBef">评估协议：线性探针 · kNN · 微调</text>
+  <text x="450" y="394" text-anchor="middle" font-size="10.5" fill="#64748b" data-page-node-id="dnEOUhqB0w3t8kVl6odAPO">三者排名常不一致，看结论需先确认协议</text>
+  <line x1="450" y1="350" x2="450" y2="246" stroke="#64748b" stroke-width="1.4" stroke-dasharray="5,3" data-page-node-id="u44Wi39h7vWP6f1NqUcynO"/>
+</svg>
+</div>
+<div class="callout success" data-page-node-id="3kXbplEAwIMsduyxptbAzx"><div class="callout-title" data-page-node-id="e8fpcaUguv0ZupmQOrVT4t">一句话总结</div>
+<p data-page-node-id="sIqYP8F3SDpsMlVsMf3KIG">自监督视觉表示学习的二十年，可以读作<strong data-page-node-id="y9Uyyyj7BvsnOHEvvCVTdD">一条"不断追问『什么才是好目标』"的纠错链</strong>：代理任务用人工任务造标签，但任务与语义脱钩；对比学习改用"一致性"作目标，却依赖负样本；BYOL / SimSiam 证明负样本可以去掉，并把防坍缩机制定位到 stop-gradient；DINO 系列最终用自蒸馏把这条路线推到基础模型规模——<em data-page-node-id="F7ZVWL3qteJ7LMiKZpVf5P">目标越来越简单，规模越来越大，而"为什么有效"的解释往往滞后于"确实有效"的发现</em>。理解每一次纠错的动机，比记住任何单个方法的细节都更有长期价值。</p>
+</div>
+</section>
+
+<section id="refs" data-page-node-id="q4E1pc40KBNo8Fh4CpxHF4"><h2 data-page-node-id="nZ9O7Pmio5NLT1YGtIqUP2">参考文献</h2>
+<ol data-page-node-id="GsEfKlGFH7UpI17kmlL6U0">
+<li data-page-node-id="9z3j8DFJG8wpKDiJr9J1qr">Dosovitskiy, A. et al. (2014). Discriminative Unsupervised Feature Learning with Convolutional Neural Networks. <em data-page-node-id="KXS6kP45EwDfzzhQAeI6Oi">NeurIPS</em>.（Exemplar CNN，用变换构造伪类别）</li>
+<li data-page-node-id="VGxZDceAS8rACYzyVrJd95">Doersch, C., Gupta, A., &amp; Efros, A. A. (2015). Unsupervised Visual Representation Learning by Context Prediction. <em data-page-node-id="u3YLYHm0KRqxhYDk6Br5Ck">ICCV</em>. arXiv:1505.05192.</li>
+<li data-page-node-id="BtH6fBXmje3M7o5O9x1uAR">Pathak, D., Krähenbühl, P., Donahue, J., Darrell, T., &amp; Efros, A. A. (2016). Context Encoders: Feature Learning by Inpainting. <em data-page-node-id="Jv9kSLnuQb1OD1xw9qiqYm">CVPR</em>. arXiv:1604.07379.</li>
+<li data-page-node-id="58lhk4N31IrTj3vpyPy4VD">Zhang, R., Isola, P., &amp; Efros, A. A. (2016). Colorful Image Colorization. <em data-page-node-id="MAAhzS9TuEjC5feI5rBPxc">ECCV</em>. arXiv:1603.08511.</li>
+<li data-page-node-id="aaeHAGX4ItzIHVU2tNtC2t">Noroozi, M., &amp; Favaro, P. (2016). Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles. <em data-page-node-id="NNurZtxqh5SS2Kcg6vEcfo">ECCV</em>. arXiv:1603.09246.</li>
+<li data-page-node-id="1oZlv8eHuFo9DiiBSsyjSe">Zhang, R., Isola, P., &amp; Efros, A. A. (2017). Split-Brain Autoencoders: Unsupervised Learning by Cross-Channel Prediction. <em data-page-node-id="Dex2BnlroefpLvVedRQiDt">CVPR</em>. arXiv:1611.09842.</li>
+<li data-page-node-id="ghEFsSvkKPJv0UE5SHojL8">Gidaris, S., Singh, P., &amp; Komodakis, N. (2018). Unsupervised Representation Learning by Predicting Image Rotations. <em data-page-node-id="d62gI4atnY85iLu2MqdlYW">ICLR</em>. arXiv:1803.07728.</li>
+<li data-page-node-id="hVJiKjRbIEgIHFrTfKf52u">Radford, A., Metz, L., &amp; Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. <em data-page-node-id="20Hn3EYSk4uOQin7KWPosp">ICLR</em>. arXiv:1511.06434.（DCGAN，判别器特征可迁移）</li>
+<li data-page-node-id="IJmhAAu44wxWPcpCS7Clna">Donahue, J., Krähenbühl, P., &amp; Darrell, T. (2017). Adversarial Feature Learning. <em data-page-node-id="HtJXyQsHXocoULSM5AJFNn">ICLR</em>. arXiv:1605.09782.</li>
+<li data-page-node-id="Ph0rGzPVDq17l72fDeck3t">van den Oord, A., Li, Y., &amp; Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. arXiv:1807.03748.（InfoNCE）</li>
+<li data-page-node-id="jL0NYEWFLYU0PMj81MB4M7">Gutmann, M., &amp; Hyvärinen, A. (2010). Noise-Contrastive Estimation: A New Estimation Principle for Unnormalized Statistical Models. <em data-page-node-id="Scd7A8ZWMiOhIMF2ao5PAt">AISTATS</em>.</li>
+<li data-page-node-id="jSqQLXBKqSZZOttaHjvko6">Wu, Z. et al. (2018). Unsupervised Feature Learning via Non-Parametric Instance Discrimination. <em data-page-node-id="ko2VL6jq2kf1DI6RRFErsA">CVPR</em>. arXiv:1805.01978.</li>
+<li data-page-node-id="rLrzTNsyeZ2zFljC5qcGMR">Chen, T., Kornblith, S., Norouzi, M., &amp; Hinton, G. (2020). A Simple Framework for Contrastive Learning of Visual Representations. <em data-page-node-id="uJjQME41J8Jcz030F10u7D">ICML</em>. arXiv:2002.05709.（SimCLR）</li>
+<li data-page-node-id="aKMrFZGH3hVYsISAhMARgn">Chen, X., Fan, H., Girshick, R., &amp; He, K. (2020). Improved Baselines with Momentum Contrastive Learning. arXiv:2003.04297.（MoCo v2）</li>
+<li data-page-node-id="OzAHXwEpkIgbQndCG6NlnS">He, K., Fan, H., Wu, Y., Xie, S., &amp; Girshick, R. (2020). Momentum Contrast for Unsupervised Visual Representation Learning. <em data-page-node-id="cXxepMjxZMJ8PEs8ybR4y1">CVPR</em>. arXiv:1911.05722.（MoCo）</li>
+<li data-page-node-id="h4j8kdL7Rhp463wYlWt5td">Caron, M., Misra, I., Mairal, J., Goyal, P., Bojanowski, P., &amp; Joulin, A. (2020). Unsupervised Learning of Visual Features by Contrasting Cluster Assignments. <em data-page-node-id="VtDmJ9yREYQofn35gAZ9gy">NeurIPS</em>. arXiv:2006.09882.（SwAV）</li>
+<li data-page-node-id="ZMeFUEj8bw8NRHGdwszCAI">Grill, J.-B. et al. (2020). Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning. <em data-page-node-id="4BJrDBb2DDWrq7s3k4ML9b">NeurIPS</em>. arXiv:2006.07733.（BYOL）</li>
+<li data-page-node-id="jNeRiBAEPobBFYXahCrExP">Chen, X., &amp; He, K. (2021). Exploring Simple Siamese Representation Learning. <em data-page-node-id="BAj1CRBZHS7T6Y74lwb5Pf">CVPR</em>. arXiv:2011.10566.（SimSiam）</li>
+<li data-page-node-id="Sy6fPsBRZFSTRHKC1PDtVz">Zbontar, J., Jing, L., Misra, I., LeCun, Y., &amp; Deny, S. (2021). Barlow Twins: Self-Supervised Learning via Redundancy Reduction. <em data-page-node-id="qxWeqQ3tH2lDX3hAUcgZGJ">ICML</em>. arXiv:2103.03230.</li>
+<li data-page-node-id="E6LrKXHDbqX3CFcNqmA7mO">Bardes, A., Ponce, J., &amp; LeCun, Y. (2022). VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning. <em data-page-node-id="s6udroFoxHh4c7Kfr6GFbl">ICLR</em>. arXiv:2105.04906.</li>
+<li data-page-node-id="UfIWbtqqqQGBk83XH1AshC">Wang, T., &amp; Isola, P. (2020). Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere. <em data-page-node-id="678Q1NfwRlkgSlNUVdkm3M">ICML</em>. arXiv:2005.10242.</li>
+<li data-page-node-id="xrt4NV8lcaH3N12qlbFbJ2">Richemond, P. H. et al. (2021). BYOL Works Even Without Batch Statistics. arXiv:2010.10241.</li>
+<li data-page-node-id="P3BCFNEox97JBORaIf8APW">Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., &amp; Joulin, A. (2021). Emerging Properties in Self-Supervised Vision Transformers. <em data-page-node-id="e2DFyLkPzdvn8S3GcDh7bk">ICCV</em>. arXiv:2104.14294.（DINO v1）</li>
+<li data-page-node-id="A5rkUgy6Cj4FcRVjxt7AD2">Oquab, M. et al. (2024). DINOv2: Learning Robust Visual Features without Supervision. <em data-page-node-id="eV5xzk61JPqSFS2cxjFDnb">TMLR</em>. arXiv:2304.07193.</li>
+<li data-page-node-id="Q95W3EdlHyfAqU1N3Z4tMB">Darcet, T., Oquab, M., Mairal, J., &amp; Bojanowski, P. (2024). Vision Transformers Need Registers. <em data-page-node-id="GbF8OwuSDNGU08G2scIqZS">ICLR</em>. arXiv:2309.16588.</li>
+<li data-page-node-id="APmiBMS4fzN4Qe4e08nBg9">Siméoni, O., Vo, H. V., Seitzer, M. et al. (2025). DINOv3. arXiv:2508.10104.</li>
+</ol>
+</section>
+
+</main>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" data-page-node-id="XQjKC2AynmPsuSWhnrCVSg">&#8593;</button>
+
+<script>
+// Sidebar highlight
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var links = document.querySelectorAll('#sidebar nav a');
+  function highlight() {
+    var scrollY = window.scrollY;
+    var current = '';
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - 100) current = sections[i].id;
+    }
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+// Formula rendering
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>

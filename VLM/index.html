@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视觉语言模型 — Flamingo · BLIP-2 · LLaVA 完整技术指南</title>
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --c-bg: #f7f9fc; --c-bg-soft: #ffffff; --c-bg-card: #ffffff; --c-bg-hover: #f1f5f9;
+  --c-border: #e2e8f0; --c-border-strong: #cbd5e1;
+  --c-text: #334155; --c-text-soft: #64748b; --c-text-faint: #94a3b8;
+  --c-primary: #2563eb; --c-primary-dark: #1d4ed8; --c-primary-light: #dbeafe; --c-primary-ghost: rgba(37,99,235,0.06);
+  --c-accent: #7c3aed; --c-accent-light: #ede9fe;
+  --c-accent2: #059669; --c-accent2-light: #d1fae5;
+  --c-warn: #ea580c; --c-warn-light: #ffedd5;
+  --c-danger: #dc2626; --c-danger-light: #fee2e2;
+  --c-code-bg: #1e293b; --c-heading: #0f172a;
+  --sidebar-w: 260px; --content-max: none; --content-padding: clamp(24px, 4vw, 64px);
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-body: -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.08), 0 10px 10px rgba(0,0,0,0.04);
+}
+html { scroll-behavior: smooth; scroll-padding-top: 80px; font-size: 16px; }
+body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-text); line-height: 1.75; font-size: clamp(15px, 0.6vw + 0.6rem, 17px); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+#progress-bar { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); z-index: 999; transition: width 0.1s ease; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+#sidebar { position: fixed; left: 0; top: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-bg-soft); border-right: 1px solid var(--c-border); overflow-y: auto; z-index: 100; padding: 24px 0; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-sm); }
+#sidebar h2 { font-size: 18px; color: var(--c-primary); padding: 0 24px 16px; border-bottom: 1px solid var(--c-border); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.5px; }
+#sidebar nav a { display: block; padding: 9px 24px; color: var(--c-text-soft); text-decoration: none; font-size: 14px; transition: all 0.2s ease; border-left: 3px solid transparent; }
+#sidebar nav a:hover { color: var(--c-primary); background: var(--c-primary-ghost); }
+#sidebar nav a.active { color: var(--c-primary); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; }
+#main { margin-left: var(--sidebar-w); margin-right: 0; padding: clamp(28px, 4vw, 56px) var(--content-padding); padding-top: clamp(32px, 5vw, 56px); }
+.hero { text-align: center; padding: clamp(48px, 8vw, 80px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
+.hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
+.hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
+.hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
+section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
+h2 { font-size: clamp(22px, 3vw, 28px); color: var(--c-heading); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--c-primary); display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+h2 .num { display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 4vw, 40px); height: clamp(32px, 4vw, 40px); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--c-primary), var(--c-accent)); color: #fff; font-size: clamp(15px, 2vw, 18px); font-weight: 800; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+h3 { font-size: clamp(17px, 2vw, 21px); color: var(--c-primary-dark); margin: 28px 0 14px; font-weight: 600; }
+h4 { font-size: clamp(15px, 1.8vw, 17px); color: var(--c-accent); margin: 20px 0 10px; font-weight: 600; }
+p { margin-bottom: 14px; text-align: justify; }
+ul, ol { margin: 0 0 16px 24px; }
+li { margin-bottom: 6px; }
+strong { color: var(--c-heading); font-weight: 600; }
+em { color: var(--c-warn); font-style: normal; font-weight: 600; }
+.code-block { background: var(--c-code-bg); border: 1px solid #334155; border-radius: var(--radius-md); padding: 0; margin: 20px 0; overflow: hidden; box-shadow: var(--shadow-md); }
+.code-header { background: #0f172a; padding: 8px 16px; font-family: var(--font-mono); font-size: 13px; color: #60a5fa; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 8px; }
+.code-header::before { content: '\25CF'; color: #f87171; font-size: 10px; }
+pre { padding: 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; color: #e2e8f0; }
+pre .kw { color: #c792ea; } pre .str { color: #c3e88d; } pre .com { color: #64748b; font-style: italic; } pre .num { color: #f78c6c; } pre .fn { color: #82aaff; } pre .cls { color: #ffcb6b; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-primary-light); color: var(--c-primary-dark); padding: 2px 6px; border-radius: 4px; }
+.formula { background: var(--c-bg-card); border: 1px solid var(--c-border); border-left: 4px solid var(--c-primary); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; font-size: 17px; color: var(--c-text); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center; gap: 16px; }
+.formula[data-eq]::after { content: attr(data-eq); flex-shrink: 0; font-size: 14px; color: var(--c-text-soft); font-family: var(--font-mono); font-weight: 600; white-space: nowrap; margin-left: 16px; }
+.formula.multi { text-align: left; padding-left: 32px; }
+.formula.multi .katex-display { margin: 8px 0; }
+.svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
+.svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.svg-box svg { max-width: 100%; height: auto; }
+@keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
+.svg-box svg { animation: fade-in-up 0.6s ease-out; }
+.svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
+.svg-box svg .pulse-node { animation: pulse-node 2s ease-in-out infinite; }
+.svg-box svg .glow-ring { animation: glow-ring 2.5s ease-in-out infinite; }
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
+th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 12px 16px; text-align: left; font-weight: 600; }
+td { padding: 10px 16px; border-top: 1px solid var(--c-border); color: var(--c-text); }
+tr:hover td { background: var(--c-primary-ghost); }
+.callout { background: var(--c-accent-light); border-left: 4px solid var(--c-accent); border-radius: var(--radius-sm); padding: 16px 24px; margin: 20px 0; box-shadow: var(--shadow-xs); }
+.callout.warn { background: var(--c-warn-light); border-left-color: var(--c-warn); }
+.callout.danger { background: var(--c-danger-light); border-left-color: var(--c-danger); }
+.callout.success { background: var(--c-accent2-light); border-left-color: var(--c-accent2); }
+.callout-title { font-weight: 700; margin-bottom: 8px; color: var(--c-accent); font-size: 15px; }
+.callout.warn .callout-title { color: var(--c-warn); } .callout.danger .callout-title { color: var(--c-danger); } .callout.success .callout-title { color: var(--c-accent2); }
+.tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.tag-blue { background: var(--c-primary-light); color: var(--c-primary-dark); } .tag-green { background: var(--c-accent2-light); color: var(--c-accent2); } .tag-orange { background: var(--c-warn-light); color: var(--c-warn); } .tag-purple { background: var(--c-accent-light); color: var(--c-accent); }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--c-primary); }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-item::before { content: ''; position: absolute; left: -28px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--c-primary); border: 3px solid var(--c-bg); box-shadow: 0 0 0 2px var(--c-primary); }
+.timeline-item .year { font-weight: 700; color: var(--c-primary); font-size: 15px; }
+.timeline-item .event { color: var(--c-text); font-size: 14px; margin-top: 4px; }
+.timeline-item .desc { color: var(--c-text-soft); font-size: 13px; margin-top: 2px; }
+.formula .katex { font-size: 1.1em; } .formula .katex-display { margin: 0; }
+#back-to-top { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--c-bg-soft); border: 1px solid var(--c-border); box-shadow: var(--shadow-md); cursor: pointer; z-index: 200; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--c-primary); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none; }
+#back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#back-to-top:hover { background: var(--c-primary); color: #fff; box-shadow: var(--shadow-lg); }
+.back-link { display: block; margin-top: 16px; padding: 12px 24px; text-align: center; text-decoration: none; font-size: 14px; font-weight: 600; color: var(--c-text-soft); border-top: 1px solid var(--c-border); transition: all 0.2s ease; }
+.back-link:hover { color: var(--c-primary); background: var(--c-primary-light); }
+.back-link .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s ease; }
+.back-link:hover .arrow { transform: translateX(-4px); }
+#menu-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; background: var(--c-bg-soft); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; color: var(--c-primary); font-size: 20px; box-shadow: var(--shadow-sm); }
+@media (min-width: 1600px) { :root { --sidebar-w: 280px; } }
+@media (min-width: 1400px) and (max-width: 1599px) { :root { --sidebar-w: 260px; } }
+@media (max-width: 1399px) and (min-width: 901px) { :root { --sidebar-w: 220px; } }
+@media (max-width: 900px) { #sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); } #sidebar.open { transform: translateX(0); } #main { margin-left: 0; padding: 60px 20px 24px; } #menu-toggle { display: block; } .hero { padding: 48px 24px; } }
+@media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
+@media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
+@media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+.fig-cap { text-align: center; color: var(--c-text-soft); font-size: 13px; line-height: 1.75; margin: -16px auto 34px; max-width: 780px; }
+</style>
+</head>
+
+<body>
+<div id="progress-bar"></div>
+<div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
+<aside id="sidebar">
+  <h2>视觉语言模型</h2>
+<nav>
+    <a href="#hero">封面</a>
+    <a href="#ch1">一、三种接法</a>
+    <a href="#ch2">二、Flamingo</a>
+    <a href="#ch3">三、BLIP-2</a>
+    <a href="#ch4">四、LLaVA</a>
+    <a href="#ch5">五、三者对照</a>
+    <a href="#ch6">六、工程实现</a>
+    <a href="#ch7">七、知识体系总结</a>
+    <a href="#refs">参考文献</a>
+  </nav>
+<a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
+</aside>
+<main id="main">
+
+<section id="hero" class="hero">
+  <h1>视觉语言模型</h1>
+  <div class="subtitle">Flamingo · BLIP-2 · LLaVA · 视觉如何接进语言模型</div>
+  <div class="tagline">门控交叉注意力 · Perceiver Resampler · Q-Former 信息瓶颈 · 视觉指令微调 · 三种接法取舍</div>
+  <div class="badges">
+    <span class="badge">7 个章节</span>
+    <span class="badge">3 张 SVG 结构图</span>
+    <span class="badge">4 个公式</span>
+    <span class="badge">2 段 PyTorch 代码</span>
+    <span class="badge">17 篇参考文献</span>
+  </div>
+</section>
+
+<section id="ch1"><h2><span class="num">1</span>把视觉接进语言模型：三种接法</h2>
+
+<p>语言模型的世界里只有一件事：给定前面的 token，预测下一个。图像要进来，必须先被翻译成这个世界的居民。所谓视觉语言模型（VLM），本质上只在回答一个工程问题——<strong>怎么翻译，以及翻译这件事要花多少代价</strong>。</p>
+
+<p>这个问题的难点不在"能不能对齐"，而在三者的相互牵制：</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>约束</th><th>含义</th><th>放宽它的代价</th></tr>
+<tr><td><strong>视觉 token 预算</strong></td><td>一张图要用多少个 token 表示</td><td>太多会挤占上下文、拖慢推理；太少会丢细节</td></tr>
+<tr><td><strong>可训练参数量</strong></td><td>为了接上视觉，需要改动多少权重</td><td>改得越多，越可能破坏 LLM 已经学到的语言能力</td></tr>
+<tr><td><strong>上下文学习能力</strong></td><td>能否像 GPT 那样靠 prompt 里的示例现学新任务</td><td>要保住它，训练数据必须是交错排列的多图文序列，而这类数据昂贵</td></tr>
+</table>
+</div>
+
+<p>过去三年的主流方案，恰好可以按"视觉在什么位置与语言汇合"分成三类。下面这张图把三种接法放在同一张坐标系里对照——每一行从左到右都是"视觉编码器 → 桥梁 → 冻结的 LLM"，区别只在中间那一段，以及视觉信息在 LLM 内部从哪里进入。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 950 528" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif" role="img">
+<text x="470" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">同一个冻结的 LLM，三种把视觉接进去的方式</text>
+<rect x="24" y="84" width="96" height="38" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4"/>
+<text x="72" y="107.5" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">Flamingo</text>
+<text x="72" y="142" text-anchor="middle" font-size="10.5" fill="#94a3b8">2022 · 80B</text>
+<rect x="138" y="74" width="106" height="62" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="191" y="110" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">视觉编码器</text>
+<text x="191" y="127" text-anchor="middle" font-size="10.5" fill="#64748b">冻结</text>
+<rect x="272" y="68" width="138" height="76" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="341" y="110" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">Perceiver</text>
+<text x="341" y="128" text-anchor="middle" font-size="10.5" fill="#64748b">Resampler</text>
+<rect x="438" y="54" width="336" height="116" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="606" y="74" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">冻结的语言模型</text>
+<text x="606" y="89" text-anchor="middle" font-size="10" fill="#94a3b8">权重全程不动</text>
+<rect x="452" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="468" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="484" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="500" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="516" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="532" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="548" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="564" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="580" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="596" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="612" y="98" width="13" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<text x="606" y="126" text-anchor="middle" font-size="10" fill="#1d4ed8">视觉从这里插进来：3 个门控交叉注意力层</text>
+<line x1="452" y1="138" x2="760" y2="138" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<line x1="760" y1="138" x2="752.2" y2="141.5" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<line x1="760" y1="138" x2="752.2" y2="134.5" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<rect x="452" y="133.5" width="10" height="9" fill="#dbeafe" stroke="#0f172a" stroke-width="1.1" rx="2"/>
+<line x1="452" y1="150" x2="760" y2="150" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<line x1="760" y1="150" x2="752.2" y2="153.5" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<line x1="760" y1="150" x2="752.2" y2="146.5" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<rect x="452" y="145.5" width="10" height="9" fill="#dbeafe" stroke="#0f172a" stroke-width="1.1" rx="2"/>
+<line x1="452" y1="162" x2="760" y2="162" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<line x1="760" y1="162" x2="752.2" y2="165.5" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<line x1="760" y1="162" x2="752.2" y2="158.5" stroke="#94a3b8" stroke-width="1.1" stroke-linecap="round"/>
+<rect x="452" y="157.5" width="10" height="9" fill="#dbeafe" stroke="#0f172a" stroke-width="1.1" rx="2"/>
+<line x1="246" y1="109" x2="270" y2="109" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="270" y1="109" x2="262.2" y2="112.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="270" y1="109" x2="262.2" y2="105.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="412" y1="109" x2="436" y2="109" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="436" y1="109" x2="428.2" y2="112.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="436" y1="109" x2="428.2" y2="105.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M412 118 Q 426 152 452 144" fill="none" stroke="#1d4ed8" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="5 4"/>
+<line x1="452" y1="144" x2="446.0" y2="149.3" stroke="#1d4ed8" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="452" y1="144" x2="444.1" y2="143.0" stroke="#1d4ed8" stroke-width="1.4" stroke-linecap="round"/>
+<text x="852" y="104" text-anchor="middle" font-size="13.5" fill="#dc2626" font-weight="700">≈10.2B</text>
+<text x="852" y="122" text-anchor="middle" font-size="10.5" fill="#94a3b8">可训练</text>
+<rect x="24" y="238" width="96" height="38" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/>
+<text x="72" y="261.5" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">BLIP-2</text>
+<text x="72" y="296" text-anchor="middle" font-size="10.5" fill="#94a3b8">2023 · 8B</text>
+<rect x="138" y="228" width="106" height="62" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="191" y="264" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">视觉编码器</text>
+<text x="191" y="281" text-anchor="middle" font-size="10.5" fill="#64748b">冻结</text>
+<rect x="272" y="222" width="138" height="76" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="341" y="264" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">Q-Former</text>
+<text x="341" y="282" text-anchor="middle" font-size="10.5" fill="#64748b">32 个 query</text>
+<rect x="438" y="208" width="336" height="116" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="606" y="228" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">冻结的语言模型</text>
+<text x="606" y="243" text-anchor="middle" font-size="10" fill="#94a3b8">权重全程不动</text>
+<rect x="452" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="469" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="486" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="503" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="520" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="537" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="554" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="571" y="252" width="14" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="588" y="252" width="14" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="605" y="252" width="14" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="622" y="252" width="14" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="639" y="252" width="14" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="656" y="252" width="14" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<text x="520" y="280" text-anchor="middle" font-size="10" fill="#1d4ed8">32 个视觉 token</text>
+<line x1="584" y1="269" x2="584" y2="286" stroke="#94a3b8" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3"/>
+<line x1="584" y1="286" x2="580.5" y2="278.2" stroke="#94a3b8" stroke-width="1" stroke-linecap="round"/>
+<line x1="584" y1="286" x2="587.5" y2="278.2" stroke="#94a3b8" stroke-width="1" stroke-linecap="round"/>
+<line x1="246" y1="263" x2="270" y2="263" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="270" y1="263" x2="262.2" y2="266.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="270" y1="263" x2="262.2" y2="259.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="412" y1="263" x2="436" y2="263" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="436" y1="263" x2="428.2" y2="266.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="436" y1="263" x2="428.2" y2="259.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="852" y="258" text-anchor="middle" font-size="13.5" fill="#047857" font-weight="700">188M</text>
+<text x="852" y="276" text-anchor="middle" font-size="10.5" fill="#94a3b8">可训练</text>
+<rect x="24" y="392" width="96" height="38" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="72" y="415.5" text-anchor="middle" font-size="13" fill="#0f172a" font-weight="700">LLaVA</text>
+<text x="72" y="450" text-anchor="middle" font-size="10.5" fill="#94a3b8">2023 · 13B</text>
+<rect x="138" y="382" width="106" height="62" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="191" y="418" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">视觉编码器</text>
+<text x="191" y="435" text-anchor="middle" font-size="10.5" fill="#64748b">冻结</text>
+<rect x="272" y="376" width="138" height="76" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="341" y="418" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">MLP 投影</text>
+<text x="341" y="436" text-anchor="middle" font-size="10.5" fill="#64748b">2 层</text>
+<rect x="438" y="362" width="336" height="116" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="606" y="382" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">冻结的语言模型</text>
+<text x="606" y="397" text-anchor="middle" font-size="10" fill="#94a3b8">权重全程不动</text>
+<rect x="452" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="466.4" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="480.8" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="495.2" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="509.6" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="524" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="538.4" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="552.8" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="567.2" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="581.6" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="596" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="610.4" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="624.8" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="639.2" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="653.6" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="668" y="406" width="11.4" height="12" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="682.4" y="406" width="11.4" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="696.8" y="406" width="11.4" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="711.1999999999999" y="406" width="11.4" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="725.6" y="406" width="11.4" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<rect x="740" y="406" width="11.4" height="12" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.1"/>
+<text x="567.2" y="434" text-anchor="middle" font-size="10" fill="#1d4ed8">576 个视觉 token</text>
+<line x1="678.4" y1="423" x2="678.4" y2="440" stroke="#94a3b8" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3"/>
+<line x1="678.4" y1="440" x2="674.9" y2="432.2" stroke="#94a3b8" stroke-width="1" stroke-linecap="round"/>
+<line x1="678.4" y1="440" x2="681.9" y2="432.2" stroke="#94a3b8" stroke-width="1" stroke-linecap="round"/>
+<line x1="246" y1="417" x2="270" y2="417" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="270" y1="417" x2="262.2" y2="420.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="270" y1="417" x2="262.2" y2="413.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="412" y1="417" x2="436" y2="417" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="436" y1="417" x2="428.2" y2="420.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="436" y1="417" x2="428.2" y2="413.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<text x="852" y="412" text-anchor="middle" font-size="13.5" fill="#047857" font-weight="700">≈20M</text>
+<text x="852" y="430" text-anchor="middle" font-size="10.5" fill="#94a3b8">可训练</text>
+<line x1="796" y1="46" x2="796" y2="462" stroke="#e2e8f0" stroke-width="1" stroke-linecap="round" stroke-dasharray="5 5"/>
+<line x1="796" y1="462" x2="792.5" y2="454.2" stroke="#e2e8f0" stroke-width="1" stroke-linecap="round"/>
+<line x1="796" y1="462" x2="799.5" y2="454.2" stroke="#e2e8f0" stroke-width="1" stroke-linecap="round"/>
+<text x="852" y="38" text-anchor="middle" font-size="11" fill="#64748b" font-weight="700">新增参数</text>
+<rect x="30" y="486" width="13" height="13" rx="3" fill="#dbeafe" stroke="#0f172a" stroke-width="1.2"/>
+<text x="50" y="497" text-anchor="start" font-size="11" fill="#64748b">视觉 token</text>
+<rect x="128" y="486" width="13" height="13" rx="3" fill="#f1f5f9" stroke="#0f172a" stroke-width="1.2"/>
+<text x="148" y="497" text-anchor="start" font-size="11" fill="#64748b">文本 token</text>
+<text x="830" y="497" text-anchor="end" font-size="11.5" fill="#0f172a" font-weight="600">越往下，塞进去的视觉 token 越多，可训练的模块越少</text>
+</svg>
+</div>
+<p class="fig-cap">三种接法的核心差异集中在一个位置上：视觉 token 是插进 LLM 的层里（Flamingo），还是作为前缀拼在输入前面（BLIP-2 / LLaVA）。前者改的是架构，后者改的是接口。</p>
+
+<div class="callout"><div class="callout-title">一条贯穿全章的主线</div>
+<p>从 Flamingo 到 BLIP-2 再到 LLaVA，可训练的模块一路变少（10.2B → 188M → 20M），但塞给 LLM 的视觉 token 一路变多（插层 → 32 → 576）。<strong>这两条曲线是反向的</strong>，而最后的胜负说明：在数据足够的前提下，让 LLM 直接看到更多原始信息，比精心设计的压缩结构更有效。</p></div>
+
+</section>
+
+<section id="ch2"><h2><span class="num">2</span>Flamingo：在冻结的 LLM 内部开一扇窗</h2>
+
+<p>Flamingo（DeepMind，2022）的问题意识很明确：能不能让一个已经训练好的 LLM 学会看图，同时<strong>不破坏它的 few-shot 能力</strong>？</p>
+
+<p>朴素的微调做不到这一点——一旦用图文数据全量微调，LLM 的语言能力会退化，上下文学习也会失效。Flamingo 的答案是不动 LLM 的权重，而是往它的层间<strong>插入新的、可训练的交叉注意力模块</strong>，并让这些模块在训练初期"等于不存在"。</p>
+
+<h3>2.1 三个组件</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>组件</th><th>作用</th><th>是否训练</th></tr>
+<tr><td><strong>视觉编码器</strong>（NFNet-F6）</td><td>把图像变成特征图，再拉平成变长的 patch 序列</td><td>冻结</td></tr>
+<tr><td><strong>Perceiver Resampler</strong></td><td>把任意长度的视觉特征压缩成固定 64 个 latent 向量</td><td>训练</td></tr>
+<tr><td><strong>Gated Cross-Attention</strong></td><td>插在冻结 LLM 的层间，让文本 token 能查询视觉 latent</td><td>训练</td></tr>
+</table>
+</div>
+
+<h3>2.2 门控：让新模块从"零作用"开始</h3>
+
+<p>交叉注意力层的输出被一个门控量控制，形式极简：</p>
+
+<div class="formula" data-eq="(1)">$$\mathbf{y} = \mathbf{x} + \tanh(\alpha) \cdot \mathrm{CrossAttn}(\mathbf{x}, \mathbf{V})$$</div>
+
+<p>关键在于 $\alpha$ 被<strong>零初始化</strong>。训练第一步时 $\tanh(0) = 0$，整个模块输出为 $\mathbf{x}$，也就是恒等映射——一个刚插入的、行为完全无害的模块。随着训练推进，$\alpha$ 逐渐离开零点，视觉信息才开始一点点渗入。</p>
+
+<p>交叉注意力本身是标准的缩放点积形式，只是 query 来自文本，key 与 value 来自视觉 latent：</p>
+
+<div class="formula" data-eq="(2)">$$\mathrm{CrossAttn}(\mathbf{x}, \mathbf{V}) = \mathrm{softmax}\!\left(\frac{\mathbf{Q}_\text{text}\mathbf{K}_\text{vis}^{\top}}{\sqrt{d}}\right)\mathbf{V}_\text{vis}$$</div>
+
+<p>Perceiver Resampler 用的也是同一个算子，区别在于它的 query 是一组<strong>可学习的 latent</strong>，数量固定为 64——正是这个固定数量，让后续的 LLM 无论面对多少张图、多高分辨率，收到的视觉 token 数都不变。</p>
+
+<p>这个设计的价值在 ViT 之后被反复验证：<strong>往一个已经训练好的网络里加新模块，最难的不是让它有用，而是让它一开始不添乱</strong>。零初始化门控（以及后来 ResNet 的零初始化残差分支）解决的是同一个问题。</p>
+
+<h3>2.3 交错图文数据：few-shot 能力的来源</h3>
+
+<p>Flamingo 能靠 prompt 里的几个示例现学新任务，不是因为架构，而是因为训练数据的形式。它使用了大规模<strong>交错图文</strong>数据（图文按网页阅读顺序自然穿插），模型因此见过"一个序列里有多个图文对"的样本，学会了在序列内建立跨样本的关联。</p>
+
+<div class="callout warn"><div class="callout-title">这一点直接决定了 BLIP-2 的短板</div>
+<p>BLIP-2 的训练数据每条样本只有一个图文对，LLM 从未见过"序列内多个图文对"的形态，因此<strong>无论怎么微调都无法获得上下文学习能力</strong>。这不是参数量的差距，是数据形式的差距。第 3 章会看到论文自己把这一点列为局限。</p></div>
+
+</section>
+
+<section id="ch3"><h2><span class="num">3</span>BLIP-2：只训一个翻译官</h2>
+
+<p>Flamingo 要在 LLM 内部插新层，意味着必须改动架构、且训练时要穿透 LLM 反向传播。BLIP-2（Salesforce，2023）换了个思路：<strong>能不能把视觉编码器和 LLM 同时冻结，只训练中间那个翻译官？</strong></p>
+
+<p>这就是 Q-Former（Querying Transformer）的由来。它用一组可学习的 query 向量去"问"视觉特征，把答案整理成固定长度的向量交给 LLM。</p>
+
+<h3>3.1 32 个 query 的瓶颈设计</h3>
+
+<p>冻结的 ViT 输出 257×1024 的特征（196 个 patch 加上 CLS），而 Q-Former 只输出 32×768。这是一个<strong>刻意为之的信息瓶颈</strong>：出口比入口窄得多，query 被迫只保留"对语言最有用"的那部分信息，天然过滤掉视觉噪声。</p>
+
+<div class="formula" data-eq="(3)">$$\underbrace{257 \times 1024}_{\text{ViT 输出}} \;\longrightarrow\; \underbrace{32 \times 768}_{\text{交给 LLM}} \qquad \text{压缩比约 } 10.7\times$$</div>
+
+<p>32 这个数字来自消融：从 16 增到 32 有提升，再增到 64 收益已经很小。附带的好处是推理成本固定——无论输入图像多大，交给 LLM 的永远是 32 个 token。</p>
+
+<h3>3.2 两阶段训练</h3>
+
+<p>第一阶段完全不碰 LLM，只训 Q-Former，用三个共享 query 的损失：</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>目标</th><th>做了什么</th><th>为什么要它</th></tr>
+<tr><td><strong>ITC</strong><br>图文对比</td><td>把 query 输出与文本 [CLS] 做对比学习，相似度取 32 个 query 中的最大值</td><td>建立全局的图文对齐。取最大值而非平均，是为了"只要有一个 query 对齐上就算对齐"</td></tr>
+<tr><td><strong>ITM</strong><br>图文匹配</td><td>二分类判断图文是否配对，使用硬负样本挖掘</td><td>提供细粒度判别力，专门挑最难区分的负样本训练</td></tr>
+<tr><td><strong>ITG</strong><br>图生文</td><td>以 query 为条件自回归生成描述</td><td>强制 query 装下"可被语言描述"的信息——这条对检索任务也有增益</td></tr>
+</table>
+</div>
+
+<p>第二阶段才接上冻结的 LLM，用一个线性层把 32×768 投到 LLM 的嵌入维度，作为<strong>软视觉提示</strong>拼在文本嵌入前面，只训 Q-Former 与这个投影层。</p>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 430" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif" role="img">
+<text x="450" y="26" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Q-Former：用一个 32×768 的窄口，把 257×1024 的视觉特征挤成语言能读的形状</text>
+<rect x="24" y="50" width="300" height="320" rx="14" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="6 5"/>
+<text x="174" y="69" text-anchor="middle" font-size="12" fill="#64748b" font-weight="700">① 信息瓶颈</text>
+<rect x="48" y="84" width="76" height="72" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="86" y="108" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">ViT</text>
+<text x="86" y="130" text-anchor="middle" font-size="10" fill="#64748b">冻结</text>
+<text x="86" y="172" text-anchor="middle" font-size="10.5" fill="#64748b">257 × 1024</text>
+<text x="86" y="188" text-anchor="middle" font-size="9.5" fill="#94a3b8">196 patch + 1</text>
+<line x1="126" y1="120" x2="158" y2="120" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="158" y1="120" x2="150.2" y2="123.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="158" y1="120" x2="150.2" y2="116.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="162" y="84" width="72" height="72" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="198" y="104" text-anchor="middle" font-size="10.5" fill="#0f172a" font-weight="700">Q-Former</text>
+<rect x="170" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="177" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="184" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="191" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="198" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="205" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="212" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="219" y="112" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="170" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="177" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="184" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="191" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="198" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="205" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="212" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="219" y="120" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="170" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="177" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="184" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="191" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="198" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="205" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="212" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="219" y="128" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="170" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="177" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="184" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="191" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="198" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="205" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="212" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<rect x="219" y="136" width="5" height="5.5" fill="#ede9fe" stroke="#0f172a" stroke-width="0.9" rx="1.2"/>
+<text x="194" y="172" text-anchor="middle" font-size="10.5" fill="#64748b" font-weight="700">32 × 768</text>
+<text x="194" y="188" text-anchor="middle" font-size="9.5" fill="#94a3b8">可学习 query</text>
+<line x1="238" y1="120" x2="262" y2="120" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="262" y1="120" x2="254.2" y2="123.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="262" y1="120" x2="254.2" y2="116.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="266" y="104" width="44" height="44" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="288" y="136" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">z</text>
+<text x="288" y="166" text-anchor="middle" font-size="9.5" fill="#94a3b8">固定长度</text>
+<path d="M56 232 L288 232 L252 268 L92 268 Z" fill="#fff3bf" stroke="#0f172a" stroke-width="1.6" stroke-linejoin="round"/>
+<text x="172" y="255" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="600">无论图多大，出口只有 32 个向量</text>
+<rect x="344" y="50" width="532" height="320" rx="14" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="6 5"/>
+<text x="610" y="69" text-anchor="middle" font-size="12" fill="#64748b" font-weight="700">② 两阶段训练</text>
+<rect x="366" y="84" width="240" height="128" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="486" y="110" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">阶段一 · 表示学习</text>
+<text x="486" y="125" text-anchor="middle" font-size="10.5" fill="#64748b">不接 LLM，只训 Q-Former</text>
+<rect x="380" y="138" width="212" height="19" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="486" y="152" text-anchor="middle" font-size="10.5" fill="#0f172a" font-weight="500">ITC 对比对齐</text>
+<rect x="380" y="160" width="212" height="19" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="486" y="174" text-anchor="middle" font-size="10.5" fill="#0f172a" font-weight="500">ITM 图文匹配（硬负样本）</text>
+<rect x="380" y="182" width="212" height="19" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="486" y="196" text-anchor="middle" font-size="10.5" fill="#0f172a" font-weight="500">ITG 以图为条件生成文本</text>
+<rect x="626" y="84" width="232" height="128" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="742" y="110" text-anchor="middle" font-size="12.5" fill="#0f172a" font-weight="700">阶段二 · 生成学习</text>
+<text x="742" y="125" text-anchor="middle" font-size="10.5" fill="#64748b">接上冻结的 LLM</text>
+<rect x="640" y="138" width="204" height="19" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="742" y="152" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="500">线性层把 32×768 投到 LLM 维度</text>
+<rect x="640" y="162" width="204" height="19" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="742" y="176" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="500">作为软提示拼在文本前面</text>
+<rect x="640" y="186" width="204" height="19" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="742" y="200" text-anchor="middle" font-size="10" fill="#0f172a" font-weight="500">只训 Q-Former + 投影层</text>
+<line x1="606" y1="148" x2="624" y2="148" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="624" y1="148" x2="616.2" y2="151.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="624" y1="148" x2="616.2" y2="144.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="366" y="228" width="492" height="122" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+<text x="612" y="252" text-anchor="middle" font-size="12" fill="#0f172a" font-weight="700">为什么两阶段不能合成一步</text>
+<text x="612" y="276" text-anchor="middle" font-size="11" fill="#64748b">如果一上来就把没对齐的视觉特征塞给 LLM，LLM 会收到一堆它读不懂的向量。</text>
+<text x="612" y="296" text-anchor="middle" font-size="11" fill="#64748b">实验显示：跳过阶段一，OPT 会出现灾难性遗忘，零样本 VQA 直接崩。</text>
+<text x="612" y="320" text-anchor="middle" font-size="11" fill="#64748b">阶段一先教会 query「什么样的视觉信息对语言有用」，阶段二再教它「怎么汇报」。</text>
+<text x="612" y="340" text-anchor="middle" font-size="11" fill="#dc2626">代价：完全无法做上下文学习——训练时每条样本只有一对图文。</text>
+<text x="450" y="396" text-anchor="middle" font-size="11.5" fill="#64748b">冻结 ViT-g(1.1B) + 冻结 OPT-6.7B + 可训练 Q-Former(188M) = 8B 总参数，只动其中 2.4%</text>
+<text x="450" y="416" text-anchor="middle" font-size="11.5" fill="#047857">论文报告：零样本 VQAv2 上超过 Flamingo-80B，而可训练参数少 54 倍</text>
+</svg>
+</div>
+<p class="fig-cap">左侧是瓶颈的几何直觉：无论输入多宽，出口只有 32 个向量。右侧是两阶段的分工——阶段一解决"怎么看"，阶段二解决"怎么向 LLM 汇报"。跳过阶段一会让 LLM 收到读不懂的向量，论文报告会出现灾难性遗忘。</p>
+
+<div class="callout"><div class="callout-title">为什么两阶段不能合成一步</div>
+<p>如果一开始就把未对齐的视觉特征塞给 LLM，LLM 面对的是它从未见过的向量分布，梯度会把两个模块同时往错误方向推。阶段一先用纯视觉-语言目标把 query 训练成一个"语言友好"的压缩器，阶段二再在那之上教它对接 LLM——这是典型的<strong>课程学习</strong>思路。</p></div>
+
+<h3>3.3 结果与代价</h3>
+
+<p>论文报告：零样本 VQAv2 上超过 Flamingo-80B，而可训练参数少 54 倍（188M 对 10.2B）。但代价也很明确：</p>
+
+<ul>
+<li><strong>无上下文学习</strong>——训练数据每条只有一个图文对，见不到序列内的示例关联</li>
+<li><strong>生成质量受 LLM 拖累</strong>——LLM 的知识错误与推理错误会原样传导到输出</li>
+<li><strong>继承 LLM 的风险</strong>——偏见、有害语言等问题一并继承</li>
+</ul>
+
+</section>
+
+<section id="ch4"><h2><span class="num">4</span>LLaVA：把对齐问题换成指令微调问题</h2>
+
+<p>LLaVA（2023）的做法在当时颇具争议：它<strong>删掉了 Q-Former</strong>，只留一个两层 MLP 把 CLIP 的 576 个 patch token 全部投到 LLM 空间，然后交给 LLM。</p>
+
+<p>压缩率明显更差——576 个 token 是 BLIP-2 的 18 倍，上下文很快被填满。但 LLaVA 赌的是另一件事：<strong>只要给足指令数据，让 LLM 自己去看原始 patch 比精心压缩更有效</strong>。</p>
+
+<h3>4.1 两步走</h3>
+
+<div class="table-wrap">
+<table>
+<tr><th>步骤</th><th>数据</th><th>训练什么</th><th>目标</th></tr>
+<tr><td><strong>特征对齐</strong></td><td>558K 图文对（CC3M 筛选）</td><td>只训两层 MLP</td><td>让 576 个视觉 token 落到 LLM 能读的语义位置</td></tr>
+<tr><td><strong>视觉指令微调</strong></td><td>158K GPT-4 生成的多轮对话</td><td>解冻 LLM，视觉编码器仍冻结</td><td>教会模型按人类预期的方式回答，覆盖问答、描述、复杂推理</td></tr>
+</table>
+</div>
+
+<div class="svg-box">
+<svg viewBox="0 0 900 372" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif" role="img">
+<text x="450" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700">LLaVA 的两步：先学会「看懂」，再学会「按指令回答」</text>
+<rect x="24" y="50" width="420" height="250" rx="14" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="6 5"/>
+<text x="234" y="69" text-anchor="middle" font-size="12" fill="#64748b" font-weight="700">第一步 · 特征对齐（只训投影层）</text>
+<rect x="46" y="88" width="96" height="58" rx="9" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="94" y="114" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="700">CLIP ViT-L</text>
+<text x="94" y="132" text-anchor="middle" font-size="10" fill="#64748b">冻结</text>
+<line x1="146" y1="117" x2="170" y2="117" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="170" y1="117" x2="162.2" y2="120.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="170" y1="117" x2="162.2" y2="113.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="174" y="92" width="84" height="50" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="216" y="122" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="700">2 层 MLP</text>
+<line x1="262" y1="117" x2="286" y2="117" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="286" y1="117" x2="278.2" y2="120.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<line x1="286" y1="117" x2="278.2" y2="113.5" stroke="#64748b" stroke-width="1.4" stroke-linecap="round"/>
+<rect x="290" y="88" width="132" height="58" rx="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="356" y="114" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="700">冻结的 LLM</text>
+<text x="356" y="132" text-anchor="middle" font-size="10" fill="#64748b">Vicuna</text>
+<text x="234" y="176" text-anchor="middle" font-size="11" fill="#64748b">数据：558K 图文对（CC3M 筛选后）</text>
+<text x="234" y="196" text-anchor="middle" font-size="11" fill="#64748b">目标：让 576 个视觉 token 落到 LLM 能读的语义位置</text>
+<rect x="60" y="216" width="348" height="30" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.4"/>
+<text x="234" y="235.5" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="600">这一阶段只训练约 20M 参数的投影层</text>
+<text x="234" y="268" text-anchor="middle" font-size="11" fill="#94a3b8">成本低，但只解决"模态对齐"，不解决"听懂指令"</text>
+<rect x="456" y="50" width="420" height="250" rx="14" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="6 5"/>
+<text x="666" y="69" text-anchor="middle" font-size="12" fill="#64748b" font-weight="700">第二步 · 视觉指令微调（端到端）</text>
+<rect x="478" y="84" width="376" height="78" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="666" y="102" text-anchor="middle" font-size="11" fill="#0f172a" font-weight="700">对话样本格式</text>
+<rect x="492" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="507" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="522" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="537" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="552" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="567" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="582" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="597" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="612" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<rect x="627" y="112" width="12" height="14" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.1"/>
+<text x="566" y="148" text-anchor="middle" font-size="9.5" fill="#1d4ed8">[576 个视觉 token]</text>
+<text x="662" y="124" text-anchor="start" font-size="10" fill="#0f172a">User: 这张图里有什么？</text>
+<text x="666" y="186" text-anchor="middle" font-size="11" fill="#64748b">数据：158K 由 GPT-4 生成的多轮对话</text>
+<text x="666" y="206" text-anchor="middle" font-size="11" fill="#64748b">覆盖问答、描述、复杂推理三类任务</text>
+<rect x="492" y="224" width="348" height="30" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+<text x="666" y="243.5" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="600">这次解冻 LLM，视觉编码器仍冻结</text>
+<text x="666" y="276" text-anchor="middle" font-size="11" fill="#94a3b8">关键：指令数据教会模型「按人类预期的方式回答」</text>
+<rect x="24" y="312" width="852" height="46" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+<text x="450" y="340" text-anchor="middle" font-size="11.5" fill="#0f172a" font-weight="600">相比 BLIP-2：省掉 Q-Former，把全部 576 个 patch token 直接交给 LLM——压缩率更差，但 LLM 能看到原始细节</text>
+</svg>
+</div>
+<p class="fig-cap">第一步只解决模态对齐，成本极低但不产生任何指令遵循能力。第二步才是 LLaVA 真正的贡献——它把"视觉对话"变成了一种可以用纯文本格式表达的训练任务：一张图加上几句对话，就是一条训练样本。</p>
+
+<p>两种前缀型方案的视觉 token 数量差了一个数量级，这直接决定了上下文预算的分配：</p>
+
+<div class="formula" data-eq="(4)">$$L_\text{seq} = \underbrace{N_\text{vis}}_{\text{BLIP-2: }32 \;\mid\; \text{LLaVA: }576} + N_\text{text}, \qquad \text{24}{\times}\text{24 patch 网格} \Rightarrow 576$$</div>
+
+<h3>4.2 为什么"简单方案"赢了</h3>
+
+<p>LLaVA 的胜利可以拆成三个原因：</p>
+
+<ol>
+<li><strong>压缩不是目的，对齐才是</strong>。BLIP-2 的瓶颈牺牲了细节换取 token 效率，但 VQA 类任务恰恰需要细粒度视觉信息（小字、纹理、空间关系）。</li>
+<li><strong>指令数据的质量比架构更稀缺</strong>。用强模型（GPT-4）生成 15 万条多轮对话，成本远低于训练一个复杂的 bridge，收益却立竿见影。</li>
+<li><strong>架构越简单越容易扩展</strong>。没有 Q-Former 的交叉注意力，多图、视频、任意分辨率都只是"多拼几个视觉 token"的问题。</li>
+</ol>
+
+<div class="callout"><div class="callout-title">与 BLIP-2 的取舍</div>
+<p>Q-Former 并没有被淘汰——在 token 预算紧张的场景（长视频、多图、端侧）它仍然不可替代。业界的实际分工是：<strong>预算充足时用全量 patch，预算紧张时用 query 压缩</strong>。这不是对错之争，是资源约束下的不同选择。</p></div>
+
+</section>
+
+<section id="ch5"><h2><span class="num">5</span>三者对照与选型</h2>
+
+<div class="table-wrap">
+<table>
+<tr><th>维度</th><th>Flamingo</th><th>BLIP-2</th><th>LLaVA</th></tr>
+<tr><td>视觉进入位置</td><td>插在 LLM 层间</td><td>作为输入前缀</td><td>作为输入前缀</td></tr>
+<tr><td>桥梁结构</td><td>Perceiver Resampler + 门控交叉注意力</td><td>Q-Former（32 query）</td><td>两层 MLP</td></tr>
+<tr><td>视觉 token 数</td><td>固定 64 个 latent</td><td>固定 32 个</td><td>576 个（全部 patch）</td></tr>
+<tr><td>冻结对象</td><td>LLM 冻结，视觉编码器冻结</td><td>两者都冻结</td><td>视觉编码器冻结，LLM 微调</td></tr>
+<tr><td>可训练参数量</td><td>约 10.2B</td><td>188M</td><td>约 20M（对齐阶段）</td></tr>
+<tr><td>上下文学习</td><td><strong>支持</strong></td><td>不支持</td><td>不支持（但可指令微调）</td></tr>
+<tr><td>训练数据形态</td><td>交错图文序列</td><td>单图文对</td><td>单图 + 多轮对话</td></tr>
+<tr><td>典型用途</td><td>少样本即学即用</td><td>token 预算受限的检索与生成</td><td>通用视觉对话助手</td></tr>
+</table>
+</div>
+
+<h3>5.1 选型建议</h3>
+
+<ul>
+<li><strong>需要 prompt 里给示例就学新任务</strong> → Flamingo 路线（交错的训练数据是硬门槛）</li>
+<li><strong>上下文窗口紧张、图像数量多</strong> → Q-Former 路线</li>
+<li><strong>要做通用的视觉对话助手</strong> → LLaVA 路线，把预算花在指令数据上</li>
+</ul>
+
+<div class="callout warn"><div class="callout-title">一个常被忽略的判据</div>
+<p>选型时先问"我的视觉信息有多细"。如果任务需要读小字、认纹理、判断精确空间关系，压缩型 bridge 会先损失掉这些信息，再多的训练也补不回来。<strong>瓶颈一旦形成，就是信息论意义上的损失</strong>。</p></div>
+
+</section>
+
+<section id="ch6"><h2><span class="num">6</span>工程实现</h2>
+
+<h3>6.1 Q-Former 的骨架</h3>
+
+<p>Q-Former 的核心是"query 之间做自注意力、query 对图像特征做交叉注意力"。下面是一个最小实现，保留了原设计的关键点：query 是可学习参数、交叉注意力每隔一层插入、文本路径不接图像。</p>
+
+<div class="code-block"><div class="code-header">qformer.py — 32 个可学习 query 如何抽取视觉信息</div><pre>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+
+<span class="kw">class</span> <span class="cls">QFormerLayer</span>(nn.Module):
+    <span class="str">"""自注意力只在 query 之间；交叉注意力让 query 去查图像特征"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, dim, heads, cross_every=<span class="num">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">self</span>.self_attn = nn.<span class="cls">MultiheadAttention</span>(dim, heads, batch_first=<span class="kw">True</span>)
+        <span class="kw">self</span>.cross_attn = nn.<span class="cls">MultiheadAttention</span>(dim, heads, batch_first=<span class="kw">True</span>)
+        <span class="kw">self</span>.cross_every = cross_every
+        <span class="kw">self</span>.norm1 = nn.<span class="cls">LayerNorm</span>(dim)
+        <span class="kw">self</span>.norm2 = nn.<span class="cls">LayerNorm</span>(dim)
+        <span class="kw">self</span>.mlp = nn.<span class="cls">Sequential</span>(nn.<span class="cls">Linear</span>(dim, <span class="num">4</span> * dim), nn.<span class="cls">GELU</span>(), nn.<span class="cls">Linear</span>(<span class="num">4</span> * dim, dim))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, queries, image_feats, use_cross):
+        q = queries + <span class="kw">self</span>.self_attn(<span class="kw">self</span>.norm1(queries), <span class="kw">self</span>.norm1(queries), <span class="kw">self</span>.norm1(queries))[<span class="num">0</span>]
+        <span class="kw">if</span> use_cross:  <span class="com"># 每隔 cross_every 层插一次交叉注意力</span>
+            q = q + <span class="kw">self</span>.cross_attn(<span class="kw">self</span>.norm2(q), image_feats, image_feats)[<span class="num">0</span>]
+        <span class="kw">return</span> q + <span class="kw">self</span>.mlp(q)
+
+
+<span class="kw">class</span> <span class="cls">QFormer</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, num_queries=<span class="num">32</span>, dim=<span class="num">768</span>, depth=<span class="num">12</span>, heads=<span class="num">8</span>, vision_dim=<span class="num">1024</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="com"># 32 个 query 是模型参数，不是输入——同一个 query 用于所有图像</span>
+        <span class="kw">self</span>.queries = nn.<span class="cls">Parameter</span>(torch.<span class="fn">randn</span>(num_queries, dim) * <span class="num">0.02</span>)
+        <span class="kw">self</span>.proj_vision = nn.<span class="cls">Linear</span>(vision_dim, dim) <span class="kw">if</span> vision_dim != dim <span class="kw">else</span> nn.<span class="cls">Identity</span>()
+        <span class="kw">self</span>.layers = nn.<span class="cls">ModuleList</span>([<span class="cls">QFormerLayer</span>(dim, heads) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(depth)])
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, image_feats, batch_size):
+        <span class="str">"""image_feats: (B, 257, 1024) -> 输出 (B, 32, 768)"""</span>
+        v = <span class="kw">self</span>.<span class="fn">proj_vision</span>(image_feats)
+        q = <span class="kw">self</span>.queries.<span class="fn">unsqueeze</span>(<span class="num">0</span>).<span class="fn">expand</span>(batch_size, -<span class="num">1</span>, -<span class="num">1</span>)
+        <span class="kw">for</span> i, layer <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="kw">self</span>.layers):
+            q = <span class="kw">self</span>.<span class="fn">layers</span>[i](q, v, use_cross=(i % <span class="num">2</span> == <span class="num">0</span>))
+        <span class="kw">return</span> q
+</pre></div>
+
+<h3>6.2 三种 bridge 的统一接口</h3>
+
+<p>抛开实现细节，三者的差别可以压成一个函数签名：把视觉特征映射成"LLM 能读的前缀 token"。</p>
+
+<div class="code-block"><div class="code-header">bridges.py — 三种桥梁的等价形式</div><pre>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+
+<span class="kw">class</span> <span class="cls">QFormerBridge</span>(nn.Module):
+    <span class="str">"""BLIP-2：压缩到 32 个 token，交给 LLM 的只有这些"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, vision_dim=<span class="num">1024</span>, llm_dim=<span class="num">4096</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">self</span>.qformer = <span class="cls">QFormer</span>(num_queries=<span class="num">32</span>, vision_dim=vision_dim)
+        <span class="kw">self</span>.to_llm = nn.<span class="cls">Linear</span>(<span class="num">768</span>, llm_dim)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, image_feats, batch_size):
+        <span class="kw">return</span> <span class="kw">self</span>.<span class="fn">to_llm</span>(<span class="kw">self</span>.qformer(image_feats, batch_size))
+
+
+<span class="kw">class</span> <span class="cls">MLPBridge</span>(nn.Module):
+    <span class="str">"""LLaVA：不压缩，576 个 patch 全部投影过去"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, vision_dim=<span class="num">1024</span>, llm_dim=<span class="num">4096</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">self</span>.net = nn.<span class="cls">Sequential</span>(nn.<span class="cls">Linear</span>(vision_dim, llm_dim), nn.<span class="cls">GELU</span>(), nn.<span class="cls">Linear</span>(llm_dim, llm_dim))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, image_feats, batch_size):
+        <span class="kw">return</span> <span class="kw">self</span>.net(image_feats)      <span class="com"># 形状 (B, 576, llm_dim)</span>
+
+
+<span class="kw">def</span> <span class="fn">prepend_visual</span>(visual_tokens, text_embeds):
+    <span class="str">"""两种前缀型 bridge 共用的拼接方式"""</span>
+    <span class="kw">return</span> torch.<span class="fn">cat</span>([visual_tokens, text_embeds], dim=<span class="num">1</span>)
+</pre></div>
+
+<div class="callout"><div class="callout-title">实现上的两个坑</div>
+<p><strong>一是注意力掩码</strong>：视觉 token 必须对后文可见，但文本 token 不应该反过来影响视觉 token 的表示（否则视觉表征会被答案污染）。<strong>二是位置编码</strong>：拼接后文本的位置 id 必须整体后移，否则 LLM 会认为视觉 token 和句首文字在同一位置。</p></div>
+
+</section>
+
+<section id="ch7"><h2><span class="num">7</span>知识体系总结</h2>
+
+<div class="table-wrap">
+<table>
+<tr><th>层次</th><th>要回答的问题</th><th>代表工作</th><th>关键机制</th></tr>
+<tr><td>1 表示对齐</td><td>图像怎么变成 LLM 能读的向量</td><td>CLIP</td><td>对比学习拉近配对图文</td></tr>
+<tr><td>2 接口设计</td><td>视觉向量以什么形式、多少数量进入 LLM</td><td>Flamingo / BLIP-2 / LLaVA</td><td>插层 vs 前缀；压缩 vs 全量</td></tr>
+<tr><td>3 行为塑造</td><td>模型怎么学会按人类预期回答</td><td>LLaVA</td><td>视觉指令微调</td></tr>
+<tr><td>4 行动输出</td><td>怎么从"看懂"走到"会做"</td><td>RT-2 / π0</td><td>动作 token 化 / 流匹配</td></tr>
+</table>
+</div>
+
+<p>本章的三条路线覆盖了第 1 到第 3 层。第 4 层是下一章的主题：一旦模型能稳定地把图像映射进语言空间，下一个问题自然就是——<strong>能不能让它的输出不只是词，而是动作</strong>。</p>
+
+<div class="callout"><div class="callout-title">归纳成一句话</div>
+<p>VLM 的全部设计空间，就是在<strong>"给 LLM 看多少"与"自己要改多少"之间找平衡点</strong>。Flamingo 选了改架构、保住上下文学习；BLIP-2 选了最小改动、牺牲 token 数量；LLaVA 选了最简架构、把复杂度转移到数据上。没有唯一正确答案，只有与资源约束匹配的答案。</p></div>
+
+</section>
+
+<section id="refs"><h2>参考文献</h2>
+<ol>
+<li>Alayrac, J.-B., Donahue, J., Luc, P. et al. (2022). Flamingo: a Visual Language Model for Few-Shot Learning. <em>NeurIPS</em>. arXiv:2204.14198.（门控交叉注意力、Perceiver Resampler、交错图文训练）</li>
+<li>Li, J., Li, D., Savarese, S., Hoi, S. (2023). BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. <em>ICML</em>. arXiv:2301.12597.（Q-Former 两阶段训练与 188M 可训练参数）</li>
+<li>Li, J., Li, D., Xiong, C., Hoi, S. (2022). BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation. <em>ICML</em>. arXiv:2201.12086.（ITC / ITM / ITG 三目标的来源，CapFilt 数据清洗）</li>
+<li>Liu, H., Li, C., Wu, Q., Lee, Y. (2023). Visual Instruction Tuning (LLaVA). <em>NeurIPS</em>. arXiv:2304.08485.（两层 MLP 投影与 158K 视觉指令数据）</li>
+<li>Liu, H., Li, C., Li, Y., Lee, Y. (2024). Improved Baselines with Visual Instruction Tuning. <em>CVPR</em>. arXiv:2310.03744.（LLaVA-1.5：把 MLP 换成两层、加入学术 VQA 数据）</li>
+<li>Dai, W., Li, J., Li, D. et al. (2023). InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning. <em>NeurIPS</em>. arXiv:2305.06500.（指令感知的 Q-Former）</li>
+<li>Zhu, D., Chen, J., Shen, X. et al. (2023). MiniGPT-4: Enhancing Vision-Language Understanding with Advanced Large Language Models. arXiv:2304.10592.（只训投影层的对照方案）</li>
+<li>Radford, A., Kim, J. W., Hallacy, C. et al. (2021). Learning Transferable Visual Models From Natural Language Supervision (CLIP). <em>ICML</em>.（本系列前置模块，视觉编码器的来源）</li>
+<li>Li, J., Li, D., Savarese, S., Hoi, S. (2023). BLIP-2 论文附录：Q-Former 结构与注意力掩码策略。arXiv:2301.12597v3.（三种损失各自的注意力掩码设计）</li>
+<li>Brock, A., De, S., Smith, S. L., Simonyan, K. (2021). High-Performance Large-Scale Image Recognition Without Normalization (NFNet). <em>ICML</em>. arXiv:2102.06171.（Flamingo 视觉编码器的基础）</li>
+<li>Hoffmann, J., Borgeaud, S., Mensch, A. et al. (2022). Training Compute-Optimal Large Language Models (Chinchilla). <em>NeurIPS</em>. arXiv:2203.15556.（Flamingo 所用语言模型的来源）</li>
+<li>Jaegle, A., Borgeaud, S., Alayrac, J.-B. et al. (2022). Perceiver IO: A General Architecture for Structured Inputs and Outputs. <em>ICLR</em>. arXiv:2107.14795.（Perceiver Resampler 的思想来源）</li>
+<li>Awadalla, A., Gao, I., Gardner, J. et al. (2023). OpenFlamingo: An Open-Source Framework for Training Large Autoregressive Vision-Language Models. arXiv:2308.01390.（Flamingo 的开源复现）</li>
+<li>Laurençon, H., Saulnier, L., Tronchon, L. et al. (2023). OBELICS: An Open Web-Scale Filtered Dataset of Interleaved Image-Text Documents. <em>NeurIPS</em>. arXiv:2306.16527.（交错图文数据的开源替代）</li>
+<li>Dosovitskiy, A., Beyer, L., Kolesnikov, A. et al. (2021). An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale. <em>ICLR</em>. arXiv:2010.11929.（patch 化的原始出处）</li>
+<li>Vaswani, A., Shazeer, N., Parmar, N. et al. (2017). Attention Is All You Need. <em>NeurIPS</em>. arXiv:1706.03762.（交叉注意力算子的基础）</li>
+<li>Zhang, R., Han, J., Zhou, A. et al. (2023). LLaMA-Adapter: Efficient Fine-Tuning of Language Models with Zero-initialized Attention. <em>ICLR</em>. arXiv:2303.16199.（零初始化门控的同期工作，与 Flamingo 的门控思想呼应）</li>
+</ol>
+</section>
+
+
+</main>
+
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8593;</button>
+
+<script>
+// Sidebar highlight
+(function() {
+  var sections = document.querySelectorAll('section[id]');
+  var links = document.querySelectorAll('#sidebar nav a');
+  function highlight() {
+    var scrollY = window.scrollY;
+    var current = '';
+    for (var i = 0; i < sections.length; i++) {
+      if (scrollY >= sections[i].offsetTop - 100) current = sections[i].id;
+    }
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+    var progressBar = document.getElementById('progress-bar');
+    var backToTop = document.getElementById('back-to-top');
+    if (progressBar) progressBar.style.width = progress + '%';
+    if (backToTop) { if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible'); }
+  }
+  window.addEventListener('scroll', highlight, { passive: true }); highlight();
+})();
+// Formula rendering
+(function() {
+  var savedFormulas = [];
+  document.querySelectorAll('.formula').forEach(function(f) {
+    savedFormulas.push({ el: f, html: f.innerHTML, eq: f.getAttribute('data-eq') });
+    f.innerHTML = '';
+  });
+  function renderAll() {
+    if (typeof renderMathInElement === 'undefined' || typeof katex === 'undefined') { setTimeout(renderAll, 100); return; }
+    renderMathInElement(document.body, { delimiters: [{left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false });
+    savedFormulas.forEach(function(item) {
+      var f = item.el; var rawHTML = item.html;
+      if (item.eq) f.setAttribute('data-eq', item.eq);
+      var body = document.createElement('div'); body.className = 'formula-body';
+      body.style.cssText = 'flex:1;text-align:center;overflow-x:auto;overflow-y:hidden;padding:4px 0;';
+      f.appendChild(body);
+      var parts = rawHTML.split(/\$\$(.*?)\$\$/s); var isFormula = false;
+      for (var i = 0; i < parts.length; i++) {
+        if (isFormula && parts[i].trim()) {
+          var eqDiv = document.createElement('div'); body.appendChild(eqDiv);
+          var tex = parts[i].trim().replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          try { katex.render(tex, eqDiv, { displayMode: true, throwOnError: false }); } catch(e) { eqDiv.textContent = parts[i]; }
+        } else if (parts[i].trim()) { var span = document.createElement('span'); span.innerHTML = parts[i]; body.appendChild(span); }
+        isFormula = !isFormula;
+      }
+    });
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>
