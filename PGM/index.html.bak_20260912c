@@ -43,7 +43,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
 .hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
 .hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
-.hero .hero-intro { font-size: clamp(13.5px, 1.6vw, 15px); color: var(--c-text-soft); position: relative; max-width: 780px; margin: 0 auto; line-height: 1.9; text-align: left; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
 .hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
 section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
@@ -142,13 +142,14 @@ tr:hover td { background: var(--c-primary-ghost); }
 <!-- ==================== HERO ==================== -->
 <section id="hero" class="hero" data-page-node-id="OAbkEZY3czAmG0V2Px4JyI">
   <h1 data-page-node-id="eXkSQemyirt5YamFevycWH">概率图模型</h1>
-  <div class="subtitle" data-page-node-id="78aSRx1sWpYvQvZcna3tne">Probabilistic Graphical Models</div>
-  <p class="hero-intro" data-page-node-id="EK2XTCa8H4Boes17N0C8Ei">用图结构表达随机变量依赖关系的统一框架，涵盖贝叶斯网络、马尔可夫随机场、因子图、精确推断（变量消除、信念传播）与近似推断（变分推断、MCMC）。</p>
+  <div class="subtitle" data-page-node-id="78aSRx1sWpYvQvZcna3tne">Probabilistic Graphical Models: 贝叶斯网络 · 马尔可夫随机场 · 变分推断</div>
+  <div class="tagline" data-page-node-id="EK2XTCa8H4Boes17N0C8Ei">图结构 × 概率推理 · 不确定性建模的统一框架</div>
   <div class="badges" data-page-node-id="4DoFGSGqtxjDvjxtFSxops">
-    <span class="badge" data-page-node-id="dpn0QTuPdFEisgqetwVcRM">13 个章节</span>
-    <span class="badge" data-page-node-id="ffyxHZKrtNWWiWr2nnZ3PF">6 张 SVG 结构图</span>
-    <span class="badge" data-page-node-id="UBNuuUq6DhWJVyPnkoO7Wq">24 个公式</span>
-    <span class="badge" data-page-node-id="FtEgSBCcqZwjpZqREWPGhF">15 篇参考文献</span>
+    <span class="badge" data-page-node-id="dpn0QTuPdFEisgqetwVcRM">13 章节</span>
+    <span class="badge" data-page-node-id="ffyxHZKrtNWWiWr2nnZ3PF">6 SVG</span>
+    <span class="badge" data-page-node-id="UBNuuUq6DhWJVyPnkoO7Wq">24 公式</span>
+    <span class="badge" data-page-node-id="CWNytS2KHjAObnFs3X8YPC">6 代码</span>
+    <span class="badge" data-page-node-id="FtEgSBCcqZwjpZqREWPGhF">15 参考文献</span>
   </div>
 </section>
 

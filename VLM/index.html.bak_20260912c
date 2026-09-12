@@ -43,7 +43,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
 .hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
 .hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
-.hero .hero-intro { font-size: clamp(13.5px, 1.6vw, 15px); color: var(--c-text-soft); position: relative; max-width: 780px; margin: 0 auto; line-height: 1.9; text-align: left; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
 .hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
 section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
@@ -136,12 +136,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="hero" class="hero">
   <h1>视觉语言模型</h1>
-  <div class="subtitle">Flamingo · BLIP-2 · LLaVA</div>
-  <p class="hero-intro">视觉怎么接进语言模型。三种接法各有取舍：Flamingo 往冻结 LLM 层间插门控交叉注意力，代价高但保住了上下文学习；BLIP-2 只训一个 188M 的 Q-Former，把 257×1024 的视觉特征挤进 32×768 的窄口；LLaVA 干脆删掉压缩结构，用 576 个 patch token 加视觉指令微调取胜。</p>
+  <div class="subtitle">Flamingo · BLIP-2 · LLaVA · 视觉如何接进语言模型</div>
+  <div class="tagline">门控交叉注意力 · Perceiver Resampler · Q-Former 信息瓶颈 · 视觉指令微调 · 三种接法取舍</div>
   <div class="badges">
     <span class="badge">7 个章节</span>
     <span class="badge">3 张 SVG 结构图</span>
     <span class="badge">4 个公式</span>
+    <span class="badge">2 段 PyTorch 代码</span>
     <span class="badge">17 篇参考文献</span>
   </div>
 </section>

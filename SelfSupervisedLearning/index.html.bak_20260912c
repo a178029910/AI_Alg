@@ -43,7 +43,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
 .hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
 .hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
-.hero .hero-intro { font-size: clamp(13.5px, 1.6vw, 15px); color: var(--c-text-soft); position: relative; max-width: 780px; margin: 0 auto; line-height: 1.9; text-align: left; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
 .hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
 section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
@@ -136,12 +136,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="hero" class="hero" data-page-node-id="6OYw24YtxQdzq6HzCoCPqx">
   <h1 data-page-node-id="94zLTOP3hX9e4cH6QANJnG">自监督学习</h1>
-  <div class="subtitle" data-page-node-id="OamGzuM7SlTz5Mjkv0Ayr3">Self-Supervised Learning</div>
-  <p class="hero-intro" data-page-node-id="csVJ9ZCEr4B0Hr8CVZEfoV">从数据自身构造监督信号，摆脱人工标注依赖。梳理从代理任务到对比学习（SimCLR、MoCo 到 BYOL、SimSiam 的负样本消解），再到 DINO v1/v2/v3 基础模型化的完整演进，重点讲清每个工作要解决的瓶颈。</p>
+  <div class="subtitle" data-page-node-id="OamGzuM7SlTz5Mjkv0Ayr3">Self-Supervised Learning · 代理任务 · 对比学习 · DINO 系列</div>
+  <div class="tagline" data-page-node-id="csVJ9ZCEr4B0Hr8CVZEfoV">Pretext Tasks · InfoNCE · SimCLR · MoCo · BYOL · SimSiam · DINO v1/v2/v3</div>
   <div class="badges" data-page-node-id="PM9ilCgQETu7TLXMHs9YE1">
     <span class="badge" data-page-node-id="YDHwGXcNZabeNAbf4h8kLT">6 个章节</span>
     <span class="badge" data-page-node-id="cGtv4jTEHahKjuLh6XTIAe">10 张 SVG 结构图</span>
     <span class="badge" data-page-node-id="2jD6rB0mfADjNS60GI5pr7">20 个公式</span>
+    <span class="badge" data-page-node-id="1buRlDXGL05sd5yjIXYnkk">4 段 PyTorch 代码</span>
     <span class="badge" data-page-node-id="aCZnELKVxlGG6bRaLJoHHH">26 篇参考文献</span>
   </div>
 </section>

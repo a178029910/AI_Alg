@@ -21,7 +21,7 @@
 12、卷积神经网络
 13、循环神经网络
 14、残差网络
-15、Transformer
+15、Transformer（课时 1）
 16、自监督学习
 17、ViT、Swin、DETR
 18、MAE、SimMIM、VideoMAE

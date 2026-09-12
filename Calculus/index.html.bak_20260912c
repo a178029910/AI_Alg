@@ -43,7 +43,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 50%, rgba(37,99,235,0.06) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 50%); }
 .hero h1 { font-size: clamp(32px, 6vw, 48px); font-weight: 800; color: var(--c-heading); position: relative; letter-spacing: 1px; margin-bottom: 16px; line-height: 1.2; }
 .hero .subtitle { font-size: clamp(16px, 2.5vw, 20px); color: var(--c-primary); position: relative; margin-bottom: 12px; font-weight: 500; }
-.hero .hero-intro { font-size: clamp(13.5px, 1.6vw, 15px); color: var(--c-text-soft); position: relative; max-width: 780px; margin: 0 auto; line-height: 1.9; text-align: left; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
 .hero .badges { margin-top: 24px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); backdrop-filter: blur(4px); }
 section { margin-bottom: clamp(48px, 7vw, 72px); scroll-margin-top: 80px; }
@@ -137,8 +137,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="hero" class="hero">
   <h1>微积分与凸优化</h1>
-  <div class="subtitle">Calculus &amp; Convex Optimization</div>
-  <p class="hero-intro">从极限与连续出发，沿微积分主线（一元微分 → 积分级数 → 多元微积分）与优化主线（凸优化理论 → 优化算法）展开，以信息论收官，串联概率论 + 微积分 + 凸优化，9 章完整知识体系。</p>
+  <div class="subtitle">Calculus & Convex Optimization · 极限 · 导数 · 梯度 · 凸函数 · KKT · 信息论</div>
+  <div class="tagline">极限连续 · 链式法则 · 泰勒展开 · 梯度海森 · 凸集凸函数 · KKT条件 · 优化算法 · 熵与KL散度</div>
   <div class="badges">
     <span class="badge">9 个章节</span>
     <span class="badge">3 张 SVG 结构图</span>

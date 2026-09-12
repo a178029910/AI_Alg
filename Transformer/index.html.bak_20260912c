@@ -41,7 +41,7 @@ body { font-family: var(--font-body); background: var(--c-bg); color: var(--c-te
 .hero { text-align: center; padding: clamp(44px, 7vw, 72px) clamp(24px, 5vw, 48px); background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 50%, #ecfeff 100%); border-radius: var(--radius-xl); margin-bottom: clamp(32px, 5vw, 56px); position: relative; overflow: hidden; border: 1px solid var(--c-border); box-shadow: var(--shadow-md); }
 .hero h1 { font-size: clamp(32px, 6vw, 46px); font-weight: 800; color: var(--c-heading); position: relative; margin-bottom: 14px; line-height: 1.2; }
 .hero .subtitle { font-size: clamp(15px, 2.2vw, 19px); color: var(--c-primary); position: relative; margin-bottom: 10px; font-weight: 500; }
-.hero .hero-intro { font-size: clamp(13.5px, 1.6vw, 15px); color: var(--c-text-soft); position: relative; max-width: 780px; margin: 0 auto; line-height: 1.9; text-align: left; }
+.hero .tagline { font-size: clamp(13px, 1.5vw, 14px); color: var(--c-text-soft); position: relative; }
 .hero .badges { margin-top: 22px; position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .hero .badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; border: 1px solid var(--c-border-strong); background: rgba(255,255,255,0.85); color: var(--c-text-soft); }
 section { margin-bottom: clamp(44px, 6vw, 68px); scroll-margin-top: 80px; }
@@ -126,12 +126,12 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-prim
 <main id="main">
 <section id="hero" class="hero">
   <h1>Transformer</h1>
-  <div class="subtitle">Self-Attention Architecture</div>
-  <p class="hero-intro">基于自注意力机制的革命性架构，摒弃循环结构实现并行序列建模。是 BERT、GPT、ViT 等现代大模型的共同基础。</p>
+  <div class="subtitle">从自注意力到工程部署 · 完整技术指南</div>
+  <div class="tagline">缩放点积注意力 · 多头并行 · 位置编码 · FFN 与残差 · KV Cache · FlashAttention</div>
   <div class="badges">
-    <span class="badge">8 个章节</span>
-    <span class="badge">2 张 SVG 结构图</span>
-    <span class="badge">42 个公式</span>
+    <span class="badge">8 章正文</span>
+    <span class="badge">1 张结构图</span>
+    <span class="badge">5 段 PyTorch 代码</span>
     <span class="badge">15 篇参考文献</span>
   </div>
 </section>
