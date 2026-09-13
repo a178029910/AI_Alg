@@ -157,40 +157,52 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 <p data-page-node-id="BDwgIYwcCi3r9cyQyxnjgz">反观语言模型：文本本身就是离散符号序列，<em data-page-node-id="zycSGAKjh61iyEQJdYg8Tk">"预测下一个词"这个目标不需要任何人工标注</em>，于是可以吃下整个互联网。视觉缺少这样天然的监督信号——像素级预测其实也存在（如 PixelRNN / PixelCNN 的"预测下一个像素"），但它会把大量容量花在低级细节上，能提供的语义信号非常稀疏。这正是自监督学习要解决的问题。</p>
 <h3 data-page-node-id="Ezy5AO2hGeSDKdBlYLrLlJ">1.2 核心思想：让数据自己出题</h3>
-<p data-page-node-id="T3IH98U0PHNaepFicbgksd">自监督学习（Self-Supervised Learning, SSL）的基本策略是<strong data-page-node-id="PuAiawkd7iQSHnBXEksYAJ">从数据本身构造监督信号</strong>。既然拿不到人工标注的 $y$，那就把图像自身拆成"题面"和"答案"：彩色图去掉颜色当作输入，让模型还原颜色；图像块被打乱当作输入，让模型还原顺序。这类人为设计的任务称为<strong data-page-node-id="l4xv1GnawMsPM1R3STbgi4">代理任务</strong>（pretext task），它的答案由构造方式<strong data-page-node-id="GxogM3eEJe0FdG3yElyGlJ">预先确定</strong>，不需要人标注——这是第 2 章的路线，其通用形式见 2.1 节公式 (3)。</p>
-  <p data-page-node-id="ssl12RouteB">代理任务之外还有一条更根本的路子，也是本模块第 3–5 章的主线：<strong data-page-node-id="ssl12RouteB2">不预测任何具体内容，只要求同一张图的两种视角在特征空间里足够接近</strong>。</p>
-  <div class="formula" data-eq="(2)" data-page-node-id="1BtWYpfrEHbAMepGgktLsz">$$\min_{\theta}\; \mathbb{E}_{x\sim\mathcal{D}}\Big[\;\mathcal{L}\Big(\,f_\theta\big(\tau_1(x)\big),\; f_\theta\big(\tau_2(x)\big)\Big)\Big]$$</div>
-  <p data-page-node-id="ewY26MVKlsOyuylypGOg9W">其中 $\tau_1,\tau_2$ 是对同一张图施加的两种随机增广（随机裁剪、颜色抖动、翻转等），两侧表示都由同一个编码器 $f_\theta$ 产生。这个目标之所以能学到语义，关键是<strong data-page-node-id="ssl12KeyIdea">语义在增广下保持不变，像素却在剧烈变化</strong>：同一只猫被裁剪、变色、翻转之后，像素值几乎全变了，但"猫"这个语义没变。强制两种视角的表示一致，就等于逼模型丢掉会随增广改变的部分（像素细节），保留不变的部分（语义）。整个式子只用 $\mathcal{D}$ 中的原始图像，不涉及任何人工标签。</p>
-  <p data-page-node-id="ssl12Road">两个视角由谁产生、二者的一致又该怎么定义，正是第 3–5 章依次要回答的问题——这几章的区别也正在于此。</p>
+<p data-page-node-id="T3IH98U0PHNaepFicbgksd">自监督学习（Self-Supervised Learning, SSL）的基本策略是<strong data-page-node-id="PuAiawkd7iQSHnBXEksYAJ">从数据本身构造监督信号</strong>：保留一部分信息作为"输入"，另一部分作为"答案"，让模型去还原或预测。这个人为设计的任务称为<strong data-page-node-id="l4xv1GnawMsPM1R3STbgi4">代理任务</strong>（pretext task），它提供的标签称为<strong data-page-node-id="GxogM3eEJe0FdG3yElyGlJ">伪标签</strong>（pseudo-label）。</p>
+<div class="formula" data-eq="(2)" data-page-node-id="1BtWYpfrEHbAMepGgktLsz">$$\min_{\theta}\; \mathbb{E}_{x\sim\mathcal{D}}\Big[\;\mathcal{L}\Big(\,f_\theta\big(\tau_1(x)\big),\; h\big(\tau_2(x)\big)\Big)\Big]$$</div>
+<p data-page-node-id="ewY26MVKlsOyuylypGOg9W">这里 $\tau_1,\tau_2$ 是对同一张图施加的两种变换（着色、遮挡、旋转、裁剪……），$h$ 把第二个视角转成监督目标。整个式子只用到 $\mathcal{D}$ 中的原始图像，不涉及任何人工标签。需要说明的是，这一形式描述的是第 3–5 章共同采用的"双视角一致性"路线：<strong data-page-node-id="AzHgNgYVr3LexVXuzkxaAE">选什么视角、怎么定义二者的一致</strong>。代理任务则走另一条更朴素的路子：直接预测被人为改掉的那个量，它的通用形式见 2.1 节公式 (3)。</p>
 <div class="svg-box" data-page-node-id="gk6r11RENcwHegFJfiWM2Q">
-<svg viewBox="0 0 880 214" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="自监督造标签的两条路线" data-page-node-id="sslFig12">
-  <defs data-page-node-id="sslFig12defs"><marker id="ssl-ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" data-page-node-id="sslFig12mk"><polygon points="0 0, 8 3, 0 6" fill="#94a3b8" data-page-node-id="sslFig12mkp"/></marker></defs>
-  <text x="440" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a" data-page-node-id="sslFig12t">自监督如何"造标签"：两条构造路线</text>
-  <text x="90" y="76" font-size="12" fill="#2563eb" font-weight="700" text-anchor="end" data-page-node-id="sslFig12a1">代理任务</text>
-  <rect x="100" y="52" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="sslFig12a2"/>
-  <text x="155" y="80" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="sslFig12a3">原图 x</text>
-  <line x1="214" y1="74" x2="250" y2="74" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="sslFig12a4"/>
-  <rect x="256" y="52" width="140" height="44" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="sslFig12a5"/>
-  <text x="326" y="72" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="sslFig12a6">人工变换</text>
-  <text x="326" y="88" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="sslFig12a7">着色 / 拼图 / 旋转</text>
-  <line x1="400" y1="74" x2="436" y2="74" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="sslFig12a8"/>
-  <rect x="442" y="52" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="sslFig12a9"/>
-  <text x="517" y="72" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="sslFig12a10">预测被改动的量</text>
-  <text x="517" y="88" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="sslFig12a11">颜色 / 顺序 / 角度</text>
-  <text x="640" y="78" font-size="11" fill="#64748b" data-page-node-id="sslFig12a12">← 第 2 章</text>
-  <text x="90" y="156" font-size="12" fill="#ea580c" font-weight="700" text-anchor="end" data-page-node-id="sslFig12b1">一致性路线</text>
-  <rect x="100" y="132" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="sslFig12b2"/>
-  <text x="155" y="160" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="sslFig12b3">原图 x</text>
-  <line x1="214" y1="154" x2="250" y2="154" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="sslFig12b4"/>
-  <rect x="256" y="132" width="140" height="44" rx="7" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" data-page-node-id="sslFig12b5"/>
-  <text x="326" y="152" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="sslFig12b6">两次随机增广</text>
-  <text x="326" y="168" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="sslFig12b7">随机裁剪 + 颜色抖动</text>
-  <line x1="400" y1="154" x2="436" y2="154" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="sslFig12b8"/>
-  <rect x="442" y="132" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="sslFig12b9"/>
-  <text x="517" y="152" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="sslFig12b10">两个视角表示一致</text>
-  <text x="517" y="168" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="sslFig12b11">语义不变，像素在变</text>
-  <text x="640" y="158" font-size="11" fill="#64748b" data-page-node-id="sslFig12b12">← 第 3–5 章</text>
-  <text x="440" y="200" text-anchor="middle" font-size="10.5" fill="#94a3b8" data-page-node-id="sslFig12c">两条路线都只使用原始图像，不需要任何人工标注</text>
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="hwp7x0sxpZ7MtQR7unkOYZ">
+  <defs data-page-node-id="fE1gPoTbR7p18ullSslNDC"><marker id="ssl-ar" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" data-page-node-id="Y5LSRwkJXiUnsuJkEBRskh"><polygon points="0 0, 8 3, 0 6" fill="#94a3b8" data-page-node-id="l4UoqCSEC2UFbqVVAkistf"/></marker></defs>
+  <text x="440" y="26" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="aT1DU1bs2fo1BmeuGOgl3L">自监督如何"造标签"：三种典型构造方式</text>
+  <!-- row 1: pretext -->
+  <text x="90" y="76" font-size="12" fill="#2563eb" font-weight="700" text-anchor="end" data-page-node-id="9TNyEuHmGFkjC0LxhLBSGZ">代理任务</text>
+  <rect x="100" y="52" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="DDmxUDYR7AsJGoF2BWOkWI"/>
+  <text x="155" y="80" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="bbkq6CGUrUdTDGpDBIBVGN">原图 x</text>
+  <line x1="214" y1="74" x2="252" y2="74" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="cyHUYUhN8z9POTWQYfRAwj"/>
+  <rect x="256" y="52" width="140" height="44" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="5higGBcdmoPJrMAx4CGyDF"/>
+  <text x="326" y="72" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="bKomIQXkQ03BBjvh5fO4mU">人工变换</text>
+  <text x="326" y="88" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="EgcQemUffXt9l16Dl6dOjz">灰度 / 打乱 / 旋转</text>
+  <line x1="400" y1="74" x2="438" y2="74" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="8qZLtfmoUHj6ss0CeU9R1T"/>
+  <rect x="442" y="52" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="GLDLB4xgRGbCb6kuSF3agu"/>
+  <text x="517" y="72" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="Te16SpxpycnsnRUNiE97YI">预测被改动的量</text>
+  <text x="517" y="88" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="m5cPCDMnbo8I7JTOp8x6VP">颜色 / 顺序 / 角度</text>
+  <text x="640" y="78" font-size="11" fill="#64748b" data-page-node-id="FcE6eEHXjn7XbHk2L687ag">← 第 2 章</text>
+  <!-- row 2: contrastive -->
+  <text x="90" y="160" font-size="12" fill="#ea580c" font-weight="700" text-anchor="end" data-page-node-id="S82lai8nDCJ3Aj2VhDrsmb">对比学习</text>
+  <rect x="100" y="136" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="98ZuC5I6zIxjwv8ry7BQnq"/>
+  <text x="155" y="164" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="VMWa2fqC1rAumvoH5mpEoh">原图 x</text>
+  <line x1="214" y1="158" x2="252" y2="158" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="bQZ3B4rYIVUjNC60KGBh7n"/>
+  <rect x="256" y="136" width="140" height="44" rx="7" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" data-page-node-id="SL2swhnD1zY0284fOL3mgy"/>
+  <text x="326" y="156" text-anchor="middle" font-size="11.5" fill="#c2410c" font-weight="700" data-page-node-id="LvBIaejmuvzKt8DCVy1HzU">两次随机增广</text>
+  <text x="326" y="172" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="79ipaDwAtucc5NEU5LGtNP">裁剪 + 颜色抖动</text>
+  <line x1="400" y1="158" x2="438" y2="158" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="SyM1ck8FWXEqS3NafxWVii"/>
+  <rect x="442" y="136" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="EuhzbF5uJJuEz3QTB6cf9o"/>
+  <text x="517" y="156" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="3R4EFsrotkz6SdqdzuDFqB">两个视角表示一致</text>
+  <text x="517" y="172" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="3fENGBjjnyNPY1Pk6dLXNM">（并与其他样本区分）</text>
+  <text x="640" y="162" font-size="11" fill="#64748b" data-page-node-id="fMR1iAtiDPLjt6XNAVQA1r">← 第 3、4 章</text>
+  <!-- row 3: self-distill -->
+  <text x="90" y="244" font-size="12" fill="#7c3aed" font-weight="700" text-anchor="end" data-page-node-id="rj8KHMyEuUg4YENcAABXQv">自蒸馏</text>
+  <rect x="100" y="220" width="110" height="44" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="pWvyLpusLmgvbAU3UcHSBt"/>
+  <text x="155" y="248" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="EgnDURgX3wtSi9BRt5Ji3B">原图 x</text>
+  <line x1="214" y1="242" x2="252" y2="242" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="rqNHLxgGi9t8fVmT98Os2T"/>
+  <rect x="256" y="220" width="140" height="44" rx="7" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="50fOwuK8kpRqaZrFlqXqaf"/>
+  <text x="326" y="240" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="YD5gNGjl2N4HiS6KhHBG90">多尺度裁剪</text>
+  <text x="326" y="256" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="qkKfBBkin1RfnOngk3Xhjg">全局 2 + 局部 8</text>
+  <line x1="400" y1="242" x2="438" y2="242" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="xXZoxaDtblYCA8DjJcADfs"/>
+  <rect x="442" y="220" width="150" height="44" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="d33ZAO20GiH5Bnzww43Tkw"/>
+  <text x="517" y="240" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="9TCQD0NUhKneFA6h5HHz8j">学生匹配教师分布</text>
+  <text x="517" y="256" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Qg1XuHdPcrQo5oPaumM7qc">教师 = 学生的滑动平均</text>
+  <text x="640" y="246" font-size="11" fill="#64748b" data-page-node-id="k5MGtdSiF4hKCjpeRO49MH">← 第 5 章</text>
 </svg>
 </div>
 <h3 data-page-node-id="LDvcLcYV57yLGCpS71ucPG">1.3 三条技术主线</h3>
@@ -323,23 +335,22 @@ tr:hover td { background: var(--c-primary-ghost); }
   <text x="752" y="274" text-anchor="middle" font-size="10" fill="#94a3b8" data-page-node-id="1vkap4I4lYs9r8jQE5VnYG">挖空重建的直系前身</text>
 </svg>
 </div>
-<p data-page-node-id="pretextGen01">把第 2 章这一族任务写成统一形式：模型只需要预测<strong data-page-node-id="pretextGen05">被人为改掉的那个量</strong>，而不必与其他视角比对——</p>
-  <div class="formula" data-eq="(3)" data-page-node-id="pretextGen02">$$\min_{\theta}\; \mathbb{E}_{x\sim\mathcal{D}}\Big[\;\ell\Big(f_\theta\big(\tau(x)\big),\; y_{\text{pretext}}\Big)\Big], \qquad y_{\text{pretext}} = \tau \text{ 改掉的那个量},\quad \tau \sim \mathcal{T}$$</div>
-  <p data-page-node-id="pretextGen03">其中 $\tau$ 是人工变换（着色、拼图、旋转……），$y_{\text{pretext}}$ 是构造时就已经知道的答案。它与公式 (2) 的差别在于：<strong data-page-node-id="pretextGen04">这里不需要第二个视角</strong>，监督信号直接来自变换参数本身。下面四个任务都是这一通用形式的具体实例。</p>
-  <h3 data-page-node-id="Jli5IGeYsnz1aLjGRKB1zl">2.2 四个代表性任务的细节</h3>
+<h3 data-page-node-id="Jli5IGeYsnz1aLjGRKB1zl">2.2 四个代表性任务的细节</h3>
 <h4 data-page-node-id="wqzBEHFjKWAk9dUjzE7sgO">① 图像着色（Colorization）</h4>
 <p data-page-node-id="8JXhPJvNoNVqBsrTbpl3Vl">把图像转到 Lab 色彩空间，丢掉 $a$、$b$ 两个色度通道，让模型根据灰度 $L$ 预测色度。关键设计是<strong data-page-node-id="RIycoOqkwQONuQy3CTKV0i">把颜色量化成离散类别</strong>而非回归连续值——因为同一灰度可能对应多种合理颜色（一件衣服可以是红也可以是蓝），直接回归会得到灰扑扑的平均色。但只用普通交叉熵又会偏向稀有的饱和色，因此原论文还按颜色的经验先验对类别重加权：</p>
-<div class="formula" data-eq="(4)" data-page-node-id="aSQ3nHVX4MUaBa0Hpp0Fq6">$$\mathcal{L}_{\text{color}} = -\sum_{h,w} w\big(q_{h,w}\big)\log p_\theta\big(q_{h,w} \mid L\big), \qquad w(q) \propto \Big[(1-\lambda)\,\tilde{p}(q) + \lambda / Q\Big]^{-1}, \quad Q \approx 313$$</div>
+<div class="formula" data-eq="(3)" data-page-node-id="aSQ3nHVX4MUaBa0Hpp0Fq6">$$\mathcal{L}_{\text{color}} = -\sum_{h,w} w\big(q_{h,w}\big)\log p_\theta\big(q_{h,w} \mid L\big), \qquad w(q) \propto \Big[(1-\lambda)\,\tilde{p}(q) + \lambda / Q\Big]^{-1}, \quad Q \approx 313$$</div>
 <p data-page-node-id="QeUezEizeL8DU73wvA9iOU">其中 $w(q)$ 是类别 $q$ 的重加权系数（越稀有的颜色权重越高），$\tilde{p}(q)$ 是训练集上的颜色先验，$\lambda$ 控制先验与均匀分布的混合比例。这个任务之所以有效，是因为<strong data-page-node-id="LrGivsiLhwEMeufKvuCiFE">要猜对颜色必须识别物体</strong>——知道那是天空、草地还是草莓，才能给出合理的色度。因此它学到的是物体级语义。后续工作（Split-Brain Autoencoder）把同一思路扩展到同时预测颜色与亮度，效果更好。</p>
 <h4 data-page-node-id="6vN84SboGbnBdd2c0SMz7Q">② 拼图还原（Jigsaw）</h4>
 <p data-page-node-id="RlUyowRRUBJC419lLcaGby">把图像切成 $3\times3$ 的九块，随机打乱后让模型预测原来的排列序号。可能的排列有 $9! = 362880$ 种，直接把每种排列当成一个类别太多，因此只从里面挑一个子集（原论文取 100 种排列）：</p>
-<div class="formula" data-eq="(5)" data-page-node-id="k2cEfh84M6WxMpTUGA1HO5">$$|\mathcal{P}| = 9! = 362880 \;\gg\; |\mathcal{P}_{\text{train}}|, \qquad \mathcal{P}_{\text{train}} \subset \mathcal{P} \text{（Hamming 距离最大的一个子集）}$$</div>
+<div class="formula" data-eq="(4)" data-page-node-id="k2cEfh84M6WxMpTUGA1HO5">$$|\mathcal{P}| = 9! = 362880 \;\gg\; |\mathcal{P}_{\text{train}}|, \qquad \mathcal{P}_{\text{train}} \subset \mathcal{P} \text{（Hamming 距离最大的一个子集）}$$</div>
 <p data-page-node-id="RZ5skC9XeBn00KXhBF1Naf">挑选依据是<strong data-page-node-id="7ArtdCytx16RSDKFqZwMxV">排列之间的 Hamming 距离</strong>：两个排列如果只差一对互换，模型很难区分，属于"无意义"的类别。选距离大的子集能让分类任务更清晰。这个任务强迫模型理解部件之间的空间关系，比如"轮子应当在车下方"。</p>
 <h4 data-page-node-id="eHWoDDlhDvxLSruZkeW6kO">③ 旋转预测（Rotation）</h4>
 <p data-page-node-id="rYsj3KlJHgLqy37zSpEghq">把整图旋转 $0°/90°/180°/270°$ 后送入网络，让它判断转了多少度——本质是一个 4 分类问题：</p>
-<div class="formula" data-eq="(6)" data-page-node-id="p5TYLKu7qQaPvxu2tqPGJV">$$\mathcal{L}_{\text{rot}} = -\frac{1}{4}\sum_{r=0}^{3}\log p_\theta\big(r \mid \text{rot}(x, r)\big)$$</div>
+<div class="formula" data-eq="(5)" data-page-node-id="p5TYLKu7qQaPvxu2tqPGJV">$$\mathcal{L}_{\text{rot}} = -\frac{1}{4}\sum_{r=0}^{3}\log p_\theta\big(r \mid \text{rot}(x, r)\big)$$</div>
 <p data-page-node-id="CANQ8esfRzeoenIRDKRWo4">其中求和遍历 4 个旋转角，等价于把一张图的 4 个旋转版本拼进同一个 batch（本文代码即如此实现）。它的优点是实现极简、不需特殊网络结构，因此成为后来几乎所有对比学习论文的对照基线。要判断朝向，模型必须认出物体的常规姿态（人脸、车头、四足动物的方向），因此学到的是与物体类别相关的特征。</p>
-
+<p data-page-node-id="pretextGen01">用一句话概括第 2 章这一族任务：模型只需要预测被人为改掉的那个量，而不必与其他视角比对——</p>
+<div class="formula" data-eq="(6)" data-page-node-id="pretextGen02">$$\min_{\theta}\; \mathbb{E}_{x\sim\mathcal{D}}\Big[\;\ell\Big(f_\theta\big(\tau(x)\big),\; y_{\text{pretext}}\Big)\Big], \qquad y_{\text{pretext}} = \tau \text{ 改掉的那个量},\quad \tau \sim \mathcal{T}$$</div>
+<p data-page-node-id="pretextGen03">其中 $\tau$ 是人工变换（灰度化、打乱、旋转……），$y_{\text{pretext}}$ 是构造时就已经知道的答案。注意它与公式 (2) 的差别：<strong data-page-node-id="pretextGen04">这里不需要第二个视角</strong>，监督信号直接来自变换参数本身。第 3–5 章的一致性路线与这一族任务，构成了自监督"造标签"的两类基本手段。</p>
 <h4 data-page-node-id="ctxEnc0001">④ 图像修复（Context Encoders）</h4>
 <p data-page-node-id="ctxEnc0002">把图像中央挖空，让模型根据四周的上下文把缺失区域补回来。与前面三个任务不同，它的监督信号是<strong data-page-node-id="ctxEnc0003">连续像素</strong>而非离散类别，因此用重建损失训练；为了让补出的区域不模糊，原论文还给重建结果接了一个对抗损失（判别器判断该区域是真实还是补出）。</p>
 <p data-page-node-id="ctxEnc0004">这个任务是后来掩码自编码的直系前身——两者的核心差别在<strong data-page-node-id="ctxEnc0005">掩码比例</strong>：Context Encoder 只挖掉中心一块（约 1/4 面积），模型可以靠周边纹理"糊"过去；掩码自编码把遮挡比例大幅提高，逼着模型必须做语义推理。2.4 节会接着讲这条生成式路线的后续。</p>
@@ -359,7 +370,7 @@ tr:hover td { background: var(--c-primary-ghost); }
     <span class="kw" data-page-node-id="rkRGvd04P5eV4Eu83PjVRz">def</span> <span class="fn" data-page-node-id="PKzL3ftwYbnjGVwMRadB7V">forward</span>(<span class="kw" data-page-node-id="6R7uavGh0O4jnXasaTEzr0">self</span>, x):
         <span class="com" data-page-node-id="w5qKojlxIEnxy88eNMxr2d"># 对同一批图像生成 4 个旋转版本并拼接：(4B, 3, H, W)</span>
         xs = torch.cat([torch.rot90(x, k, dims=(<span class="num" data-page-node-id="MbIobv5CGZXdldM0vhFij6">2</span>, <span class="num" data-page-node-id="8jyo5bBv2BUeEREQZggCGf">3</span>)) <span class="kw" data-page-node-id="f1clutRn2aO4AFKEHYG2TL">for</span> k <span class="kw" data-page-node-id="FtHb4RyC1frak3MgkywGAk">in</span> <span class="fn" data-page-node-id="JsAAFx7Euup8tuNUIDagIZ">range</span>(<span class="num" data-page-node-id="yo21clNcrGYHEI5a1QONfS">4</span>)], dim=<span class="num" data-page-node-id="AWtRSFiH6uZdctCYtja0GP">0</span>)
-        <span class="com" data-page-node-id="QUuncdWThUwAbKeHGWX9Vv"># 代理标签：每个样本的旋转次数 k 就是它的类别</span>
+        <span class="com" data-page-node-id="QUuncdWThUwAbKeHGWX9Vv"># 伪标签：每个样本的旋转次数 k 就是它的类别</span>
         labels = torch.arange(<span class="num" data-page-node-id="GGWOMNZFFP3iMap82d5Qzq">4</span>).repeat_interleave(x.size(<span class="num" data-page-node-id="Q6Pe7xlqBMZI8aGbbul3qK">0</span>)).to(x.device)
         logits = <span class="kw" data-page-node-id="I0Y4UfBYUvgjGH3CqOrUWL">self</span>.head(<span class="kw" data-page-node-id="vvtqFtZWbnrq46tuDzWwDD">self</span>.backbone(xs))   <span class="com" data-page-node-id="4rF9FJokYY6qeyCMyGhoAW"># (4B, 4)</span>
         <span class="kw" data-page-node-id="n2e3BzMFofBCBDu9EHFIJ0">return</span> logits, labels
@@ -379,7 +390,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li data-page-node-id="bma1lkSZH3GtGfRz3FPBKv"><strong data-page-node-id="1QcSQlFOLozcs5popzZPtz">优化目标与我们要的东西不是同一个</strong>。用互信息可以把这个缺口写清楚：</li>
 </ul>
 <div class="formula" data-eq="(7)" data-page-node-id="QhLuLQ7dvhpAMaafH1yvP0">$$\max_{\theta}\; I\big(f_\theta(X);\, Y_{\text{pretext}}\big) \;\;\not\Rightarrow\;\; \max_{\theta}\; I\big(f_\theta(X);\, Y_{\text{semantic}}\big)$$</div>
-<p data-page-node-id="aqiUvaf53xTd2GMjoq9yYU">代理任务最大化的是特征与<em data-page-node-id="rC1BaVMlyZmQwAaEObsL2Z">代理标签</em>的互信息，而代理标签只是语义的一个<strong data-page-node-id="c1gCslFH2OJ1aufpRwPKU6">有噪近似</strong>。两者并不等价：代理标签只是语义的有噪近似，把它的互信息拉满，并不保证语义方向的互信息同步提高。在有限容量下两者还会互相挤压——把表示的大量自由度用来编码"旋转角度"，留给"物体类别"的就少了（这里说的是表示容量的分配，不是互信息本身的性质）。</p>
+<p data-page-node-id="aqiUvaf53xTd2GMjoq9yYU">代理任务最大化的是特征与<em data-page-node-id="rC1BaVMlyZmQwAaEObsL2Z">伪标签</em>的互信息，而伪标签只是语义的一个<strong data-page-node-id="c1gCslFH2OJ1aufpRwPKU6">有噪代理</strong>。两者并不等价：伪标签只是语义的有噪代理，把它的互信息拉满，并不保证语义方向的互信息同步提高。在有限容量下两者还会互相挤压——把表示的大量自由度用来编码"旋转角度"，留给"物体类别"的就少了（这里说的是表示容量的分配，不是互信息本身的性质）。</p>
 <ul data-page-node-id="kL1oFexHK7cxKYwtpKVHcg">
 <li data-page-node-id="iTIy40DUPbNOUI729gQfnk"><strong data-page-node-id="FiBdWeAVm3rhN5h6mcgNrY">特征与任务强耦合，迁移性差</strong>。为着色学到的特征偏重纹理与颜色统计，为拼图学到的偏重边缘与局部几何。换一个下游任务时，这些"定制特征"可利用的部分有限。而人类希望得到的是<strong data-page-node-id="uFc3PMBKDdm1gY99ABXBU1">任务无关</strong>的通用表示。</li>
 </ul>
@@ -902,9 +913,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr data-page-node-id="eAfFhscjjC5Ghoe4OmO3SM"><th data-page-node-id="w7Q27h8Fp3AaZnfdYGxUBT">编号</th><th data-page-node-id="HokpvFPxA4ld3DhWK8KcKi">公式</th><th data-page-node-id="sNXoHkuHdIUpbsmTt1CcCq">关键点</th></tr>
 <tr data-page-node-id="WYKLwHZgMF6Nt63e713csH"><td data-page-node-id="sJqcGdQqSWFUOJnQhyJZEv">(1)</td><td data-page-node-id="etz4HEOQxoT6lZmDYXBbHb">有监督目标</td><td data-page-node-id="kPTaglHgx48TFZE4zTEzWa">需要人工标签 $y$，成本高且与任务强绑定</td></tr>
 <tr data-page-node-id="tblRow2"><td data-page-node-id="tblRow2a">(2)</td><td data-page-node-id="tblRow2b">自监督的一般形式（一致性路线）</td><td data-page-node-id="tblRow2c">同一张图的两个视角，特征是自造的监督信号</td></tr>
-<tr data-page-node-id="tblRow3"><td data-page-node-id="tblRow3a">(3)</td><td data-page-node-id="tblRow3b">代理任务的一般形式（预测被改掉的量）</td><td data-page-node-id="tblRow3c">只预测被人为改掉的量，不需要第二个视角</td></tr>
+<tr data-page-node-id="tblRow3"><td data-page-node-id="tblRow3a">(3)</td><td data-page-node-id="tblRow3b">代理任务的一般形式（预测伪标签）</td><td data-page-node-id="tblRow3c">只预测被人为改掉的量，不需要第二个视角</td></tr>
 <tr data-page-node-id="ptApqhPtFkonG9AkOhUjZU"><td data-page-node-id="A6ebRBboq8MznU2IxAu1po">(4)(5)(6)</td><td data-page-node-id="ZfIyBOExvsIK3zMKKdVbqU">着色 / 拼图 / 旋转预测</td><td data-page-node-id="FS8NgSHWU8y7yIQy13ZSyL">代理任务的三类典型构造</td></tr>
-<tr data-page-node-id="DHPsZO4zTddE5ZZEsj1OQ9"><td data-page-node-id="ySFTWUMNc8GzIS9cK0IKmP">(7)</td><td data-page-node-id="FXLiTOGQHf2o8x2YI8ZrOo">代理任务的根本缺口</td><td data-page-node-id="mbDX0BdVhWcVIWoqPxYIUs">最大化与代理标签的互信息 ≠ 最大化与语义的互信息</td></tr>
+<tr data-page-node-id="DHPsZO4zTddE5ZZEsj1OQ9"><td data-page-node-id="ySFTWUMNc8GzIS9cK0IKmP">(7)</td><td data-page-node-id="FXLiTOGQHf2o8x2YI8ZrOo">代理任务的根本缺口</td><td data-page-node-id="mbDX0BdVhWcVIWoqPxYIUs">最大化与伪标签的互信息 ≠ 最大化与语义的互信息</td></tr>
 <tr data-page-node-id="op6PFaQgDqZAlQ5BBHQ8Wu"><td data-page-node-id="qfjoUzZ3NesuMH12kImAJz">(8)</td><td data-page-node-id="RRABul5Q8qFBR8lCw5naBp">对比目标</td><td data-page-node-id="3ihtQFABgELn2FceD3jqfR">正样本拉近、负样本推远，特征需 L2 归一化</td></tr>
 <tr data-page-node-id="UaLLlKU01ENE0icmAqHNKy"><td data-page-node-id="EpCwaELElHOvZuMPbxZ9km">(9)</td><td data-page-node-id="vyoEffHkCsv0pcgOVsxvwS">InfoNCE</td><td data-page-node-id="tFuWA5wQtxcHAHGAqch64d">softmax 形式，分母含全部负样本；$\tau$ 控制尖锐度</td></tr>
 <tr data-page-node-id="m4B6Sg14CqVZk0eJ06dxif"><td data-page-node-id="xV5f5WptreMV0trSAJiFEE">(10)</td><td data-page-node-id="GlG8j7ZGpZCLaQK7aQGruz">NT-Xent（SimCLR）</td><td data-page-node-id="czwaQ3t8yfoCcwyulNMGEZ">对称损失，负样本来自同 batch</td></tr>
@@ -942,7 +953,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <rect x="48" y="52" width="212" height="96" rx="9" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="AI54BWRqAoIAODVXiqFt8c"/>
   <text x="154" y="74" text-anchor="middle" font-size="12.5" fill="#6d28d9" font-weight="700" data-page-node-id="xEemVo8sKcXVieZcYdl8Qo">① 代理任务（第 2 章）</text>
   <text x="154" y="96" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="m8ZyXQNygLhNxdzki0CkHc">着色 · 拼图 · 旋转 · 修复</text>
-  <text x="154" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="hhHT3Tg06lOq3ZK97Fw7tz">构造代理标签，无需人工标注</text>
+  <text x="154" y="114" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="hhHT3Tg06lOq3ZK97Fw7tz">构造伪标签，无需人工标注</text>
   <text x="154" y="136" text-anchor="middle" font-size="10.5" fill="#dc2626" font-weight="700" data-page-node-id="CslXKKDZZAAPqpQ8ANOIWf">短板：捷径解，任务与语义脱钩</text>
   <line x1="262" y1="118" x2="388" y2="176" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" data-page-node-id="F8sULkUpqtID3vOACrLpJh"/>
   <!-- 2 -->
