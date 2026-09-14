@@ -493,6 +493,15 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-prim
   <p>其中 $c$ 为裁剪阈值（常用 1.0）。这在大模型训练中几乎是标配。</p>
 
   <h3>7.8 完整训练循环</h3>
+  <p>把第 7.1–7.7 节的各组件串成完整的单步训练流程，Transformer 的训练循环可以用五步概括：</p>
+  <ol>
+    <li><strong>前向与损失。</strong>输入序列右移一位送入模型（teacher forcing），输出 logits 经交叉熵损失（带 label smoothing 0.1）计算出当前 batch 的标量损失值。</li>
+    <li><strong>梯度反传。</strong><code>loss.backward()</code> 沿计算图回传梯度至所有参数；此时梯度可能因深度堆叠而爆炸。</li>
+    <li><strong>梯度裁剪。</strong>对全部参数的梯度做范数裁剪（阈值 1.0），防止偶发的梯度爆炸——这是深层 Transformer 训练稳定的标配（7.7 节）。</li>
+    <li><strong>参数更新。</strong>AdamW 优化器按自适应学习率与解耦权重衰减更新参数（7.5 节）；warmup 调度器在每个 step 后调整学习率（7.4 节）。</li>
+    <li><strong>迭代直至收敛。</strong>以上四步循环往复，训练数据遍历完毕即一个 epoch；通常训练数十万 step，用验证集 loss 与 BLEU/困惑度监控收敛情况。</li>
+  </ol>
+  <p>下面的代码把上述五步落实为约 20 行 PyTorch——注意 warmup 调度的 lambda 函数与梯度裁剪的位置：</p>
   <div class="code-block"><div class="code-header">train.py — 训练循环核心片段</div><pre>
 model = Transformer(d_model=<span class="num">512</span>, num_heads=<span class="num">8</span>, num_layers=<span class="num">6</span>, vocab_size=<span class="num">32000</span>)
 opt   = torch.optim.AdamW(model.parameters(), lr=<span class="num">0</span>, betas=(<span class="num">0.9</span>, <span class="num">0.98</span>), eps=<span class="num">1</span>e-<span class="num">9</span>)

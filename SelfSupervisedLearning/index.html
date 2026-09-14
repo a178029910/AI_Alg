@@ -71,6 +71,8 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-prim
 .svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
 .svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .svg-box svg { max-width: 100%; height: auto; }
+.svg-box img { max-width: 100%; height: auto; border-radius: 8px; }
+.svg-cap { font-size: 13px; color: var(--c-text-soft); margin-top: 10px; text-align: center; }
 @keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
 .svg-box svg { animation: fade-in-up 0.6s ease-out; }
 .svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
@@ -436,16 +438,16 @@ tr:hover td { background: var(--c-primary-ghost); }
   <!-- one image -->
   <rect x="40" y="56" width="96" height="72" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6" data-page-node-id="7fxTJCVbKaSfKHdBzTiRra"/>
   <text x="88" y="98" text-anchor="middle" font-size="12" fill="#6d28d9" font-weight="700" data-page-node-id="5qWHefMBcoYIltYQE2djZW">图像 x</text>
-  <line x1="140" y1="76" x2="188" y2="76" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="qOWxrYbzsAZUbLZ5jE9utA"/>
-  <line x1="140" y1="108" x2="188" y2="108" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="DbegHhouwDtmR3dU7f18Bb"/>
+  <line x1="140" y1="92" x2="188" y2="76" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="qOWxrYbzsAZUbLZ5jE9utA"/>
+  <line x1="140" y1="92" x2="188" y2="136" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="DbegHhouwDtmR3dU7f18Bb"/>
   <text x="164" y="70" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="TW0AiPE53CAB5H2Xo4MJUk">τ₁</text>
-  <text x="164" y="124" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="YRDwN8xLiSRrLFAkfFgAtC">τ₂</text>
+  <text x="164" y="152" text-anchor="middle" font-size="9.5" fill="#7c3aed" font-weight="700" data-page-node-id="YRDwN8xLiSRrLFAkfFgAtC">τ₂</text>
   <rect x="192" y="52" width="66" height="48" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4" data-page-node-id="vf88JoRXuo9rF2DbfeooHI"/>
   <text x="225" y="81" text-anchor="middle" font-size="10.5" fill="#1d4ed8" data-page-node-id="TwiGaY7Euok9cciVuUxwaG">视图 1</text>
   <rect x="192" y="112" width="66" height="48" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4" data-page-node-id="RHOwjHduo124vkOMrbYP7a"/>
   <text x="225" y="141" text-anchor="middle" font-size="10.5" fill="#1d4ed8" data-page-node-id="Rl1DBpz6PfCNh2Z7xT34KU">视图 2</text>
-  <line x1="262" y1="76" x2="300" y2="94" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="dJJTd8B2jr7kdAOCXEoGVr"/>
-  <line x1="262" y1="136" x2="300" y2="118" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="TYlpYi4foMF5UKTNcz6TU8"/>
+  <line x1="258" y1="76" x2="300" y2="94" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="dJJTd8B2jr7kdAOCXEoGVr"/>
+  <line x1="258" y1="136" x2="300" y2="118" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#ssl-ar)" data-page-node-id="TYlpYi4foMF5UKTNcz6TU8"/>
   <!-- encoder -->
   <rect x="304" y="70" width="96" height="72" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.6" data-page-node-id="K2XceR7hPt1Uy5WpbPjzFs"/>
   <text x="352" y="100" text-anchor="middle" font-size="11.5" fill="#047857" font-weight="700" data-page-node-id="lUue8gSaibc43AtUuMuXvr">编码器 f</text>
@@ -454,22 +456,23 @@ tr:hover td { background: var(--c-primary-ghost); }
   <!-- embedding space -->
   <rect x="446" y="46" width="240" height="140" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4" data-page-node-id="A6OUXrViviWaMtOB0VblXA"/>
   <text x="566" y="66" text-anchor="middle" font-size="11" fill="#475569" font-weight="700" data-page-node-id="qE3zi49KgDFViWYBCaG255">特征空间</text>
-  <circle cx="536" cy="106" r="12" fill="#2563eb" data-page-node-id="eZ3Nh2LhGmuUpLepBGjmMF"/>
-  <text x="536" y="111" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" data-page-node-id="N9n9AV8D1kIJAq2H7DM6xX">z₁</text>
+  <circle cx="500" cy="100" r="12" fill="#2563eb" data-page-node-id="eZ3Nh2LhGmuUpLepBGjmMF"/>
+  <text x="500" y="105" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" data-page-node-id="N9n9AV8D1kIJAq2H7DM6xX">z₁</text>
   <circle cx="566" cy="118" r="12" fill="#60a5fa" data-page-node-id="wTJUjrmzNTnoVXQDA8FDWZ"/>
   <text x="566" y="123" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" data-page-node-id="0hqDQlfHDJeo7Y2aeNChm1">z₂</text>
-  <line x1="546" y1="112" x2="556" y2="114" stroke="#059669" stroke-width="3" data-page-node-id="XN1W2Q73JLH0vGApAWEgHB"/>
-  <text x="566" y="90" text-anchor="middle" font-size="9.5" fill="#059669" font-weight="700" data-page-node-id="I00bhVG5g6okVm8L9cWB87">拉近</text>
+  <line x1="512" y1="103" x2="554" y2="115" stroke="#059669" stroke-width="3" data-page-node-id="XN1W2Q73JLH0vGApAWEgHB"/>
+  <text x="533" y="96" text-anchor="middle" font-size="9.5" fill="#059669" font-weight="700" data-page-node-id="I00bhVG5g6okVm8L9cWB87">拉近</text>
   <circle cx="636" cy="86" r="11" fill="#fca5a5" data-page-node-id="S3oA6rDW1ElDgxudCZhwy9"/>
   <text x="636" y="90" text-anchor="middle" font-size="8.5" fill="#7f1d1d" font-weight="700" data-page-node-id="rFB0DGlBmoZSWyRBe8qmfF">z⁻</text>
   <circle cx="654" cy="140" r="11" fill="#fca5a5" data-page-node-id="R90TMRPO2iqiDDwoEs4rDF"/>
   <text x="654" y="144" text-anchor="middle" font-size="8.5" fill="#7f1d1d" font-weight="700" data-page-node-id="IGA3HpOgGPAU8A63KIrfA8">z⁻</text>
   <circle cx="606" cy="156" r="11" fill="#fca5a5" data-page-node-id="zoMLFkybXp9Mjq0gG0UUts"/>
   <text x="606" y="160" text-anchor="middle" font-size="8.5" fill="#7f1d1d" font-weight="700" data-page-node-id="gPQcBHRZbkoXrYh8RLGBQN">z⁻</text>
-  <line x1="562" y1="112" x2="628" y2="92" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="xo40s7u0tx0xcHLDyVIoZI"/>
-  <line x1="566" y1="126" x2="648" y2="136" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="vGgvUpNtQ6D8xYBGRCiAXy"/>
-  <text x="500" y="166" font-size="10.5" fill="#dc2626" font-weight="700" text-anchor="middle" data-page-node-id="edK2rVquiTFTjiSkbxR5PU">推远</text>
-  <text x="500" y="179" font-size="9.5" fill="#94a3b8" text-anchor="middle" data-page-node-id="SbKUvMl8dEX9OsONRSuBGQ">其他图像</text>
+  <line x1="545" y1="106" x2="625" y2="88" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="xo40s7u0tx0xcHLDyVIoZI"/>
+  <line x1="545" y1="112" x2="643" y2="137" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="vGgvUpNtQ6D8xYBGRCiAXy"/>
+  <line x1="543" y1="116" x2="597" y2="150" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="vGgvUpNtQ6D8NewThirdLine"/>
+  <text x="640" y="172" font-size="10.5" fill="#dc2626" font-weight="700" text-anchor="middle" data-page-node-id="edK2rVquiTFTjiSkbxR5PU">推远</text>
+  <text x="640" y="185" font-size="9.5" fill="#94a3b8" text-anchor="middle" data-page-node-id="SbKUvMl8dEX9OsONRSuBGQ">其他图像</text>
   <!-- loss -->
   <line x1="690" y1="116" x2="740" y2="116" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="43pVZsE6C4fdQ1DiF7xfV6"/>
   <rect x="744" y="76" width="110" height="80" rx="9" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6" data-page-node-id="AmBb7A8zPSByh9vMjCmkIU"/>
@@ -492,6 +495,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 <h3 data-page-node-id="4bvje7Nr5AtY82XdXxdtBH">3.3 SimCLR：极简框架，代价是大批次</h3>
 <p data-page-node-id="unW5CWMu8BQ867S4oOKopd">在 SimCLR 之前，Instance Discrimination（Wu 等，2018）已把"让每个样本自成一类"的思路引入对比学习。SimCLR（2020.02）的价值在于<strong data-page-node-id="hoqdZ4r3pY8xI2yH2ZF3tb">把对比学习简化到只剩必要组件</strong>，并系统地做了消融实验，回答"到底哪些设计是关键的"。它的框架极简：同一张图做两次随机增广得到两个视图，分别过同一个编码器与投影头，用对称的 NT-Xent 损失训练：</p>
+<div class="svg-box" data-page-node-id="simclrFig2Box">
+<img src="simclr_framework.png" alt="SimCLR 双分支对比学习框架" />
+<div class="svg-cap">图 1　SimCLR 双分支框架示意。一张图从增广族 $\mathcal{T}$ 采样两个增广算子 $t, t'$，得到两个相关视图 $\tilde{x}_i, \tilde{x}_j$；各自经过共享编码器 $f(\cdot)$ 得到表征 $h_i, h_j$，再经投影头 $g(\cdot)$ 映射到对比损失所在空间；训练目标是最上方 "Maximize agreement"——最大化两个投影向量的一致性。与 3.1 节通用框架的差别在于：SimCLR 的负样本全部来自当前 batch，因此图中没有显式负样本，模型只需把同图两视图拉近即可，代价是大 batch。</div>
+</div>
 <div class="formula" data-eq="(10)" data-page-node-id="ji0FOcGXBSq9XgmgUXAsvf">$$\mathcal{L} = \frac{1}{2N}\sum_{i=1}^{N}\Big[\;\ell\big(i,\, j(i)\big) + \ell\big(j(i),\, i\big)\Big], \qquad \ell(i,j) = -\log\frac{\exp\big(\text{sim}(z_i,z_j)/\tau\big)}{\sum_{k\ne i}\exp\big(\text{sim}(z_i,z_k)/\tau\big)}$$</div>
 <p data-page-node-id="Nl3gPslGqoMUwyN2rQUVue">SimCLR 的四个结论，每一个都影响了后续所有工作：</p>
 <div class="table-wrap" data-page-node-id="bAsuYqQ3yrOQV8UMx5PXnA">
@@ -526,6 +533,17 @@ tr:hover td { background: var(--c-primary-ghost); }
     <span class="kw" data-page-node-id="BTHrzbeJMyHHGc67pGeGt6">return</span> F.cross_entropy(sim, targets)
 </pre></div>
 <p data-page-node-id="Fr8N5Sd5vBIJ5ImpYlnBo2">注意第 3 步：<strong data-page-node-id="NM9H2zbtqxcZyj9nw9rehz">整个 batch 内除自己以外的 $2N-2$ 个样本都充当负样本</strong>。这就是 SimCLR 需要大 batch 的直接原因——batch 越大，分母里的负样本越多，InfoNCE 下界越紧，表示质量越好。</p>
+<h4 data-page-node-id="simclrFlowH4">实现：SimCLR 的训练流程</h4>
+<p data-page-node-id="simclrFlowP0">把上面的组件串成单步训练，SimCLR 的循环极其简洁——全部负样本来自当前 batch，无需队列或动量，但也因此对 batch 大小有硬性要求。完整流程如下：</p>
+<ol data-page-node-id="simclrFlowList">
+<li data-page-node-id="simclrFlowLi1"><strong>数据与增广。</strong>从训练集取一个 batch（$N$ 张图，通常 $N \geq 4096$）；每张图独立做两次随机增广（随机裁剪 + 颜色抖动），得到 $2N$ 个视图 $\tilde{x}_1, \dots, \tilde{x}_{2N}$。增广组合是 SimCLR 效果的关键——消融实验表明，去掉颜色抖动会显著降精度。</li>
+<li data-page-node-id="simclrFlowLi2"><strong>编码与投影。</strong>全部 $2N$ 个视图过同一个编码器 $f_\theta$（如 ResNet-50）得到表征 $h_i$，再过投影头 $g_\theta$（2 层 MLP）得到对比空间特征 $z_i$，最后做 $\ell_2$ 归一化。投影头不可省——在投影头输出上算损失、在编码器输出上做下游任务。</li>
+<li data-page-node-id="simclrFlowLi3"><strong>计算相似度矩阵。</strong>将 $2N$ 个归一化特征拼成 $(2N, D)$ 矩阵，做点积得到 $(2N, 2N)$ 相似度矩阵 $z_i \cdot z_j / \tau$；温度 $\tau$ 通常取 0.5，控制 softmax 的尖锐度。</li>
+<li data-page-node-id="simclrFlowLi4"><strong>计算对称 NT-Xent 损失。</strong>屏蔽对角线（自身不出现在分母中），让第 $i$ 个样本的目标指向第 $i \bmod N + 1$ 个（即它的正样本伙伴），做 softmax 交叉熵；正反两个方向各算一次取平均——即公式 (10) 的对称形式。该损失同时实现了"拉近正样本"与"推远同 batch 内所有 $2N-2$ 个负样本"。</li>
+<li data-page-node-id="simclrFlowLi5"><strong>梯度更新。</strong>损失对 $\theta$ 求梯度后用 LARS 优化器（Layer-wise Adaptive Rate Scaling）做一步下降——LARS 是大规模 batch 训练的标配，它为每层单独设定信任系数，避免大 batch 下梯度方向偏差累积。学习率配合 warmup 线性增长后保持恒定。</li>
+<li data-page-node-id="simclrFlowLi6"><strong>迭代直至收敛。</strong>以上循环往复，通常训练 500–1000 epoch；训练中用线性探针在 ImageNet 验证集上监控特征质量。由于负样本全部来自当前 batch，batch 大小是 SimCLR 性能瓶颈——4096 是起步配置，8192 仍有提升。</li>
+</ol>
+<p data-page-node-id="simclrFlowP1">SimCLR 的训练流程之所以"极简"，是因为它把负样本获取的工作完全交给了 batch——也因此显存墙成为无法逾越的限制，这正是下一节 MoCo 要解决的问题。</p>
 <h3 data-page-node-id="fbJOhdVJSCVtxlG3BNX06X">3.4 MoCo：把负样本"存"起来</h3>
 <p data-page-node-id="2jaUFDXSDHsmICimct5jjv">MoCo（2019.11 首次投稿，CVPR 2020）的动机一句话就能说清：<strong data-page-node-id="Mj81Xp2URDlAHppoYUBJIR">负样本的"数量"和 batch 的"大小"本来不必绑在一起</strong>。SimCLR 之所以需要大 batch，只是因为负样本必须来自同一个 batch。MoCo 的做法是维护一个<strong data-page-node-id="FKOx4lkRmeqtMl5zxW6dLP">特征队列</strong>：每个 batch 的编码结果入队，最老的特征出队，队列长度远大于 batch（默认 65536 对 256）。</p>
 <p data-page-node-id="DVbKZkZYSCDYHBbZPicAvK">但直接把历史特征当负样本会有一个问题：编码器参数在更新，队列里的旧特征来自<strong data-page-node-id="euDq4w4Z58NDSFIGGI4ZWV">不同的编码器</strong>，与当前特征不可比。MoCo 的解法是引入<strong data-page-node-id="SlR65Gm53cmYdOKHTJWHVs">动量编码器</strong>——它不参与梯度更新，而是缓慢跟随主编码器：</p>
@@ -564,6 +582,18 @@ tr:hover td { background: var(--c-primary-ghost); }
   <text x="665" y="244" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="2BUIhBvTo4D39Al5ScGPau">负样本数量与 batch 大小解耦 ⇒ 小显存也能训</text>
 </svg>
 </div>
+<h4 data-page-node-id="mocoFlowH4">实现：MoCo 的训练流程</h4>
+<p data-page-node-id="mocoFlowP0">MoCo 的训练流程与 SimCLR 的关键区别在于：负样本不再来自当前 batch，而是来自一个维护在显存中的特征队列；编码器也拆成了两路——query 编码器走梯度，key 编码器走 EMA。完整流程如下：</p>
+<ol data-page-node-id="mocoFlowList">
+<li data-page-node-id="mocoFlowLi1"><strong>数据与增广。</strong>从训练集取一个 batch（$N$ 张图，$N$ 可小至 256）；每张图做两次随机增广，分别喂给 query 编码器 $f_q$（参数 $\theta_q$）和 key 编码器 $f_k$（参数 $\theta_k$），得到 query 视图与 key 视图。</li>
+<li data-page-node-id="mocoFlowLi2"><strong>Query 编码（梯度路径）。</strong>query 视图过 $f_q$ 得到特征 $q$，该路径正常计算梯度。$f_q$ 是唯一被优化器更新的编码器。</li>
+<li data-page-node-id="mocoFlowLi3"><strong>Key 编码（EMA 路径）。</strong>key 视图过 $f_k$ 得到特征 $k^+$（正样本 key），该路径用 <code>no_grad</code> 包裹——$f_k$ 不接收梯度，而是按公式 (11) 以动量系数 $m=0.999$ 指数滑动跟随 $\theta_q$。$m$ 越接近 1，队列中不同时刻的特征越一致。</li>
+<li data-page-node-id="mocoFlowLi4"><strong>入队与出队。</strong>将本 batch 的 $N$ 个 key 特征 $k^+$ 入队到特征队列（长度 65536，先进先出）；最老的 $N$ 个特征出队。队列在整个训练过程中持续滚动，提供大量"历史负样本"。</li>
+<li data-page-node-id="mocoFlowLi5"><strong>计算 InfoNCE 损失。</strong>query 特征 $q$ 与正样本 key $k^+$ 做点积（分子），与队列中全部 65536 个 key 做点积（分母），温度 $\tau = 0.07$，形式与公式 (9) 的 InfoNCE 完全一致——区别仅在于负样本来源不同。该损失只对 $\theta_q$ 求梯度。</li>
+<li data-page-node-id="mocoFlowLi6"><strong>梯度更新。</strong>优化器用损失梯度更新 $\theta_q$；随后用 EMA 公式更新 $\theta_k \leftarrow m\,\theta_k + (1-m)\,\theta_q$。两路更新在每步末尾依次发生。</li>
+<li data-page-node-id="mocoFlowLi7"><strong>迭代直至收敛。</strong>以上循环往复，通常训练 200–800 epoch；用线性探针监控特征质量。由于负样本数量由队列长度决定（65536），batch 只需 256 即可——这使 MoCo 在单卡或小集群上就能训练。</li>
+</ol>
+<p data-page-node-id="mocoFlowP1">MoCo v2 在此基础上做了两处增强：加投影头 MLP（与 SimCLR 一致）和加强增广（加模糊），把 ResNet-50 线性探针精度从 60.6% 提升到 71.1%。但队列方案也有代价——队列中的特征来自不同时刻的 $f_k$，即使有 EMA 平滑，仍存在轻微不一致，这是 SimCLR 路线支持者指出的主要弱点。</p>
 <h3 data-page-node-id="dFX02g94fk6XIwFuD5vicz">3.5 同期的其他思路</h3>
 <p data-page-node-id="IBW7MdD26RHSyBNn9buMLz">2020–2022 年间还有若干方法从不同角度绕开"负样本"，值得一并了解，因为它们与第 4 章的问题同源：</p>
 <ul data-page-node-id="4UqwjCz33sbidzKiaJzjUm">
@@ -640,6 +670,18 @@ tr:hover td { background: var(--c-primary-ghost); }
   <text x="440" y="320" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="1ARJl15HXiq9qypQZyJmZa">全程没有任何负样本 —— 防坍缩靠的是"非对称性"，而不是"把别人推开"</text>
 </svg>
 </div>
+<h4 data-page-node-id="byolFlowH4">实现：BYOL 的训练流程</h4>
+<p data-page-node-id="byolFlowP0">BYOL 的训练流程与前面两个方法有本质不同：<strong data-page-node-id="byolFlowStrong0">全程没有任何负样本</strong>，防坍缩完全依赖"在线网络有预测器、目标网络没有"这一非对称结构。完整流程如下：</p>
+<ol data-page-node-id="byolFlowList">
+<li data-page-node-id="byolFlowLi1"><strong>数据与增广。</strong>从训练集取一个 batch（$N$ 张图，batch 大小无硬性要求，通常 256–4096）；每张图做两次随机增广（裁剪 + 颜色抖动 + 模糊），得到视图 1 和视图 2。</li>
+<li data-page-node-id="byolFlowLi2"><strong>在线网络前向。</strong>视图 1 喂入在线网络（参数 $\theta$）：编码器 $f_\theta$ → 投影头 $g_\theta$ → <strong>预测器</strong> $q_\theta$，输出预测向量 $p_1 = q_\theta(g_\theta(f_\theta(\tilde{x}_1)))$。预测器是在线网络独有的组件，是引入非对称性的关键。</li>
+<li data-page-node-id="byolFlowLi3"><strong>目标网络前向（无梯度）。</strong>视图 2 喂入目标网络（参数 $\xi$）：编码器 $f_\xi$ → 投影头 $g_\xi$，<strong>无预测器</strong>，输出目标向量 $z'_\xi = g_\xi(f_\xi(\tilde{x}_2))$。该路径用 <code>no_grad</code> 包裹，完全不计算梯度。</li>
+<li data-page-node-id="byolFlowLi4"><strong>计算损失。</strong>对 $p_1$ 和 $z'_\xi$ 分别做 $\ell_2$ 归一化后计算 MSE（等价于 $2 - 2 \cdot \cos$，公式 12）；交换两个视图再算一次（$p_2$ 对 $z_\xi$），两次取平均——对称化确保两个视图地位平等。该损失只对 $\theta$ 求梯度。</li>
+<li data-page-node-id="byolFlowLi5"><strong>梯度更新。</strong>优化器用损失梯度更新在线网络参数 $\theta$（编码器 + 投影头 + 预测器全部更新）；目标网络参数 $\xi$ 不接收梯度。</li>
+<li data-page-node-id="byolFlowLi6"><strong>EMA 更新目标网络。</strong>训练每步末尾按公式 (13) 更新 $\xi \leftarrow m\,\xi + (1-m)\,\theta$；动量系数 $m$ 从 0.996 余弦递增到 1.0——目标网络越训练越"懒"，变化越慢，提供越来越稳定的学习信号。</li>
+<li data-page-node-id="byolFlowLi7"><strong>迭代直至收敛。</strong>以上循环往复，通常训练 300–1000 epoch；用线性探针监控特征质量。下游任务只取在线网络的编码器 $f_\theta$，投影头与预测器在训练结束后丢弃。</li>
+</ol>
+<p data-page-node-id="byolFlowP1">BYOL 最值得关注的是第 3 步与第 6 步：目标网络既不接收梯度、又用 EMA 缓慢跟随——这两点构成了"非对称性"的核心。但这种设计最初受到质疑（"没有负样本为何不坍缩？"），直到 SimSiam 用消融实验证明，真正不可省的不是 EMA，而是 stop-gradient——详见 4.3 节的三种解释与 4.5 节的关键消融。</p>
 <h3 data-page-node-id="aDD9zPjkBrfDullAu7LEW5">4.3 为什么不会坍缩：三种解释与它们的证据</h3>
 <p data-page-node-id="Z8YvIeKWS1GXgxyx3npBwf">BYOL 为什么有效，在它发表后引发了持续数年的讨论。整理下来有三种解释，且它们的证据强度不同——这一点值得注意，因为它是"自监督理论落后于实践"的一个典型例子。</p>
 <div class="table-wrap" data-page-node-id="CizKB7TvQvlPoOyy5ANTs1">
@@ -737,6 +779,16 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout danger" data-page-node-id="rMLQwf9XWdVZG6EHePlTkv"><div class="callout-title" data-page-node-id="QD67vP4cqHgly6fvFmfDCj">把 detach() 去掉会立刻坍缩</div>
 <p data-page-node-id="XDwKB8KhJd5vAi6zNrnR1K">把上面两处 <code data-page-node-id="nZCUBOSE1PfeyrQx5ttPzj">.detach()</code> 删掉再训练，会看到损失在几个 step 内就从 $0$ 掉到 $-1$——此时所有样本的投影特征完全相同，模型输出常数，训练彻底失败。这不是"训练不稳定"，而是该优化问题的<strong data-page-node-id="gHxIuZufwXKzCpR6B3vQUA">平凡最优解被激活了</strong>。SimSiam 最重要的贡献正是把这个现象暴露出来并给出解释。</p>
 </div>
+<h4 data-page-node-id="simsiamFlowH4">实现：SimSiam 的训练流程</h4>
+<p data-page-node-id="simsiamFlowP0">SimSiam 是本章四个方法中最精简的——没有负样本、没有动量编码器、没有 EMA、不需要大 batch，全部防坍缩机制浓缩为 <code>detach()</code> 一行。完整流程如下：</p>
+<ol data-page-node-id="simsiamFlowList">
+<li data-page-node-id="simsiamFlowLi1"><strong>数据与增广。</strong>从训练集取一个 batch（$N$ 张图，batch 大小无硬性要求，通常 256–512）；每张图做两次随机增广（裁剪 + 颜色抖动 + 模糊），得到视图 1 和视图 2。</li>
+<li data-page-node-id="simsiamFlowLi2"><strong>孪生前向（共享权重）。</strong>两个视图分别过<strong>同一个</strong>编码器 $f_\theta$ 与投影头，得到 $z_1 = f_\theta(\tilde{x}_1)$ 和 $z_2 = f_\theta(\tilde{x}_2)$——注意是共享权重，不是像 BYOL 那样的双路。这两个 $z$ 既是特征也是"目标"。</li>
+<li data-page-node-id="simsiamFlowLi3"><strong>预测器与 stop-gradient。</strong> $z_1$ 过预测器 $q_\theta$ 得到 $p_1 = q_\theta(z_1)$；$z_2$ 调用 <code>detach()</code>（即 stop-gradient，公式 14 中的 $\texttt{sg}$）后作为目标。计算 $p_1$ 与 $\texttt{sg}(z_2)$ 的负余弦相似度；交换两个视图再算一次（$p_2$ 对 $\texttt{sg}(z_1)$），两次取平均——对称化确保两路地位平等。</li>
+<li data-page-node-id="simsiamFlowLi4"><strong>梯度更新。</strong>损失只对 $\theta$ 求梯度（被 <code>detach()</code> 的一侧不回传），优化器用 SGD 或 AdamW 做一步下降。没有 EMA 更新、没有队列维护、没有动量编码器——每步只有一次普通的前向 + 反向 + 更新。</li>
+<li data-page-node-id="simsiamFlowLi5"><strong>迭代直至收敛。</strong>以上循环往复，通常训练 100–800 epoch；用线性探针监控特征质量。下游任务只取编码器 $f_\theta$，投影头与预测器在训练结束后丢弃。</li>
+</ol>
+<p data-page-node-id="simsiamFlowP1">SimSiam 流程中最关键的是第 3 步中的 <code>detach()</code>——这一行代码决定了模型训练成功还是坍缩。如 4.5 节消融所示，去掉它损失会在数步内掉到 $-1$（余弦相似度上界），所有特征塌成同一个常数向量。SimSiam 的贡献在于证明了：在"孪生网络 + 正样本"这条路上，<strong>stop-gradient 才是防坍缩的充要条件</strong>，而非 EMA 或大 batch。</p>
 <h3 data-page-node-id="joPqbvOu9SEgCTluOCv8sS">4.6 从"负样本"到"只用正样本"的演进对照</h3>
 <div class="table-wrap" data-page-node-id="oHOjQktbbAc1YOpEl42lJ7">
 <table data-page-node-id="4FHmQHesBYJgciRBm5V391">
@@ -764,8 +816,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3 data-page-node-id="xFDL8kIBukWvDi8iUUd89C">5.1 DINO v1：自蒸馏，并意外获得了物体分割</h3>
 <p data-page-node-id="5Z0ipzEm1e0hGdMivPJxow">DINO（2021.04，全称 self-<strong data-page-node-id="1uwegaOpaAR0o75ZCApZEE">DI</strong>stillation with <strong data-page-node-id="PGrMsBXBoMHFUArXvevUE7">NO</strong> labels）建立在前两章结论之上：既然负样本、动量、大批次都可以省，那么"自蒸馏"——<strong data-page-node-id="6v4xnKDCjVetTOZ4F0DfFL">让学生网络去匹配一个由自己演化而来的教师网络的输出分布</strong>——就足以支撑表示学习。它与 BYOL 的关系是：都采用"学生/教师 + EMA"的非对称结构，区别在于<strong data-page-node-id="6iZ1zxEoHxJXB2hGWftjGm">DINO 匹配的是概率分布而非特征向量，且教师只看全局视图、学生要看局部视图</strong>。</p>
 <p data-page-node-id="EV10ZKgfDeJTND4hrXz7jC">DINO 的损失是教师与学生在多个视图上的交叉熵：</p>
+<div class="svg-box" data-page-node-id="dinoFig2Box">
+<img src="dino_v1_framework.png" alt="DINO v1 自蒸馏框架示意" />
+<div class="svg-cap">图 2　DINO v1 自蒸馏框架示意。输入图像 $x$ 经增广得到 2 个全局视图 $x_1^g, x_2^g$ 与 1 个局部视图 $x^l$；教师网络 $g_{\theta_t}$ 只看全局视图，学生网络 $g_{\theta_s}$ 看全部视图。教师的输出分布 $P_t$ 经中心化（减 $c$）与低温锐化（$\tau_t = 0.04$）后作为"伪标签"，学生以常温 $\tau_s = 0.1$ 输出 $P_s$ 并与其做交叉熵；教师参数由学生参数的指数滑动平均（EMA）更新（$\theta_t \leftarrow m\theta_t + (1-m)\theta_s$，$m: 0.996 \to 1.0$）。"局部预测全局"的约束迫使学生从局部块推断整体语义。</div>
+</div>
 <div class="formula" data-eq="(16)" data-page-node-id="MxNGYLgqd26v5jU5bA1QrD">$$\min_{\theta_s}\; \frac{1}{|\mathcal{P}|}\sum_{x \in \{x_1^{g},\,x_2^{g}\}} \;\sum_{\substack{x' \in V,\; x' \neq x}} H\Big(P_t(x),\; P_s(x')\Big), \qquad H(a,b) = -\sum_{k} a_k \log b_k$$</div>
-<p data-page-node-id="lYT1DMNksWKXcwwAp8BYHk">其中 $V$ 包含 2 个全局视图（$224^2$）与 8 个局部视图（$96^2$），共 10 个视图：<strong data-page-node-id="JOv9siGIFKRBtCxqkuT72Y">教师只看 2 个全局视图，学生要看全部 10 个</strong>——这构成了一种"局部预测全局"的额外约束，迫使学生从局部块推断整体语义。两个网络的输出分布由温度控制，并在教师一侧加入中心化：</p>
+<p data-page-node-id="lYT1DMNksWKXcwwAp8BYHk">其中 $V$ 包含 2 个全局视图（224×224 像素）与 8 个局部视图（96×96 像素），共 10 个视图：<strong data-page-node-id="JOv9siGIFKRBtCxqkuT72Y">教师只看 2 个全局视图，学生要看全部 10 个</strong>——这构成了一种"局部预测全局"的额外约束，迫使学生从局部块推断整体语义。两个网络的输出分布由温度控制，并在教师一侧加入中心化：</p>
 <div class="formula" data-eq="(17)" data-page-node-id="R3b6lpg58Ht1vAch6BETjY">$$P_s(v)^{(k)} = \frac{\exp\big(g_{\theta_s}(v)^{(k)} / \tau_s\big)}{\sum_{j}\exp\big(g_{\theta_s}(v)^{(j)} / \tau_s\big)}, \qquad P_t(v)^{(k)} = \frac{\exp\big(\big(g_{\theta_t}(v)^{(k)} - c^{(k)}\big) / \tau_t\big)}{\sum_{j}\exp\big(\big(g_{\theta_t}(v)^{(j)} - c^{(j)}\big) / \tau_t\big)}$$</div>
 <div class="formula" data-eq="(18)" data-page-node-id="SDesWMzsuNTlemOWQfJkbF">$$\theta_t \;\leftarrow\; m\,\theta_t + (1-m)\,\theta_s, \qquad m: 0.996 \to 1.0$$</div>
 <div class="callout success" data-page-node-id="GjTEWx9LBAIqRbknatKNrN"><div class="callout-title" data-page-node-id="fNL3SRgsPSCjL1tWtvSvps">中心化与锐化：一对相互对抗的力</div>
@@ -773,6 +829,17 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p data-page-node-id="IQWFTJkwvFiDF7t9BgG9W7">两者必须<strong data-page-node-id="YHTAuiz3PLr5oVynlaBqTE">配套使用并保持平衡</strong>：去掉中心化会让某一个原型维独占输出（下文称单维坍缩），去掉锐化则会把输出推向均匀分布（均匀坍缩）。这与第 4 章的"stop-gradient"一样，属于"看起来是超参数、实际上是机制"的设计。</p>
 </div>
 <p data-page-node-id="xXkY8DZCHMy5LeeZn8dvuI">DINO v1 最被广泛引用的成果，其实不在精度上，而在一个<strong data-page-node-id="7BDahy7wS45Om9QKBEXX7w">意外发现</strong>：训练完成后，模型的<strong data-page-node-id="LDPZFFnoCqBTrss23Ab011">自注意力图会自动勾勒出物体的轮廓</strong>——没有任何分割标签，也不需要任何微调。这个现象说明自监督 ViT 内部自发形成了物体级的空间组织结构，直接启发了后续大量分割工作（以及第 5.4 节要讲的基础模型化方向）。</p>
+<h4 data-page-node-id="dinoV1FlowH4">实现：DINO v1 的训练流程</h4>
+<p data-page-node-id="dinoV1FlowP0">把上面的目标串成单步训练，v1 的循环比 v2/v3 精简——只有"图像级"一条腿，但防坍缩机制（中心化、锐化、EMA）已经完整。完整流程如下：</p>
+<ol data-page-node-id="dinoV1FlowList">
+<li data-page-node-id="dinoV1FlowLi1"><strong>数据与视图。</strong>从训练集（ImageNet-1k）取一张图 $x$，经增广生成 2 个全局视图（224×224）与 8 个局部视图（96×96），共 10 个视图；教师网络只看 2 个全局视图，学生网络看全部 10 个（与公式 (16) 中 $V$ 的配置一致）。</li>
+<li data-page-node-id="dinoV1FlowLi2"><strong>前向与输出分布。</strong>两个网络分别输出 65536 维 logits；教师侧先减去中心 $c$，再按低温 $\tau_t = 0.04$ 做 softmax，得到"伪标签" $P_t$；学生侧按常温 $\tau_s = 0.1$ 输出 $P_s$（公式 17）。</li>
+<li data-page-node-id="dinoV1FlowLi3"><strong>计算损失。</strong>对每一对（教师全局视图，学生的任一其他视图）计算交叉熵 $H\big(P_t(x),\, P_s(x')\big)$，按公式 (16) 求和取平均；该损失只携带学生网络的梯度，教师一侧不反向传播。</li>
+<li data-page-node-id="dinoV1FlowLi4"><strong>更新学生与教师。</strong>学生按损失梯度下降更新；教师参数不参与优化，而是由学生参数的指数滑动平均（EMA）更新（公式 18），动量系数 $m$ 从 0.996 余弦递增到 1.0。</li>
+<li data-page-node-id="dinoV1FlowLi5"><strong>更新中心。</strong>用教师 softmax 前的输出（而非概率）对中心 $c$ 做滑动平均更新，全程放在 <code>no_grad</code> 中——中心是统计量，不携带梯度（与下面 <code>dino_loss.py</code> 的实现一致）。</li>
+<li data-page-node-id="dinoV1FlowLi6"><strong>迭代直至收敛。</strong>以上循环往复；训练中通常用 k-NN 或线性探针在验证集上监控特征质量。全程无需负样本、无需大批次，这是 v1 相比第 4 章对比学习方法最直接的工程简化。</li>
+</ol>
+<p data-page-node-id="dinoV1FlowP1">与 v2 相比，v1 没有 patch 级目标：patch 特征没有任何显式监督，只能靠"局部预测全局"的间接约束被动变好——这正是 v1 在分割、深度估计等密集任务上不如 v2 稳定，却也意外收获"注意力自动分割"现象的原因。</p>
 <h4 data-page-node-id="8gRE5uEOMBGDMnpr1dhEFC">实现：DINO 损失（中心化 + 锐化）</h4>
 <p data-page-node-id="DPJRE5IqosxYKKBMFAPEaG">下面这段把公式 (16)(17) 落地。有两个细节容易写错：<strong data-page-node-id="JIstBQF3iPRdzW1gHG7Nx4">中心要用教师的 softmax 前输出更新</strong>（而非概率），且更新必须放在 <code data-page-node-id="oDtQshTx9mHlCSYyKlICnM">no_grad</code> 中——中心是统计量，不应携带梯度。</p>
 <div class="code-block" data-page-node-id="hjXFCIk8LGqqCGXQd3BUez"><div class="code-header" data-page-node-id="RDF9moQgs3x2GinT64s0Tt">dino_loss.py — DINO 自蒸馏损失</div><pre data-page-node-id="NhjMRvqk1T666W7HwrGP20">
@@ -820,6 +887,21 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="formula" data-eq="(19)" data-page-node-id="JtS946uDMBGZHkbjX5Prre">$$\mathcal{L}_{\text{koleo}} = -\frac{1}{n}\sum_{i=1}^{n}\log\big(d_i\big), \qquad d_i = \min_{j \neq i}\big\| z_i - z_j \big\|$$</div>
 <p data-page-node-id="Z5CZmikkc6MjxkoH45ixOL">直观理解：若某些样本挤在一起（$d_i$ 很小），$-\log d_i$ 就会很大，损失促使其散开。这相当于对特征空间施加了一个<strong data-page-node-id="c9WrGWs8BOfvyeXgSGL28W">"均匀铺开"的软约束</strong>，与对比学习用负样本达到的效果相似，但不需要显式比较样本对。</p>
 <p data-page-node-id="rwVzTPpAYOmWsMMB7zMKfr">v2 的工程成果同样重要：它交付了 ViT-S/B/L/g 四个尺寸的模型，并<strong data-page-node-id="TCoCA1xuj70HpyEQddIyWc">把大模型蒸馏成小模型</strong>，使不同算力预算都能使用。其冻结特征在分类、分割、深度估计等任务上超过了同期的 CLIP 类弱监督特征（检索任务上两者互有胜负）——这是"自监督特征能与语言监督特征正面竞争"的标志性结果。</p>
+<h4 data-page-node-id="dinoV2FlowH4">实现：DINO v2 的联合训练流程</h4>
+<p data-page-node-id="dinoV2FlowP0">把上面的配方串成单步训练，v2 相比 v1 的关键变化是多了"patch 级"这一条腿。完整流程如下：</p>
+<ol data-page-node-id="dinoV2FlowList">
+<li data-page-node-id="dinoV2FlowLi1"><strong>数据准备（LVD-142M）。</strong>用已训练好的自监督特征模型对所有候选图片提取 embedding，以 ImageNet-22K、ADE20K 等干净数据集为"种子"，在 embedding 空间做近邻检索，筛出分布接近的 1.42 亿张；同时做去重，并严格剔除与各类评测集的重叠，防止数据泄漏——全程不引入任何标签。</li>
+<li data-page-node-id="dinoV2FlowLi2"><strong>视图与掩码。</strong>每张图生成 2 个全局视图（224×224）与 8 个局部视图（96×96），教师只看 2 个全局视图，学生看全部 10 个（与公式 (16) 中 $V$ 的配置一致）。在此基础上，学生的输入再叠加一步 patch 掩码——随机遮掉约 40% 的 patch，而教师看到的是完整图像。</li>
+<li data-page-node-id="dinoV2FlowLi3"><strong>图像级损失。</strong>教师输出经 Sinkhorn 中心化与低温锐化后作为软标签，学生以常温输出与之做交叉熵，即公式 (16)(17) 的形式；教师参数仍按公式 (18) 做 EMA 更新。</li>
+<li data-page-node-id="dinoV2FlowLi4"><strong>patch 级损失（iBOT 式掩码预测）。</strong>对每个被掩码的位置 $m$，学生输出该位置的语义分布 $q^{\text{s}}_{m}$，去匹配教师在同一位置的分布 $q^{\text{t}}_{m}$：</li>
+</ol>
+<div class="formula" data-page-node-id="dinoV2FlowF1">$$\mathcal{L}_{\text{iBOT}} = -\frac{1}{M}\sum_{m=1}^{M}\sum_{k=1}^{K} q^{\text{t}}_{m,k}\;\log q^{\text{s}}_{m,k}$$</div>
+<ol start="5" data-page-node-id="dinoV2FlowList2">
+<li data-page-node-id="dinoV2FlowLi5"><strong>正则与防坍缩。</strong>图像级与 patch 级两个目标分别挂载在<strong>解耦的预测头</strong>上，避免目标互相拉扯；批内再加 KoLeo 正则（公式 19），让特征在空间中均匀铺开。</li>
+<li data-page-node-id="dinoV2FlowLi6"><strong>工程与高分辨率收尾。</strong>训练全程使用 FlashAttention、FSDP、sequence packing，使 ViT-g/14（约 11 亿参数）能在亿级数据上训练；在训练的最后约 10k 步把分辨率提升到 518，专门校准 patch 特征在高分辨率下的表现。</li>
+<li data-page-node-id="dinoV2FlowLi7"><strong>蒸馏交付。</strong>把训练好的 ViT-g/14 冻结为教师，用蒸馏把能力压缩到 ViT-S/B/L，形成覆盖不同算力预算的模型族。</li>
+</ol>
+<p data-page-node-id="dinoV2FlowP1">与 v1 相比，第 2、4 步是本质新增：v1 只约束"全局对全局、局部对全局"的语义一致性，patch 特征没有任何显式目标；v2 用掩码预测给每个 patch 一个语义监督，patch 特征才真正被"教"出来——这正是 v2 在分割、深度估计上大幅领先 v1 的直接原因。</p>
 <h3 data-page-node-id="bUT9gqF4LpNe8EdDWvgq9X">5.3 DINO v3：规模与"密集特征退化"问题</h3>
 <p data-page-node-id="438ezfqD54B8GnVB7wmqve">DINO v3（2025.08）把 DINO 的配方推到了一个新的量级：<strong data-page-node-id="nNyC02xCHjQrEpfT7m2FG6">ViT-7B/16（约 67 亿参数）、LVD-1689M 约 17 亿张图像</strong>，另有一套约 4.93 亿张的卫星遥感数据用于该领域。但真正值得学习的是它解决的那个<strong data-page-node-id="LmENonZuWEbf2IJw4fBkJ8">技术难题</strong>，因为它暴露了自监督在大规模训练下的一个结构性缺陷。</p>
 <p data-page-node-id="tQ8jI6HPMPW4rgLGsPAb9o"><strong data-page-node-id="mrSTsWfxpyqscIq3zV5deO">问题：全局特征在变好，密集特征却在退化。</strong>在超长训练过程中，图像级（全局）表示的指标持续上升，但 patch 级（密集）特征却逐渐"塌陷"——本应互相区分的不同图块开始变得相似。原因是训练目标主要由全局对比/蒸馏驱动，对 patch 之间<strong data-page-node-id="MfoJcM8zYrjZJtr534UMOW">相对关系</strong>的约束很弱。这直接影响分割、深度估计、检测这类需要逐像素输出的任务，而这恰恰是 DINO v2 相对弱于专用系统的领域。</p>
@@ -835,7 +917,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <text x="155" y="98" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="HQUPJklobZQwIGLPeKwVMz">自蒸馏 + 中心化锐化</text>
   <line x1="52" y1="112" x2="258" y2="112" stroke="#ddd6fe" stroke-width="1.2" data-page-node-id="gBOsnbSRIeZJJCjJMSfuki"/>
   <text x="52" y="136" font-size="11" fill="#475569" data-page-node-id="DTkUpw43zcVsS3bJoMTd3z">· 学生/教师双网络，教师 = EMA</text>
-  <text x="52" y="158" font-size="11" fill="#475569" data-page-node-id="y6GXVHoyJyqSKubpbi40Vl">· 2 全局 + 6 局部视图</text>
+  <text x="52" y="158" font-size="11" fill="#475569" data-page-node-id="y6GXVHoyJyqSKubpbi40Vl">· 2 全局 + 8 局部视图</text>
   <text x="52" y="180" font-size="11" fill="#475569" data-page-node-id="cB1HJaTehAn8FkNcQtgjiX">· 输出 65536 维原型分布</text>
   <text x="52" y="202" font-size="11" fill="#475569" data-page-node-id="kYrjfCchFyRHNbQKYuq4mS">· 无需负样本、无需大批次</text>
   <text x="52" y="230" font-size="11" fill="#7c3aed" font-weight="700" data-page-node-id="gtTrzH4YGqKx4bfwLZMGeo">成果：注意力自动分割物体</text>
@@ -868,6 +950,19 @@ tr:hover td { background: var(--c-primary-ghost); }
   <text x="612" y="270" font-size="10.5" fill="#94a3b8" data-page-node-id="v3DataRow01">数据：LVD-1689M（约 17 亿）</text>
 </svg>
 </div>
+<h4 data-page-node-id="dinoV3FlowH4">实现：DINO v3 的训练流程</h4>
+<p data-page-node-id="dinoV3FlowP0">v3 的配方可以看作"v2 的损失 + Gram 正则 + 更大规模 + 架构更新"。总损失为四项的加权和：</p>
+<div class="formula" data-page-node-id="dinoV3FlowF1">$$\mathcal{L} = \lambda_{\text{img}}\,\mathcal{L}_{\text{DINO}} + \lambda_{\text{patch}}\,\mathcal{L}_{\text{iBOT}} + \lambda_{\text{KoLeo}}\,\mathcal{L}_{\text{KoLeo}} + \lambda_{\text{Gram}}\,\mathcal{L}_{\text{Gram}}$$</div>
+<p data-page-node-id="dinoV3FlowP1">单步训练流程如下，与前两代相比，红色标注的是 v3 新增的环节：</p>
+<ol data-page-node-id="dinoV3FlowList">
+<li data-page-node-id="dinoV3FlowLi1"><strong>数据准备（LVD-1689M）。</strong>从约 170 亿张的候选图像池出发，做多层级聚类与去重，筛出约 17 亿张高多样性图像；训练中混合使用来自大规模 web 子集的<em>异质 batch</em> 与来自 ImageNet 等干净数据集的<em>同质 batch</em>，兼顾泛化与基准表现。</li>
+<li data-page-node-id="dinoV3FlowLi2"><strong>视图与掩码。</strong>延续 2 个全局视图 + 8 个局部视图的配置，教师只看全局视图，学生看全部；学生的输入再随机掩码约 40% 的 patch 做 iBOT 式预测。位置编码从固定式换成 <strong>Axial RoPE</strong>（轴向旋转位置编码，带 jitter），使模型对缩放、裁剪、高分辨率输入更鲁棒。</li>
+<li data-page-node-id="dinoV3FlowLi3"><strong>前三大损失与 v2 一致。</strong>图像级 DINO 蒸馏（公式 16/17，教师侧用 Sinkhorn 中心化）、patch 级 iBOT 掩码预测、KoLeo 正则（公式 19），教师参数仍按 EMA 更新。</li>
+<li data-page-node-id="dinoV3FlowLi4"><strong>开启 Gram Anchoring（v3 新增）。</strong>先按 v2 配方训练约百万次迭代，让密集特征先自然形成结构；随后取一个密集特征尚未退化的检查点作为<strong>固定的 Gram 教师</strong>，用公式 (20) 约束当前模型的 patch Gram 矩阵与其一致（仅在全局视图上计算）。训练一段时间后进入 refinement 阶段，每 10k 次迭代把 Gram 教师更新为当前的 EMA 教师，使锚定目标既稳定又跟得上训练进度。</li>
+<li data-page-node-id="dinoV3FlowLi5"><strong>训练工程。</strong>ViT-7B/16（约 67 亿参数）采用 FSDP2 + bf16/fp8 混合精度 + FlashAttention + 恒定学习率；在基础分辨率预训练后，再做高分辨率适配（只微调 LayerNorm、register token 相关层等少量参数），使模型迁移到 518 甚至更高分辨率。</li>
+<li data-page-node-id="dinoV3FlowLi6"><strong>Post-hoc 交付。</strong>训练完成后提供一系列后处理能力：<strong>多教师蒸馏</strong>（从 ViT-7B 蒸馏出 ViT-S+/B/L/H+ 与 ConvNeXt 等小模型，同时对齐 CLS 与 patch 特征）、<strong>文本对齐</strong>（冻结视觉骨干，接浅层头映射到文本嵌入空间，获得类似 CLIP 的图文检索能力）。</li>
+</ol>
+<p data-page-node-id="dinoV3FlowP4">与 v2 相比，第 4 步（Gram Anchoring）是本质新增：它不改变"学什么"（目标仍是 DINO + iBOT 的语义一致性），而是改变"别忘什么"——用固定结构约束兜住 patch 特征在长训练中退化的底线。这也是第 5.4 节"基础模型化"判断标准里"骨干可以冻结"得以成立的关键一环。</p>
 <h3 data-page-node-id="MgyXjcJAkPdoDNqlMhGCiG">5.4 基础模型化的三个标志</h3>
 <p data-page-node-id="QPTGN9e4dXcgcryqIg2UyK">从 v1 到 v3，自监督视觉模型的性质发生了实质变化。可以用三条标准来判断一个自监督方法是否已经变成"基础模型"：</p>
 <ul data-page-node-id="w9UKGNCUy5NQpwDoo5l7ic">
@@ -980,31 +1075,31 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="refs" data-page-node-id="q4E1pc40KBNo8Fh4CpxHF4"><h2 data-page-node-id="nZ9O7Pmio5NLT1YGtIqUP2">参考文献</h2>
 <ol data-page-node-id="GsEfKlGFH7UpI17kmlL6U0">
-<li data-page-node-id="9z3j8DFJG8wpKDiJr9J1qr">Dosovitskiy, A. et al. (2014). Discriminative Unsupervised Feature Learning with Convolutional Neural Networks. <i data-page-node-id="KXS6kP45EwDfzzhQAeI6Oi">NeurIPS</i>.（Exemplar CNN，用变换构造伪类别）</li>
-<li data-page-node-id="VGxZDceAS8rACYzyVrJd95">Doersch, C., Gupta, A., &amp; Efros, A. A. (2015). Unsupervised Visual Representation Learning by Context Prediction. <i data-page-node-id="u3YLYHm0KRqxhYDk6Br5Ck">ICCV</i>. arXiv:1505.05192.</li>
-<li data-page-node-id="BtH6fBXmje3M7o5O9x1uAR">Pathak, D., Krähenbühl, P., Donahue, J., Darrell, T., &amp; Efros, A. A. (2016). Context Encoders: Feature Learning by Inpainting. <i data-page-node-id="Jv9kSLnuQb1OD1xw9qiqYm">CVPR</i>. arXiv:1604.07379.</li>
-<li data-page-node-id="58lhk4N31IrTj3vpyPy4VD">Zhang, R., Isola, P., &amp; Efros, A. A. (2016). Colorful Image Colorization. <i data-page-node-id="MAAhzS9TuEjC5feI5rBPxc">ECCV</i>. arXiv:1603.08511.</li>
-<li data-page-node-id="aaeHAGX4ItzIHVU2tNtC2t">Noroozi, M., &amp; Favaro, P. (2016). Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles. <i data-page-node-id="NNurZtxqh5SS2Kcg6vEcfo">ECCV</i>. arXiv:1603.09246.</li>
-<li data-page-node-id="1oZlv8eHuFo9DiiBSsyjSe">Zhang, R., Isola, P., &amp; Efros, A. A. (2017). Split-Brain Autoencoders: Unsupervised Learning by Cross-Channel Prediction. <i data-page-node-id="Dex2BnlroefpLvVedRQiDt">CVPR</i>. arXiv:1611.09842.</li>
-<li data-page-node-id="ghEFsSvkKPJv0UE5SHojL8">Gidaris, S., Singh, P., &amp; Komodakis, N. (2018). Unsupervised Representation Learning by Predicting Image Rotations. <i data-page-node-id="d62gI4atnY85iLu2MqdlYW">ICLR</i>. arXiv:1803.07728.</li>
-<li data-page-node-id="hVJiKjRbIEgIHFrTfKf52u">Radford, A., Metz, L., &amp; Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. <i data-page-node-id="20Hn3EYSk4uOQin7KWPosp">ICLR</i>. arXiv:1511.06434.（DCGAN，判别器特征可迁移）</li>
-<li data-page-node-id="IJmhAAu44wxWPcpCS7Clna">Donahue, J., Krähenbühl, P., &amp; Darrell, T. (2017). Adversarial Feature Learning. <i data-page-node-id="HtJXyQsHXocoULSM5AJFNn">ICLR</i>. arXiv:1605.09782.</li>
+<li data-page-node-id="9z3j8DFJG8wpKDiJr9J1qr">Dosovitskiy, A. et al. (2014). Discriminative Unsupervised Feature Learning with Convolutional Neural Networks. <em data-page-node-id="KXS6kP45EwDfzzhQAeI6Oi">NeurIPS</em>.（Exemplar CNN，用变换构造伪类别）</li>
+<li data-page-node-id="VGxZDceAS8rACYzyVrJd95">Doersch, C., Gupta, A., &amp; Efros, A. A. (2015). Unsupervised Visual Representation Learning by Context Prediction. <em data-page-node-id="u3YLYHm0KRqxhYDk6Br5Ck">ICCV</em>. arXiv:1505.05192.</li>
+<li data-page-node-id="BtH6fBXmje3M7o5O9x1uAR">Pathak, D., Krähenbühl, P., Donahue, J., Darrell, T., &amp; Efros, A. A. (2016). Context Encoders: Feature Learning by Inpainting. <em data-page-node-id="Jv9kSLnuQb1OD1xw9qiqYm">CVPR</em>. arXiv:1604.07379.</li>
+<li data-page-node-id="58lhk4N31IrTj3vpyPy4VD">Zhang, R., Isola, P., &amp; Efros, A. A. (2016). Colorful Image Colorization. <em data-page-node-id="MAAhzS9TuEjC5feI5rBPxc">ECCV</em>. arXiv:1603.08511.</li>
+<li data-page-node-id="aaeHAGX4ItzIHVU2tNtC2t">Noroozi, M., &amp; Favaro, P. (2016). Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles. <em data-page-node-id="NNurZtxqh5SS2Kcg6vEcfo">ECCV</em>. arXiv:1603.09246.</li>
+<li data-page-node-id="1oZlv8eHuFo9DiiBSsyjSe">Zhang, R., Isola, P., &amp; Efros, A. A. (2017). Split-Brain Autoencoders: Unsupervised Learning by Cross-Channel Prediction. <em data-page-node-id="Dex2BnlroefpLvVedRQiDt">CVPR</em>. arXiv:1611.09842.</li>
+<li data-page-node-id="ghEFsSvkKPJv0UE5SHojL8">Gidaris, S., Singh, P., &amp; Komodakis, N. (2018). Unsupervised Representation Learning by Predicting Image Rotations. <em data-page-node-id="d62gI4atnY85iLu2MqdlYW">ICLR</em>. arXiv:1803.07728.</li>
+<li data-page-node-id="hVJiKjRbIEgIHFrTfKf52u">Radford, A., Metz, L., &amp; Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. <em data-page-node-id="20Hn3EYSk4uOQin7KWPosp">ICLR</em>. arXiv:1511.06434.（DCGAN，判别器特征可迁移）</li>
+<li data-page-node-id="IJmhAAu44wxWPcpCS7Clna">Donahue, J., Krähenbühl, P., &amp; Darrell, T. (2017). Adversarial Feature Learning. <em data-page-node-id="HtJXyQsHXocoULSM5AJFNn">ICLR</em>. arXiv:1605.09782.</li>
 <li data-page-node-id="Ph0rGzPVDq17l72fDeck3t">van den Oord, A., Li, Y., &amp; Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. arXiv:1807.03748.（InfoNCE）</li>
-<li data-page-node-id="jL0NYEWFLYU0PMj81MB4M7">Gutmann, M., &amp; Hyvärinen, A. (2010). Noise-Contrastive Estimation: A New Estimation Principle for Unnormalized Statistical Models. <i data-page-node-id="Scd7A8ZWMiOhIMF2ao5PAt">AISTATS</i>.</li>
-<li data-page-node-id="jSqQLXBKqSZZOttaHjvko6">Wu, Z. et al. (2018). Unsupervised Feature Learning via Non-Parametric Instance Discrimination. <i data-page-node-id="ko2VL6jq2kf1DI6RRFErsA">CVPR</i>. arXiv:1805.01978.</li>
-<li data-page-node-id="rLrzTNsyeZ2zFljC5qcGMR">Chen, T., Kornblith, S., Norouzi, M., &amp; Hinton, G. (2020). A Simple Framework for Contrastive Learning of Visual Representations. <i data-page-node-id="uJjQME41J8Jcz030F10u7D">ICML</i>. arXiv:2002.05709.（SimCLR）</li>
+<li data-page-node-id="jL0NYEWFLYU0PMj81MB4M7">Gutmann, M., &amp; Hyvärinen, A. (2010). Noise-Contrastive Estimation: A New Estimation Principle for Unnormalized Statistical Models. <em data-page-node-id="Scd7A8ZWMiOhIMF2ao5PAt">AISTATS</em>.</li>
+<li data-page-node-id="jSqQLXBKqSZZOttaHjvko6">Wu, Z. et al. (2018). Unsupervised Feature Learning via Non-Parametric Instance Discrimination. <em data-page-node-id="ko2VL6jq2kf1DI6RRFErsA">CVPR</em>. arXiv:1805.01978.</li>
+<li data-page-node-id="rLrzTNsyeZ2zFljC5qcGMR">Chen, T., Kornblith, S., Norouzi, M., &amp; Hinton, G. (2020). A Simple Framework for Contrastive Learning of Visual Representations. <em data-page-node-id="uJjQME41J8Jcz030F10u7D">ICML</em>. arXiv:2002.05709.（SimCLR）</li>
 <li data-page-node-id="aKMrFZGH3hVYsISAhMARgn">Chen, X., Fan, H., Girshick, R., &amp; He, K. (2020). Improved Baselines with Momentum Contrastive Learning. arXiv:2003.04297.（MoCo v2）</li>
-<li data-page-node-id="OzAHXwEpkIgbQndCG6NlnS">He, K., Fan, H., Wu, Y., Xie, S., &amp; Girshick, R. (2020). Momentum Contrast for Unsupervised Visual Representation Learning. <i data-page-node-id="cXxepMjxZMJ8PEs8ybR4y1">CVPR</i>. arXiv:1911.05722.（MoCo）</li>
-<li data-page-node-id="h4j8kdL7Rhp463wYlWt5td">Caron, M., Misra, I., Mairal, J., Goyal, P., Bojanowski, P., &amp; Joulin, A. (2020). Unsupervised Learning of Visual Features by Contrasting Cluster Assignments. <i data-page-node-id="VtDmJ9yREYQofn35gAZ9gy">NeurIPS</i>. arXiv:2006.09882.（SwAV）</li>
-<li data-page-node-id="ZMeFUEj8bw8NRHGdwszCAI">Grill, J.-B. et al. (2020). Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning. <i data-page-node-id="4BJrDBb2DDWrq7s3k4ML9b">NeurIPS</i>. arXiv:2006.07733.（BYOL）</li>
-<li data-page-node-id="jNeRiBAEPobBFYXahCrExP">Chen, X., &amp; He, K. (2021). Exploring Simple Siamese Representation Learning. <i data-page-node-id="BAj1CRBZHS7T6Y74lwb5Pf">CVPR</i>. arXiv:2011.10566.（SimSiam）</li>
-<li data-page-node-id="Sy6fPsBRZFSTRHKC1PDtVz">Zbontar, J., Jing, L., Misra, I., LeCun, Y., &amp; Deny, S. (2021). Barlow Twins: Self-Supervised Learning via Redundancy Reduction. <i data-page-node-id="qxWeqQ3tH2lDX3hAUcgZGJ">ICML</i>. arXiv:2103.03230.</li>
-<li data-page-node-id="E6LrKXHDbqX3CFcNqmA7mO">Bardes, A., Ponce, J., &amp; LeCun, Y. (2022). VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning. <i data-page-node-id="s6udroFoxHh4c7Kfr6GFbl">ICLR</i>. arXiv:2105.04906.</li>
-<li data-page-node-id="UfIWbtqqqQGBk83XH1AshC">Wang, T., &amp; Isola, P. (2020). Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere. <i data-page-node-id="678Q1NfwRlkgSlNUVdkm3M">ICML</i>. arXiv:2005.10242.</li>
+<li data-page-node-id="OzAHXwEpkIgbQndCG6NlnS">He, K., Fan, H., Wu, Y., Xie, S., &amp; Girshick, R. (2020). Momentum Contrast for Unsupervised Visual Representation Learning. <em data-page-node-id="cXxepMjxZMJ8PEs8ybR4y1">CVPR</em>. arXiv:1911.05722.（MoCo）</li>
+<li data-page-node-id="h4j8kdL7Rhp463wYlWt5td">Caron, M., Misra, I., Mairal, J., Goyal, P., Bojanowski, P., &amp; Joulin, A. (2020). Unsupervised Learning of Visual Features by Contrasting Cluster Assignments. <em data-page-node-id="VtDmJ9yREYQofn35gAZ9gy">NeurIPS</em>. arXiv:2006.09882.（SwAV）</li>
+<li data-page-node-id="ZMeFUEj8bw8NRHGdwszCAI">Grill, J.-B. et al. (2020). Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning. <em data-page-node-id="4BJrDBb2DDWrq7s3k4ML9b">NeurIPS</em>. arXiv:2006.07733.（BYOL）</li>
+<li data-page-node-id="jNeRiBAEPobBFYXahCrExP">Chen, X., &amp; He, K. (2021). Exploring Simple Siamese Representation Learning. <em data-page-node-id="BAj1CRBZHS7T6Y74lwb5Pf">CVPR</em>. arXiv:2011.10566.（SimSiam）</li>
+<li data-page-node-id="Sy6fPsBRZFSTRHKC1PDtVz">Zbontar, J., Jing, L., Misra, I., LeCun, Y., &amp; Deny, S. (2021). Barlow Twins: Self-Supervised Learning via Redundancy Reduction. <em data-page-node-id="qxWeqQ3tH2lDX3hAUcgZGJ">ICML</em>. arXiv:2103.03230.</li>
+<li data-page-node-id="E6LrKXHDbqX3CFcNqmA7mO">Bardes, A., Ponce, J., &amp; LeCun, Y. (2022). VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning. <em data-page-node-id="s6udroFoxHh4c7Kfr6GFbl">ICLR</em>. arXiv:2105.04906.</li>
+<li data-page-node-id="UfIWbtqqqQGBk83XH1AshC">Wang, T., &amp; Isola, P. (2020). Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere. <em data-page-node-id="678Q1NfwRlkgSlNUVdkm3M">ICML</em>. arXiv:2005.10242.</li>
 <li data-page-node-id="xrt4NV8lcaH3N12qlbFbJ2">Richemond, P. H. et al. (2021). BYOL Works Even Without Batch Statistics. arXiv:2010.10241.</li>
-<li data-page-node-id="P3BCFNEox97JBORaIf8APW">Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., &amp; Joulin, A. (2021). Emerging Properties in Self-Supervised Vision Transformers. <i data-page-node-id="e2DFyLkPzdvn8S3GcDh7bk">ICCV</i>. arXiv:2104.14294.（DINO v1）</li>
-<li data-page-node-id="A5rkUgy6Cj4FcRVjxt7AD2">Oquab, M. et al. (2024). DINOv2: Learning Robust Visual Features without Supervision. <i data-page-node-id="eV5xzk61JPqSFS2cxjFDnb">TMLR</i>. arXiv:2304.07193.</li>
-<li data-page-node-id="Q95W3EdlHyfAqU1N3Z4tMB">Darcet, T., Oquab, M., Mairal, J., &amp; Bojanowski, P. (2024). Vision Transformers Need Registers. <i data-page-node-id="GbF8OwuSDNGU08G2scIqZS">ICLR</i>. arXiv:2309.16588.</li>
+<li data-page-node-id="P3BCFNEox97JBORaIf8APW">Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., &amp; Joulin, A. (2021). Emerging Properties in Self-Supervised Vision Transformers. <em data-page-node-id="e2DFyLkPzdvn8S3GcDh7bk">ICCV</em>. arXiv:2104.14294.（DINO v1）</li>
+<li data-page-node-id="A5rkUgy6Cj4FcRVjxt7AD2">Oquab, M. et al. (2024). DINOv2: Learning Robust Visual Features without Supervision. <em data-page-node-id="eV5xzk61JPqSFS2cxjFDnb">TMLR</em>. arXiv:2304.07193.</li>
+<li data-page-node-id="Q95W3EdlHyfAqU1N3Z4tMB">Darcet, T., Oquab, M., Mairal, J., &amp; Bojanowski, P. (2024). Vision Transformers Need Registers. <em data-page-node-id="GbF8OwuSDNGU08G2scIqZS">ICLR</em>. arXiv:2309.16588.</li>
 <li data-page-node-id="APmiBMS4fzN4Qe4e08nBg9">Siméoni, O., Vo, H. V., Seitzer, M. et al. (2025). DINOv3. arXiv:2508.10104.</li>
 </ol>
 </section>

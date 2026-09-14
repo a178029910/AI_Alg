@@ -22,7 +22,7 @@
 13、循环神经网络
 14、残差网络
 15、Transformer（课时 1）
-16、自监督学习
+16、自监督学习（课时 1：SimCLR、MoCo、BYOL、SimSiam、DINO v1/v2/v3）
 17、ViT、Swin、DETR
 18、MAE、SimMIM、VideoMAE
 19、JEPA、V-JEPA、LeJEPA
