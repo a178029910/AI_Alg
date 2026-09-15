@@ -3,7 +3,7 @@
 从经典机器学习到前沿深度学习 — 完整技术文档系列
 
 ## 数学基础
-1、线性代数
+1、线性代数（）
 2、概率论
 3、微积分与凸优化
 
@@ -21,9 +21,9 @@
 12、卷积神经网络
 13、循环神经网络
 14、残差网络
-15、Transformer（课时 1）
-16、自监督学习（课时 1：SimCLR、MoCo、BYOL、SimSiam、DINO v1/v2/v3）
-17、ViT、Swin、DETR
+15、Transformer
+16、自监督学习（SimCLR、MoCo、BYOL、SimSiam、DINO v1/v2/v3，代理任务、对比学习）
+17、视觉Transformer（ViT、Swin、DETR）
 18、MAE、SimMIM、VideoMAE
 19、JEPA、V-JEPA、LeJEPA
 20、CLIP、SigLIP、BLIP

@@ -69,6 +69,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-prim
 .svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(16px, 3vw, 28px); margin: 28px 0; text-align: center; box-shadow: var(--shadow-sm); transition: box-shadow 0.3s ease, transform 0.3s ease; }
 .svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .svg-box svg { max-width: 100%; height: auto; }
+  .svg-box img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
 @keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
 .svg-box svg { animation: fade-in-up 0.6s ease-out; }
 .svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
@@ -256,48 +257,15 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3 data-page-node-id="3BQxNH8ivcQ9Do5OR6GRwu">2.1 动机：一次"用数据换先验"的赌注</h3>
 <p data-page-node-id="54QgbwzsaSK03mcGow1RFI">ViT 的核心判断是：<strong data-page-node-id="4xin2qFvh12j7DmmF0sleL">CNN 的归纳偏置不是必需的，只是数据不足时的替代品</strong>。作者的原话大意是——当数据规模足够大时，模型不需要人工注入局部性与平移等变，它完全可以从数据中学会这些规律，甚至学得更好、更一般。这个判断把研究问题从"如何设计更好的视觉专用结构"改成了"能否用通用架构 + 更多数据达到同等效果"。</p>
 <p data-page-node-id="wMurgfJ6gtNgrdSljGUKpM">因此 ViT 的论文最重要的不是架构本身（它几乎是 Transformer 编码器的原样搬用），而是那个<strong data-page-node-id="IoqAyGSsTtZZ2yzUVtv4W0">对照结论</strong>：在 ImageNet-1k 上单独训练，ViT 不如同规模的 ResNet；但在 JFT-300M 上预训练后，ViT 反超，且数据越多优势越大。这解释了为什么 ViT 明确把自己的适用场景限定为"大规模预训练 + 下游微调"。</p>
+<div class="svg-box" data-page-node-id="vitArchFigBox">
+<img src="vit_architecture.png" alt="ViT 完整架构示意图" />
+<div class="svg-cap">图 1　ViT 完整架构。输入图像 224×224×3 经 Patch Embedding（16×16 卷积）切分为 196 个 token，拼接 CLS token 后加位置编码得到 z₀ ∈ ℝ^{197×768}；经 L 层 Transformer Encoder（Pre-LN + MSA + MLP + 残差）后取 CLS 位置的输出，经 LayerNorm 与线性分类头得到预测。</div>
+</div>
 <h3 data-page-node-id="TXBC5EIBGIRqGtgDM3yD2j">2.2 图像即序列：Patch Embedding</h3>
 <p data-page-node-id="EOWQW9k4BIVo1ATsDVA4cV">把图像 $\mathbf{x} \in \mathbb{R}^{H \times W \times C}$ 划分为 $N$ 个大小为 $P \times P$ 的不重叠块，$N = HW/P^2$。每块展平为长度 $P^2C$ 的向量，再经可学习的线性映射压缩到模型维度 $D$：</p>
 <div class="formula" data-eq="(1)" data-page-node-id="EprtBrhlip320veVuys0Bc">$$\mathbf{x}_p^i \in \mathbb{R}^{P^{2}C}, \qquad N = \frac{HW}{P^{2}}, \qquad \mathbf{x}_p^i E \in \mathbb{R}^{D}, \quad E \in \mathbb{R}^{P^{2}C \times D}$$</div>
 <p data-page-node-id="kGIGN7WEFbTSC5sjDqQcJH">以 $224\times224\times3$、$P=16$ 为例：$N = 196$，序列长度 196，比逐像素建模缩短了 256 倍。这一步在实现上等价于一个 <code data-page-node-id="nEAKXgVULfsByYGFGAxpmy">kernel_size=16, stride=16</code> 的卷积——<strong data-page-node-id="qE615vTux35oUna6v1KXlq">ViT 的第一层其实就是卷积，只是之后再无卷积</strong>。这是理解 ViT 的一个实用要点：它并非"完全没有卷积"，而是把卷积压缩成一次性的分块嵌入。</p>
-<div class="svg-box" data-page-node-id="icEz5mSichWPDV882b1jJW">
-<svg viewBox="0 0 880 280" xmlns="http://www.w3.org/2000/svg" data-page-node-id="eaGsGKSNxmEnzggQDbfFHj">
-  <text x="440" y="24" text-anchor="middle" font-size="15" fill="#0f172a" font-weight="700" data-page-node-id="wHgLpwOqfJL5mcvsA61UMu">Patch Embedding：从图像网格到 token 序列</text>
-  <!-- image -->
-  <rect x="40" y="60" width="180" height="180" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="dZHJtjTMB5ZvY20CRhKAkX"/>
-  <text x="130" y="52" text-anchor="middle" font-size="11.5" fill="#7c3aed" font-weight="700" data-page-node-id="dkcAWMbIy0AuoDaGP9umms">输入图像 224×224×3</text>
-  <g stroke="#7c3aed" stroke-width="0.8" opacity="0.45" data-page-node-id="pACBZfv2TGFUtLRZWjnSKj">
-    <line x1="62.5" y1="60" x2="62.5" y2="240" data-page-node-id="Hyky4Nl8v2zkYVgtHM0GF2"/><line x1="85" y1="60" x2="85" y2="240" data-page-node-id="zqpHsz1XiIBjq4wAyFYRAe"/><line x1="107.5" y1="60" x2="107.5" y2="240" data-page-node-id="XEpvhfpVcLKULYY5xfZz2y"/><line x1="130" y1="60" x2="130" y2="240" data-page-node-id="oHR967kcyQ9IDsNCqph3kF"/><line x1="152.5" y1="60" x2="152.5" y2="240" data-page-node-id="p5ufh2A1kzrNGs7MC86mGw"/><line x1="175" y1="60" x2="175" y2="240" data-page-node-id="2eioddW7npvJguabgmHas2"/><line x1="197.5" y1="60" x2="197.5" y2="240" data-page-node-id="FU0UKTdpTP15PwZ67FauGG"/>
-    <line x1="40" y1="82.5" x2="220" y2="82.5" data-page-node-id="6JWJT1VtFw11dE4sMMy07H"/><line x1="40" y1="105" x2="220" y2="105" data-page-node-id="Vx98ouHGYiimR0nBatF3fG"/><line x1="40" y1="127.5" x2="220" y2="127.5" data-page-node-id="7cVyA6Ijuek43C4A7hMiEO"/><line x1="40" y1="150" x2="220" y2="150" data-page-node-id="eUPZU79qnul4FDm5aGBaRq"/><line x1="40" y1="172.5" x2="220" y2="172.5" data-page-node-id="02IwkgIKcdZE1GZGzz73ii"/><line x1="40" y1="195" x2="220" y2="195" data-page-node-id="AE6N3qsYGVe6iEw2Typ5AU"/><line x1="40" y1="217.5" x2="220" y2="217.5" data-page-node-id="yBmPtLzhYFYuF126y13Wt7"/>
-  </g>
-  <rect x="62.5" y="82.5" width="22.5" height="22.5" fill="#c4b5fd" stroke="#7c3aed" stroke-width="2" data-page-node-id="P1Irt26ArFdwIBqmC1IRhZ"/>
-  <text x="130" y="262" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="ZIdJFoPtCaaDigPe1WXaX4">P=16 → 14×14 = 196 个 patch</text>
-  <line x1="228" y1="150" x2="268" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="B7KMDCbkz2QF74Mxyy7nps"/>
-  <!-- flatten -->
-  <rect x="276" y="112" width="150" height="76" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="YCampPjJ3grXVJEie6sYs0"/>
-  <text x="351" y="134" text-anchor="middle" font-size="11.5" fill="#1d4ed8" font-weight="700" data-page-node-id="RWEkZnyw34tNLJT71heRJS">展平 + 线性投影 E</text>
-  <text x="351" y="152" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="3HjzWfFdb7TWRkXYfDhOTQ">16×16×3 = 768 → D=768</text>
-  <text x="351" y="170" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="HPy3b5i6RJ27jGZpEC9GIg">等价于 16×16 步长卷积</text>
-  <line x1="434" y1="150" x2="474" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="jDoltqYzfNqeC78nBjDGRA"/>
-  <!-- tokens -->
-  <g data-page-node-id="8PuXOGJZW10xmEYpMbtdWq">
-    <rect x="482" y="130" width="34" height="34" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.8" data-page-node-id="unycIfqeFoDdqVvgqp7nbS"/>
-    <text x="499" y="152" text-anchor="middle" font-size="10" fill="#92400e" font-weight="700" data-page-node-id="5EnRC5PU2dIO0hS5gQ6rPI">CLS</text>
-  </g>
-  <g fill="#dbeafe" stroke="#2563eb" stroke-width="1.2" data-page-node-id="1t6auPsYdSbFGu3HQA2eFl">
-    <rect x="522" y="130" width="34" height="34" rx="5" data-page-node-id="HggNVqwRAX94xbNLXnoLRH"/><rect x="560" y="130" width="34" height="34" rx="5" data-page-node-id="H9vPfTdeYYE8gjt1IDw1I1"/><rect x="598" y="130" width="34" height="34" rx="5" data-page-node-id="ZUnC9CXTH4Ul01BGMK2bsa"/><rect x="636" y="130" width="34" height="34" rx="5" data-page-node-id="WMsH9kGPUo7u3FGDviu34C"/>
-  </g>
-  <text x="600" y="152" text-anchor="middle" font-size="13" fill="#1e3a5f" font-weight="700" data-page-node-id="Hu5XloqWRhi6kAvIYr6Dnk">. . .</text>
-  <rect x="678" y="130" width="34" height="34" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2" data-page-node-id="ZoEssvVM4whmowxD2cLpkd"/>
-  <text x="695" y="152" text-anchor="middle" font-size="9.5" fill="#1d4ed8" data-page-node-id="pYauV2a5mChMqsHW1gNmEV">196</text>
-  <text x="600" y="112" text-anchor="middle" font-size="11.5" fill="#2563eb" font-weight="700" data-page-node-id="kdMuu8EX1VktLW9u3HBEwm">token 序列长度 = 197</text>
-  <line x1="726" y1="147" x2="766" y2="147" stroke="#94a3b8" stroke-width="2" marker-end="url(#tl-ar)" data-page-node-id="vQtJZO9p8vtqLdgDbhqCPr"/>
-  <rect x="774" y="118" width="80" height="58" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5" data-page-node-id="lwmArhNEmzVMRt4nGZ8SCV"/>
-  <text x="814" y="142" text-anchor="middle" font-size="11" fill="#047857" font-weight="700" data-page-node-id="ripByYaaKEBAvR3spnbleU">+ 位置编码</text>
-  <text x="814" y="160" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="ny2GCBGw0oGKBehBUUUa92">z₀ ∈ ℝ^{197×768}</text>
-  <text x="440" y="218" text-anchor="middle" font-size="11.5" fill="#64748b" data-page-node-id="p8lfhBg5QNJA8xusfKcCip">张量形状：(B, 3, 224, 224) → (B, 196, 768) → 拼接 CLS → (B, 197, 768)</text>
-</svg>
-</div>
+
 <h3 data-page-node-id="UwA04bWToijUcARiX3oJYk">2.3 CLS Token 与位置编码</h3>
 <p data-page-node-id="ayqoxnQgKzDmMvH4mADTo9">在序列开头拼接一个可学习的向量 $\mathbf{x}_{\text{class}}$，它的作用类似 BERT 的 <code data-page-node-id="3w7uKXc93CVSYGJGAObb4p">[CLS]</code>：不与任何图像块对应，只负责在多层注意力中<strong data-page-node-id="mieDUK8VcJc1fVG8GMyVIm">汇聚全局信息</strong>，最终用它的输出做分类。同时为 197 个位置各加一个可学习的位置编码，恢复空间顺序：</p>
 <div class="formula" data-eq="(2)" data-page-node-id="WfuWoWOyc0J2fOMfhisHHm">$$\mathbf{z}_0 = \big[\,\mathbf{x}_{\text{class}};\; \mathbf{x}_p^1 E;\; \mathbf{x}_p^2 E;\; \dots;\; \mathbf{x}_p^{N} E\,\big] + E_{\text{pos}}, \qquad E_{\text{pos}} \in \mathbb{R}^{(N+1)\times D}$$</div>
@@ -337,9 +305,9 @@ tr:hover td { background: var(--c-primary-ghost); }
   <path d="M110 232 C 250 220, 400 178, 560 122 S 720 96, 790 84" fill="none" stroke="#2563eb" stroke-width="2.6" stroke-dasharray="7,4" data-page-node-id="0bVPCdqHAp6HPss6i1PDrG"/>
   <text x="250" y="238" font-size="12" fill="#2563eb" font-weight="700" data-page-node-id="JpOxBjqKL3BrnRfZJUB8Nt">ViT（无卷积先验）</text>
   <!-- crossover -->
-  <circle cx="596" cy="116" r="6" fill="#7c3aed" data-page-node-id="GEE0xJh205SB8KEhB4Tfv4"/>
-  <line x1="596" y1="116" x2="596" y2="250" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="4,3" data-page-node-id="KuK5jCsZn0Y0GTN16Ho8M7"/>
-  <text x="606" y="110" font-size="11.5" fill="#7c3aed" font-weight="700" data-page-node-id="vjJOfQ3j6Q9wmNXY6CkWoc">交叉点</text>
+  <circle cx="616.8" cy="103.7" r="6" fill="#7c3aed" data-page-node-id="GEE0xJh205SB8KEhB4Tfv4"/>
+  <line x1="616.8" y1="103.7" x2="616.8" y2="250" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="4,3" data-page-node-id="KuK5jCsZn67Y0GTN16Ho8M7"/>
+  <text x="616.8" y="88" text-anchor="middle" font-size="11.5" fill="#7c3aed" font-weight="700" data-page-node-id="vjJOfQ3j6Q9wmNXY6CkWoc">交叉点</text>
   <rect x="140" y="150" width="230" height="56" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.2" data-page-node-id="JkkhdVmmxDK54UOwkJwDhG"/>
   <text x="255" y="170" text-anchor="middle" font-size="11" fill="#c2410c" font-weight="700" data-page-node-id="UvTaeXaz3l1slqiZgGEl5u">小数据区间：CNN 胜</text>
   <text x="255" y="190" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="VOLHZ1jWKXqr9AY4ZsAAFy">归纳偏置 = 免费的正则化</text>
@@ -356,7 +324,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p data-page-node-id="OJ6A1Ev2j2CzQgeAgJ5am9">设模型维度 $D$、层数 $L$、token 数 $N$。主要计算量集中在两处：自注意力 $O(N^2D)$ 来自 $N\times N$ 的注意力矩阵；线性投影 $O(ND^2)$ 来自 $Q,K,V$ 与 MLP。当 $N \gg D$ 时第一项主导——这正是 Swin 要解决的问题：</p>
 <div class="formula" data-eq="(9)" data-page-node-id="eYvp4fjnTpw5yBWt7xXnPp">$$\text{FLOPs} \approx \underbrace{4ND^{2}}_{\text{QKV 与输出投影}} + \underbrace{2N^{2}D}_{\text{注意力矩阵}} + \underbrace{8ND^{2}}_{\text{MLP}}$$</div>
 <p data-page-node-id="qZ4eDBhNncECaBAC0Fcnq8">参数量主要落在 MLP 与投影矩阵上，与 $N$ 无关，因此 ViT-Base（$D=768,L=12$）约 86M 参数，与 ResNet-50（25M）相比更重——但有归纳偏置的 ResNet 用更少参数就能达到相近的 ImageNet-1k 精度，这又回到了 2.6 节的"数据换先验"。</p>
-<h3 data-page-node-id="t4B5G3GrftSvkuKFMU0rn4">2.9 PyTorch 实现</h3>
+<h3 data-page-node-id="t4B5G3GrftSvkuKFMU0rn4">2.9 算法实现</h3>
+<h4 data-page-node-id="vitTrainFlowH4">训练过程</h4>
+<p data-page-node-id="vitTrainFlowP0">ViT 采用标准的<strong data-page-node-id="vtfP0s1">大规模预训练 + 下游微调</strong>两阶段训练范式。预训练阶段决定了 ViT 能否超越 CNN——正如 2.1 节所述，ViT 的归纳偏置极弱，必须靠充足的数据来补偿。完整训练流程如下：</p>
+<ol data-page-node-id="vitTrainFlowList">
+<li data-page-node-id="vitTrainFlowLi1"><strong>预训练数据准备。</strong>ViT 论文使用 JFT-300M（3 亿张图，1.8 万类）或 ImageNet-21k（1400 万张图，2.1 万类）作为预训练集。数据规模是关键——在 ImageNet-1k（128 万张）上预训练的 ViT 精度低于同规模 ResNet，只有数据量达到 ImageNet-21k 以上时 ViT 才开始反超。预训练标签采用多标签格式（JFT-300M 每张图平均 5 个标签），损失允许一张图对应多个类别。</li>
+<li data-page-node-id="vitTrainFlowLi2"><strong>输入处理。</strong>图像 resize 到 224×224（或更高），经 Patch Embedding 切为 196 个 token，拼接 CLS token 并加位置编码，得到序列 z₀ ∈ ℝ^{(N+1)×D}（ViT-Base：D=768，L=12 层）。数据增广使用随机裁剪、颜色抖动等常规策略，未引入 CNN 时代的特殊技巧。</li>
+<li data-page-node-id="vitTrainFlowLi3"><strong>前向传播。</strong>z₀ 逐层经过 L 个 Transformer Encoder 块（公式 3–6），每层包含 Pre-LN 多头自注意力与 Pre-LN MLP，均带残差连接。第 L 层输出后取 CLS 位置的特征 z_L^0，经 LayerNorm 与线性分类头得到 logits（公式 7）。</li>
+<li data-page-node-id="vitTrainFlowLi4"><strong>损失计算。</strong>预训练使用交叉熵损失（多标签场景下对每个标签独立做 sigmoid + BCE）。下游微调用单标签交叉熵 + label smoothing（0.1）。损失对模型所有参数（Patch Embedding、CLS token、位置编码、编码器层、分类头）求梯度。</li>
+<li data-page-node-id="vitTrainFlowLi5"><strong>优化器与调度。</strong>使用 AdamW（β₁=0.9, β₂=0.999，权重衰减 0.1–0.3）。学习率采用 warmup + cosine decay：前 10k 步线性预热，随后余弦衰减至 0。预训练 batch size 通常 4096–8192，微调阶段降到 512。ViT-Base 预训练约 300 epoch（JFT-300M）或 7 epoch（ImageNet-21k），微调 10–30 epoch。</li>
+<li data-page-node-id="vitTrainFlowLi6"><strong>梯度裁剪与正则。</strong>梯度范数裁剪阈值 1.0；Dropout（0.1）加在 MSA 与 MLP 的输出上；Stochastic Depth（随机深度）在深层模型中可选使用。Pre-LN 结构本身无需 warmup 也能稳定训练（2.4 节已述），但 warmup 仍被沿用以提升最终精度。</li>
+<li data-page-node-id="vitTrainFlowLi7"><strong>高分辨率微调。</strong>预训练完成后，把输入分辨率从 224 提升到 384 或 512 做短期微调（约 10k 步），位置编码做二维插值（公式 8）。这一步通常带来 1–2% 的精度提升，且不引入新的参数。</li>
+</ol>
+<p data-page-node-id="vitTrainFlowP1"><strong data-page-node-id="vtfPrePredict">预测过程。</strong>推理时，输入图像经相同的 Patch Embedding → CLS + 位置编码 → L 层编码器 → 取 CLS 输出 → LayerNorm → 线性分类头 → softmax，输出类别概率分布。整个前向传播为单次计算（无自回归），与训练前向完全一致，区别仅在于 Dropout 关闭、Batch Norm/Layer Norm 使用积累统计量。对单张 224×224 图像，ViT-Base 的推理延迟约为 5–10ms（V100 GPU）。</p>
 <div class="code-block" data-page-node-id="OTayfCuFrfPQlsDGRgHz3V"><div class="code-header" data-page-node-id="NAEzry2PrEte6oX2ltlxzh">vit.py — Patch Embedding 与编码器块</div><pre data-page-node-id="uUGLuSCC86Jb2DiiFf4FmS">
 <span class="kw" data-page-node-id="77h9TbdhXNA8cWSk1mMKo6">import</span> torch
 <span class="kw" data-page-node-id="czGiDDUE9t1pf4MPtSJ3nl">import</span> torch.nn <span class="kw" data-page-node-id="waR6tJXFmzQzu3WQiZsJts">as</span> nn
