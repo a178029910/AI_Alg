@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -120,19 +120,14 @@ tr:hover td { background: var(--c-primary-ghost); }
   <h2>随机森林与集成学习</h2>
   <nav>
     <a href="#hero">封面</a>
-    <a href="#ch1">一、决策树基础</a>
-    <a href="#ch2">二、决策树剪枝</a>
-    <a href="#ch3">三、集成学习概述</a>
-    <a href="#ch4">四、Bagging 与随机森林</a>
-    <a href="#ch5">五、特征重要性</a>
-    <a href="#ch6">六、Boosting 概述</a>
-    <a href="#ch7">七、AdaBoost</a>
-    <a href="#ch8">八、梯度提升树（GBDT）</a>
-    <a href="#ch9">九、XGBoost</a>
-    <a href="#ch10">十、LightGBM 与 CatBoost</a>
-    <a href="#ch11">十一、PyTorch 代码实现</a>
-    <a href="#ch12">十二、算法对比与工程选型</a>
-    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#ch1">一、决策树</a>
+    <a href="#ch2">二、集成学习概述</a>
+    <a href="#ch3">三、Bagging 与随机森林</a>
+    <a href="#ch4">四、AdaBoost</a>
+    <a href="#ch5">五、梯度提升树（GBDT）</a>
+    <a href="#ch6">六、XGBoost 与现代梯度提升框架</a>
+    <a href="#ch7">七、代码实现</a>
+    <a href="#ch8">八、算法对比与总结</a>
     <a href="#refs">参考文献</a>
   </nav>
   <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
@@ -145,16 +140,16 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="subtitle">Random Forest &amp; Ensemble Learning</div>
   <p class="hero-intro">从决策树（CART、ID3、C4.5）出发，系统讲解集成学习两大流派：Bagging（随机森林）与 Boosting（AdaBoost、GBDT、XGBoost、LightGBM、CatBoost），涵盖 Bias-Variance 分解与工程选型。</p>
   <div class="badges">
-    <span class="badge">13 个章节</span>
+    <span class="badge">8 个章节</span>
     <span class="badge">5 张示例图</span>
-    <span class="badge">15 个公式</span>
+    <span class="badge">18 个公式</span>
     <span class="badge">14 篇参考文献</span>
   </div>
 </section>
 
 <!-- ========== 第一章 ========== -->
 <section id="ch1">
-<h2><span class="num">一</span> 决策树基础</h2>
+<h2><span class="num">1</span> 决策树</h2>
 
 <h3>1.1 什么是决策树</h3>
 <p><strong>决策树（Decision Tree）</strong> 是一种树形结构的监督学习模型，以"分而治之"的策略递归地把特征空间划分为若干互不相交的区域：从<strong>根节点</strong>出发，每个<strong>内部节点</strong>对应一个特征上的判定条件（if-then 规则），每个<strong>叶子节点</strong>给出预测结果。它可解释性极强——任意一条从根到叶的路径都是一条完整的 if-then 规则，人类可以直接阅读并验证。</p>
@@ -251,9 +246,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout">
 <div class="callout-title">C4.5 算法：增益率（Gain Ratio）</div>
 <p>C4.5（Quinlan, 1993）是 ID3 的后继改进，核心修正用<strong>增益率</strong>替代信息增益来选择特征。首先定义特征的<strong>固有值</strong>（Intrinsic Value），衡量特征取值数量的"分裂度"：</p>
-<div class="formula" data-eq="(3.1)">$$\text{IV}(A) = -\sum_{v=1}^{V} \frac{|D_v|}{|D|} \log_2 \frac{|D_v|}{|D|}$$</div>
+<div class="formula" data-eq="(4)">$$\text{IV}(A) = -\sum_{v=1}^{V} \frac{|D_v|}{|D|} \log_2 \frac{|D_v|}{|D|}$$</div>
 <p>取值越多、各子集越均匀，$\text{IV}(A)$ 越大。增益率定义为信息增益与固有值之比：</p>
-<div class="formula" data-eq="(3.2)">$$g_R(D, A) = \frac{g(D, A)}{\text{IV}(A)}$$</div>
+<div class="formula" data-eq="(5)">$$g_R(D, A) = \frac{g(D, A)}{\text{IV}(A)}$$</div>
 <p>C4.5 选择增益率最大的特征。由于 $\text{IV}(A)$ 对取值多的特征施加惩罚，增益率有效抑制了 ID3 对"编号"类高基数特征的偏好。实际中 C4.5 做了两步启发式：先挑出信息增益高于平均的特征，再从中选增益率最大者，避免过度偏向低 IV 的特征。</p>
 </div>
 
@@ -297,11 +292,11 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>1.3 基尼指数（Gini Index）</h3>
 <p><strong>基尼指数</strong>是另一种"不纯度"度量：从数据集 $D$ 中随机抽取两个样本，它们类别不同的概率。基尼值越小，数据越纯：</p>
 
-<div class="formula" data-eq="(4)">$$\text{Gini}(D) = 1 - \sum_{k=1}^{K} p_k^2$$</div>
+<div class="formula" data-eq="(6)">$$\text{Gini}(D) = 1 - \sum_{k=1}^{K} p_k^2$$</div>
 
 <p>以特征 $A$ 划分后的加权基尼指数为：</p>
 
-<div class="formula" data-eq="(5)">$$\text{Gini}(D, A) = \sum_{v=1}^{V} \frac{|D_v|}{|D|} \, \text{Gini}(D_v)$$</div>
+<div class="formula" data-eq="(7)">$$\text{Gini}(D, A) = \sum_{v=1}^{V} \frac{|D_v|}{|D|} \, \text{Gini}(D_v)$$</div>
 
 <p>CART 分类树在候选特征中选取<strong>基尼指数最小</strong>的特征作为最优划分特征，并支持对连续特征做二分。</p>
 
@@ -344,52 +339,65 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>现代集成学习框架（sklearn、XGBoost、LightGBM 等）默认采用 <strong>CART 二叉树 + 基尼指数/方差</strong> 作为分裂准则；ID3 / C4.5 更多作为教材概念存在。</p>
 </div>
 
-</section>
+<h3>1.4 剪枝</h3>
+<p>决策树的归纳偏好是"尽可能拟合训练数据"：如果不加限制地生长，树可以把每个训练样本都单独划进一个叶子，此时训练误差为 0，但<strong>泛化能力很差</strong>，即<strong>过拟合（Overfitting）</strong>。剪枝（Pruning）正是为了在"拟合能力"与"模型复杂度"之间取得平衡。</p>
 
-<!-- ========== 第二章 ========== -->
-<section id="ch2">
-<h2><span class="num">二</span> 决策树剪枝</h2>
-
-<h3>2.1 过拟合问题</h3>
-<p>决策树的归纳偏好是"尽可能拟合训练数据"：如果不加限制地生长，树可以把每个训练样本都单独划进一个叶子，此时训练误差为 0，但<strong>泛化能力（对未见数据的预测能力）很差</strong>，即<strong>过拟合（Overfitting）</strong>。随着树深度增加，模型复杂度上升、方差变大，测试误差呈"先降后升"的 U 型曲线。剪枝（Pruning）正是为了在"拟合能力"与"模型复杂度"之间取得平衡。</p>
-
-<div class="callout warn">
-<div class="callout-title">过拟合信号</div>
-<p>训练集准确率接近 100% 而验证集准确率明显偏低；或树深超过特征数时仍持续分裂。出现这些信号就应考虑剪枝、限制深度或改用集成方法。</p>
-</div>
-
-<h3>2.2 预剪枝 vs 后剪枝</h3>
 <div class="table-wrap">
 <table>
 <thead>
 <tr><th>策略</th><th>时机</th><th>做法</th><th>优点</th><th>缺点</th></tr>
 </thead>
 <tbody>
-<tr><td>预剪枝</td><td>建树过程中</td><td>在分裂前评估：若当前划分不能带来验证集性能提升（或节点样本数过少、深度过大），则停止分裂，当前节点直接作为叶子</td><td>计算开销小、树更矮、抗过拟合强</td><td>可能"欠拟合"：贪心停止过早，错过后续有增益的分裂</td></tr>
-<tr><td>后剪枝</td><td>树建成后</td><td>自底向上考察非叶节点：若剪掉该子树（替换为叶子）后验证集性能不下降，则剪掉</td><td>保留充分生长、效果通常更好</td><td>计算开销大（需完整建树再评估）</td></tr>
+<tr><td>预剪枝</td><td>建树过程中</td><td>分裂前评估验证集性能提升、节点样本数、深度等，不满足则停止</td><td>开销小、树更短</td><td>可能贪心停止过早</td></tr>
+<tr><td>后剪枝</td><td>树建成后</td><td>自底向上考察：若剪掉子树后性能不下降则剪</td><td>效果通常更好</td><td>计算开销大</td></tr>
 </tbody>
 </table>
 </div>
 
-<h3>2.3 代价复杂度剪枝（Cost-Complexity Pruning）</h3>
-<p>CART 采用<strong>代价复杂度剪枝（CCP）</strong>：把"误差"与"复杂度"放进同一个目标函数，通过一个可调参数 $\alpha$ 权衡。对一棵子树 $T$，定义其代价复杂度：</p>
+<p>CART 采用<strong>代价复杂度剪枝（CCP）</strong>：通过可调参数 $\alpha$ 权衡误差与复杂度：</p>
 
-<div class="formula" data-eq="(6)">$$R_{\alpha}(T) = R(T) + \alpha\, |T|$$</div>
+<div class="formula" data-eq="(8)">$$R_{\alpha}(T) = R(T) + \alpha\, |T|$$</div>
 
-<p>其中 $R(T)$ 为子树 $T$ 在训练集（或验证集）上的误分类代价（回归时取平方误差），$|T|$ 为叶子节点个数，$\alpha \geq 0$ 为复杂度惩罚系数。$\alpha$ 越大，树越倾向于"小"（叶子少、结构简单）。CCP 先对完整树生成一组嵌套子树 $T_0 \supset T_1 \supset \dots \supset \{root\}$，再通过交叉验证选择使验证误差最小的 $\alpha$ 及其对应子树。</p>
+<p>其中 $R(T)$ 为子树误差，$|T|$ 为叶子数，$\alpha$ 越大树越简单。CCP 先生成嵌套子树 $T_0 \supset T_1 \supset \dots$，再通过交叉验证选最优 $\alpha$。</p>
 
 <div class="callout">
 <div class="callout-title">剪枝的本质</div>
-<p>剪枝 = 正则化。深度、叶子最小样本数、$\alpha$ 惩罚项，都是限制模型复杂度的旋钮。集成学习（Bagging / Boosting）则从另一个角度解决同一问题：通过组合多棵树来降低方差或偏差。</p>
+<p>剪枝 = 正则化。深度、叶子最小样本数、$\alpha$ 惩罚项都是限制复杂度的旋钮。集成学习则从另一个角度解决同一问题：通过组合多棵树来降低方差或偏差。</p>
+</div>
+
+<h3>1.5 决策树算法伪代码</h3>
+
+<p>综合前述划分准则、剪枝与预测流程，CART 决策树的完整训练与预测算法如下：</p>
+
+<p><strong>算法 1：CART 决策树（训练与预测）</strong></p>
+<p><strong>输入</strong>：训练集 $\mathcal{D} = \{(\mathbf{x}_n, y_n)\}_{n=1}^{N}$，最大深度 $d_{\max}$，叶子最小样本数 $n_{\min}$，不纯度度量 $I$（基尼指数或信息熵）。</p>
+<p><strong>输出</strong>：决策树 $T$。</p>
+
+<h4>训练阶段（递归建树）</h4>
+<ol>
+<li><strong>终止判断</strong>：若深度 $\ge d_{\max}$、或节点样本数 $\le n_{\min}$、或节点纯（所有样本同类），则创建叶子，类别取多数票，返回。</li>
+<li><strong>选择最优分裂</strong>：对每个特征 $j$ 与每个候选切分点 $s$，计算分裂后加权不纯度 $I(D; j, s) = \frac{|D_L|}{|D|} I(D_L) + \frac{|D_R|}{|D|} I(D_R)$，选取使其最小的 $(j^*, s^*)$。</li>
+<li><strong>分裂与递归</strong>：按 $(j^*, s^*)$ 将 $D$ 分为 $D_L$、$D_R$，对左右子集分别递归调用本过程，返回内部节点（特征 $j^*$，切分点 $s^*$，左子树，右子树）。</li>
+</ol>
+
+<h4>预测阶段</h4>
+<ol>
+<li>对新样本 $\mathbf{x}$，从根节点出发：若 $x_{j^*} \le s^*$ 走左子树，否则走右子树。</li>
+<li>递归下降直至叶子节点，返回叶子类别（分类）或叶子均值（回归）。</li>
+</ol>
+
+<div class="callout">
+<div class="callout-title">决策树思维</div>
+<p>决策树的核心思维是<strong>"分而治之"</strong>：每一步找到最能区分数据的特征与切分点（贪婪选择），递归地把复杂问题拆解为越来越简单的子问题，直到子问题足够简单可以直接给出答案。这种"贪婪递归"策略简单但有效——单棵树易过拟合，但作为集成的基学习器，其"高方差、低偏差"的特性恰好是 Bagging 降方差的理想输入。</p>
 </div>
 
 </section>
 
-<!-- ========== 第三章 ========== -->
-<section id="ch3">
-<h2><span class="num">三</span> 集成学习概述</h2>
+<!-- ========== 第二章 ========== -->
+<section id="ch2">
+<h2><span class="num">2</span> 集成学习概述</h2>
 
-<h3>3.1 为什么需要集成</h3>
+<h3>2.1 为什么需要集成</h3>
 <p><strong>集成学习（Ensemble Learning）</strong> 的核心思想是"<strong>三个臭皮匠，赛过诸葛亮</strong>"：训练多个<strong>弱学习器</strong>（只比随机略好的模型，如浅决策树），再用某种策略把它们组合成一个<strong>强学习器</strong>。单个弱学习器能力有限、偏差或方差偏大，但多个弱学习器的组合可以互相纠错、互相补充，显著提升整体精度与鲁棒性。</p>
 
 <div class="callout">
@@ -397,10 +405,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>一位医生可能误诊，但<strong>多位独立医生会诊</strong>后投票，错误会被多数票淹没；类似地，随机森林让成百上千棵"有分歧"的树分别投票，最终答案往往比任何一棵树都可靠。</p>
 </div>
 
-<h3>3.2 Bias-Variance 分解</h3>
+<h3>2.2 Bias-Variance 分解</h3>
 <p>理解集成学习为什么有效，需要引入<strong>偏差-方差分解（Bias-Variance Decomposition）</strong>。对回归问题，设真实函数为 $f(x)$，模型预测为 $\hat{f}(x)$，期望误差可分解为三部分：</p>
 
-<div class="formula" data-eq="(7)">$$\mathbb{E}\left[\left(y - \hat{f}(x)\right)^2\right] = \text{Bias}^2\big(\hat{f}(x)\big) + \text{Var}\big(\hat{f}(x)\big) + \sigma^2$$</div>
+<div class="formula" data-eq="(9)">$$\mathbb{E}\left[\left(y - \hat{f}(x)\right)^2\right] = \text{Bias}^2\big(\hat{f}(x)\big) + \text{Var}\big(\hat{f}(x)\big) + \sigma^2$$</div>
 
 <ul>
 <li><strong>偏差 $\text{Bias}$</strong>：模型预测期望与真实值的差距，刻画<strong>欠拟合</strong>程度（模型太简单）。</li>
@@ -410,7 +418,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <p>集成学习正是沿着这两条线发力：<strong>Bagging 通过平均降低方差</strong>，<strong>Boosting 通过加权组合降低偏差</strong>。</p>
 
-<h3>3.3 集成学习的两大流派：Bagging vs Boosting</h3>
+<h3>2.3 集成学习的两大流派：Bagging vs Boosting</h3>
 <div class="table-wrap">
 <table>
 <thead>
@@ -508,13 +516,51 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
+<!-- ========== 集成学习伪代码 ========== -->
+
+<h3>2.4 集成学习算法伪代码</h3>
+
+<p>集成学习的两大流派可以用统一的伪代码框架描述。两者的核心差异在于：Bagging 的基学习器<strong>并行独立</strong>训练，Boosting 的基学习器<strong>串行纠错</strong>训练。</p>
+
+<p><strong>算法 2a：Bagging（并行集成）</strong></p>
+<p><strong>输入</strong>：训练集 $\mathcal{D} = \{(\mathbf{x}_n, y_n)\}_{n=1}^{N}$，基学习器算法 $\mathcal{L}$，基学习器个数 $M$。</p>
+<p><strong>输出</strong>：集成模型 $F(\mathbf{x})$。</p>
+<ol>
+<li><strong>并行训练</strong>：对 $m = 1, 2, \dots, M$（可并行）：
+<ol>
+<li>从 $\mathcal{D}$ 中有放回抽取 $N$ 个样本，得到 Bootstrap 子集 $\mathcal{D}_m$。</li>
+<li>在 $\mathcal{D}_m$ 上训练基学习器 $f_m = \mathcal{L}(\mathcal{D}_m)$。</li>
+</ol></li>
+<li><strong>聚合预测</strong>：$F(\mathbf{x}) = \begin{cases} \arg\max_y \sum_m \mathbb{I}[f_m(\mathbf{x}) = y] & \text{分类（多数投票）} \\ \frac{1}{M} \sum_m f_m(\mathbf{x}) & \text{回归（取平均）} \end{cases}$</li>
+</ol>
+
+<p><strong>算法 2b：Boosting（串行集成）</strong></p>
+<p><strong>输入</strong>：训练集 $\mathcal{D}$，基学习器算法 $\mathcal{L}$，迭代轮数 $M$，损失函数 $L$。</p>
+<p><strong>输出</strong>：强学习器 $F_M(\mathbf{x})$。</p>
+<ol>
+<li><strong>初始化</strong>：$F_0(\mathbf{x}) = \arg\min_c \sum_i L(y_i, c)$（常数模型）。</li>
+<li><strong>串行迭代</strong>：对 $m = 1, 2, \dots, M$：
+<ol>
+<li><strong>计算伪残差</strong>：$r_{im} = -\left[\frac{\partial L(y_i, F(\mathbf{x}_i))}{\partial F(\mathbf{x}_i)}\right]_{F=F_{m-1}}$（AdaBoost 用样本权重替代）。</li>
+<li><strong>拟合基学习器</strong>：$f_m = \mathcal{L}(\{(\mathbf{x}_i, r_{im})\}_{i=1}^N)$，在残差（或加权数据）上训练新树。</li>
+<li><strong>计算步长</strong>：$\rho_m = \arg\min_\rho \sum_i L(y_i, F_{m-1}(\mathbf{x}_i) + \rho \cdot f_m(\mathbf{x}_i))$。</li>
+<li><strong>更新模型</strong>：$F_m(\mathbf{x}) = F_{m-1}(\mathbf{x}) + \nu \cdot \rho_m \cdot f_m(\mathbf{x})$，其中 $\nu \in (0, 1]$ 为学习率。</li>
+</ol></li>
+<li><strong>输出</strong>：$F_M(\mathbf{x}) = F_0(\mathbf{x}) + \nu \sum_m \rho_m f_m(\mathbf{x})$。</li>
+</ol>
+
+<div class="callout">
+<div class="callout-title">集成思维</div>
+<p>集成学习的核心思维是<strong>"组合优于单一"</strong>：Bagging 通过<strong>并行 + 扰动 + 平均</strong>降低方差（多棵有差异的树投票，错误互相抵消）；Boosting 通过<strong>串行 + 纠错 + 累加</strong>降低偏差（每棵树聚焦前一棵的错误，逐步逼近最优）。两者的共同前提是基学习器要有"多样性"——Bagging 靠随机采样注入多样性，Boosting 靠残差/权重调整聚焦难点。</p>
+</div>
+
 </section>
 
-<!-- ========== 第四章 ========== -->
-<section id="ch4">
-<h2><span class="num">四</span> Bagging 与随机森林</h2>
+<!-- ========== 第三章 ========== -->
+<section id="ch3">
+<h2><span class="num">3</span> Bagging 与随机森林</h2>
 
-<h3>4.1 Bagging 原理</h3>
+<h3>3.1 Bagging 原理</h3>
 <p><strong>Bagging（Bootstrap Aggregating，自举汇聚）</strong> 由 Breiman 于 1996 年提出，是并行式集成学习的代表。流程分为三步：</p>
 <ul>
 <li><strong>① Bootstrap 采样</strong>：从原始训练集 $D$（含 $N$ 个样本）有放回地随机抽取 $N$ 个样本，形成子集 $D_1, D_2, \dots, D_M$（约 63.2% 的样本会被抽到，其余构成袋外数据）。</li>
@@ -523,7 +569,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 <p>由于 Bootstrap 采样引入了<strong>样本扰动</strong>，各基学习器之间存在差异，平均/投票后方差被显著降低——这正是"降低方差"这一集成路径的实现机制。</p>
 
-<h3>4.2 随机森林的"随机"</h3>
+<h3>3.2 随机森林的"随机"</h3>
 <p><strong>随机森林（Random Forest）</strong> 是 Bagging + 决策树的组合，由 Breiman 于 2001 年正式提出。它引入了<strong>双重随机性</strong>：</p>
 <ul>
 <li><strong>样本随机</strong>：每个基学习器用 Bootstrap 子集训练（与 Bagging 一致）。</li>
@@ -535,13 +581,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>若只做样本扰动，若干棵"最强特征"相同的树会在同一位置分裂，高度相关；投票时它们的错误会"共振"。特征随机让不同的树关注不同的特征子集，错误相互独立，集成效果才真正显现。</p>
 </div>
 
-<h3>4.3 随机森林的预测</h3>
+<h3>3.3 随机森林的预测</h3>
 <ul>
 <li><strong>分类</strong>：每棵树给出类别，最终取<strong>多数投票</strong>（可叠加样本权重 / 树权重）。</li>
 <li><strong>回归</strong>：对每棵树的输出取<strong>算术平均</strong>。</li>
 </ul>
 
-<h3>4.4 袋外误差（OOB Error）</h3>
+<h4>袋外误差（OOB Error）</h4>
 <p>由于 Bootstrap 有放回采样，每棵树训练时约有 $1 - 0.632 \approx 36.8\%$ 的样本未被用到，这些样本称为该树的<strong>袋外样本（Out-of-Bag, OOB）</strong>。对每个样本 $x_i$，用"所有没有在训练时用到它"的那些树做预测，再投票/平均，即可得到 OOB 预测。OOB 误差是<strong>免费的交叉验证</strong>：无需额外划分验证集，就能在训练过程中估计泛化误差，且随树的数量增加而趋于稳定。</p>
 
 <div class="svg-box">
@@ -617,15 +663,11 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
-</section>
-
-<!-- ========== 第五章 ========== -->
-<section id="ch5">
-<h2><span class="num">五</span> 随机森林的特征重要性</h2>
+<h3>3.4 特征重要性</h3>
 
 <p>随机森林不仅能给出高质量预测，还能回答一个关键问题：<strong>哪些特征对预测贡献最大？</strong>这在实际业务（特征筛选、模型解释、风控审计）中往往与预测本身同等重要。</p>
 
-<h3>5.1 基于不纯度下降（Gini Importance）</h3>
+<h4>基于不纯度下降（Gini Importance）</h4>
 <p><strong>基于不纯度下降的重要性（也称 MDI，Mean Decrease in Impurity）</strong> 统计每个特征在所有树的所有分裂节点上带来的<strong>基尼指数下降量</strong>，按各节点样本占比加权后累加：</p>
 <ul>
 <li>对每棵树的每个分裂节点，计算该节点分裂前后基尼指数的减少量 $\Delta = G_{\text{parent}} - (G_{\text{left}} + G_{\text{right}})$（按样本数加权）。</li>
@@ -634,7 +676,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </ul>
 <p>该指标的优点是<strong>计算零成本</strong>（训练时顺带统计）；缺点是存在<strong>偏向连续/高基数特征的偏差</strong>，且对特征之间的相关性敏感。</p>
 
-<h3>5.2 基于排列重要性（Permutation Importance）</h3>
+<h4>基于排列重要性（Permutation Importance）</h4>
 <p><strong>排列重要性（MDA，Mean Decrease in Accuracy）</strong> 的思路更直接：</p>
 <ol>
 <li>用训练好的森林计算 OOB 误差 $E_0$。</li>
@@ -648,7 +690,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>无论是 Gini 重要性还是置换重要性，度量的都是<strong>统计关联</strong>而非<strong>因果效应</strong>。若两个特征强相关，重要性会被"分摊"，排序结果可能误导因果判断。</p>
 </div>
 
-<h3>5.3 SHAP 值简介</h3>
+<h4>SHAP 值简介</h4>
 <p><strong>SHAP（SHapley Additive exPlanations）</strong> 源自合作博弈论的 Shapley 值，为每个样本的每个特征给出一个<strong>加性贡献值</strong>：预测值 = 基线值 + 各特征 SHAP 值之和。其性质优良：</p>
 <ul>
 <li><strong>可加性</strong>：$\text{SHAP}(x_1) + \dots + \text{SHAP}(x_d) = f(x) - \mathbb{E}[f]$。</li>
@@ -659,11 +701,11 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<!-- ========== 第六章 ========== -->
-<section id="ch6">
-<h2><span class="num">六</span> Boosting 概述</h2>
+<!-- ========== 第四章 ========== -->
+<section id="ch4">
+<h2><span class="num">4</span> AdaBoost</h2>
 
-<h3>6.1 Boosting 的核心思想</h3>
+<h3>4.1 Boosting 的核心思想</h3>
 <p><strong>Boosting（提升）</strong> 是串行式集成学习的总称：逐个训练基学习器，<strong>每个新学习器都致力于纠正前面所有学习器犯的错误</strong>，最终把所有学习器按一定权重组合起来。与 Bagging 降低方差不同，Boosting 走的是<strong>降低偏差</strong>的路线——即使基学习器很弱（准确率略高于 0.5），经过多轮迭代也能组合出强学习器。</p>
 
 <div class="callout">
@@ -671,29 +713,23 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>就像"错题本"学习法：第一轮复习后找出仍然做错的题，第二轮重点攻克这些错题；每轮都聚焦上一轮的错误，整体水平逐步提升。</p>
 </div>
 
-<h3>6.2 加法模型与前向分步算法</h3>
+<h3>4.2 加法模型与前向分步算法</h3>
 <p>Boosting 家族（AdaBoost、GBDT、XGBoost）都可以统一到<strong>加法模型（Additive Model）</strong>框架下：最终模型是一组基学习器 $b_m(x)$ 的加权求和：</p>
 
-<div class="formula">$$F_M(x) = \sum_{m=1}^{M} \beta_m \, f_m(x)$$</div>
+<div class="formula" data-eq="(16)">$$F_M(x) = \sum_{m=1}^{M} \beta_m \, f_m(x)$$</div>
 
 <p>直接联合优化所有 $(\beta_m, f_m)$ 是困难的，因此采用<strong>前向分步算法（Forward Stagewise Algorithm）</strong>：从 $m=1$ 到 $M$ 逐轮求解——每轮只优化当前新增的学习器，固定之前已经学到的部分：</p>
 
-<div class="formula">$$(\beta_m, f_m) = \arg\min_{\beta, f} \sum_{i=1}^{N} L\left(y_i, \; F_{m-1}(x_i) + \beta f(x_i)\right)$$</div>
+<div class="formula" data-eq="(17)">$$(\beta_m, f_m) = \arg\min_{\beta, f} \sum_{i=1}^{N} L\left(y_i, \; F_{m-1}(x_i) + \beta f(x_i)\right)$$</div>
 
-<h3>6.3 指数损失函数与 AdaBoost 关系</h3>
+<h3>4.3 指数损失函数与 AdaBoost 关系</h3>
 <p>当损失函数取<strong>指数损失</strong> $L(y, F(x)) = \exp(-y F(x))$（其中 $y \in \{-1, +1\}$）时，前向分步算法推出的加权更新规则恰与 AdaBoost 完全等价——这是统计学习视角对 AdaBoost 的标准解释：</p>
 
-<div class="formula">$$L(y, F(x)) = e^{-y F(x)}$$</div>
+<div class="formula" data-eq="(18)">$$L(y, F(x)) = e^{-y F(x)}$$</div>
 
 <p>指数损失对错分样本施加指数级惩罚，天然地在每轮迭代中"放大"难样本的权重，这正是 AdaBoost 权重更新机制的内在原因。</p>
 
-</section>
-
-<!-- ========== 第七章 ========== -->
-<section id="ch7">
-<h2><span class="num">七</span> AdaBoost</h2>
-
-<h3>7.1 AdaBoost 算法流程</h3>
+<h3>4.4 AdaBoost 算法流程</h3>
 <p><strong>AdaBoost（Adaptive Boosting，自适应提升）</strong> 由 Freund 与 Schapire 于 1995 年提出，是第一个实用化、理论完备的 Boosting 算法。输入带标签样本集 $D = \{(x_1, y_1), \dots, (x_N, y_N)\}$，$y_i \in \{-1, +1\}$，弱学习器算法 $\mathcal{A}$，迭代轮数 $M$：</p>
 <ol>
 <li><strong>初始化</strong>：样本权重 $w_i^{(1)} = 1/N, \; i = 1, \dots, N$。</li>
@@ -701,26 +737,26 @@ tr:hover td { background: var(--c-primary-ghost); }
 <ol>
 <li>在权重 $w^{(m)}$ 下训练弱分类器 $f_m(x)$，使其加权误差最小。</li>
 <li>计算加权错误率 $\epsilon_m = \frac{\sum_i w_i^{(m)} \mathbb{I}[f_m(x_i) \neq y_i]}{\sum_i w_i^{(m)}}$。</li>
-<li>计算弱分类器权重 $\alpha_m$（见公式 (12)）。</li>
-<li>更新样本权重（见公式 (11)），并归一化。</li>
+<li>计算弱分类器权重 $\alpha_m$（见公式 (11)）。</li>
+<li>更新样本权重（见公式 (10)），并归一化。</li>
 </ol></li>
-<li><strong>输出</strong>：加权组合的最终强分类器（见公式 (13)）。</li>
+<li><strong>输出</strong>：加权组合的最终强分类器（见公式 (12)）。</li>
 </ol>
 
-<h3>7.2 样本权重更新</h3>
+<h3>4.5 样本权重更新</h3>
 <p>每轮迭代后，<strong>提高被分错样本的权重、降低被分对样本的权重</strong>，使下一轮弱学习器被迫更关注"难样本"：</p>
 
-<div class="formula" data-eq="(8)">$$w_i^{(m+1)} = w_i^{(m)} \cdot \exp\left(-\alpha_m \, y_i \, f_m(x_i)\right), \quad \text{再归一化至 } \sum_i w_i = 1$$</div>
+<div class="formula" data-eq="(10)">$$w_i^{(m+1)} = w_i^{(m)} \cdot \exp\left(-\alpha_m \, y_i \, f_m(x_i)\right), \quad \text{再归一化至 } \sum_i w_i = 1$$</div>
 
-<h3>7.3 弱分类器权重</h3>
+<h3>4.6 弱分类器权重</h3>
 <p>每个弱分类器的发言权重由它的错误率决定——<strong>错误率越低，权重越大</strong>：</p>
 
-<div class="formula" data-eq="(9)">$$\alpha_m = \frac{1}{2} \ln \frac{1 - \epsilon_m}{\epsilon_m}$$</div>
+<div class="formula" data-eq="(11)">$$\alpha_m = \frac{1}{2} \ln \frac{1 - \epsilon_m}{\epsilon_m}$$</div>
 
 <p>当 $\epsilon_m < 0.5$ 时 $\alpha_m > 0$，错误率越低 $\alpha_m$ 越大；若某轮 $\epsilon_m \geq 0.5$（弱于随机猜测），则停止迭代或翻转分类器。</p>
 
-<h3>7.4 最终分类器</h3>
-<div class="formula" data-eq="(10)">$$F(x) = \operatorname{sign}\left( \sum_{m=1}^{M} \alpha_m \, f_m(x) \right)$$</div>
+<h3>4.7 最终分类器</h3>
+<div class="formula" data-eq="(12)">$$F(x) = \operatorname{sign}\left( \sum_{m=1}^{M} \alpha_m \, f_m(x) \right)$$</div>
 
 <p>预测时每个弱分类器按 $\alpha_m$ 加权投票，符号函数给出最终类别。下图展示 AdaBoost 的迭代与权重更新流程：</p>
 
@@ -792,11 +828,11 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<!-- ========== 第八章 ========== -->
-<section id="ch8">
-<h2><span class="num">八</span> 梯度提升树（GBDT）</h2>
+<!-- ========== 第五章 ========== -->
+<section id="ch5">
+<h2><span class="num">5</span> 梯度提升树（GBDT）</h2>
 
-<h3>8.1 梯度提升的核心思想</h3>
+<h3>5.1 梯度提升的核心思想</h3>
 <p><strong>梯度提升（Gradient Boosting）</strong> 由 Friedman 于 1999 年系统化提出，是 AdaBoost 之后 Boosting 家族最重要的一次升级：<strong>不再依赖指数损失的特殊形式，而是用损失函数的负梯度（pseudo-residual）来指导每轮新树的拟合</strong>。任何可微损失函数都可以套进这个框架——回归用平方误差，分类用对数几率损失，排序用 LambdaRank 等。</p>
 
 <div class="callout">
@@ -804,19 +840,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>AdaBoost 通过调整样本权重来间接纠正错误；GBDT 则直接计算当前模型对每个样本的<strong>负梯度</strong>（即"还差多少"），让新树去拟合这个残差——每棵树都在"补课"，逐步逼近最优模型。</p>
 </div>
 
-<h3>8.2 损失函数的负梯度（Pseudo-Residual）</h3>
+<h3>5.2 损失函数的负梯度（Pseudo-Residual）</h3>
 <p>对当前集成模型 $F_{m-1}(x)$，第 $m$ 轮针对每个样本 $x_i$ 计算损失函数 $L$ 关于当前预测值的<strong>负梯度</strong>，作为该轮的"伪残差"：</p>
 
-<div class="formula" data-eq="(11)">$$r_{im} = -\left[ \frac{\partial L\big(y_i, F(x_i)\big)}{\partial F(x_i)} \right]_{F(x) = F_{m-1}(x)}$$</div>
+<div class="formula" data-eq="(13)">$$r_{im} = -\left[ \frac{\partial L\big(y_i, F(x_i)\big)}{\partial F(x_i)} \right]_{F(x) = F_{m-1}(x)}$$</div>
 
-<p>当 $L$ 取平方误差 $L = \frac{1}{2}(y - F)^2$ 时，负梯度恰好是 $y_i - F_{m-1}(x_i)$——即<strong>普通残差</strong>；取指数损失时退化为 AdaBoost。这一观点把"梯度下降"从参数空间推广到了<strong>函数空间</strong>。</p>
+<p>当 $L$ 取平方误差 $L = \frac{1}{2}(y - F)^2$ 时，负梯度恰好是 $y_i - F_{m-1}(x_i)$——即<strong>普通残差</strong>；取指数损失时退化为 AdaBoost。这一观点把"梯度下降"从参数空间推广到了<strong>函数空间</strong>。与 AdaBoost 相比，GBDT 将指数损失替换为任意可微损失，将样本权重调整替换为直接拟合负梯度，从而更灵活、更鲁棒。</p>
 
-<h3>8.3 GBDT 回归算法流程</h3>
+<h3>5.3 GBDT 回归算法流程</h3>
 <ol>
 <li>初始化：$F_0(x) = \arg\min_c \sum_i L(y_i, c)$（平方损失下即样本均值）。</li>
 <li>对 $m = 1, \dots, M$：
 <ol>
-<li>计算伪残差 $r_{im}$（公式 (11)）。</li>
+<li>计算伪残差 $r_{im}$（公式 (13)）。</li>
 <li>用回归树拟合 $\{(x_i, r_{im})\}$，得到叶子区域 $R_{jm}$。</li>
 <li>对每个叶子求最优输出 $c_{jm} = \arg\min_c \sum_{x_i \in R_{jm}} L\big(y_i, F_{m-1}(x_i) + c\big)$。</li>
 <li>更新模型 $F_m(x) = F_{m-1}(x) + \nu \sum_j c_{jm} \mathbb{I}[x \in R_{jm}]$，其中 $\nu$ 为学习率（shrinkage）。</li>
@@ -824,49 +860,34 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li>输出 $F_M(x)$。</li>
 </ol>
 
-<h3>8.4 GBDT 分类（对数几率损失）</h3>
+<h3>5.4 GBDT 分类（对数几率损失）</h3>
 <p>二分类场景采用<strong>对数几率损失（Logistic Loss）</strong> $L(y, F) = \log\big(1 + e^{-2yF}\big)$（$y \in \{-1, +1\}$），其负梯度为：</p>
 
 <div class="formula">$$\tilde{r}_{im} = \frac{2 y_i}{1 + e^{2 y_i F_{m-1}(x_i)}}$$</div>
 
 <p>最终的输出经 sigmoid 变换 $p = 1 / (1 + e^{-2F(x)})$ 得到类别概率。多分类则采用 One-vs-Rest 叠加 softmax 变换。</p>
 
-<h3>8.5 与 AdaBoost 的对比</h3>
-<div class="table-wrap">
-<table>
-<thead>
-<tr><th>维度</th><th>AdaBoost</th><th>GBDT</th></tr>
-</thead>
-<tbody>
-<tr><td>损失函数</td><td>指数损失（固定）</td><td>任意可微损失（灵活）</td></tr>
-<tr><td>每轮拟合对象</td><td>调整样本权重后直接训练</td><td>损失函数的负梯度（伪残差）</td></tr>
-<tr><td>对异常值</td><td>指数损失放大异常影响</td><td>可选 Huber 等鲁棒损失缓解</td></tr>
-<tr><td>可扩展性</td><td>仅二分类友好</td><td>回归 / 分类 / 排序 / 生存分析通用</td></tr>
-</tbody>
-</table>
-</div>
-
 </section>
 
-<!-- ========== 第九章 ========== -->
-<section id="ch9">
-<h2><span class="num">九</span> XGBoost</h2>
+<!-- ========== 第六章 ========== -->
+<section id="ch6">
+<h2><span class="num">6</span> XGBoost 与现代梯度提升框架</h2>
 
-<h3>9.1 XGBoost 的目标函数</h3>
+<h3>6.1 XGBoost 的目标函数</h3>
 <p><strong>XGBoost（eXtreme Gradient Boosting）</strong> 由陈天奇等于 2014 年提出，是 GBDT 的极致工程化版本。与经典 GBDT 相比，它在目标函数中显式加入<strong>正则化项</strong>（叶子数 + 叶子权重的 L2 惩罚），从源头控制模型复杂度、抑制过拟合：</p>
 
-<div class="formula" data-eq="(12)">$$\mathcal{L}^{(t)} = \sum_{i=1}^{N} L\left(y_i, \; \hat{y}_i^{(t-1)} + f_t(x_i)\right) + \Omega(f_t), \qquad \Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2$$</div>
+<div class="formula" data-eq="(14)">$$\mathcal{L}^{(t)} = \sum_{i=1}^{N} L\left(y_i, \; \hat{y}_i^{(t-1)} + f_t(x_i)\right) + \Omega(f_t), \qquad \Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2$$</div>
 
 <p>其中 $T$ 为叶子数，$w_j$ 为叶子得分，$\gamma$、$\lambda$ 为正则系数。</p>
 
-<h3>9.2 二阶泰勒展开近似</h3>
+<h3>6.2 二阶泰勒展开近似</h3>
 <p>经典 GBDT 只利用一阶导数（负梯度），XGBoost 则对损失函数做<strong>二阶泰勒展开</strong>，同时利用一阶导 $g_i$ 与二阶导 $h_i$，逼近精度更高、收敛更快：</p>
 
-<div class="formula" data-eq="(13)">$$\mathcal{L}^{(t)} \approx \sum_{i=1}^{n} \left[ L(y_i, \hat{y}_i^{(t-1)}) + g_i f_t(x_i) + \frac{1}{2} h_i f_t^2(x_i) \right] + \Omega(f_t)$$</div>
+<div class="formula" data-eq="(15)">$$\mathcal{L}^{(t)} \approx \sum_{i=1}^{n} \left[ L(y_i, \hat{y}_i^{(t-1)}) + g_i f_t(x_i) + \frac{1}{2} h_i f_t^2(x_i) \right] + \Omega(f_t)$$</div>
 
 <p>其中 $g_i = \partial_{\hat{y}^{(t-1)}} L(y_i, \hat{y}^{(t-1)})$，$h_i = \partial^2_{\hat{y}^{(t-1)}} L(y_i, \hat{y}^{(t-1)})$。由于常数项不影响优化，目标简化为对每个叶子求解最优权重 $w_j^* = -G_j / (H_j + \lambda)$，并按"增益公式" $\text{Gain} = \frac{1}{2}\left[\frac{G_L^2}{H_L+\lambda} + \frac{G_R^2}{H_R+\lambda} - \frac{(G_L+G_R)^2}{H_L+H_R+\lambda}\right] - \gamma$ 决定是否分裂。</p>
 
-<h3>9.3 XGBoost 的工程优化</h3>
+<h3>6.3 XGBoost 的工程优化</h3>
 <ul>
 <li><strong>列采样</strong>（Column Subsampling）：类似随机森林的特征随机，进一步降低方差、加速训练。</li>
 <li><strong>缺失值处理</strong>：自动学习缺失值的最优默认方向（把缺失样本分到增益更大的一侧）。</li>
@@ -875,29 +896,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>early stopping 与原生交叉验证</strong>：训练时内置早停与 CV 支持。</li>
 </ul>
 
-<h3>9.4 XGBoost vs GBDT</h3>
-<div class="table-wrap">
-<table>
-<thead>
-<tr><th>维度</th><th>GBDT（经典实现）</th><th>XGBoost</th></tr>
-</thead>
-<tbody>
-<tr><td>导数阶数</td><td>一阶（负梯度）</td><td>二阶泰勒展开</td></tr>
-<tr><td>正则化</td><td>仅靠学习率/剪枝</td><td>gamma + lambda 显式正则</td></tr>
-<tr><td>缺失值</td><td>需预处理填充</td><td>原生学习最优默认方向</td></tr>
-<tr><td>分裂搜索</td><td>逐特征排序扫描</td><td>预排序 + 分位数近似 + 并行</td></tr>
-<tr><td>扩展性</td><td>串行为主</td><td>多线程 / GPU / 分布式原生支持</td></tr>
-</tbody>
-</table>
-</div>
-
-</section>
-
-<!-- ========== 第十章 ========== -->
-<section id="ch10">
-<h2><span class="num">十</span> LightGBM 与 CatBoost</h2>
-
-<h3>10.1 LightGBM：Leaf-wise 生长策略、直方图算法、GOSS、EFB</h3>
+<h3>6.4 LightGBM：Leaf-wise 生长策略、直方图算法、GOSS、EFB</h3>
 <p><strong>LightGBM</strong> 由微软于 2017 年提出，主打"<strong>更快、更省内存</strong>"，四项核心技术：</p>
 <ul>
 <li><strong>直方图算法（Histogram-based）</strong>：把连续特征离散为固定数量的分箱，以直方图统计代替逐点排序，训练速度与内存占用大幅下降。</li>
@@ -906,7 +905,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>EFB（Exclusive Feature Bundling）</strong>：把互斥（几乎不同时为非零）的稀疏特征捆绑成单一特征，减少特征维数。</li>
 </ul>
 
-<h3>10.2 CatBoost：类别特征处理、Ordered Boosting</h3>
+<h3>6.5 CatBoost：类别特征处理、Ordered Boosting</h3>
 <p><strong>CatBoost</strong> 由 Yandex 于 2017 年发布，最擅长处理<strong>高基数类别特征</strong>：</p>
 <ul>
 <li><strong>类别特征原生支持</strong>：用"目标编码 + 有序统计"（基于目标均值与先验）把类别特征转为数值，避免独热编码爆炸。</li>
@@ -914,7 +913,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>对称树（Oblivious Tree）</strong>：同一深度所有节点用相同分裂特征，天然支持 GPU 并行且不易过拟合。</li>
 </ul>
 
-<h3>10.3 三大梯度提升框架对比</h3>
+<h3>6.6 三大梯度提升框架对比</h3>
 <div class="table-wrap">
 <table>
 <thead>
@@ -933,13 +932,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 </section>
-<!-- ========== 第十一章 ========== -->
-<section id="ch11">
-<h2><span class="num">十一</span> PyTorch 代码实现</h2>
+<!-- ========== 第七章 ========== -->
+<section id="ch7">
+<h2><span class="num">7</span> 代码实现</h2>
 
-<p>下面用 6 段可独立运行的 Python 代码演示核心算法。每段自带合成数据、可直接运行验证。代码以 <code>numpy</code> 实现为主（决策树/集成是传统机器学习算法，numpy 向量化表达最清晰；训练过程的 tensor 操作同样适用于 torch，两者接口等价），print 输出仅使用 ASCII 字符以保证 GBK 兼容。</p>
+<p>下面用 5 段可独立运行的 Python 代码演示核心算法。每段自带合成数据、可直接运行验证。代码以 <code>numpy</code> 实现为主（决策树/集成是传统机器学习算法，numpy 向量化表达最清晰；训练过程的 tensor 操作同样适用于 torch，两者接口等价），print 输出仅使用 ASCII 字符以保证 GBK 兼容。</p>
 
-<h3>11.1 决策树（CART，基尼指数，递归建树）</h3>
+<h3>7.1 决策树（CART，基尼指数，递归建树）</h3>
 <p>以鸢尾花式合成数据演示 CART 分类树：按基尼指数最小准则递归二分，直到深度或纯度条件满足：</p>
 <div class="code-block">
 <div class="code-header">decision_tree.py</div>
@@ -1024,7 +1023,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </pre>
 </div>
 
-<h3>11.2 随机森林（Bootstrap 采样 + 特征随机 + 投票）</h3>
+<h3>7.2 随机森林（Bootstrap 采样 + 特征随机 + 投票）</h3>
 <p>在决策树之上叠加 Bootstrap 样本随机与特征随机，训练 30 棵树并对预测投票：</p>
 <div class="code-block">
 <div class="code-header">random_forest.py</div>
@@ -1131,7 +1130,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </pre>
 </div>
 
-<h3>11.3 AdaBoost（样本权重更新 + 弱分类器加权组合）</h3>
+<h3>7.3 AdaBoost（样本权重更新 + 弱分类器加权组合）</h3>
 <p>以决策桩（stump）为弱分类器，每轮更新样本权重、计算分类器权重 $\alpha_m$，最终加权投票：</p>
 <div class="code-block">
 <div class="code-header">adaboost.py</div>
@@ -1200,7 +1199,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </pre>
 </div>
 
-<h3>11.4 GBDT 回归（负梯度拟合 + 学习率缩减）</h3>
+<h3>7.4 GBDT 回归（负梯度拟合 + 学习率缩减）</h3>
 <p>用平方损失下的残差作为负梯度，逐轮用回归树拟合残差，并以学习率（shrinkage）缩减每棵树贡献：</p>
 <div class="code-block">
 <div class="code-header">gbdt.py</div>
@@ -1288,7 +1287,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </pre>
 </div>
 
-<h3>11.5 XGBoost 简化版（二阶导数 + 正则化）</h3>
+<h3>7.5 XGBoost 简化版（二阶导数 + 正则化）</h3>
 <p>演示 XGBoost 的核心机制：利用一阶导 $g_i$ 与二阶导 $h_i$，配合 $\gamma/\lambda$ 正则计算分裂增益与叶子权重闭式解：</p>
 <div class="code-block">
 <div class="code-header">xgboost_approx.py</div>
@@ -1385,89 +1384,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 </pre>
 </div>
 
-<h3>11.6 随机森林特征重要性评估（不纯度下降）</h3>
-<p>统计各特征在所有分裂节点带来的基尼下降量并归一化，区分"区分性特征"与"噪声特征"：</p>
-<div class="code-block">
-<div class="code-header">feature_importance.py</div>
-<pre>
-<span class="kw">import</span> numpy <span class="kw">as</span> <span class="cls">np</span>
-
-<span class="com"># 特征重要性评估：不纯度下降（Gini importance）</span>
-<span class="com"># 复用上文随机森林实现中的 Tree，这里单独演示 Gini importance 统计</span>
-
-<span class="kw">def</span> gini_imp(labels):
-    n = <span class="fn">len</span>(labels)
-    <span class="kw">if</span> n == <span class="num">0</span>:
-        <span class="kw">return</span> <span class="num">0.0</span>
-    _, c = <span class="cls">np</span>.<span class="fn">unique</span>(labels, return_counts=<span class="kw">True</span>)
-    p = c / n
-    <span class="kw">return</span> <span class="num">1.0</span> - <span class="fn">float</span>((p ** <span class="num">2</span>).<span class="fn">sum</span>())
-
-
-<span class="kw">class</span> ImpTree:
-    <span class="str">&quot;&quot;</span><span class="str">&quot;记录每次分裂带来的不纯度下降，归属到对应特征&quot;</span><span class="str">&quot;&quot;</span>
-    <span class="kw">def</span> __init__(<span class="kw">self</span>, max_depth=<span class="num">3</span>):
-        <span class="kw">self</span>.max_depth = max_depth
-        <span class="kw">self</span>.imp = {}          <span class="com"># feat -&gt; 累积下降量</span>
-        <span class="kw">self</span>.n_cls = <span class="kw">None</span>
-
-    <span class="kw">def</span> fit(<span class="kw">self</span>, X, y):
-        <span class="kw">self</span>.n_cls = <span class="fn">int</span>(<span class="cls">np</span>.<span class="fn">max</span>(y)) + <span class="num">1</span>
-        <span class="kw">self</span>._build(X, y, <span class="num">0</span>)
-        <span class="kw">return</span> <span class="kw">self</span>
-
-    <span class="kw">def</span> _build(<span class="kw">self</span>, X, y, d):
-        <span class="kw">if</span> d &gt;= <span class="kw">self</span>.max_depth <span class="kw">or</span> <span class="fn">len</span>(<span class="cls">np</span>.<span class="fn">unique</span>(y)) == <span class="num">1</span>:
-            <span class="kw">return</span>
-        best = <span class="kw">None</span>
-        g0 = gini_imp(y)
-        <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(X.<span class="fn">shape</span>[<span class="num">1</span>]):
-            v = <span class="cls">np</span>.<span class="fn">unique</span>(X[:, f])
-            <span class="kw">for</span> t <span class="kw">in</span> (v[:-<span class="num">1</span>] + v[<span class="num">1</span>:]) / <span class="num">2.0</span>:
-                m = X[:, f] &lt;= t
-                <span class="kw">if</span> m.<span class="fn">sum</span>() &lt; <span class="num">1</span> <span class="kw">or</span> (~m).<span class="fn">sum</span>() &lt; <span class="num">1</span>:
-                    <span class="kw">continue</span>
-                gain = g0 - (<span class="fn">len</span>(y[m]) * gini_imp(y[m]) + <span class="fn">len</span>(y[~m]) * gini_imp(y[~m])) / <span class="fn">len</span>(y)
-                <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> gain &gt; best[<span class="num">0</span>]:
-                    best = (gain, f, t)
-        <span class="kw">if</span> best <span class="kw">is</span> <span class="kw">None</span> <span class="kw">or</span> best[<span class="num">0</span>] &lt;= <span class="num">0</span>:
-            <span class="kw">return</span>
-        _, f, t = best
-        <span class="kw">self</span>.imp[f] = <span class="kw">self</span>.imp.<span class="fn">get</span>(f, <span class="num">0.0</span>) + best[<span class="num">0</span>]
-        m = X[:, f] &lt;= t
-        <span class="kw">self</span>._build(X[m], y[m], d + <span class="num">1</span>)
-        <span class="kw">self</span>._build(X[~m], y[~m], d + <span class="num">1</span>)
-
-
-<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
-    rng = <span class="cls">np</span>.random.default_rng(<span class="num">2</span>)
-    <span class="com"># 3 特征，其中只有特征 0 真正区分两类</span>
-    n = <span class="num">300</span>
-    x0 = rng.normal([<span class="num">1.5</span>] * n, <span class="num">0.8</span>)          <span class="com"># 区分特征</span>
-    x1 = rng.normal(<span class="num">3.0</span>, <span class="num">1.0</span>, n)             <span class="com"># 噪声特征</span>
-    x2 = rng.normal(<span class="num">5.0</span>, <span class="num">1.0</span>, n)             <span class="com"># 噪声特征</span>
-    X = <span class="cls">np</span>.column_stack([x0, x1, x2])
-    y = <span class="cls">np</span>.where(x0 &gt; <span class="num">1.5</span>, <span class="num">1</span>, <span class="num">0</span>)
-
-    trees = [ImpTree(max_depth=<span class="num">4</span>).fit(X, y) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">20</span>)]
-    total = {f: <span class="num">0.0</span> <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>)}
-    <span class="kw">for</span> t <span class="kw">in</span> trees:
-        <span class="kw">for</span> f, v <span class="kw">in</span> t.imp.<span class="fn">items</span>():
-            total[f] += v
-    s = <span class="fn">sum</span>(total.values()) <span class="kw">or</span> <span class="num">1.0</span>
-    names = [<span class="str">&quot;feat0&quot;</span>, <span class="str">&quot;feat1&quot;</span>, <span class="str">&quot;feat2&quot;</span>]
-    <span class="kw">for</span> f <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
-        <span class="fn">print</span>(names[f], <span class="str">&quot;importance =&quot;</span>, <span class="fn">round</span>(total[f] / s, <span class="num">4</span>))
-</pre>
-</div>
-
 </section>
 
-<!-- ========== 第十二章 ========== -->
-<section id="ch12">
-<h2><span class="num">十二</span> 算法对比与工程选型</h2>
+<!-- ========== 第八章 ========== -->
+<section id="ch8">
+<h2><span class="num">8</span> 算法对比与总结</h2>
 
-<h3>12.1 主流算法对比表</h3>
+<h3>8.1 主流算法对比表</h3>
 <div class="table-wrap">
 <table>
 <thead>
@@ -1485,7 +1408,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </table>
 </div>
 
-<h3>12.2 工程选型建议</h3>
+<h3>8.2 工程选型建议</h3>
 <ul>
 <li><strong>解释性要求高</strong> → 决策树（或单棵 CART + 规则导出）。</li>
 <li><strong>通用分类/回归、开箱即用</strong> → 随机森林（几乎无需调参就有不错效果，还能给出特征重要性）。</li>
@@ -1499,7 +1422,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>工程上常用路线：<strong>先随机森林建基线</strong>（快速、稳、给特征重要性）→ <strong>再用 LightGBM/XGBoost 提精度</strong>（网格搜索调参）→ <strong>用 SHAP 做最终解释与特征筛选</strong>。三个工具恰好覆盖"基线、精度、解释"三个阶段。</p>
 </div>
 
-<h3>12.3 超参数调优建议</h3>
+<h3>8.3 超参数调优建议</h3>
 <div class="table-wrap">
 <table>
 <thead>
@@ -1519,13 +1442,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </table>
 </div>
 
-</section>
-
-<!-- ========== 第十三章 ========== -->
-<section id="ch13">
-<h2><span class="num">十三</span> 演进时间线与总结</h2>
-
-<h3>13.1 发展时间线</h3>
+<h3>8.4 演进时间线</h3>
 <p>从单棵决策树到梯度提升框架，集成学习走过了 30 余年。下图给出关键里程碑的总览：</p>
 
 <div class="svg-box">
@@ -1610,50 +1527,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
-<div class="timeline">
-<div class="timeline-item">
-<div class="year">1984</div>
-<div class="event">CART（Breiman 等）</div>
-<div class="desc">分类回归树与代价复杂度剪枝，随机森林的基学习器。</div>
-</div>
-<div class="timeline-item">
-<div class="year">1986</div>
-<div class="event">ID3（Quinlan）</div>
-<div class="desc">以信息增益为准则的决策树学习算法。</div>
-</div>
-<div class="timeline-item">
-<div class="year">1993</div>
-<div class="event">C4.5（Quinlan）</div>
-<div class="desc">增益率 + 连续特征 + 剪枝，决策树实用化标杆。</div>
-</div>
-<div class="timeline-item">
-<div class="year">1995</div>
-<div class="event">AdaBoost（Freund &amp; Schapire）</div>
-<div class="desc">第一个实用 Boosting 算法，理论误差界完备。</div>
-</div>
-<div class="timeline-item">
-<div class="year">1999</div>
-<div class="event">Gradient Boosting（Friedman）</div>
-<div class="desc">把 Boosting 统一到函数空间梯度下降。</div>
-</div>
-<div class="timeline-item">
-<div class="year">2001</div>
-<div class="event">Random Forest（Breiman）</div>
-<div class="desc">Bagging + 特征随机，机器学习"瑞士军刀"。</div>
-</div>
-<div class="timeline-item">
-<div class="year">2014</div>
-<div class="event">XGBoost（Chen &amp; Guestrin）</div>
-<div class="desc">二阶泰勒 + 正则化，横扫 Kaggle 的结构化数据竞赛。</div>
-</div>
-<div class="timeline-item">
-<div class="year">2017</div>
-<div class="event">LightGBM（Microsoft）与 CatBoost（Yandex）</div>
-<div class="desc">直方图/GOSS/EFB 提速；有序编码与 Ordered Boosting 处理类别特征。</div>
-</div>
-</div>
-
-<h3>13.2 总结：从单棵树到集成学习的演进脉络</h3>
+<h3>8.5 总结</h3>
 <p>回望整条演进路径，可以提炼出三条主线：</p>
 <ul>
 <li><strong>从"单模型"到"组合模型"</strong>：单棵决策树受限于偏差/方差的固有权衡，集成学习通过"并行平均"（Bagging）与"串行纠错"（Boosting）两条路线突破单模型天花板。</li>
@@ -1661,31 +1535,26 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>从"算法"到"工程系统"</strong>：LightGBM 的直方图与 GOSS、CatBoost 的有序编码、三大框架的 GPU/分布式支持，说明树模型竞争的主战场已经从"算法思想"转向"工程效率与易用性"。</li>
 </ul>
 
-<div class="callout success">
-<div class="callout-title">给实践者的核心结论</div>
-<p>结构化数据建模的实战顺序清晰可循：<strong>随机森林保底 → 梯度提升（XGBoost/LightGBM/CatBoost）冲精度 → SHAP 做解释</strong>。理解本文的偏差-方差分解、负梯度拟合与二阶优化三条思想主线，足以应对绝大多数表格数据建模任务。</p>
-</div>
-
 </section>
 
 <!-- ========== 参考文献 ========== -->
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-<li>Breiman, L. (2001). Random Forests. <em>Machine Learning, 45(1), 5-32</em>. (随机森林奠基论文)</li>
-<li>Breiman, L., Friedman, J. H., Olshen, R. A., &amp; Stone, C. J. (1984). Classification and Regression Trees. <em>Wadsworth</em>. (CART 经典专著)</li>
-<li>Quinlan, J. R. (1986). Induction of Decision Trees. <em>Machine Learning, 1(1), 81-106</em>. (ID3)</li>
-<li>Quinlan, J. R. (1993). C4.5: Programs for Machine Learning. <em>Morgan Kaufmann</em>. (C4.5)</li>
-<li>Freund, Y., &amp; Schapire, R. E. (1997). A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting. <em>Journal of Computer and System Sciences, 55(1), 119-139</em>. (AdaBoost 经典)</li>
-<li>Freund, Y., &amp; Schapire, R. E. (1996). Experiments with a New Boosting Algorithm. <em>ICML 1996</em>. (AdaBoost 实验)</li>
-<li>Breiman, L. (1996). Bagging Predictors. <em>Machine Learning, 24(2), 123-140</em>. (Bagging)</li>
-<li>Friedman, J. H. (2001). Greedy Function Approximation: A Gradient Boosting Machine. <em>Annals of Statistics, 29(5), 1189-1232</em>. (GBDT)</li>
-<li>Friedman, J. H. (2002). Stochastic Gradient Boosting. <em>Computational Statistics &amp; Data Analysis, 38(4), 367-378</em>. (随机梯度提升)</li>
-<li>Chen, T., &amp; Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. <em>KDD 2016</em>. (XGBoost)</li>
-<li>Ke, G., et al. (2017). LightGBM: A Highly Efficient Gradient Boosting Decision Tree. <em>NeurIPS 2017</em>. (LightGBM)</li>
-<li>Prokhorenkova, L., et al. (2018). CatBoost: Unbiased Boosting with Categorical Features. <em>NeurIPS 2018</em>. (CatBoost)</li>
-<li>Lundberg, S. M., &amp; Lee, S.-I. (2017). A Unified Approach to Interpreting Model Predictions. <em>NeurIPS 2017</em>. (SHAP)</li>
-<li>Louppe, G., et al. (2013). Understanding Variable Importances in Forests of Randomized Trees. <em>NeurIPS 2013</em>. (特征重要性理论分析)</li>
+<li>Breiman, L. (2001). <em>Random Forests</em>. Machine Learning, 45(1), 5-32. (随机森林奠基论文)</li>
+<li>Breiman, L., Friedman, J. H., Olshen, R. A., &amp; Stone, C. J. (1984). <em>Classification and Regression Trees</em>. Wadsworth. (CART 经典专著)</li>
+<li>Quinlan, J. R. (1986). <em>Induction of Decision Trees</em>. Machine Learning, 1(1), 81-106. (ID3)</li>
+<li>Quinlan, J. R. (1993). <em>C4.5: Programs for Machine Learning</em>. Morgan Kaufmann. (C4.5)</li>
+<li>Freund, Y., &amp; Schapire, R. E. (1997). <em>A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting</em>. Journal of Computer and System Sciences, 55(1), 119-139. (AdaBoost 经典)</li>
+<li>Freund, Y., &amp; Schapire, R. E. (1996). <em>Experiments with a New Boosting Algorithm</em>. ICML 1996. (AdaBoost 实验)</li>
+<li>Breiman, L. (1996). <em>Bagging Predictors</em>. Machine Learning, 24(2), 123-140. (Bagging)</li>
+<li>Friedman, J. H. (2001). <em>Greedy Function Approximation: A Gradient Boosting Machine</em>. Annals of Statistics, 29(5), 1189-1232. (GBDT)</li>
+<li>Friedman, J. H. (2002). <em>Stochastic Gradient Boosting</em>. Computational Statistics &amp; Data Analysis, 38(4), 367-378. (随机梯度提升)</li>
+<li>Chen, T., &amp; Guestrin, C. (2016). <em>XGBoost: A Scalable Tree Boosting System</em>. KDD 2016. (XGBoost)</li>
+<li>Ke, G., et al. (2017). <em>LightGBM: A Highly Efficient Gradient Boosting Decision Tree</em>. NeurIPS 2017. (LightGBM)</li>
+<li>Prokhorenkova, L., et al. (2018). <em>CatBoost: Unbiased Boosting with Categorical Features</em>. NeurIPS 2018. (CatBoost)</li>
+<li>Lundberg, S. M., &amp; Lee, S.-I. (2017). <em>A Unified Approach to Interpreting Model Predictions</em>. NeurIPS 2017. (SHAP)</li>
+<li>Louppe, G., et al. (2013). <em>Understanding Variable Importances in Forests of Randomized Trees</em>. NeurIPS 2013. (特征重要性理论分析)</li>
 </ol>
 </section>
 

@@ -236,12 +236,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>1.3 条件独立假设</h3>
 
 <h4>指数级概率难题</h4>
-<p>直接使用贝叶斯定理进行分类有一个致命问题：计算 $P(\mathbf{x} \mid y)$ 需要估计特征向量的<strong>联合概率分布</strong>。如果 $\mathbf{x} = (x_1, x_2, \ldots, x_d)$ 有 $d$ 个特征，每个特征有 $k$ 个取值，则需要估计 $k^d$ 个参数——这随特征维度<strong>指数增长</strong>，在数据和计算上都不可行。</p>
+<p>直接使用贝叶斯定理进行分类有一个致命问题：计算 $P(\mathbf{x} \mid y)$ 需要估计特征向量的<strong>联合概率分布</strong>。如果 $\mathbf{x} = (x_1, x_2, \ldots, x_d)$ 有 $d$ 个特征，每个特征有 $k$ 个取值，则单个类别的联合分布就需要估计 $k^d - 1$ 个参数——这随特征维度<strong>指数增长</strong>，在数据和计算上都不可行。</p>
 
 <h4>条件独立性假设</h4>
 <p>朴素贝叶斯做出了一个大胆的"朴素"假设：<strong>在给定类别 $y$ 的条件下，各特征之间相互独立</strong>。即：</p>
 <div class="formula" data-eq="(4)">$$P(\mathbf{x} \mid y) = P(x_1, x_2, \ldots, x_d \mid y) = \prod_{i=1}^{d} P(x_i \mid y)$$</div>
-<p>这个假设将联合概率分解为 $d$ 个独立的一维条件概率的乘积，参数量从 $k^d$ 降为 $d \times k$，是<strong>线性</strong>增长而非指数增长。</p>
+<p>这个假设将联合概率分解为 $d$ 个独立的一维条件概率的乘积，参数量从每类 $k^d$ 量级降为每类 $d(k-1)$ 量级（自由参数），是<strong>线性</strong>增长而非指数增长。</p>
 
 <div class="callout warn">
 <div class="callout-title">"朴素"在哪里？</div>
@@ -318,7 +318,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h4>多项式模型的平滑</h4>
 <p>对于多项式朴素贝叶斯（文本分类），平滑后的参数为：</p>
 <div class="formula" data-eq="(9)">$$\hat{\theta}_{y,i} = \frac{N_{y,i} + \alpha}{N_y + \alpha d}$$</div>
-<p>其中 $N_{y,i}$ 是类别 $y$ 中词 $i$ 的总出现次数，$N_y = \sum_i N_{y,i}$ 是类别 $y$ 的总词数，$d$ 是词表大小。</p>
+<p>其中 $N_{y,i}$ 是类别 $y$ 中词 $i$ 的总出现次数，$N_y = \sum_i N_{y,i}$ 是类别 $y$ 的总词数（<strong>注意：多项式模型在此处将 $N_y$ 重定义为词数而非符号表中的样本数</strong>），$d$ 是词表大小。</p>
 
 <h3>1.5 预测规则：对数空间 MAP</h3>
 
@@ -452,7 +452,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <table>
 <tr><th>类别</th><th>更新前</th><th>累加新词频</th><th>更新后</th></tr>
 <tr><td>体育</td><td>总词数 1000，进球 400、算法 200</td><td>进球 +3、算法 +1</td><td>总词数 1004，$\theta_{\text{goal}} \approx 0.401$、$\theta_{\text{algo}} \approx 0.200$</td></tr>
-<tr><td>科技</td><td>总词数 1000，芯片 450、算法 400</td><td>芯片 +3、算法 +2</td><td>总词数 1005，$\theta_{\text{chip}} \approx 0.450$、$\theta_{\text{algo}} \approx 0.400$</td></tr>
+<tr><td>科技</td><td>总词数 1000，芯片 450、算法 400</td><td>芯片 +3、算法 +2</td><td>总词数 1005，$\theta_{\text{chip}} \approx 0.450$、$\theta_{\text{algo}} \approx 0.399$</td></tr>
 </table>
 </div>
 <p>词频表随新文章<strong>滚动累加</strong>，模型不断吸收新知识。</p>
@@ -558,7 +558,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <table>
 <tr><th>维度</th><th>多项式 NB</th><th>伯努利 NB</th></tr>
 <tr><td>特征值</td><td>词频（整数）</td><td>0/1（是否出现）</td></tr>
-<tr><td>不出现的词</td><td>不影响（$0^0=1$）</td><td>显式建模 $P(x_i=0|y)$</td></tr>
+<tr><td>不出现的词</td><td>不影响（$x_i=0$ 时 $\theta_{y,i}^{x_i}=1$）</td><td>显式建模 $P(x_i=0|y)$</td></tr>
 <tr><td>适合文档</td><td>中长文本（新闻、论文）</td><td>短文本（邮件、推文）</td></tr>
 <tr><td>词频信息</td><td>利用</td><td>忽略</td></tr>
 </table>
@@ -591,7 +591,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>停用词过滤</strong>：去除"的、是、在"等高频无信息词</li>
 <li><strong>n-gram 特征</strong>：使用二元组（如"免费"+"领取"→"免费领取"）捕捉词序信息</li>
 <li><strong>阈值调优</strong>：设置 $\tau = 999$（强保守），避免误删正常邮件</li>
-<li><strong>增量学习</strong>：用户标记的新spam邮件可在线更新模型参数</li>
+<li><strong>增量学习</strong>：用户标记的新 spam 邮件可在线更新模型参数</li>
 </ul>
 </div>
 
@@ -610,13 +610,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>4.2 在线学习与增量更新</h3>
 <p>朴素贝叶斯天然支持<strong>在线更新</strong>：当新样本到来时，只需更新计数器（$N_y$ 和 $N_{y,x_i}$），无需重新训练。这使它在流式数据场景中极其高效。</p>
-<div class="formula" data-eq="(17)">$$\hat{P}(x_i \mid y)^{(t+1)} = \frac{N_{y,x_i}^{(t)} + \mathbb{I}(x_i^{(t)}, y^{(t)}) + \alpha}{N_y^{(t)} + \mathbb{I}(y^{(t)}) + \alpha|V_i|}$$</div>
-<p>其中上标 $(t)$ 表示时刻，$\mathbb{I}$ 是指示函数。</p>
+<div class="formula" data-eq="(17)">$$\hat{P}(x_i \mid y)^{(t+1)} = \frac{N_{y,x_i}^{(t)} + \mathbb{I}(y^{(t)} = y,\; x_i^{(t)} = x_i) + \alpha}{N_y^{(t)} + \mathbb{I}(y^{(t)} = y) + \alpha|V_i|}$$</div>
+<p>其中上标 $(t)$ 表示时刻，$\mathbb{I}$ 是指示函数：当新样本 $\mathbf{x}^{(t)}$ 的类别 $y^{(t)}$ 等于 $y$ 时，分母 $N_y$ 加 $1$；若同时其特征 $i$ 取值为 $x_i$，则分子 $N_{y,x_i}$ 再加 $1$。新样本不属于类别 $y$ 时分子分母均不变。</p>
 
 <h3>4.3 补充朴素贝叶斯（Complement NB）</h3>
-<p>当数据类别<strong>极度不平衡</strong>时，标准朴素贝叶斯的先验会偏向多数类。<strong>补充朴素贝叶斯</strong>（Complement NB）不直接计算每类的概率，而是计算<strong>不属于该类的概率</strong>，然后选择补集概率最小的类：</p>
+<p>当数据类别<strong>极度不平衡</strong>时，标准朴素贝叶斯的先验会偏向多数类。<strong>补充朴素贝叶斯</strong>（Complement NB）不直接计算每类的概率，而是计算<strong>不属于该类的概率</strong>——其中 $\bar{y}$ 表示除 $y$ 以外的所有类别（补集），$N_{\bar{y},i}$ 为补集中特征 $i$ 的计数、$N_{\bar{y}}$ 为补集总词数——然后选择补集概率最小的类：</p>
 <div class="formula" data-eq="(18)">$$\hat{y} = \arg\min_y \; \sum_{i} x_i \log\frac{N_{\bar{y},i} + \alpha}{N_{\bar{y}} + \alpha d}$$</div>
-<p>其中 $\bar{y}$ 表示除 $y$ 以外的所有类别。Complement NB 在文本分类的不平衡数据集上表现优于标准多项式 NB。</p>
+<p>Complement NB 在文本分类的不平衡数据集上表现优于标准多项式 NB。</p>
 
 <h3>4.4 从朴素贝叶斯到贝叶斯网络</h3>
 
@@ -629,50 +629,77 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>其中 $\text{Pa}(X_i)$ 是 $X_i$ 的父节点集合。</p>
 
 <div class="svg-box">
-<svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 900 340" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <marker id="nbA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker>
-  <marker id="nbNP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#7c3aed"/></marker>
+  <marker id="nbA" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#334155"/></marker>
+  <marker id="nbNP" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="#7c3aed"/></marker>
 </defs>
-<!-- 左图：朴素贝叶斯（星形） -->
-<text x="150" y="28" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">朴素贝叶斯（星形）</text>
-<circle cx="150" cy="62" r="26" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
-<text x="150" y="68" fill="#1e293b" font-size="13" text-anchor="middle" font-weight="600">y</text>
-<line x1="150" y1="90" x2="60" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<line x1="150" y1="90" x2="115" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<line x1="150" y1="90" x2="185" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<line x1="150" y1="90" x2="240" y2="150" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<circle cx="60" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="60" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x₁</text>
-<circle cx="115" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="115" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x₂</text>
-<circle cx="185" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="185" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x₃</text>
-<circle cx="240" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="240" y="173" fill="#1e293b" font-size="11" text-anchor="middle">x_d</text>
-<text x="150" y="215" fill="#64748b" font-size="11" text-anchor="middle">所有特征条件独立于 y，互不连接</text>
-<text x="150" y="236" fill="#94a3b8" font-size="10.5" text-anchor="middle">P(y, x₁…x_d) = P(y) Π P(xᵢ|y)</text>
 
-<!-- 中间：一般化箭头 -->
-<line x1="320" y1="120" x2="400" y2="120" stroke="#7c3aed" stroke-width="3" stroke-dasharray="8,4" class="flow-line" marker-end="url(#nbNP)"/>
-<text x="360" y="105" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">一般化</text>
+<!-- ===== 左图：朴素贝叶斯（星形） ===== -->
+<text x="160" y="28" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">朴素贝叶斯（星形）</text>
 
-<!-- 右图：贝叶斯网络（DAG） -->
-<text x="600" y="28" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">贝叶斯网络（DAG）</text>
-<circle cx="600" cy="62" r="24" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
-<text x="600" y="68" fill="#1e293b" font-size="12" text-anchor="middle" font-weight="600">A</text>
-<line x1="560" y1="86" x2="485" y2="148" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<line x1="640" y1="86" x2="715" y2="148" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<circle cx="470" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="470" y="183" fill="#1e293b" font-size="12" text-anchor="middle">B</text>
-<circle cx="730" cy="168" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
-<text x="730" y="183" fill="#1e293b" font-size="12" text-anchor="middle">C</text>
-<line x1="470" y1="191" x2="560" y2="248" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<line x1="730" y1="191" x2="640" y2="248" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
-<circle cx="600" cy="268" r="21" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
-<text x="600" y="283" fill="#1e293b" font-size="12" text-anchor="middle">D</text>
-<text x="600" y="215" fill="#64748b" font-size="11" text-anchor="middle">A→B、A→C、B→D、C→D：任意依赖</text>
-<text x="600" y="240" fill="#94a3b8" font-size="10.5" text-anchor="middle">P(A,B,C,D) = P(A)P(B|A)P(C|A)P(D|B,C)</text>
+<!-- 类别节点 y -->
+<circle cx="160" cy="74" r="24" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="160" y="80" fill="#1e293b" font-size="13" text-anchor="middle" font-weight="600">y</text>
+
+<!-- 4 条箭头 y → x_i，起点在圆边外侧、终点在子节点圆边外侧 -->
+<!-- 到 x1: 方向 (160,98)→(60,160)，dist≈79.4，起点偏移 +24、终点偏移 -21 -->
+<line x1="144" y1="96" x2="67" y2="159" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<!-- 到 x2 -->
+<line x1="154" y1="98" x2="117" y2="155" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<!-- 到 x3 -->
+<line x1="166" y1="98" x2="177" y2="155" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<!-- 到 xd -->
+<line x1="177" y1="96" x2="229" y2="159" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+
+<!-- 特征节点 x1..xd -->
+<circle cx="60" cy="178" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="60" y="184" fill="#1e293b" font-size="11" text-anchor="middle">x₁</text>
+<circle cx="110" cy="178" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="110" y="184" fill="#1e293b" font-size="11" text-anchor="middle">x₂</text>
+<circle cx="185" cy="178" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="185" y="184" fill="#1e293b" font-size="11" text-anchor="middle">x₃</text>
+<circle cx="245" cy="178" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="245" y="184" fill="#1e293b" font-size="11" text-anchor="middle">x_d</text>
+
+<!-- 说明文字放在节点下方，与线条无交叉 -->
+<text x="160" y="232" fill="#64748b" font-size="11" text-anchor="middle">所有特征条件独立于 y，互不连接</text>
+<text x="160" y="252" fill="#94a3b8" font-size="10.5" text-anchor="middle">P(y, x₁…x_d) = P(y) Π P(xᵢ|y)</text>
+
+<!-- ===== 中间：一般化箭头 ===== -->
+<line x1="310" y1="120" x2="400" y2="120" stroke="#7c3aed" stroke-width="3" stroke-dasharray="8,4" marker-end="url(#nbNP)"/>
+<text x="355" y="110" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">一般化</text>
+
+<!-- ===== 右图：贝叶斯网络（DAG） ===== -->
+<text x="610" y="28" fill="#0f172a" font-size="15" font-weight="700" text-anchor="middle">贝叶斯网络（DAG）</text>
+
+<!-- 节点 A（顶层） -->
+<circle cx="610" cy="74" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<text x="610" y="80" fill="#1e293b" font-size="12" text-anchor="middle" font-weight="600">A</text>
+
+<!-- A→B：方向 (590,92)→(490,158)，起点偏移 22、终点偏移 21 -->
+<line x1="592" y1="93" x2="494" y2="158" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<!-- A→C：方向 (630,92)→(730,158) -->
+<line x1="628" y1="93" x2="722" y2="158" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+
+<!-- 节点 B、C（中层） -->
+<circle cx="480" cy="178" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="480" y="184" fill="#1e293b" font-size="12" text-anchor="middle">B</text>
+<circle cx="735" cy="178" r="21" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<text x="735" y="184" fill="#1e293b" font-size="12" text-anchor="middle">C</text>
+
+<!-- B→D：方向 (480,200)→(580,260) -->
+<line x1="488" y1="197" x2="576" y2="254" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+<!-- C→D：方向 (735,200)→(640,260) -->
+<line x1="727" y1="197" x2="644" y2="254" stroke="#334155" stroke-width="1.5" marker-end="url(#nbA)"/>
+
+<!-- 节点 D（底层） -->
+<circle cx="610" cy="272" r="21" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+<text x="610" y="278" fill="#1e293b" font-size="12" text-anchor="middle">D</text>
+
+<!-- 说明文字放在右下角空白区 -->
+<text x="610" y="318" fill="#64748b" font-size="11" text-anchor="middle">A→B、A→C、B→D、C→D：任意依赖</text>
+<text x="610" y="336" fill="#94a3b8" font-size="10.5" text-anchor="middle">P(A,B,C,D) = P(A)P(B|A)P(C|A)P(D|B,C)</text>
 </svg>
 </div>
 
@@ -739,7 +766,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>条件独立假设过强</strong>：特征相关时性能下降</li>
 <li><strong>概率估计不准</strong>：虽然分类准确，但输出概率往往过自信（接近 0 或 1）</li>
 <li><strong>零概率问题</strong>：需要平滑处理</li>
-<li><strong>决策边界简单</strong>：线性边界，无法捕捉复杂模式</li>
+<li><strong>决策边界简单</strong>：多项式 / 伯努利 NB 为线性边界，高斯 NB 为二次曲面，均难以捕捉复杂模式</li>
 <li><strong>对特征缩放敏感</strong>（高斯 NB）：需要标准化</li>
 </ul>
 
@@ -925,7 +952,7 @@ labels = [<span class="str">"spam"</span>, <span class="str">"ham"</span>, <span
 
 pipeline = <span class="fn">build_nb_pipeline</span>(alpha=<span class="num">0.5</span>)
 scores = <span class="cls">cross_val_score</span>(pipeline, texts, labels, cv=<span class="num">3</span>, scoring=<span class="str">'f1_macro'</span>)
-<span class="fn">print</span>(f<span class="str">"5-Fold F1: {scores.mean():.4f} +/- {scores.std():.4f}"</span>)
+<span class="fn">print</span>(f<span class="str">"3-Fold F1: {scores.mean():.4f} +/- {scores.std():.4f}"</span>)
 
 pipeline.<span class="fn">fit</span>(texts, labels)
 test = [<span class="str">"免费的报告请查收"</span>]
@@ -1031,18 +1058,18 @@ test = [<span class="str">"免费的报告请查收"</span>]
 </div>
 <div class="timeline-item">
 <div class="year">1812</div>
-<div class="event">Laplace 独立重新发现贝叶斯定理</div>
-<div class="desc">Laplace 将贝叶斯定理系统化，并提出了拉普拉斯平滑</div>
+<div class="event">Laplace 系统化贝叶斯定理</div>
+<div class="desc">Laplace 独立推导逆概率法则并在《概率分析理论》中系统化，同时提出拉普拉斯平滑</div>
 </div>
 <div class="timeline-item">
 <div class="year">1960s</div>
 <div class="event">朴素贝叶斯在信息检索中应用</div>
-<div class="desc">Maron 和 Kuhns 将贝叶斯方法用于文档自动分类</div>
+<div class="desc">Maron 提出基于贝叶斯概率的文档自动索引方法</div>
 </div>
 <div class="timeline-item">
-<div class="year">1996</div>
-<div class="event">Joachims 提出文本分类中的 NB 方法</div>
-<div class="desc">系统验证朴素贝叶斯在文本分类中的有效性</div>
+<div class="year">1997</div>
+<div class="event">Joachims 从概率角度分析 TF-IDF 文本分类</div>
+<div class="desc">解释 TF-IDF 加权的概率性，推动文本分类的向量化方法发展</div>
 </div>
 <div class="timeline-item">
 <div class="year">1998</div>
@@ -1050,9 +1077,9 @@ test = [<span class="str">"免费的报告请查收"</span>]
 <div class="desc">开创了 NB 垃圾过滤的工程实践范式</div>
 </div>
 <div class="timeline-item">
-<div class="year">2001</div>
-<div class="event">McCallum 提出 TAN 和补充朴素贝叶斯</div>
-<div class="desc">通过树增强和补集方法改进朴素贝叶斯的性能</div>
+<div class="year">2002</div>
+<div class="event">Ng &amp; Jordan 系统比较生成式与判别式分类器</div>
+<div class="desc">理论分析朴素贝叶斯（生成式）与逻辑回归（判别式）在小样本与大数据场景下的差异</div>
 </div>
 <div class="timeline-item">
 <div class="year">2003</div>
@@ -1086,21 +1113,21 @@ test = [<span class="str">"免费的报告请查收"</span>]
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-<li>Bayes, T. (1763). An essay towards solving a problem in the doctrine of chances. <em>Phil. Trans. Royal Society, 53, 370-418</em>.</li>
-<li>Laplace, P. S. (1812). Théorie analytique des probabilités. <em>Courcier</em>. (拉普拉斯平滑)</li>
-<li>Maron, M. E. (1961). Automatic indexing: an experimental inquiry. <em>JACM, 8(3), 404-417</em>. (信息检索中的 NB)</li>
-<li>Duda, R. O., &amp; Hart, P. E. (1973). Pattern Classification and Scene Analysis. <em>Wiley</em>. (经典教材)</li>
-<li>Lewis, D. D. (1998). Naive (Bayes) at forty: The independence assumption in IR. <em>ECML 1998</em>. (NB 在 IR 中的独立假设分析)</li>
-<li>Joachims, T. (1997). A probabilistic analysis of the Rocchio algorithm with TFIDF for text categorization. <em>ICML 1997</em>.</li>
-<li>Sahami, M., et al. (1998). A Bayesian approach to filtering junk e-mail. <em>AAAI Workshop on Learning for Text Categorization</em>. (垃圾邮件过滤)</li>
-<li>McCallum, A., &amp; Nigam, K. (1998). A comparison of event models for Naive Bayes text classification. <em>AAAI Workshop</em>. (多项式 vs 伯努利 NB)</li>
-<li>Rennie, J. D., et al. (2003). Tackling the poor assumptions of Naive Bayes text classifiers. <em>ICML 2003</em>. (Complement NB)</li>
-<li>Friedman, N., Geiger, D., &amp; Goldszmidt, M. (1997). Bayesian network classifiers. <em>Machine Learning, 29, 131-163</em>. (TAN)</li>
-<li>Webb, G. I., et al. (2005). Not so naive Bayes: aggregating one-dependence estimators. <em>Machine Learning, 58, 5-24</em>. (AODE)</li>
-<li>Domingos, P., &amp; Pazzani, M. (1997). On the optimality of the simple Bayesian classifier under zero-one loss. <em>Machine Learning, 29, 103-130</em>. (NB 为何有效的理论分析)</li>
-<li>Ng, A. Y., &amp; Jordan, M. I. (2002). On discriminative vs. generative classifiers. <em>NIPS 2002</em>. (NB vs 逻辑回归)</li>
-<li>Elkan, C. (1997). Boosting and naive Bayesian learning. <em>Technical Report, UCSD</em>.</li>
-<li>Kibriya, A. M., et al. (2004). Multinomial naive Bayes for text categorization revisited. <em>AI 2004</em>.</li>
+<li>Bayes, T. (1763). <em>An essay towards solving a problem in the doctrine of chances</em>. Phil. Trans. Royal Society, 53, 370-418.</li>
+<li>Laplace, P. S. (1812). <em>Théorie analytique des probabilités</em>. Courcier. (拉普拉斯平滑)</li>
+<li>Maron, M. E. (1961). <em>Automatic indexing: an experimental inquiry</em>. JACM, 8(3), 404-417. (信息检索中的 NB)</li>
+<li>Duda, R. O., &amp; Hart, P. E. (1973). <em>Pattern Classification and Scene Analysis</em>. Wiley. (经典教材)</li>
+<li>Lewis, D. D. (1998). <em>Naive (Bayes) at forty: The independence assumption in IR</em>. ECML 1998. (NB 在 IR 中的独立假设分析)</li>
+<li>Joachims, T. (1997). <em>A probabilistic analysis of the Rocchio algorithm with TFIDF for text categorization</em>. ICML 1997.</li>
+<li>Sahami, M., et al. (1998). <em>A Bayesian approach to filtering junk e-mail</em>. AAAI Workshop on Learning for Text Categorization. (垃圾邮件过滤)</li>
+<li>McCallum, A., &amp; Nigam, K. (1998). <em>A comparison of event models for Naive Bayes text classification</em>. AAAI Workshop. (多项式 vs 伯努利 NB)</li>
+<li>Rennie, J. D., et al. (2003). <em>Tackling the poor assumptions of Naive Bayes text classifiers</em>. ICML 2003. (Complement NB)</li>
+<li>Friedman, N., Geiger, D., &amp; Goldszmidt, M. (1997). <em>Bayesian network classifiers</em>. Machine Learning, 29, 131-163. (TAN)</li>
+<li>Webb, G. I., et al. (2005). <em>Not so naive Bayes: aggregating one-dependence estimators</em>. Machine Learning, 58, 5-24. (AODE)</li>
+<li>Domingos, P., &amp; Pazzani, M. (1997). <em>On the optimality of the simple Bayesian classifier under zero-one loss</em>. Machine Learning, 29, 103-130. (NB 为何有效的理论分析)</li>
+<li>Ng, A. Y., &amp; Jordan, M. I. (2002). <em>On discriminative vs. generative classifiers</em>. NIPS 2002. (NB vs 逻辑回归)</li>
+<li>Elkan, C. (1997). <em>Boosting and naive Bayesian learning</em>. Technical Report, UCSD.</li>
+<li>Kibriya, A. M., et al. (2004). <em>Multinomial naive Bayes for text categorization revisited</em>. AI 2004.</li>
 </ol>
 </section>
 
