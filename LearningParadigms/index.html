@@ -140,10 +140,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="hero" class="hero">
   <h1>机器学习范式综述</h1>
   <div class="subtitle">Learning Paradigms</div>
-  <p class="hero-intro">系统综述有监督、无监督、半监督、自监督、弱监督、迁移与元学习六大范式，涵盖基本原理、核心公式与 2024-2025 前沿新技术（RLHF/RLVR/DPO、FixMatch、I-JEPA、扩散模型、异构半监督等），附选型决策流程与演进时间线。</p>
+  <p class="hero-intro">系统综述有监督、无监督、半监督、自监督、弱监督、迁移与元学习六大范式，涵盖基本原理、核心公式与前沿新技术（RLHF/RLVR/DPO、FixMatch、I-JEPA、扩散模型、异构半监督等），附选型决策流程与演进时间线。</p>
   <div class="badges">
     <span class="badge">11 个章节</span>
-    <span class="badge">6 张 SVG 结构图</span>
+    <span class="badge">6 张示例图</span>
     <span class="badge">22 个公式</span>
     <span class="badge">31 篇参考文献</span>
   </div>
@@ -175,41 +175,50 @@ tr:hover td { background: var(--c-primary-ghost); }
 <rect x="340" y="15" width="220" height="40" rx="20" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
 <text x="450" y="40" fill="#1e293b" font-size="15" font-weight="700" text-anchor="middle">机器学习范式</text>
 <!-- 第一层：4 大范式 -->
-<line x1="450" y1="55" x2="130" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
-<line x1="450" y1="55" x2="360" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
-<line x1="450" y1="55" x2="590" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
-<line x1="450" y1="55" x2="810" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
-<rect x="50" y="105" width="160" height="34" rx="17" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
-<text x="130" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">有监督学习</text>
-<rect x="280" y="105" width="160" height="34" rx="17" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
-<text x="360" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">无监督学习</text>
-<rect x="510" y="105" width="160" height="34" rx="17" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
-<text x="590" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">半监督学习</text>
-<rect x="730" y="105" width="160" height="34" rx="17" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
-<text x="810" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">自监督学习</text>
-<!-- 第二层：方法 -->
-<text x="130" y="168" fill="#64748b" font-size="11" text-anchor="middle">标注数据 → 映射</text>
-<text x="360" y="168" fill="#64748b" font-size="11" text-anchor="middle">无标签 → 结构发现</text>
-<text x="590" y="168" fill="#64748b" font-size="11" text-anchor="middle">少量标注 + 大量无标</text>
-<text x="810" y="168" fill="#64748b" font-size="11" text-anchor="middle">自构造 pretext → 表示</text>
+<line x1="450" y1="55" x2="106" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<line x1="450" y1="55" x2="278" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<line x1="450" y1="55" x2="450" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<line x1="450" y1="55" x2="622" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<line x1="450" y1="55" x2="794" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#lpA)"/>
+<rect x="30" y="105" width="152" height="34" rx="17" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+<text x="106" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">有监督学习</text>
+<rect x="202" y="105" width="152" height="34" rx="17" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+<text x="278" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">半监督学习</text>
+<rect x="374" y="105" width="152" height="34" rx="17" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+<text x="450" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">弱监督学习</text>
+<rect x="546" y="105" width="152" height="34" rx="17" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+<text x="622" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">自监督学习</text>
+<rect x="718" y="105" width="152" height="34" rx="17" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="794" y="127" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">无监督学习</text>
+<!-- 第二层：标注方式（按信号强度递减） -->
+<text x="106" y="168" fill="#64748b" font-size="11" text-anchor="middle">标注数据 → 映射</text>
+<text x="278" y="168" fill="#64748b" font-size="11" text-anchor="middle">少量标注 + 大量无标</text>
+<text x="450" y="168" fill="#64748b" font-size="11" text-anchor="middle">弱/噪声标签 → 映射</text>
+<text x="622" y="168" fill="#64748b" font-size="11" text-anchor="middle">自构造 pretext → 表示</text>
+<text x="794" y="168" fill="#64748b" font-size="11" text-anchor="middle">无标签 → 结构发现</text>
 <!-- 第三层：代表方法 -->
-<text x="130" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">SVM · RF · CNN · BERT</text>
-<text x="360" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">K-Means · PCA · VAE · GAN</text>
-<text x="590" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">FixMatch · Mean Teacher</text>
-<text x="810" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">SimCLR · MAE · MoCo</text>
+<text x="106" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">SVM · CNN · ResNet</text>
+<text x="278" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">FixMatch · Mean Teacher</text>
+<text x="450" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">CAM · 多实例学习</text>
+<text x="622" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">SimCLR · MAE · MoCo</text>
+<text x="794" y="200" fill="#94a3b8" font-size="10.5" text-anchor="middle">K-Means · PCA · VAE</text>
 <!-- 标注强度条 -->
 <text x="450" y="250" fill="#0f172a" font-size="13" font-weight="700" text-anchor="middle">标注信号强度</text>
-<rect x="100" y="265" width="700" height="14" rx="7" fill="url(#lpGrad)"/>
+<rect x="30" y="265" width="840" height="14" rx="7" fill="url(#lpGrad)"/>
 <defs>
   <linearGradient id="lpGrad" x1="0%" x2="100%">
-    <stop offset="0%" stop-color="#dc2626"/><stop offset="33%" stop-color="#7c3aed"/><stop offset="66%" stop-color="#ea580c"/><stop offset="100%" stop-color="#059669"/>
+    <stop offset="9%" stop-color="#dc2626"/><stop offset="29.5%" stop-color="#ea580c"/><stop offset="50%" stop-color="#0d9488"/><stop offset="70.5%" stop-color="#059669"/><stop offset="91%" stop-color="#7c3aed"/>
   </linearGradient>
 </defs>
-<text x="130" y="298" fill="#dc2626" font-size="11" font-weight="600" text-anchor="middle">强（全标注）</text>
-<text x="450" y="298" fill="#7c3aed" font-size="11" font-weight="600" text-anchor="middle">中（部分/弱标注）</text>
-<text x="810" y="298" fill="#059669" font-size="11" font-weight="600" text-anchor="middle">弱（自构造）</text>
+<text x="106" y="298" fill="#dc2626" font-size="11" font-weight="600" text-anchor="middle">全标注</text>
+<text x="278" y="298" fill="#ea580c" font-size="11" font-weight="600" text-anchor="middle">少量标注</text>
+<text x="450" y="298" fill="#0d9488" font-size="11" font-weight="600" text-anchor="middle">弱/噪声标注</text>
+<text x="622" y="298" fill="#059669" font-size="11" font-weight="600" text-anchor="middle">自构造信号</text>
+<text x="794" y="298" fill="#7c3aed" font-size="11" font-weight="600" text-anchor="middle">无标注</text>
 </svg>
 </div>
+
+<p>注：上图仅按「标注信号强度」<strong>单一维度</strong>排列，共列 5 类范式；<strong>迁移学习与元学习</strong>不在这一维度上（它们刻画的是跨域 / 跨任务的知识复用与快速适应，而非标注强度），因此未列入本谱系，详见第七章。</p>
 
 <h3>1.2 范式之间的关系</h3>
 <p>各范式并非完全独立，而是存在递进和融合关系：</p>
@@ -316,8 +325,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h4>大模型时代的无监督聚类</h4>
 <p>传统 K-Means 在高维嵌入空间中效果有限。2024 年出现了基于<strong>大模型嵌入 + 层次聚类</strong>的新方法，如利用 BERT/CLIP 嵌入做语义聚类（SE-Clustering），在无标注场景下实现了接近有监督方法的聚类精度。</p>
 
-<h4>无监督表示学习新范式</h4>
-<p>如今，<strong>掩码图像建模</strong>（MIM）和<strong>掩码语言建模</strong>（MLM）已成为无监督表示学习的主流方向。MAE 在视觉领域、BERT 在语言领域证明了：通过重建被遮盖的部分，模型能学到高质量的通用表示。</p>
+<h4>表示学习：向自监督过渡</h4>
+<p>掩码建模是无监督家族中最具影响力的一支，严格说它属于其中的<strong>自监督</strong>分支：遮住输入的一部分、用剩余部分预测被遮住的部分，监督信号完全由数据自身自动构造（自监督的完整体系见第五章）。MAE 在视觉领域、BERT 在语言领域证明了：通过重建被遮盖的部分，模型能学到高质量的通用表示。</p>
 
 <div class="svg-box">
 <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg">
@@ -378,8 +387,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>一致性正则（Consistency Regularization）</h4>
 <p>对同一输入施加不同扰动，模型应给出一致预测。代表方法 <strong>Π-Model</strong> 和 <strong>Mean Teacher</strong>：</p>
-<div class="formula" data-eq="(9)">$$\mathcal{L}_{\text{cons}} = \| f_\theta(\mathbf{x}) - f_{\theta'}(\text{aug}(\mathbf{x})) \|^2$$</div>
-<p>Mean Teacher 用 EMA（指数移动平均）更新 $\theta'$，使教师模型更稳定。</p>
+<div class="formula" data-eq="(9)">$$\mathcal{L}_{\text{cons}} = \left\| f_\theta(\text{aug}_1(\mathbf{x})) - f_{\theta'}(\text{aug}_2(\mathbf{x})) \right\|^2$$</div>
+<p>其中 $\text{aug}_1$、$\text{aug}_2$ 是对同一样本施加的<strong>两个不同随机增强</strong>；Π-Model 取 $\theta' = \theta$（同一网络两个视图），Mean Teacher 则用 EMA（指数移动平均）更新 $\theta'$，使教师模型更稳定。</p>
 
 <h4>伪标签（Pseudo-Label）</h4>
 <p>用模型对无标注数据的预测生成伪标签，再将高置信度伪标签加入训练集。FixMatch 结合一致性正则和伪标签，在极低标注量下达到全监督性能：</p>
@@ -447,28 +456,28 @@ tr:hover td { background: var(--c-primary-ghost); }
 <rect x="520" y="50" width="200" height="36" rx="18" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
 <text x="620" y="72" fill="#1e293b" font-size="13" font-weight="600" text-anchor="middle">CV 自监督</text>
 <!-- NLP 子方法 -->
-<line x1="280" y1="86" x2="220" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
-<line x1="280" y1="86" x2="340" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
-<rect x="150" y="120" width="140" height="30" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
-<text x="220" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">MLM (BERT)</text>
-<rect x="270" y="120" width="140" height="30" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
-<text x="340" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">CLM (GPT)</text>
+<line x1="280" y1="86" x2="206" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<line x1="280" y1="86" x2="354" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<rect x="138" y="120" width="136" height="30" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+<text x="206" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">MLM (BERT)</text>
+<rect x="286" y="120" width="136" height="30" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="1"/>
+<text x="354" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">CLM (GPT)</text>
 <!-- CV 子方法 -->
-<line x1="620" y1="86" x2="560" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
-<line x1="620" y1="86" x2="680" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
-<rect x="490" y="120" width="140" height="30" rx="15" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
-<text x="560" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">对比学习 (SimCLR)</text>
-<rect x="610" y="120" width="140" height="30" rx="15" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
-<text x="680" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">掩码建模 (MAE)</text>
+<line x1="620" y1="86" x2="546" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<line x1="620" y1="86" x2="694" y2="115" stroke="#334155" stroke-width="1.5" marker-end="url(#ssA)"/>
+<rect x="478" y="120" width="136" height="30" rx="15" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+<text x="546" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">对比学习 (SimCLR)</text>
+<rect x="626" y="120" width="136" height="30" rx="15" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+<text x="694" y="140" fill="#1e293b" font-size="12" font-weight="500" text-anchor="middle">掩码建模 (MAE)</text>
 <!-- 底部：pretext task 说明 -->
-<line x1="220" y1="150" x2="220" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
-<line x1="340" y1="150" x2="340" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
-<line x1="560" y1="150" x2="560" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
-<line x1="680" y1="150" x2="680" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
-<text x="220" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">预测遮盖 token</text>
-<text x="340" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">预测下一个 token</text>
-<text x="560" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">实例判别对比</text>
-<text x="680" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">重建遮盖 patch</text>
+<line x1="206" y1="150" x2="206" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<line x1="354" y1="150" x2="354" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<line x1="546" y1="150" x2="546" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<line x1="694" y1="150" x2="694" y2="185" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,2"/>
+<text x="206" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">预测遮盖 token</text>
+<text x="354" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">预测下一个 token</text>
+<text x="546" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">实例判别对比</text>
+<text x="694" y="200" fill="#64748b" font-size="10.5" text-anchor="middle">重建遮盖 patch</text>
 <!-- 底部：大模型时代 -->
 <line x1="180" y1="235" x2="720" y2="235" stroke="#7c3aed" stroke-width="2" stroke-dasharray="8,4" class="flow-line"/>
 <text x="450" y="262" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">大模型预训练 = 自监督学习 + 规模化</text>
@@ -479,7 +488,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>5.4 新技术与新进展</h3>
 
 <h4>掩码自编码器的全面突破</h4>
-<p>近年，MAE 系列在视觉预训练领域占据主导地位。<strong>MAE v2</strong> 和 <strong>CAE v2</strong> 改进了重建目标和编码策略。<strong>iMAE</strong>（I-JEPA，LeCun 团队）提出了一种基于<strong>潜在空间预测</strong>的自监督方法，不再需要像素级重建，而是预测被遮盖区域的表示，在 ImageNet 线性探测和下游迁移上均超过 MAE。</p>
+<p>近年，MAE 系列在视觉预训练领域占据主导地位。<strong>MAE v2</strong> 和 <strong>CAE v2</strong> 改进了重建目标和编码策略。<strong>I-JEPA</strong>（Meta AI，Assran et al., 2023）提出了一种基于<strong>潜在空间预测</strong>的自监督方法，不再需要像素级重建，而是预测被遮盖区域的表示，在 ImageNet 线性探测和下游迁移上均超过 MAE。</p>
 
 <h4>多模态自监督</h4>
 <p>CLIP 开创了跨模态对比自监督范式。后续改进包括：<strong>SigLIP</strong>（用 sigmoid 代替 softmax 对比损失，支持大批量训练）、<strong>EVA-CLIP</strong>（扩展到 18B 参数）、<strong>OpenCLIP</strong>（开源大规模视觉-语言预训练）。这些方法本质上都是自监督学习，从海量图文对中学习跨模态表示。</p>
@@ -521,7 +530,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>仅有图像级标签，需定位目标。CAM（Class Activation Map）通过 GAP 层提取类别热力图，定位目标区域。2024 年改进方法引入<strong>在线分块策略</strong>和<strong>对抗擦除</strong>，逐步扩展目标区域。</p>
 
 <h4>弱监督语义分割</h4>
-<p>从图像级标签生成像素级分割掩码。新方法结合<strong>大视觉语言模型</strong>（如 SAM、SEEM）自动生成分割伪标签，再训练分割网络。</p>
+<p>从图像级标签生成像素级分割掩码。新方法借助<strong>可提示分割基础模型</strong>（如 SAM）与<strong>多模态分割模型</strong>（如 SEEM）自动生成分割伪标签，再训练分割网络。</p>
 
 <h3>6.3 最新进展</h3>
 <p>2024 年中科院团队提出<strong>统一弱监督学习框架</strong>用于 LiDAR 遥感观测，将不完整、不精确、不准确标注统一建模。2026 年 arXiv 综述（Wang et al.）系统梳理了弱监督学习的<em>新监督范式</em>和<em>假设松弛</em>策略。</p>
@@ -580,8 +589,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>正则化目标</h4>
 <p>完整的训练目标通常加入正则化项以防止过拟合：</p>
-<div class="formula" data-eq="(15)">$$\mathcal{L}_{\text{total}} = \underbrace{\frac{1}{N}\sum_{i=1}^{N} \mathcal{L}(f_\theta(\mathbf{x}_i), y_i)}_{\text{经验风险}} + \lambda_1 \underbrace{\|\theta\|_1}_{\text{L1}} + \lambda_2 \underbrace{\|\theta\|_2^2}_{\text{L2}} + \lambda_3 \underbrace{\text{Dropout}(\theta)}_{\text{Dropout}}$$</div>
-<p>大模型时代，正则化更多通过<strong>数据增强</strong>、<strong>权重衰减</strong>和<strong>Dropout</strong>实现，而非显式的 L1/L2 罚项。</p>
+<div class="formula" data-eq="(15)">$$\mathcal{L}_{\text{total}} = \underbrace{\frac{1}{N}\sum_{i=1}^{N} \mathcal{L}(f_\theta(\mathbf{x}_i), y_i)}_{\text{经验风险}} + \lambda_1 \underbrace{\|\theta\|_1}_{\text{L1}} + \lambda_2 \underbrace{\|\theta\|_2^2}_{\text{L2}}$$</div>
+<p>大模型时代，正则化更多通过<strong>数据增强</strong>、<strong>权重衰减</strong>和<strong>Dropout</strong>实现，而非显式的 L1/L2 罚项。注意<strong>Dropout 与数据增强不是目标函数项</strong>——它们是训练过程中施加的随机操作，不存在关于 $\theta$ 的可微罚项，因此不能像 L1 / L2 那样写进上式。</p>
 
 <h4>大模型时代的新型目标函数</h4>
 <ul>
@@ -668,12 +677,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 <text x="580" y="258" fill="#64748b" font-size="10.5" text-anchor="middle">旋转坐标系优化</text>
 <text x="760" y="258" fill="#64748b" font-size="10.5" text-anchor="middle">等谱流形更新</text>
 <text x="210" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">DeepSeek V4 采用</text>
-<text x="400" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">内存减 50%</text>
+<text x="400" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">步数减半</text>
 <text x="580" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">自适应旋转</text>
 <text x="760" y="275" fill="#94a3b8" font-size="10" text-anchor="middle">谱保持更新</text>
 <!-- 底部总结 -->
 <text x="450" y="310" fill="#7c3aed" font-size="13" font-weight="700" text-anchor="middle">趋势：从一阶到二阶/正交化 · 从通用到矩阵参数专用 · 内存效率提升</text>
-<text x="450" y="330" fill="#94a3b8" font-size="11" text-anchor="middle">浙大 2026.05 对 23 种优化器做了系统评测，AdamW 仍占主导但面临挑战</text>
+<text x="450" y="330" fill="#94a3b8" font-size="11" text-anchor="middle">OmniOpt 2026.07 系统评测现代优化器，AdamW 仍占主导但面临挑战</text>
 </svg>
 </div>
 
@@ -685,8 +694,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>Sophia 优化器（2024）</h4>
 <p><strong>Sophia</strong>（Second-order Clipped Stochastic Optimization）引入 Hessian 对角估计，使用二阶信息自适应调整每个参数的学习率：</p>
-<div class="formula" data-eq="(22)">$$\theta_{t+1} = \theta_t - \eta \frac{m_t}{\max(|h_t|, \epsilon)}$$</div>
-<p>其中 $h_t$ 是 Hessian 对角的廉价估计（通过 Hessian-vector product 在 5 步内计算一次）。Sophia 在 LLM 训练中比 AdamW 减少 50% 的步数达到相同验证损失，且内存开销更低。</p>
+<div class="formula" data-eq="(22)">$$\theta_{t+1} = \theta_t - \eta \cdot \mathrm{clip}\!\left( \frac{m_t}{\max(\gamma h_t, \epsilon)}, 1 \right)$$</div>
+<p>其中 $m_t$ 是梯度的一阶矩估计，$h_t$ 是 Hessian 对角的廉价估计（通过 Hessian-vector product 周期性重估），$\gamma$ 是一个小的缩放常数（如 0.01）；$\mathrm{clip}(\cdot, 1)$ 把更新幅度截断到 $[-1, 1]$，这正是方法名中 <strong>Clipped</strong> 的来源。Sophia 在 LLM 训练中比 AdamW 减少约 50% 的步数达到相同验证损失——它的收益是<strong>省算力（步数）而非省内存</strong>：Sophia-G 仍需维护 $m$ 与 $h$ 两个状态，内存与 AdamW 相当。</p>
 
 <h4>ARO 优化器（2026.03，微软）</h4>
 <p><strong>ARO</strong>（Adaptive Rotated Optimization）由微软于 2026 年 3 月提出，引入<strong>旋转坐标系</strong>的思想：在每个迭代中将参数空间旋转到梯度的主轴方向，然后在新坐标系中执行自适应优化。这使得优化器能更好地处理病态条件数的损失曲面。</p>
@@ -695,7 +704,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p><strong>Pion</strong>由港中文团队于 2026 年 5 月提出，基于<strong>等谱流形更新</strong>理论：将参数更新约束在保持矩阵谱（特征值集合）不变的流形上，通过保谱变换实现更稳定的优化轨迹。理论上证明了等谱更新在非凸优化中的收敛性。</p>
 
 <h4>优化器系统评测</h4>
-<p>2026 年 5 月，浙大团队对 23 种优化器在 LLM 训练中进行了系统评测，结论包括：AdamW 仍占主导地位但内存开销过大；Muon 在矩阵参数上显著优于 AdamW；Sophia 在中等规模模型上效率最优；新优化器在超大规模训练中的稳定性仍需验证。</p>
+<p>2026 年 7 月，上海人工智能实验室等多家机构联合发布 <strong>OmniOpt</strong>：系统梳理 100+ 种现代优化器，并在 60M-1B 参数规模、256-32k 上下文与 CIFAR100 视觉任务上完成跨架构基准评测。结论包括：AdamW 仍占主导地位但内存开销过大；Muon 在矩阵参数上显著优于 AdamW；Sophia 在中等规模模型上效率最优；新优化器在超大规模训练中的稳定性仍需验证。</p>
 
 <div class="code-block">
 <div class="code-header">optimizer_comparison.py — AdamW vs Muon 简化对比</div>
@@ -770,7 +779,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>9.3 视觉自监督新进展</h3>
 <ul>
-  <li><strong>I-JEPA</strong>（Meta, 2024）：潜在空间预测式自监督，不依赖像素重建，更接近"概念级"表示学习。</li>
+  <li><strong>I-JEPA</strong>（Meta AI, 2023）：潜在空间预测式自监督，不依赖像素重建，更接近"概念级"表示学习。</li>
   <li><strong>MAE 系列成熟</strong>：MAE v2 / CAE v2 在 ImageNet 迁移和检测分割上全面超越有监督预训练。</li>
   <li><strong>多模态对比</strong>：SigLIP 用 sigmoid 对比损失替代 InfoNCE，训练效率提升 4 倍以上。</li>
   <li><strong>视频自监督</strong>：VideoMAE v2 将高比例掩码引入视频时序维度，实现高效视频预训练。</li>
@@ -813,7 +822,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <li><strong>旋转位置编码改进</strong>（RoPE）：YaRN、NTK-aware 等方法实现了位置编码的外推，无需重训练即可扩展上下文。</li>
   <li><strong>分块注意力</strong>（Chunk Attention）：将长序列分割为块，在块内全注意力、块间稀疏注意力，降低 $O(n^2)$ 复杂度。</li>
   <li><strong>Ring Attention</strong>（UCB, 2024）：将长序列分布式分块到多个 GPU，通过环形通信实现百万 token 训练。</li>
-  <li><strong>DeepSeek V4 百万上下文</strong>：结合 Muon 优化器和分块注意力，在百万 token 上下文上实现高效训练，推理速度损失不到 5%。</li>
+  <li><strong>DeepSeek V4 百万上下文</strong>：采用 <strong>CSA（压缩稀疏注意力）+ HCA（重度压缩注意力）</strong>的混合注意力架构，并配合 Muon 优化器，在百万 token 上下文下单 token 推理 FLOPs 降至 DeepSeek-V3.2 的 <strong>27%</strong>、KV cache 降至 <strong>10%</strong>。</li>
   <li><strong>推断阶段长上下文</strong>：StreamingLLM（注意力汇聚）、H2O（Heavy-Hitter Oracle）等方法在不重训练的情况下将推理上下文扩展到 4M token。</li>
 </ul>
 
@@ -848,7 +857,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>近年来，机器学习顶会在范式融合与新学习机制上涌现了一批具有里程碑意义的工作，本小节集中梳理代表性成果：</p>
 
 <h4>自监督强化学习：千层网络的潜力</h4>
-<p><strong>RL1000</strong>（NeurIPS 2025 最佳论文，巴黎文理研究大学等）首次训练了深达 <strong>1024 层</strong>的自监督强化学习网络，打破了 RL 模型通常只有 2-5 层的惯例。该工作证明在无任何人工指导的目标达成任务中，深层网络能解锁全新的目标达成能力，为<em>自监督信号 + 深度网络</em>的组合提供了新的扩展维度。</p>
+<p><strong>RL1000</strong>（NeurIPS 2025 最佳论文，普林斯顿大学、华沙理工大学等）首次训练了深达 <strong>1024 层</strong>的自监督强化学习网络，打破了 RL 模型通常只有 2-5 层的惯例。该工作证明在无任何人工指导的目标达成任务中，深层网络能解锁全新的目标达成能力，为<em>自监督信号 + 深度网络</em>的组合提供了新的扩展维度。</p>
 
 <h4>大语言模型注意力机制：门控注意力</h4>
 <p><strong>Gated Attention</strong>（NeurIPS 2025 最佳论文，阿里 Qwen 团队联合清华、斯坦福、MIT、爱丁堡大学）系统研究了 Softmax 注意力中引入<strong>门控（Gating）</strong>的作用，提出了无需 Attention Sink 的新架构设计，在非线性、稀疏性与训练稳定性之间取得更好平衡。该成果已应用于新一代 Qwen3-Next 模型，是中国大陆团队首次斩获 NeurIPS 最佳论文。</p>
@@ -877,11 +886,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td><strong>标注成本</strong></td><td>高</td><td>无</td><td>中</td><td>无</td><td>低</td><td>中</td></tr>
 <tr><td><strong>数据规模需求</strong></td><td>中-大</td><td>中</td><td>大</td><td>极大</td><td>中</td><td>源域大/目标域小</td></tr>
 <tr><td><strong>代表方法</strong></td><td>SVM · CNN · Transformer</td><td>K-Means · VAE · 扩散</td><td>FixMatch · Mean Teacher</td><td>BERT · MAE · CLIP</td><td>CAM · 多实例学习</td><td>LoRA · MAML · ICL</td></tr>
-<tr><td><strong>典型优化器</strong></td><td>SGD · AdamW</td><td>Adam · AdamW</td><td>AdamW · SGD</td><td>AdamW · LAMB</td><td>SGD · Adam</td><td>MAML · AdamW</td></tr>
+<tr><td><strong>典型优化器</strong></td><td>SGD · AdamW</td><td>Adam · AdamW</td><td>AdamW · SGD</td><td>AdamW · LAMB</td><td>SGD · Adam</td><td>AdamW · SGD</td></tr>
 <tr><td><strong>适用场景</strong></td><td>标注充足</td><td>探索分析</td><td>标注有限</td><td>大规模预训练</td><td>标注质量差</td><td>跨域/少样本</td></tr>
 <tr><td><strong>主流度</strong></td><td>★★★★（微调阶段）</td><td>★★★</td><td>★★★</td><td>★★★★★（预训练）</td><td>★★</td><td>★★★★</td></tr>
 </table>
 </div>
+
+<p>注：<strong>MAML 是元学习算法而非优化器</strong>——它内部的内循环更新仍由 SGD / Adam 完成，因此上表「典型优化器」一列只列优化器本身。</p>
 
 <h3>10.2 选型决策流程</h3>
 <div class="svg-box">
@@ -1025,8 +1036,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="timeline-item"><span class="year">2020</span><div class="event">SimCLR · MoCo — 视觉对比学习</div><div class="desc">对比学习在 ImageNet 上首次接近有监督性能</div></div>
 <div class="timeline-item"><span class="year">2021</span><div class="event">CLIP — 多模态自监督</div><div class="desc">4 亿图文对对比学习，实现零样本分类</div></div>
 <div class="timeline-item"><span class="year">2022</span><div class="event">MAE · FixMatch 成熟</div><div class="desc">视觉自监督走向高效掩码建模；半监督在低标注场景达全监督性能</div></div>
-<div class="timeline-item"><span class="year">2022-2023</span><div class="event">ChatGPT — RLHF 范式确立</div><div class="desc">自监督预训练 + SFT + RLHF 三阶段范式成为大模型标准</div></div>
-<div class="timeline-item"><span class="year">2024</span><div class="event">DPO · RLVR · I-JEPA · Muon 优化器</div><div class="desc">直接偏好优化简化 RLHF；可验证奖励训练推理；自监督表示新突破；Muon 开启正交化优化器时代</div></div>
+<div class="timeline-item"><span class="year">2022-2023</span><div class="event">ChatGPT · I-JEPA — RLHF 范式确立</div><div class="desc">自监督预训练 + SFT + RLHF 三阶段范式成为大模型标准；I-JEPA 开启潜在空间预测式自监督</div></div>
+<div class="timeline-item"><span class="year">2024</span><div class="event">DPO · RLVR · Muon 优化器</div><div class="desc">直接偏好优化简化 RLHF；可验证奖励训练推理；Muon 开启正交化优化器时代</div></div>
 <div class="timeline-item"><span class="year">2025</span><div class="event">DeepSeek-R1 · Uni-HSSL · Sophia · 具身 ICL</div><div class="desc">RLVR 大规模训练推理能力；异构半监督学习；二阶优化器 Sophia；具身上下文学习</div></div>
 <div class="timeline-item"><span class="year">2026</span><div class="event">无监督 RL · 统一弱监督 · ARO · Pion</div><div class="desc">无标注奖励的自我改进；弱监督假设松弛系统化；旋转坐标系优化；等谱流形更新</div></div>
 </div>
@@ -1037,37 +1048,37 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-<li>Devlin, J., et al. (2018). BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. <em>NAACL 2019</em>.</li>
-<li>He, K., et al. (2022). Masked Autoencoders Are Scalable Vision Learners. <em>CVPR 2022</em>.</li>
-<li>Chen, T., et al. (2020). SimCLR: A Simple Framework for Contrastive Learning. <em>ICML 2020</em>.</li>
-<li>Radford, A., et al. (2021). CLIP: Learning Transferable Visual Models. <em>ICML 2021</em>.</li>
-<li>Sohn, K., et al. (2020). FixMatch: Simplifying Semi-Supervised Learning. <em>NeurIPS 2020</em>.</li>
-<li>Tarvainen, A., &amp; Valpola, H. (2017). Mean Teachers are Better Role Models. <em>NeurIPS 2017</em>.</li>
-<li>Oord, A., et al. (2018). Representation Learning with Contrastive Predictive Coding. <em>arXiv:1807.03748</em>.</li>
-<li>Assran, M., et al. (2023). JEPA: Joint-Embedding Predictive Architecture. <em>Meta AI</em>.</li>
-<li>Hu, E., et al. (2021). LoRA: Low-Rank Adaptation of Large Language Models. <em>ICLR 2022</em>.</li>
-<li>Ouyang, L., et al. (2022). Training language models to follow instructions with human feedback (RLHF). <em>NeurIPS 2022</em>.</li>
-<li>Rafailov, R., et al. (2023). DPO: Direct Preference Optimization. <em>NeurIPS 2023</em>.</li>
-<li>DeepSeek-AI. (2025). DeepSeek-R1: Incentivizing Reasoning Capability via RLVR. <em>arXiv:2501.12948</em>.</li>
-<li>Finn, C., et al. (2017). MAML: Model-Agnostic Meta-Learning. <em>ICML 2017</em>.</li>
-<li>Zhou, Z., et al. (2025). Uni-HSSL: Unified Heterogeneous Semi-Supervised Learning. <em>CVPR 2025</em>.</li>
-<li>Wang, W., Niu, G., &amp; Sugiyama, M. (2026). Recent advances in weakly supervised learning. <em>arXiv:2608.06896</em>.</li>
-<li>Ho, J., et al. (2020). Denoising Diffusion Probabilistic Models (DDPM). <em>NeurIPS 2020</em>.</li>
-<li>Zheng, Y., et al. (2025). BoCLIS: Boundary-guided Contrastive Learning for Semi-supervised Medical Image Segmentation. <em>TMI 2025</em>.</li>
-<li>清华团队. (2026). Unsupervised Reinforcement Learning for Large Language Models. <em>ICLR 2026</em>.</li>
-<li>Jordan, K. (2024). Muon: An optimizer for neural networks. <em>GitHub / Twitter announcement</em>.</li>
-<li>Liu, H., et al. (2024). Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training. <em>arXiv:2305.14342</em>.</li>
-<li>Microsoft Research. (2026). ARO: Adaptive Rotated Optimization. <em>Microsoft Research Blog</em>.</li>
-<li>Chen, X., et al. (2026). Pion: Isospectral Manifold Optimization. <em>CUHK</em>.</li>
-<li>Zhejiang University. (2026). A Systematic Evaluation of 23 Optimizers for LLM Training. <em>BAAI 2026</em>.</li>
-<li>DeepSeek-AI. (2026). DeepSeek V4: Million-Token Context with Muon Optimizer. <em>arXiv:2604.xxxxx</em>.</li>
-<li>arXiv. (2025). Gradient Orthogonalization and Non-Euclidean Trust-Region Optimization. <em>arXiv:2503.12645</em>.</li>
-<li>Qwen Team, et al. (2025). Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free. <em>NeurIPS 2025 Best Paper</em>.</li>
-<li>Princeton / PSL Research University, et al. (2025). 1000 Layer Networks for Self-Supervised RL: Scaling Depth Can Enable New Goal-Reaching Capabilities. <em>NeurIPS 2025 Best Paper</em>.</li>
-<li>Jiang, L., et al. (2025). Artificial Hivemind: The Open-Ended Homogeneity of Language Models (and Beyond). <em>NeurIPS 2025 Best Paper</em>.</li>
-<li>BJTU, et al. (2025). Jasmine: Self-Supervised Monocular Depth Estimation with Stable Diffusion Prior. <em>NeurIPS 2025</em>.</li>
-<li>PRIME-RL / Tsinghua, et al. (2025). TTRL: Test-Time Reinforcement Learning. <em>NeurIPS 2025</em>.</li>
-<li>Tsinghua &amp; Shanghai AI Lab. (2026). How Far Can Unsupervised RLVR Scale LLM Training? <em>ICLR 2026</em>.</li>
+<li>Devlin, J., et al. (2018). <em>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</em>. NAACL 2019.</li>
+<li>He, K., et al. (2022). <em>Masked Autoencoders Are Scalable Vision Learners</em>. CVPR 2022.</li>
+<li>Chen, T., et al. (2020). <em>SimCLR: A Simple Framework for Contrastive Learning</em>. ICML 2020.</li>
+<li>Radford, A., et al. (2021). <em>CLIP: Learning Transferable Visual Models</em>. ICML 2021.</li>
+<li>Sohn, K., et al. (2020). <em>FixMatch: Simplifying Semi-Supervised Learning</em>. NeurIPS 2020.</li>
+<li>Tarvainen, A., &amp; Valpola, H. (2017). <em>Mean Teachers are Better Role Models</em>. NeurIPS 2017.</li>
+<li>Oord, A., et al. (2018). <em>Representation Learning with Contrastive Predictive Coding</em>. arXiv:1807.03748.</li>
+<li>Assran, M., et al. (2023). <em>JEPA: Joint-Embedding Predictive Architecture</em>. Meta AI.</li>
+<li>Hu, E., et al. (2021). <em>LoRA: Low-Rank Adaptation of Large Language Models</em>. ICLR 2022.</li>
+<li>Ouyang, L., et al. (2022). <em>Training language models to follow instructions with human feedback (RLHF)</em>. NeurIPS 2022.</li>
+<li>Rafailov, R., et al. (2023). <em>DPO: Direct Preference Optimization</em>. NeurIPS 2023.</li>
+<li>DeepSeek-AI. (2025). <em>DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</em>. arXiv:2501.12948; Nature 645, 633-638.</li>
+<li>Finn, C., et al. (2017). <em>MAML: Model-Agnostic Meta-Learning</em>. ICML 2017.</li>
+<li>Zhou, Z., et al. (2025). <em>Uni-HSSL: Unified Heterogeneous Semi-Supervised Learning</em>. CVPR 2025.</li>
+<li>Wang, W., Niu, G., &amp; Sugiyama, M. (2026). <em>Recent advances in weakly supervised learning</em>. arXiv:2608.06896.</li>
+<li>Ho, J., et al. (2020). <em>Denoising Diffusion Probabilistic Models (DDPM)</em>. NeurIPS 2020.</li>
+<li>Zheng, Y., et al. (2025). <em>BoCLIS: Boundary-guided Contrastive Learning for Semi-supervised Medical Image Segmentation</em>. TMI 2025.</li>
+<li>清华团队. (2026). <em>Unsupervised Reinforcement Learning for Large Language Models</em>. ICLR 2026.</li>
+<li>Jordan, K., Jin, Y., Boza, V., You, J., Cesista, F., Newhouse, L., &amp; Bernstein, J. (2024). <em>Muon: An optimizer for hidden layers in neural networks</em>. Blog post, https://kellerjordan.github.io/posts/muon/</li>
+<li>Liu, H., et al. (2024). <em>Sophia: A Scalable Stochastic Second-order Optimizer for Language Model Pre-training</em>. arXiv:2305.14342.</li>
+<li>Microsoft Research. (2026). <em>ARO: Adaptive Rotated Optimization</em>. Microsoft Research Blog.</li>
+<li>Chen, X., et al. (2026). <em>Pion: Isospectral Manifold Optimization</em>. CUHK.</li>
+<li>Li, S., Pan, J., Liu, Y., et al. (2026). <em>OmniOpt: Taxonomy, Geometry, and Benchmarking of Modern Optimizers</em>. arXiv:2607.04033.</li>
+<li>DeepSeek-AI. (2026). <em>DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence</em>. arXiv:2606.19348.</li>
+<li>Kovalev, D. (2025). <em>Understanding Gradient Orthogonalization for Deep Learning via Non-Euclidean Trust-Region Optimization</em>. arXiv:2503.12645.</li>
+<li>Qwen Team, et al. (2025). <em>Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free</em>. NeurIPS 2025 Best Paper.</li>
+<li>Princeton / Warsaw University of Technology, et al. (2025). <em>1000 Layer Networks for Self-Supervised RL: Scaling Depth Can Enable New Goal-Reaching Capabilities</em>. NeurIPS 2025 Best Paper.</li>
+<li>Jiang, L., et al. (2025). <em>Artificial Hivemind: The Open-Ended Homogeneity of Language Models (and Beyond)</em>. NeurIPS 2025 Best Paper.</li>
+<li>BJTU, et al. (2025). <em>Jasmine: Self-Supervised Monocular Depth Estimation with Stable Diffusion Prior</em>. NeurIPS 2025.</li>
+<li>PRIME-RL / Tsinghua, et al. (2025). <em>TTRL: Test-Time Reinforcement Learning</em>. NeurIPS 2025.</li>
+<li>Tsinghua &amp; Shanghai AI Lab. (2026). <em>How Far Can Unsupervised RLVR Scale LLM Training?</em> ICLR 2026.</li>
 </ol>
 </section>
 
