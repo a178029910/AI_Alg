@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>马尔科夫链详解 — Markov Chain 完整技术指南</title>
+<title>马尔可夫链 — Markov Chain 完整技术指南</title>
 <link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -116,33 +116,29 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div id="progress-bar"></div>
 <div id="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776; 目录</div>
 <aside id="sidebar">
-  <h2>马尔科夫链</h2>
+  <h2>马尔可夫链</h2>
   <nav>
     <a href="#hero">封面</a>
-    <a href="#ch1">一、随机过程与马尔科夫性质</a>
-    <a href="#ch2">二、离散马尔科夫链与转移矩阵</a>
-    <a href="#ch3">三、Chapman-Kolmogorov 方程</a>
-    <a href="#ch4">四、状态分类：常返与周期</a>
-    <a href="#ch5">五、平稳分布与极限分布</a>
-    <a href="#ch6">六、遍历性与极限定理</a>
-    <a href="#ch7">七、连续时间马尔科夫链</a>
-    <a href="#ch8">八、隐马尔科夫模型（HMM）</a>
-    <a href="#ch9">九、HMM 三大问题</a>
-    <a href="#ch10">十、MCMC：马尔科夫链蒙特卡洛</a>
-    <a href="#ch11">十一、应用：PageRank 与排队论</a>
-    <a href="#ch12">十二、Python 代码实现</a>
-    <a href="#ch13">十三、演进时间线与总结</a>
+    <a href="#ch1">一、随机过程与马尔可夫性质</a>
+    <a href="#ch2">二、转移矩阵与 C-K 方程</a>
+    <a href="#ch3">三、状态分类、平稳分布与遍历性</a>
+    <a href="#ch4">四、连续时间马尔可夫链</a>
+    <a href="#ch5">五、隐马尔可夫模型（HMM）</a>
+    <a href="#ch6">六、MCMC：马尔可夫链蒙特卡洛</a>
+    <a href="#ch7">七、应用：PageRank 与排队论</a>
+    <a href="#ch8">八、Python 代码实现</a>
+    <a href="#ch9">九、演进时间线与总结</a>
     <a href="#refs">参考文献</a>
   </nav>
   <a class="back-link" href="../index.html"><span class="arrow">&larr;</span>返回算法总览</a>
 </aside>
 <main id="main">
 <section id="hero" class="hero">
-  <h1>马尔科夫链详解</h1>
+  <h1>马尔可夫链</h1>
   <div class="subtitle">Markov Chain</div>
   <p class="hero-intro">描述无记忆性随机过程的核心数学工具，涵盖转移矩阵、平稳分布、HMM、MCMC、PageRank 等重要应用。</p>
   <div class="badges">
-    <span class="badge">13 个章节</span>
+    <span class="badge">9 个章节</span>
     <span class="badge">3 张示例图</span>
     <span class="badge">20 个公式</span>
     <span class="badge">15 篇参考文献</span>
@@ -150,29 +146,28 @@ tr:hover td { background: var(--c-primary-ghost); }
 </section>
 
 <section id="ch1">
-<h2><span class="num">1</span>随机过程与马尔科夫性质</h2>
-
+<h2><span class="num">1</span>随机过程与马尔可夫性质</h2>
 <h3>1.1 从随机变量到随机过程</h3>
-<p><strong>随机变量</strong>描述某一时刻的不确定性，而<strong>随机过程</strong>描述随时间演化的不确定性序列。马尔科夫链是最重要的离散随机过程之一——它的核心假设是：<strong>未来只取决于现在，与过去无关</strong>。</p>
+<p><strong>随机变量</strong>描述某一时刻的不确定性，而<strong>随机过程</strong>描述随时间演化的不确定性序列。马尔可夫链是最重要的离散随机过程之一——它的核心假设是：<strong>未来只取决于现在，与过去无关</strong>。</p>
 
-<h3>1.2 马尔科夫性质</h3>
-<p>一个随机序列 $\{X_t\}_{t=0,1,2,\ldots}$ 满足<strong>马尔科夫性质</strong>（Markov Property），如果：</p>
+<h3>1.2 马尔可夫性质</h3>
+<p>一个随机序列 $\{X_t\}_{t=0,1,2,\ldots}$ 满足<strong>马尔可夫性质</strong>（Markov Property），如果：</p>
 <div class="formula" data-eq="(1)">$$P(X_{t+1} = j \mid X_t = i, X_{t-1} = i_{t-1}, \ldots, X_0 = i_0) = P(X_{t+1} = j \mid X_t = i)$$</div>
 <p>这意味着：在知道当前状态 $X_t = i$ 的条件下，未来状态 $X_{t+1}$ 的分布<strong>不依赖于任何历史信息</strong>。这一"无记忆性"假设极大简化了概率计算——不需要记住完整历史，只需知道当前状态。</p>
 
 <div class="callout">
 <div class="callout-title">直觉理解</div>
-<p>想象一个棋盘游戏：下一步的局面只取决于当前棋盘状态，而不取决于你是怎么走到当前局面的。或者天气模型："明天天气"只取决于"今天天气"，不需要知道一周前的天气。这种"无记忆性"就是马尔科夫性质。</p>
+<p>想象一个棋盘游戏：下一步的局面只取决于当前棋盘状态，而不取决于你是怎么走到当前局面的。或者天气模型："明天天气"只取决于"今天天气"，不需要知道一周前的天气。这种"无记忆性"就是马尔可夫性质。</p>
 </div>
 
 <h3>1.3 状态空间</h3>
-<p>马尔科夫链的<strong>状态空间</strong> $S$ 是所有可能状态的集合。状态空间可以是：</p>
+<p>马尔可夫链的<strong>状态空间</strong> $S$ 是所有可能状态的集合。状态空间可以是：</p>
 <ul>
 <li><strong>离散有限</strong>：$S = \{1, 2, \ldots, N\}$，如天气 $\{$晴, 阴, 雨$\}$</li>
 <li><strong>离散无限</strong>：$S = \{0, 1, 2, \ldots\}$，如排队人数</li>
-<li><strong>连续</strong>：$S = \mathbb{R}$，如粒子位置（连续时间马尔科夫过程）</li>
+<li><strong>连续</strong>：$S = \mathbb{R}$，如粒子位置（连续时间马尔可夫过程）</li>
 </ul>
-<p>本章聚焦于<strong>离散时间、离散状态</strong>的马尔科夫链（DTMC），这是最基础的也是应用最广的形式。</p>
+<p>本章聚焦于<strong>离散时间、离散状态</strong>的马尔可夫链（DTMC），这是最基础的也是应用最广的形式。</p>
 
 <div class="svg-box">
 <svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
@@ -180,11 +175,11 @@ tr:hover td { background: var(--c-primary-ghost); }
 <circle cx="100" cy="130" r="35" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5" class="pulse-node"/>
 <text x="88" y="125" fill="#1e293b" font-size="13">X₀</text>
 <text x="82" y="142" fill="#64748b" font-size="10">过去</text>
-<line x1="135" y1="130" x2="235" y2="130" stroke="#334155" stroke-width="2" marker-end="url(#mk1)" class="flow-line"/>
+<line x1="135" y1="130" x2="235" y2="130" stroke="#334155" stroke-width="2" marker-end="url(#mk1)"/>
 <circle cx="280" cy="130" r="35" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5" class="glow-ring"/>
 <text x="268" y="125" fill="#1e293b" font-size="13">Xₜ</text>
 <text x="262" y="142" fill="#64748b" font-size="10">现在</text>
-<line x1="315" y1="130" x2="415" y2="130" stroke="#059669" stroke-width="2.5" marker-end="url(#mk1)" class="flow-line"/>
+<line x1="315" y1="130" x2="415" y2="130" stroke="#059669" stroke-width="2.5" marker-end="url(#mk1)"/>
 <circle cx="460" cy="130" r="35" fill="#d1fae5" stroke="#059669" stroke-width="2.5"/>
 <text x="445" y="125" fill="#1e293b" font-size="13">Xₜ₊₁</text>
 <text x="435" y="142" fill="#64748b" font-size="10">未来</text>
@@ -195,17 +190,18 @@ tr:hover td { background: var(--c-primary-ghost); }
 <line x1="100" y1="175" x2="100" y2="155" stroke="#dc2626" stroke-width="1.5"/>
 <text x="430" y="200" fill="#059669" font-size="12" font-weight="600">✓ 仅依赖当前状态</text>
 <line x1="460" y1="175" x2="460" y2="155" stroke="#059669" stroke-width="1.5"/>
-<text x="250" y="240" fill="#334155" font-size="13" font-weight="600">马尔科夫性质：P(Xₜ₊₁ | Xₜ, Xₜ₋₁, ..., X₀) = P(Xₜ₊₁ | Xₜ)</text>
+<text x="250" y="240" fill="#334155" font-size="13" font-weight="600">马尔可夫性质：P(Xₜ₊₁ | Xₜ, Xₜ₋₁, ..., X₀) = P(Xₜ₊₁ | Xₜ)</text>
 </svg>
 </div>
 
 </section>
 
 <section id="ch2">
-<h2><span class="num">2</span>离散马尔科夫链与转移矩阵</h2>
+<h2><span class="num">2</span>转移矩阵与 Chapman-Kolmogorov 方程</h2>
+<p>本章搭建离散马尔可夫链的基本工具：先由转移概率引出转移矩阵，再用天气模型把抽象矩阵落到具体数字上，最后导出 $n$ 步转移的 Chapman-Kolmogorov 方程，看看状态分布如何随时间演化。</p>
 
-<h3>2.1 转移概率</h3>
-<p>对于时间齐次（time-homogeneous）的马尔科夫链，转移概率不随时间变化：</p>
+<h3>2.1 转移概率与转移矩阵</h3>
+<p>对于时间齐次（time-homogeneous）的马尔可夫链，转移概率不随时间变化：</p>
 <div class="formula" data-eq="(2)">$$p_{ij} = P(X_{t+1} = j \mid X_t = i), \quad \forall t$$</div>
 <p>转移概率满足两条基本性质：</p>
 <ul>
@@ -213,12 +209,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>行和为 1</strong>：$\sum_{j} p_{ij} = 1$，对所有 $i$（从状态 $i$ 必然转移到某个状态）</li>
 </ul>
 
-<h3>2.2 转移矩阵</h3>
-<p>有限状态马尔科夫链的转移概率组成<strong>转移矩阵</strong>（Transition Matrix）$\mathbf{P}$：</p>
+
+<p>有限状态马尔可夫链的转移概率组成<strong>转移矩阵</strong>（Transition Matrix）$\mathbf{P}$：</p>
 <div class="formula" data-eq="(3)">$$\mathbf{P} = \begin{pmatrix} p_{11} & p_{12} & \cdots & p_{1N} \\ p_{21} & p_{22} & \cdots & p_{2N} \\ \vdots & \vdots & \ddots & \vdots \\ p_{N1} & p_{N2} & \cdots & p_{NN} \end{pmatrix}$$</div>
 <p>其中第 $i$ 行表示从状态 $i$ 出发的转移概率分布，每一行之和为 1。</p>
 
-<h3>2.3 天气示例</h3>
+<h3>2.2 天气示例</h3>
 <div class="callout">
 <div class="callout-title">三状态天气模型</div>
 <p>状态空间 $S = \{$晴(S), 阴(C), 雨(R)$\}$。转移矩阵：</p>
@@ -255,7 +251,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <text x="400" y="78" fill="#2563eb" font-size="12">0.3</text>
 <!-- C↔R 绿色（双向平行） -->
 <line x1="553.2" y1="117.6" x2="430" y2="210" stroke="#0d9488" stroke-width="2" marker-end="url(#mkC2R)"/>
-<text x="540" y="150" fill="#0d9488" font-size="12">0.3</text>
+<text x="472" y="150" fill="#0d9488" font-size="12">0.3</text>
 <line x1="446.8" y1="232.4" x2="570" y2="140" stroke="#0d9488" stroke-width="2" marker-end="url(#mkC2R)"/>
 <text x="500" y="205" fill="#0d9488" font-size="12">0.3</text>
 <!-- S↔R 紫色（双向平行） -->
@@ -266,20 +262,15 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
-<h3>2.4 初始分布</h3>
-<p>马尔科夫链的起始由<strong>初始分布</strong> $\boldsymbol{\pi}^{(0)} = (\pi_1^{(0)}, \pi_2^{(0)}, \ldots, \pi_N^{(0)})$ 描述，其中 $\pi_i^{(0)} = P(X_0 = i)$，$\sum_i \pi_i^{(0)} = 1$。</p>
+<h3>2.3 初始分布</h3>
+<p>马尔可夫链的起始由<strong>初始分布</strong> $\boldsymbol{\pi}^{(0)} = (\pi_1^{(0)}, \pi_2^{(0)}, \ldots, \pi_N^{(0)})$ 描述，其中 $\pi_i^{(0)} = P(X_0 = i)$，$\sum_i \pi_i^{(0)} = 1$。</p>
 
-</section>
-
-<section id="ch3">
-<h2><span class="num">3</span>Chapman-Kolmogorov 方程</h2>
-
-<h3>3.1 n 步转移概率</h3>
+<h3>2.4 n 步转移与 C-K 方程</h3>
 <p><strong>$n$ 步转移概率</strong> $p_{ij}^{(n)}$ 表示从状态 $i$ 出发，经过 $n$ 步到达状态 $j$ 的概率：</p>
 <p>$$p_{ij}^{(n)} = P(X_{t+n} = j \mid X_t = i)$$</p>
 
-<h3>3.2 C-K 方程</h3>
-<p><strong>Chapman-Kolmogorov 方程</strong>是马尔科夫链的核心递推关系：</p>
+
+<p><strong>Chapman-Kolmogorov 方程</strong>是马尔可夫链的核心递推关系：</p>
 <div class="formula" data-eq="(5)">$$p_{ij}^{(m+n)} = \sum_{k \in S} p_{ik}^{(m)} \cdot p_{kj}^{(n)}$$</div>
 <p>这意味着：从 $i$ 经 $m+n$ 步到 $j$，可以分解为先经 $m$ 步到某个中间状态 $k$，再经 $n$ 步从 $k$ 到 $j$，对所有中间状态 $k$ 求和。用矩阵表示就是：</p>
 <div class="formula" data-eq="(6)">$$\mathbf{P}^{(n)} = \mathbf{P}^n$$</div>
@@ -287,17 +278,17 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <div class="callout">
 <div class="callout-title">C-K 方程算例：两天的天气</div>
-<p>沿用 2.3 节的天气模型，一步转移矩阵：</p>
+<p>沿用 2.2 节的天气模型，一步转移矩阵：</p>
 <div class="formula">$$\mathbf{P} = \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix}$$</div>
 <p>若今天晴天，问<strong>后天</strong>晴天/雨天的概率各是多少？C-K 方程 $p_{ij}^{(2)} = \sum_k p_{ik} p_{kj}$ 要求穷举"明天"这个中间状态 $k$：</p>
 <div class="formula">$$\begin{aligned} p_{SS}^{(2)} &= p_{SS} p_{SS} + p_{SC} p_{CS} + p_{SR} p_{RS} \\ &= 0.7 \times 0.7 + 0.2 \times 0.3 + 0.1 \times 0.2 = 0.49 + 0.06 + 0.02 = 0.57 \end{aligned}$$</div>
 <div class="formula">$$\begin{aligned} p_{SR}^{(2)} &= p_{SS} p_{SR} + p_{SC} p_{CR} + p_{SR} p_{RR} \\ &= 0.7 \times 0.1 + 0.2 \times 0.3 + 0.1 \times 0.5 = 0.07 + 0.06 + 0.05 = 0.18 \end{aligned}$$</div>
 <p>直观理解：今天晴→明天晴→后天晴（$0.7 \times 0.7$）、今天晴→明天阴→后天晴（$0.2 \times 0.3$）、今天晴→明天雨→后天晴（$0.1 \times 0.2$），三条"中转路径"互斥，概率相加得 $57\%$。类似地，$p_{SR}^{(2)} = 18\%$。写成矩阵就是 $\mathbf{P}^2$：</p>
 <div class="formula">$$\mathbf{P}^2 = \begin{pmatrix} 0.57 & 0.25 & 0.18 \\ 0.39 & 0.31 & 0.30 \\ 0.33 & 0.31 & 0.36 \end{pmatrix}$$</div>
-<p>这个结果与 3.3 节"天气示例续"中后天分布 $(0.57, 0.25, 0.18)$ 完全一致——那正是 $\boldsymbol{\pi}^{(0)} = (1,0,0)$ 取 $\mathbf{P}^2$ 的第一行。</p>
+<p>$\mathbf{P}^2$ 的第一行 $(0.57, 0.25, 0.18)$ 正是"今天晴"出发两天后的天气分布。</p>
 </div>
 
-<h3>3.3 状态分布的演化</h3>
+<h3>2.5 状态分布的演化</h3>
 <p>时刻 $t$ 的状态分布 $\boldsymbol{\pi}^{(t)}$ 通过转移矩阵递推：</p>
 <div class="formula" data-eq="(7)">$$\boldsymbol{\pi}^{(t)} = \boldsymbol{\pi}^{(0)} \cdot \mathbf{P}^t$$</div>
 <p>即初始分布右乘转移矩阵的 $t$ 次幂。</p>
@@ -309,17 +300,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<section id="ch4">
-<h2><span class="num">4</span>状态分类：常返与周期</h2>
+<section id="ch3">
+<h2><span class="num">3</span>状态分类、平稳分布与遍历性</h2>
+<p>本章回答"长期会怎样"这一核心问题。先刻画<strong>单个状态</strong>的性质——可达、常返、周期与遍历；再转向<strong>整条链</strong>的长期行为——平稳分布与极限分布；最后给出遍历定理、收敛速度与中心极限定理。</p>
 
-<h3>4.1 可达与互通</h3>
+<h3>3.1 可达、互通与不可约</h3>
+<p>先从状态之间的连通关系说起——它决定了链能否被拆成互不相干的几个部分。</p>
 <ul>
 <li><strong>可达</strong>（Accessible）：若存在 $n \geq 1$ 使 $p_{ij}^{(n)} > 0$，则称 $i$ 可达 $j$，记 $i \to j$</li>
 <li><strong>互通</strong>（Communicate）：若 $i \to j$ 且 $j \to i$，则称 $i, j$ 互通，记 $i \leftrightarrow j$</li>
 <li><strong>不可约</strong>（Irreducible）：若所有状态两两互通，则链不可约</li>
 </ul>
 
-<h3>4.2 常返与非常返</h3>
+<h3>3.2 常返与周期</h3>
 <p>从状态 $i$ 出发，<strong>迟早回到 $i$ 的概率</strong>为：</p>
 <div class="formula" data-eq="(8)">$$f_{ii} = P(\text{ EVER return to } i \mid X_0 = i) = \sum_{n=1}^{\infty} f_{ii}^{(n)}$$</div>
 <p>若 $f_{ii} = 1$，状态 $i$ 是<strong>常返</strong>的（Recurrent）；若 $f_{ii} < 1$，状态 $i$ 是<strong>非常返</strong>的（Transient）。</p>
@@ -330,22 +323,21 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td><strong>非常返</strong></td><td>可能不回来，只有限次</td><td>$E[N_i] < \infty$</td></tr>
 </table>
 
-<h3>4.3 正常返与零常返</h3>
+
 <p>常返状态进一步分为：</p>
 <ul>
 <li><strong>正常返</strong>（Positive Recurrent）：平均返回时间 $\mu_i = E[T_i] < \infty$</li>
 <li><strong>零常返</strong>（Null Recurrent）：平均返回时间 $\mu_i = \infty$</li>
 </ul>
-<p>只有有限状态的马尔科夫链中不存在零常返状态。</p>
+<p>只有有限状态的马尔可夫链中不存在零常返状态。</p>
 
-<h3>4.4 周期性</h3>
-<p>状态 $i$ 的<strong>周期</strong> $d(i)$ 定义为 $\gcd\{n : p_{ii}^{(n)} > 0\}$。若 $d(i) = 1$ 则状态 $i$ <strong>非周期</strong>（Aperiodic）。</p>
+<p>刻画状态的另一维度是<strong>周期性</strong>——它描述状态被访问时的节律。状态 $i$ 的<strong>周期</strong> $d(i)$ 定义为 $\gcd\{n : p_{ii}^{(n)} > 0\}$。若 $d(i) = 1$ 则状态 $i$ <strong>非周期</strong>（Aperiodic）。</p>
 <div class="callout warn">
 <div class="callout-title">自环妙用</div>
 <p>如果状态 $i$ 有自环（$p_{ii} > 0$），则 $p_{ii}^{(1)} > 0$，所以 $d(i) = \gcd(1, \ldots) = 1$，即<strong>有自环的状态必然非周期</strong>。在工程实践中，常通过加入小概率自环来消除周期性。</p>
 </div>
 
-<h3>4.5 遍历态</h3>
+<h3>3.3 遍历态</h3>
 <p>若状态 $i$ 同时满足<strong>正常返</strong>且<strong>非周期</strong>，则称其为<strong>遍历态</strong>（Ergodic）。不可约且所有状态都遍历的链称为<strong>遍历链</strong>。<strong>遍历定理</strong>保证遍历链有唯一的极限分布。</p>
 
 <table>
@@ -358,15 +350,15 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <div class="callout">
 <div class="callout-title">遍历态举例：天气模型是遍历链</div>
-<p>回到 2.3 节的天气模型 $\mathbf{P} = \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix}$，逐条检验遍历条件：</p>
+<p>回到 2.2 节的天气模型 $\mathbf{P} = \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix}$，逐条检验遍历条件：</p>
 <ul>
-<li><strong>不可约</strong>：晴 $\to$ 阴 $\to$ 雨 两两互通，图 1 中三个状态由箭头连成一体，链无法分解；</li>
-<li><strong>非周期</strong>：每个状态都有自环（$p_{SS}=0.7 > 0$ 等），由 4.4 节"自环妙用"知 $d(i) = 1$；</li>
-<li><strong>正常返</strong>：有限状态链中所有状态都是正常返的（见 4.3 节）。</li>
+<li><strong>不可约</strong>：晴 $\to$ 阴 $\to$ 雨 两两互通，天气状态图中三个状态由箭头连成一体，链无法分解；</li>
+<li><strong>非周期</strong>：每个状态都有自环（$p_{SS}=0.7 > 0$ 等），由 3.2 节"自环妙用"知 $d(i) = 1$；</li>
+<li><strong>正常返</strong>：有限状态链中所有状态都是正常返的（见 3.2 节）。</li>
 </ul>
 <p>三条同时满足，故三个状态都是遍历态，整个链是<strong>遍历链</strong>。由遍历定理，无论今天是什么天气，$n$ 步后的天气分布都收敛到同一极限。看 $\mathbf{P}^n$ 的行：</p>
 <div class="formula">$$\mathbf{P}^{10} \approx \begin{pmatrix} 0.457 & 0.283 & 0.261 \\ 0.456 & 0.283 & 0.261 \\ 0.456 & 0.283 & 0.261 \end{pmatrix}$$</div>
-<p>三行几乎相同——<strong>起点的影响消失了</strong>，每行都趋向平稳分布 $\boldsymbol{\pi}^* \approx (0.46, 0.28, 0.26)$，与 5.3 节解方程的结果一致。</p>
+<p>三行几乎相同——<strong>起点的影响消失了</strong>，每行都趋向同一个分布 $\boldsymbol{\pi}^* \approx (0.46, 0.28, 0.26)$，这就是<strong>平稳分布</strong>。</p>
 </div>
 
 <div class="callout warn">
@@ -375,49 +367,39 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>$\mathbf{Q}$ 的奇数次幂 $\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$，偶数次幂 $\begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$，对角线永远在 0 与 1 之间振荡，<strong>不收敛</strong>。因此周期链没有唯一的极限分布——例如从晴天出发，奇数天后一定是雨天、偶数天后一定是晴天，长期行为取决于起点和时刻的奇偶，不满足遍历性。</p>
 </div>
 
-</section>
-
-<section id="ch5">
-<h2><span class="num">5</span>平稳分布与极限分布</h2>
-
-<h3>5.1 平稳分布</h3>
+<h3>3.4 平稳分布与极限分布</h3>
 <p>分布 $\boldsymbol{\pi}$ 是<strong>平稳分布</strong>（Stationary Distribution），如果它满足：</p>
 <div class="formula" data-eq="(9)">$$\boldsymbol{\pi} = \boldsymbol{\pi} \cdot \mathbf{P}$$</div>
 <p>即从 $\boldsymbol{\pi}$ 出发一步转移后仍为 $\boldsymbol{\pi}$，分布不再变化。这是一个<strong>左特征向量</strong>问题，对应特征值 1。</p>
 
-<h3>5.2 极限分布</h3>
+
 <p>对于遍历链，无论初始分布如何，状态分布收敛到唯一的平稳分布：</p>
 <div class="formula" data-eq="(10)">$$\lim_{n \to \infty} \boldsymbol{\pi}^{(0)} \mathbf{P}^n = \boldsymbol{\pi}^*$$</div>
 <p>且 $\boldsymbol{\pi}^*$ 就是平稳分布。逐元素写为：</p>
 <div class="formula" data-eq="(11)">$$\lim_{n \to \infty} p_{ij}^{(n)} = \pi_j^*, \quad \forall i$$</div>
 <p>即长期来看，到达各状态的概率与起点无关。</p>
 
-<h3>3.3 平稳分布的计算</h3>
-<p>解方程组 $\boldsymbol{\pi} \mathbf{P} = \boldsymbol{\pi}$ 加归一化 $\sum \pi_i = 1$：</p>
+
+<p>平稳分布可以用线性方程组求解——联立 $\boldsymbol{\pi} \mathbf{P} = \boldsymbol{\pi}$ 与归一化条件 $\sum \pi_i = 1$：</p>
 <div class="formula" data-eq="(12)">$$\begin{cases} \pi_j = \sum_{i} \pi_i \, p_{ij}, & \forall j \\ \sum_{j} \pi_j = 1 \end{cases}$$</div>
 
 <div class="callout">
 <div class="callout-title">天气模型的平稳分布</div>
-<p>解 $\boldsymbol{\pi} \mathbf{P} = \boldsymbol{\pi}$ 加 $\pi_S + \pi_C + \pi_R = 1$，得 $\boldsymbol{\pi}^* \approx (0.5, 0.25, 0.25)$。即长期来看，约 $50\%$ 的日子是晴天，$25\%$ 阴天，$25\%$ 雨天。<strong>这个分布不取决于初始天气</strong>。</p>
+<p>解 $\boldsymbol{\pi} \mathbf{P} = \boldsymbol{\pi}$ 加 $\pi_S + \pi_C + \pi_R = 1$，得 $\boldsymbol{\pi}^* \approx (0.457, 0.283, 0.261)$。即长期来看，约 $45.7\%$ 的日子是晴天，$28.3\%$ 阴天，$26.1\%$ 雨天。<strong>这个分布不取决于初始天气</strong>。</p>
 </div>
 
-<h3>5.4 细致平衡</h3>
+<h3>3.5 细致平衡</h3>
 <p>如果存在分布 $\boldsymbol{\pi}$ 使得：</p>
 <div class="formula" data-eq="(13)">$$\pi_i \, p_{ij} = \pi_j \, p_{ji}, \quad \forall i, j$$</div>
 <p>则称链满足<strong>细致平衡</strong>（Detailed Balance）。满足细致平衡的链是可逆的，且 $\boldsymbol{\pi}$ 一定是平稳分布。细致平衡条件是 MCMC 算法的理论基础。</p>
 
-</section>
-
-<section id="ch6">
-<h2><span class="num">6</span>遍历性与极限定理</h2>
-
-<h3>6.1 遍历定理</h3>
-<p>对于遍历马尔科夫链，时间平均等于空间平均（依概率 1）：</p>
+<h3>3.6 遍历定理与收敛速度</h3>
+<p>对于遍历马尔可夫链，时间平均等于空间平均（依概率 1）：</p>
 <div class="formula" data-eq="(14)">$$\frac{1}{n} \sum_{t=1}^{n} f(X_t) \xrightarrow{a.s.} E_{\pi}[f(X)] = \sum_{i} f(i) \pi_i$$</div>
-<p>这意味着：沿一条马尔科夫链轨迹的时间平均收敛到平稳分布下的期望。<strong>这是 MCMC 的理论基础</strong>——我们可以用马尔科夫链的样本均值来估计期望。</p>
+<p>这意味着：沿一条马尔可夫链轨迹的时间平均收敛到平稳分布下的期望。<strong>这是 MCMC 的理论基础</strong>——我们可以用马尔可夫链的样本均值来估计期望。</p>
 
-<h3>6.2 收敛速度</h3>
-<p>马尔科夫链收敛到平稳分布的速度取决于转移矩阵的<strong>谱隙</strong>（Spectral Gap）：</p>
+
+<p>遍历定理回答了"收敛到哪里"，而工程上同样关心"收敛得多快"——这由转移矩阵的<strong>谱隙</strong>（Spectral Gap）决定：</p>
 <div class="formula" data-eq="(15)">$$\text{Spectral Gap} = 1 - |\lambda_2|$$</div>
 <p>其中 $\lambda_2$ 是转移矩阵的次大特征值（模长）。谱隙越大，收敛越快；谱隙接近 0 时收敛极慢。</p>
 
@@ -432,34 +414,33 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p><strong>混合时间</strong>（Mixing Time）$t_{\text{mix}}$ 定义为分布与平稳分布的距离小于 $\epsilon$ 所需的最小步数：$t_{\text{mix}}(\epsilon) = \min\{t : \|\boldsymbol{\pi}^{(t)} - \boldsymbol{\pi}\|_{\text{TV}} \leq \epsilon\}$。混合时间是衡量 MCMC 效率的关键指标。</p>
 </div>
 
-<h3>6.3 大数定律与中心极限定理</h3>
-<p>遍历定理是<strong>马尔科夫链的大数定律</strong>。对于马尔科夫链的中心极限定理，有：</p>
+<h3>3.7 中心极限定理与误差分析</h3>
+<p>遍历定理是<strong>马尔可夫链的大数定律</strong>。对于马尔可夫链的中心极限定理，有：</p>
 <div class="formula" data-eq="(16)">$$\sqrt{n}\left(\frac{1}{n}\sum_{t=1}^{n} f(X_t) - E_\pi[f]\right) \xrightarrow{d} \mathcal{N}(0, \sigma_f^2)$$</div>
 <p>其中 $\sigma_f^2$ 与转移矩阵的谱性质有关。这为 MCMC 估计的误差分析提供了理论工具。</p>
 
 </section>
 
-<section id="ch7">
-<h2><span class="num">7</span>连续时间马尔科夫链</h2>
-
-<h3>7.1 从离散到连续</h3>
-<p>在<strong>连续时间马尔科夫链</strong>（CTMC）中，状态转移可以在任意时刻发生。两个关键量是：</p>
+<section id="ch4">
+<h2><span class="num">4</span>连续时间马尔可夫链</h2>
+<h3>4.1 从离散到连续</h3>
+<p>在<strong>连续时间马尔可夫链</strong>（CTMC）中，状态转移可以在任意时刻发生。两个关键量是：</p>
 <ul>
 <li><strong>转移速率</strong> $q_{ij}$：从状态 $i$ 到 $j$ 的瞬时转移速率</li>
 <li><strong>驻留时间</strong>：在状态 $i$ 的停留时间服从指数分布 $\text{Exp}(q_i)$，其中 $q_i = \sum_{j \neq i} q_{ij}$</li>
 </ul>
 
-<h3>7.2 转移速率矩阵</h3>
+<h3>4.2 生成元矩阵与转移概率矩阵</h3>
 <p>CTMC 由<strong>无穷小生成元矩阵</strong>（Generator Matrix）$\mathbf{Q}$ 描述：</p>
 <div class="formula" data-eq="(17)">$$\mathbf{Q} = \begin{pmatrix} -q_1 & q_{12} & \cdots & q_{1N} \\ q_{21} & -q_2 & \cdots & q_{2N} \\ \vdots & & \ddots & \vdots \\ q_{N1} & q_{N2} & \cdots & -q_N \end{pmatrix}$$</div>
 <p>其中 $q_i = \sum_{j \neq i} q_{ij}$，每行之和为 0。</p>
 
-<h3>7.3 转移概率矩阵</h3>
-<p>CTMC 的时刻 $t$ 转移概率矩阵通过矩阵指数给出：</p>
+
+<p>有了生成元矩阵，任意时刻 $t$ 的转移概率矩阵就由矩阵指数给出：</p>
 <div class="formula" data-eq="(18)">$$\mathbf{P}(t) = e^{\mathbf{Q}t} = \sum_{k=0}^{\infty} \frac{(\mathbf{Q}t)^k}{k!}$$</div>
 <p>平稳分布满足 $\boldsymbol{\pi} \mathbf{Q} = \mathbf{0}$。</p>
 
-<h3>7.4 离散与连续对比</h3>
+<h3>4.3 离散与连续对比</h3>
 <table>
 <tr><th>维度</th><th>离散时间 (DTMC)</th><th>连续时间 (CTMC)</th></tr>
 <tr><td>时间</td><td>$t = 0, 1, 2, \ldots$</td><td>$t \in \mathbb{R}_{\geq 0}$</td></tr>
@@ -472,18 +453,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<section id="ch8">
-<h2><span class="num">8</span>隐马尔科夫模型（HMM）</h2>
+<section id="ch5">
+<h2><span class="num">5</span>隐马尔可夫模型（HMM）</h2>
+<p>本章把马尔可夫链推广到"状态不可见"的情形：先定义隐马尔可夫模型及其两大假设，再介绍求解评估、解码、学习三大问题的经典算法，最后用一个贯穿始终的算例把它们串起来。</p>
 
-<h3>8.1 从可见到隐藏</h3>
-<p>在标准马尔科夫链中，状态是可观测的。但在许多场景中，真实状态<strong>隐藏不可见</strong>，只能观测到与状态相关的输出。这就是<strong>隐马尔科夫模型</strong>（Hidden Markov Model, HMM）。</p>
+<h3>5.1 从可见到隐藏</h3>
+<p>在标准马尔可夫链中，状态是可观测的。但在许多场景中，真实状态<strong>隐藏不可见</strong>，只能观测到与状态相关的输出。这就是<strong>隐马尔可夫模型</strong>（Hidden Markov Model, HMM）。</p>
 
 <div class="callout">
 <div class="callout-title">HMM 的经典场景</div>
 <p><strong>语音识别</strong>：隐藏状态 = 音素，观测 = 声学特征。<strong>词性标注</strong>：隐藏状态 = 词性标签，观测 = 词语。<strong>基因序列</strong>：隐藏状态 = 编码区/非编码区，观测 = DNA 碱基。</p>
 </div>
 
-<h3>8.2 HMM 的五元组</h3>
+<h3>5.2 HMM 的五元组与两大假设</h3>
 <table>
 <tr><th>要素</th><th>符号</th><th>含义</th></tr>
 <tr><td>状态集合</td><td>$S = \{s_1, \ldots, s_N\}$</td><td>隐藏的 $N$ 个状态</td></tr>
@@ -493,9 +475,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td>初始分布</td><td>$\boldsymbol{\pi}$</td><td>$\pi_i = P(X_0 = s_i)$</td></tr>
 </table>
 
-<h3>8.3 HMM 的两大假设</h3>
+<p>在这个五元组之上，HMM 依赖两条关键假设，把"状态如何转移"与"观测如何产生"彻底解耦：</p>
 <ol>
-<li><strong>马尔科夫假设</strong>：隐藏状态序列满足一阶马尔科夫性质</li>
+<li><strong>马尔可夫假设</strong>：隐藏状态序列满足一阶马尔可夫性质</li>
 <li><strong>观测独立假设</strong>：$t$ 时刻的观测 $O_t$ 仅依赖于当前隐藏状态 $X_t$，与其他无关</li>
 </ol>
 
@@ -506,10 +488,10 @@ tr:hover td { background: var(--c-primary-ghost); }
 <defs><marker id="mk3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#334155"/></marker></defs>
 <circle cx="120" cy="80" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5" class="glow-ring"/>
 <text x="105" y="85" fill="#1e293b" font-size="12">X₁</text>
-<line x1="150" y1="80" x2="220" y2="80" stroke="#334155" stroke-width="2" marker-end="url(#mk3)" class="flow-line"/>
+<line x1="150" y1="80" x2="220" y2="80" stroke="#334155" stroke-width="2" marker-end="url(#mk3)"/>
 <circle cx="260" cy="80" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
 <text x="245" y="85" fill="#1e293b" font-size="12">X₂</text>
-<line x1="290" y1="80" x2="360" y2="80" stroke="#334155" stroke-width="2" marker-end="url(#mk3)" class="flow-line"/>
+<line x1="290" y1="80" x2="360" y2="80" stroke="#334155" stroke-width="2" marker-end="url(#mk3)"/>
 <circle cx="400" cy="80" r="30" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
 <text x="385" y="85" fill="#1e293b" font-size="12">X₃</text>
 <line x1="430" y1="80" x2="500" y2="80" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>
@@ -533,11 +515,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 </svg>
 </div>
 
-</section>
-
-<section id="ch9">
-<h2><span class="num">9</span>HMM 三大问题</h2>
-
+<h3>5.3 三大问题与核心算法</h3>
+<p>给定模型与观测，HMM 需要回答三个基本问题，它们分别对应三个经典算法：</p>
 <table>
 <tr><th>问题</th><th>描述</th><th>算法</th><th>复杂度</th></tr>
 <tr><td><strong>评估</strong></td><td>给定模型 $\lambda=(A,B,\pi)$ 和观测 $O$，求 $P(O \mid \lambda)$</td><td>前向算法</td><td>$O(N^2 T)$</td></tr>
@@ -545,21 +524,22 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td><strong>学习</strong></td><td>给定观测，估计模型参数 $A, B, \pi$</td><td>Baum-Welch (EM)</td><td>$O(N^2 T)$ per iter</td></tr>
 </table>
 
-<h3>9.1 前向算法</h3>
+<h4>前向算法（评估）</h4>
 <p>定义<strong>前向概率</strong> $\alpha_t(i) = P(O_1, \ldots, O_t, X_t = s_i \mid \lambda)$：</p>
 <div class="formula" data-eq="(20)">$$\alpha_{t+1}(j) = \left[\sum_{i=1}^{N} \alpha_t(i) \, a_{ij}\right] b_j(O_{t+1})$$</div>
 <p>最终 $P(O \mid \lambda) = \sum_{i=1}^{N} \alpha_T(i)$。前向算法通过递推避免了枚举所有状态序列的 $O(N^T)$ 指数复杂度。</p>
 
-<h3>9.2 Viterbi 算法</h3>
+<h4>Viterbi 算法（解码）</h4>
 <p>定义<strong>最优路径概率</strong> $\delta_t(i) = \max_{X_1,\ldots,X_{t-1}} P(X_1, \ldots, X_{t-1}, X_t=s_i, O_1, \ldots, O_t \mid \lambda)$：</p>
 <p>$$\delta_{t+1}(j) = \max_{i} [\delta_t(i) \, a_{ij}] \cdot b_j(O_{t+1})$$</p>
 <p>同时记录回溯指针 $\psi_{t+1}(j) = \arg\max_i [\delta_t(i) \, a_{ij}]$。最终通过回溯得到最优状态序列。</p>
 
-<h3>9.3 Baum-Welch 算法</h3>
+<h4>Baum-Welch 算法（学习）</h4>
 <p>Baum-Welch 是 EM 算法在 HMM 上的特化：<strong>E 步</strong>用前向-后向算法计算期望 sufficient statistics，<strong>M 步</strong>更新参数。迭代直到对数似然收敛。</p>
 
+<h3>5.4 算例：天气-活动 HMM</h3>
 <div class="callout">
-<div class="callout-title">统一算例：天气-活动 HMM</div>
+<div class="callout-title">问题设定</div>
 <p>为了直观理解三大问题，先固定一个贯穿始终的小例子。每天的真实天气（晴 S / 雨 R）<strong>不可见</strong>，只能观测到当天的活动（散步 W / 购物 M / 清洁 C）。模型参数：</p>
 <div class="formula">$$\boldsymbol{\pi} = (0.6, 0.4), \quad \mathbf{A} = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}, \quad \mathbf{B} = \begin{pmatrix} 0.5 & 0.4 & 0.1 \\ 0.1 & 0.3 & 0.6 \end{pmatrix}$$</div>
 <p>观测序列 $O = (\text{散步}, \text{购物}, \text{清洁})$。三天的天气状态 $X_1, X_2, X_3$ 是我们想知道的隐藏变量。</p>
@@ -599,27 +579,27 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<section id="ch10">
-<h2><span class="num">10</span>MCMC：马尔科夫链蒙特卡洛</h2>
+<section id="ch6">
+<h2><span class="num">6</span>MCMC：马尔可夫链蒙特卡洛</h2>
+<h3>6.1 为什么需要 MCMC</h3>
+<p>在贝叶斯推断中，我们需要计算后验分布的期望 $E_\pi[f(X)]$，但分布 $\pi(x)$ 往往<strong>无法解析求解</strong>。MCMC 的思想是：构造一个以 $\pi$ 为平稳分布的马尔可夫链，运行足够长时间后，链上的样本近似服从 $\pi$，然后用样本均值估计期望。</p>
 
-<h3>10.1 为什么需要 MCMC？</h3>
-<p>在贝叶斯推断中，我们需要计算后验分布的期望 $E_\pi[f(X)]$，但分布 $\pi(x)$ 往往<strong>无法解析求解</strong>。MCMC 的思想是：构造一个以 $\pi$ 为平稳分布的马尔科夫链，运行足够长时间后，链上的样本近似服从 $\pi$，然后用样本均值估计期望。</p>
-
-<h3>10.2 Metropolis-Hastings 算法</h3>
+<h3>6.2 Metropolis-Hastings 算法</h3>
 <p>MH 算法的核心是<strong>接受-拒绝</strong>机制：</p>
 <ol>
-<li>从提议分布 $q(x' \mid x)$ 中采样新状态 $x'$</li>
-<li>计算接受概率：</li>
+<li><strong>提议</strong>：从提议分布 $q(x' \mid x)$ 中采样新状态 $x'$；</li>
+<li><strong>计算接受概率</strong>：
+<div class="formula">$$\alpha(x, x') = \min\left(1, \frac{\pi(x') \, q(x \mid x')}{\pi(x) \, q(x' \mid x)}\right)$$</div>
+</li>
+<li><strong>接受或拒绝</strong>：以概率 $\alpha$ 接受 $x'$（令 $x_{t+1} = x'$），否则拒绝（令 $x_{t+1} = x_t$）。</li>
 </ol>
-<p>$$\alpha(x, x') = \min\left(1, \frac{\pi(x') \, q(x \mid x')}{\pi(x) \, q(x' \mid x)}\right)$$</li>
-<li>以概率 $\alpha$ 接受 $x'$（令 $x_{t+1} = x'$），否则拒绝（令 $x_{t+1} = x_t$）</li>
 
 <div class="callout success">
 <div class="callout-title">MH 的巧妙之处</div>
 <p>MH 只需要 $\pi(x)$ 的<strong>未归一化形式</strong>（因为分子分母同时出现），这意味着我们不需要计算归一化常数 $Z$——这正是贝叶斯推断中最困难的部分。</p>
 </div>
 
-<h3>10.3 Gibbs 采样</h3>
+<h3>6.3 Gibbs 采样</h3>
 <p>Gibbs 采样是 MH 的特例：对高维分布 $\pi(\mathbf{x}) = \pi(x_1, \ldots, x_d)$，每次只更新一个维度，从<strong>条件分布</strong>中采样：</p>
 <p>$$x_i^{(t+1)} \sim \pi(x_i \mid x_{-i}^{(t)})$$</p>
 <p>Gibbs 采样的接受率始终为 1（无需拒绝），但要求条件分布可采样。</p>
@@ -634,16 +614,15 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<section id="ch11">
-<h2><span class="num">11</span>应用：PageRank 与排队论</h2>
-
-<h3>11.1 PageRank</h3>
-<p>Google 的 PageRank 将网页排名建模为马尔科夫链的<strong>平稳分布</strong>：网页是状态，超链接是转移概率。用户在网页间随机跳转，长期来看访问各网页的概率就是 PageRank 值。</p>
+<section id="ch7">
+<h2><span class="num">7</span>应用：PageRank 与排队论</h2>
+<h3>7.1 PageRank</h3>
+<p>Google 的 PageRank 将网页排名建模为马尔可夫链的<strong>平稳分布</strong>：网页是状态，超链接是转移概率。用户在网页间随机跳转，长期来看访问各网页的概率就是 PageRank 值。</p>
 <p>转移矩阵加入<strong>阻尼因子</strong> $d$ 处理悬挂节点和确保不可约性：</p>
 <p>$$\mathbf{P}_{\text{PR}} = d \cdot \mathbf{P} + (1-d) \cdot \frac{1}{N}\mathbf{1}\mathbf{1}^T$$</p>
 <p>其中 $d \approx 0.85$。PageRank 向量就是 $\boldsymbol{\pi} \mathbf{P}_{\text{PR}} = \boldsymbol{\pi}$ 的解。</p>
 
-<h3>11.2 排队论</h3>
+<h3>7.2 排队论</h3>
 <p>M/M/1 排队模型是一个 CTMC，状态为系统中的顾客数：</p>
 <ul>
 <li>到达速率 $\lambda$：泊松过程</li>
@@ -652,7 +631,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li>当 $\rho = \lambda/\mu < 1$ 时系统稳定，平稳分布为几何分布 $\pi_n = (1-\rho)\rho^n$</li>
 </ul>
 
-<h3>11.3 其他应用</h3>
+<h3>7.3 其他应用</h3>
 <table>
 <tr><th>领域</th><th>应用</th><th>状态</th><th>转移</th></tr>
 <tr><td>生物信息学</td><td>基因序列分析</td><td>编码区/非编码区</td><td>序列变化</td></tr>
@@ -664,24 +643,23 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 </section>
 
-<section id="ch12">
-<h2><span class="num">12</span>Python 代码实现</h2>
-
-<h3>12.1 离散马尔科夫链模拟</h3>
+<section id="ch8">
+<h2><span class="num">8</span>Python 代码实现</h2>
+<h3>8.1 离散马尔可夫链模拟</h3>
 <div class="code-block">
 <div class="code-header">markov_chain.py</div>
 <pre>
 <span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
 
 <span class="kw">class</span> <span class="cls">MarkovChain</span>:
-    <span class="str">"""离散时间马尔科夫链"""</span>
+    <span class="str">"""离散时间马尔可夫链"""</span>
     <span class="kw">def</span> __init__(<span class="kw">self</span>, P, states=<span class="kw">None</span>):
         <span class="kw">self</span>.P = <span class="cls">np</span>.<span class="fn">array</span>(P, dtype=<span class="fn">float</span>)
         <span class="kw">self</span>.n_states = <span class="fn">len</span>(P)
         <span class="kw">self</span>.states = states <span class="kw">or</span> <span class="fn">list</span>(<span class="fn">range</span>(<span class="kw">self</span>.n_states))
 
     <span class="kw">def</span> <span class="fn">simulate</span>(<span class="kw">self</span>, n_steps, start_state=<span class="kw">None</span>, seed=<span class="kw">None</span>):
-        <span class="str">"""模拟马尔科夫链轨迹"""</span>
+        <span class="str">"""模拟马尔可夫链轨迹"""</span>
         rng = <span class="cls">np</span>.<span class="fn">random</span>.RandomState(seed)
         path = []
         current = start_state <span class="kw">if</span> start_state <span class="kw">is</span> <span class="kw">not</span> <span class="kw">None</span> <span class="kw">else</span> rng.<span class="fn">choice</span>(<span class="kw">self</span>.n_states)
@@ -712,14 +690,14 @@ mc = <span class="cls">MarkovChain</span>(P, states=[<span class="str">"晴"</sp
 </pre>
 </div>
 
-<h3>12.2 HMM 前向算法 + Viterbi</h3>
+<h3>8.2 HMM 前向算法与 Viterbi 解码</h3>
 <div class="code-block">
 <div class="code-header">hmm.py</div>
 <pre>
 <span class="kw">import</span> <span class="cls">numpy</span> <span class="kw">as</span> <span class="cls">np</span>
 
 <span class="kw">class</span> <span class="cls">HMM</span>:
-    <span class="str">"""隐马尔科夫模型"""</span>
+    <span class="str">"""隐马尔可夫模型"""</span>
     <span class="kw">def</span> __init__(<span class="kw">self</span>, A, B, pi):
         <span class="kw">self</span>.A = <span class="cls">np</span>.<span class="fn">array</span>(A)  <span class="com"># 转移矩阵 N×N</span>
         <span class="kw">self</span>.B = <span class="cls">np</span>.<span class="fn">array</span>(B)  <span class="com"># 发射矩阵 N×M</span>
@@ -767,7 +745,7 @@ mc = <span class="cls">MarkovChain</span>(P, states=[<span class="str">"晴"</sp
 </pre>
 </div>
 
-<h3>12.3 Baum-Welch 参数学习</h3>
+<h3>8.3 Baum-Welch 参数学习</h3>
 <div class="code-block">
 <div class="code-header">baum_welch.py</div>
 <pre>
@@ -818,7 +796,7 @@ mc = <span class="cls">MarkovChain</span>(P, states=[<span class="str">"晴"</sp
 </pre>
 </div>
 
-<h3>12.4 Metropolis-Hastings 采样</h3>
+<h3>8.4 Metropolis-Hastings 采样</h3>
 <div class="code-block">
 <div class="code-header">metropolis.py</div>
 <pre>
@@ -861,7 +839,7 @@ samples, rate = <span class="fn">metropolis_hastings</span>(<span class="fn">bim
 </pre>
 </div>
 
-<h3>12.5 Gibbs 采样器</h3>
+<h3>8.5 Gibbs 采样器</h3>
 <div class="code-block">
 <div class="code-header">gibbs.py</div>
 <pre>
@@ -900,7 +878,7 @@ samples = <span class="fn">gibbs_sampler</span>((mu, Sigma), x0=[<span class="nu
 </pre>
 </div>
 
-<h3>12.6 PageRank 计算</h3>
+<h3>8.6 PageRank 计算</h3>
 <div class="code-block">
 <div class="code-header">pagerank.py</div>
 <pre>
@@ -944,24 +922,23 @@ pr = <span class="fn">pagerank</span>(A)
 
 </section>
 
-<section id="ch13">
-<h2><span class="num">13</span>演进时间线与总结</h2>
-
+<section id="ch9">
+<h2><span class="num">9</span>演进时间线与总结</h2>
 <div class="timeline">
 <div class="timeline-item">
 <div class="year">1906</div>
-<div class="event">Markov 提出马尔科夫链</div>
-<div class="desc">Andrey Markov 研究普希金诗歌中的元音分布，提出马尔科夫性质</div>
+<div class="event">Markov 提出马尔可夫链</div>
+<div class="desc">为证明大数定律不依赖独立性，Markov 构造了相互依赖的随机变量序列；1913 年他又用《叶甫盖尼·奥涅金》的元音序列做了实证</div>
 </div>
 <div class="timeline-item">
 <div class="year">1931</div>
-<div class="event">Kolmogorov 建立严格理论</div>
-<div class="desc">Kolmogorov 发表概率论基础，为马尔科夫链建立公理化体系</div>
+<div class="event">Chapman-Kolmogorov 方程</div>
+<div class="desc">Kolmogorov 用解析方法研究马尔可夫过程，确立转移概率的递推关系（Chapman 于 1928 年在布朗运动研究中也得到同一公式）</div>
 </div>
 <div class="timeline-item">
-<div class="year">1936</div>
-<div class="event">Chapman-Kolmogorov 方程</div>
-<div class="desc">确立转移概率的递推关系</div>
+<div class="year">1933</div>
+<div class="event">Kolmogorov 概率论公理化</div>
+<div class="desc">《概率论基础》出版，用测度论为随机过程奠定严格基础</div>
 </div>
 <div class="timeline-item">
 <div class="year">1953</div>
@@ -970,8 +947,8 @@ pr = <span class="fn">pagerank</span>(A)
 </div>
 <div class="timeline-item">
 <div class="year">1960s</div>
-<div class="event">Baum 和 Petrie 发展 HMM 理论</div>
-<div class="desc">前向-后向算法、Viterbi 解码、Baum-Welch 学习相继提出</div>
+<div class="event">Baum 和 Petrie 奠定 HMM 理论</div>
+<div class="desc">提出 HMM 的概率模型与前向-后向算法（Baum-Welch 学习的基础），Viterbi 于 1967 年给出最优解码算法</div>
 </div>
 <div class="timeline-item">
 <div class="year">1970</div>
@@ -986,7 +963,7 @@ pr = <span class="fn">pagerank</span>(A)
 <div class="timeline-item">
 <div class="year">1998</div>
 <div class="event">Brin 和 Page 发明 PageRank</div>
-<div class="desc">Google 搜索引擎的核心算法基于马尔科夫链平稳分布</div>
+<div class="desc">Google 搜索引擎的核心算法基于马尔可夫链平稳分布</div>
 </div>
 <div class="timeline-item">
 <div class="year">2001</div>
@@ -996,13 +973,13 @@ pr = <span class="fn">pagerank</span>(A)
 <div class="timeline-item">
 <div class="year">2010s+</div>
 <div class="event">MCMC 在深度学习中应用</div>
-<div class="desc">SGMCMC、变分推断等方法将马尔科夫链思想与深度学习结合</div>
+<div class="desc">SGMCMC、变分推断等方法将马尔可夫链思想与深度学习结合</div>
 </div>
 </div>
 
 <div class="callout success">
 <div class="callout-title">总结</div>
-<p>马尔科夫链是概率论中最具工程价值的概念之一。它以"无记忆性"这一简单假设为起点，发展出了涵盖状态分类、平稳分布、遍历定理的完整理论体系。从 PageRank 的网页排名到 HMM 的语音识别，从 MCMC 的贝叶斯计算到排队论的系统设计，马尔科夫链的影响无处不在。它是连接概率论、信息论和算法设计的桥梁，也是理解概率图模型和条件随机场的基础。</p>
+<p>马尔可夫链是概率论中最具工程价值的概念之一。它以"无记忆性"这一简单假设为起点，发展出了涵盖状态分类、平稳分布、遍历定理的完整理论体系。从 PageRank 的网页排名到 HMM 的语音识别，从 MCMC 的贝叶斯计算到排队论的系统设计，马尔可夫链的影响无处不在。它是连接概率论、信息论和算法设计的桥梁，也是理解概率图模型和条件随机场的基础。</p>
 </div>
 
 </section>
@@ -1010,21 +987,21 @@ pr = <span class="fn">pagerank</span>(A)
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-<li>Markov, A. A. (1906). Extension of the limit theorems of probability theory. <em>Izvestiya Fiz-Mat Obshchestva Kazan Univ</em>.</li>
-<li>Kolmogorov, A. N. (1931). Uber die analytischen Methoden in der Wahrscheinlichkeitsrechnung. <em>Math. Ann., 104, 415-458</em>.</li>
-<li>Doob, J. L. (1953). Stochastic Processes. <em>Wiley</em>. (经典教材)</li>
-<li>Baum, L. E., &amp; Petrie, T. (1966). Statistical inference for probabilistic functions of finite state Markov chains. <em>Ann. Math. Stat., 37, 1554-1563</em>. (HMM 基础)</li>
-<li>Viterbi, A. J. (1967). Error bounds for convolutional codes. <em>IEEE Trans. IT, 13, 260-269</em>. (Viterbi 算法)</li>
-<li>Baum, L. E. (1972). An inequality and associated maximization technique. <em>Proc. Symposium on Math. Stat. and Probability</em>. (Baum-Welch)</li>
-<li>Metropolis, N., et al. (1953). Equation of state calculations by fast computing machines. <em>J. Chem. Phys., 21, 1087-1092</em>. (MCMC 起源)</li>
-<li>Hastings, W. K. (1970). Monte Carlo sampling methods using Markov chains. <em>Biometrika, 57, 97-109</em>. (MH 算法)</li>
-<li>Geman, S., &amp; Geman, D. (1984). Stochastic relaxation, Gibbs distributions. <em>IEEE TPAMI, 6, 721-741</em>. (Gibbs 采样)</li>
-<li>Brin, S., &amp; Page, L. (1998). The anatomy of a large-scale hypertextual web search engine. <em>Computer Networks, 30, 107-117</em>. (PageRank)</li>
-<li>Rabiner, L. R. (1989). A tutorial on hidden Markov models. <em>Proc. IEEE, 77(2), 257-286</em>. (HMM 教程经典)</li>
-<li>Norris, J. R. (1997). Markov Chains. <em>Cambridge University Press</em>. (理论教材)</li>
-<li>Levin, D. A., Peres, Y., &amp; Wilmer, E. L. (2009). Markov Chains and Mixing Times. <em>AMS</em>. (混合时间专著)</li>
-<li>Andrieu, C., et al. (2003). An introduction to MCMC for machine learning. <em>Machine Learning, 50, 5-43</em>.</li>
-<li>Bishop, C. M. (2006). Pattern Recognition and Machine Learning, Chapter 13. <em>Springer</em>. (HMM/CRF 章节)</li>
+<li>Markov, A. A. (1906). Extension of the law of large numbers to variables connected in a chain. <em>Izvestiya Fiziko-matematicheskogo obshchestva pri Kazanskom universitete</em>, 2nd series, 15, 135-156.</li>
+<li>Kolmogorov, A. N. (1931). Über die analytischen Methoden in der Wahrscheinlichkeitsrechnung. <em>Math. Ann.</em>, 104, 415-458.</li>
+<li>Doob, J. L. (1953). <em>Stochastic Processes</em>. Wiley. (经典教材)</li>
+<li>Baum, L. E., &amp; Petrie, T. (1966). Statistical inference for probabilistic functions of finite state Markov chains. <em>Ann. Math. Statist.</em>, 37(6), 1554-1563. (HMM 基础)</li>
+<li>Viterbi, A. J. (1967). Error bounds for convolutional codes and an asymptotically optimum decoding algorithm. <em>IEEE Trans. Inf. Theory</em>, 13(2), 260-269. (Viterbi 算法)</li>
+<li>Baum, L. E., Petrie, T., Soules, G., &amp; Weiss, N. (1970). A maximization technique occurring in the statistical analysis of probabilistic functions of Markov chains. <em>Ann. Math. Statist.</em>, 41(1), 164-171. (Baum-Welch 算法)</li>
+<li>Metropolis, N., et al. (1953). Equation of state calculations by fast computing machines. <em>J. Chem. Phys.</em>, 21(6), 1087-1092. (MCMC 起源)</li>
+<li>Hastings, W. K. (1970). Monte Carlo sampling methods using Markov chains and their applications. <em>Biometrika</em>, 57(1), 97-109. (MH 算法)</li>
+<li>Geman, S., &amp; Geman, D. (1984). Stochastic relaxation, Gibbs distributions, and the Bayesian restoration of images. <em>IEEE Trans. Pattern Anal. Mach. Intell.</em>, 6(6), 721-741. (Gibbs 采样)</li>
+<li>Brin, S., &amp; Page, L. (1998). The anatomy of a large-scale hypertextual web search engine. <em>Computer Networks and ISDN Systems</em>, 30(1-7), 107-117. (PageRank)</li>
+<li>Rabiner, L. R. (1989). A tutorial on hidden Markov models and selected applications in speech recognition. <em>Proc. IEEE</em>, 77(2), 257-286. (HMM 教程经典)</li>
+<li>Norris, J. R. (1997). <em>Markov Chains</em>. Cambridge University Press. (理论教材)</li>
+<li>Levin, D. A., Peres, Y., &amp; Wilmer, E. L. (2009). <em>Markov Chains and Mixing Times</em>. AMS. (混合时间专著)</li>
+<li>Andrieu, C., et al. (2003). An introduction to MCMC for machine learning. <em>Machine Learning</em>, 50(1-2), 5-43.</li>
+<li>Bishop, C. M. (2006). <em>Pattern Recognition and Machine Learning</em>, Chapter 13. Springer. (HMM/CRF 章节)</li>
 </ol>
 </section>
 
