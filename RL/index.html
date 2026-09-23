@@ -142,7 +142,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">13 个章节</span>
     <span class="badge">6 张示例图</span>
-    <span class="badge">24 个公式</span>
+    <span class="badge">26 个公式</span>
     <span class="badge">14 篇参考文献</span>
   </div>
 </section>
@@ -331,7 +331,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>3.2 策略改进（Policy Improvement）</h3>
 <p>有了 $V^{\pi}$ 之后，就可以"贪心"地改进策略：在每个状态下选择能使 $Q$ 值最大的动作：</p>
 
-<div class="formula">$$\pi'(s) = \arg\max_{a} \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V^{\pi}(s') \right]$$</div>
+<div class="formula" data-eq="(13)">$$\pi'(s) = \arg\max_{a} \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V^{\pi}(s') \right]$$</div>
 
 <p><strong>策略改进定理</strong>保证：只要 $\pi'$ 至少在一个状态下严格优于 $\pi$，那么 $V^{\pi'}(s) \geq V^{\pi}(s)$ 对所有状态成立。评估 → 改进 → 再评估 → 再改进……最终收敛到最优策略。</p>
 
@@ -340,7 +340,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <p><strong>价值迭代（Value Iteration）</strong>：把策略改进"折叠"进评估过程，每一步直接取最大值，即把贝尔曼最优方程 (10) 变为迭代公式：</p>
 
-<div class="formula" data-eq="(13)">$$V_{k+1}(s) = \max_{a} \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V_k(s') \right]$$</div>
+<div class="formula" data-eq="(14)">$$V_{k+1}(s) = \max_{a} \sum_{s'} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V_k(s') \right]$$</div>
 
 <div class="callout warn">
 <div class="callout-title">DP 方法的两大局限</div>
@@ -424,28 +424,28 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>5.1 TD(0)：一步自举</h3>
 <p>TD(0) 用"当前奖励 + 下一状态的估计价值"作为更新目标，取代 MC 中的完整回报 $G_t$，从而把等待时间从"轨迹结束"缩短到"一步之后"：</p>
 
-<div class="formula" data-eq="(14)">$$V(s) \leftarrow V(s) + \alpha \left[ R + \gamma V(s') - V(s) \right]$$</div>
+<div class="formula" data-eq="(15)">$$V(s) \leftarrow V(s) + \alpha \left[ R + \gamma V(s') - V(s) \right]$$</div>
 
 <p>方括号中的 $R + \gamma V(s') - V(s)$ 称为<strong>TD 误差（TD error）</strong>。与 MC 相比：TD 偏差更大但方差小得多；两者充分学习后都会收敛到真实价值函数。</p>
 
 <h3>5.2 SARSA：同策略控制</h3>
 <p>SARSA 的名字来自其更新元组 $(s, a, r, s', a')$。它每一步用一个五元组做自举更新，且用来采样的策略与要学习的策略是同一个（on-policy）：</p>
 
-<div class="formula" data-eq="(15)">$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma Q(s', a') - Q(s, a) \right]$$</div>
+<div class="formula" data-eq="(16)">$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma Q(s', a') - Q(s, a) \right]$$</div>
 
 <p>SARSA 的探索机制（如 $\epsilon$-greedy）会影响它最终学到的策略，因此对探索参数比较敏感。</p>
 
 <h3>5.3 Q-Learning：off-policy 控制</h3>
 <p>Q-Learning 是强化学习中最经典的算法。其更新不再使用"实际执行的 $a'$"，而是取下一状态所有动作的<strong>最大值</strong> $\max_{a'} Q(s', a')$。即使当前行为策略在探索，学习目标始终指向最优策略，因此是 <strong>off-policy</strong>：</p>
 
-<div class="formula" data-eq="(16)">$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right]$$</div>
+<div class="formula" data-eq="(17)">$$Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right]$$</div>
 
 <p>Q-Learning 的收敛性有严格理论保证：只要每个状态-动作对被无限次探索，且学习率满足 Robbins-Monro 条件，$Q$ 将以概率 1 收敛到 $Q^*$。</p>
 
 <h3>5.3 epsilon-greedy 探索</h3>
 <p>$\epsilon$-greedy 是权衡"探索 vs 利用"的最简单策略：以大概率选择当前最优动作，以小概率随机探索：</p>
 
-<div class="formula" data-eq="(17)">$$\pi(a \mid s) = \begin{cases} 1 - \epsilon + \frac{\epsilon}{|A|} & \text{if } a = \arg\max_{a'} Q(s, a') \\ \frac{\epsilon}{|A|} & \text{otherwise} \end{cases}$$</div>
+<div class="formula" data-eq="(18)">$$\pi(a \mid s) = \begin{cases} 1 - \epsilon + \frac{\epsilon}{|A|} & \text{if } a = \arg\max_{a'} Q(s, a') \\ \frac{\epsilon}{|A|} & \text{otherwise} \end{cases}$$</div>
 
 <h3>5.4 On-policy vs Off-policy 对比</h3>
 <div class="table-wrap">
@@ -474,23 +474,23 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>6.1 DQN 核心思想</h3>
 <p>DQN 的网络输入是状态 $s$（如图像），输出是每个动作的 Q 值向量。训练目标是最小化预测与贝尔曼最优目标之间的均方误差：</p>
 
-<div class="formula" data-eq="(18)">$$\mathcal{L}(\theta) = \mathbb{E}_{(s, a, r, s') \sim \mathcal{D}}\left[ \left( r + \gamma \max_{a'} Q_{\theta^-}(s', a') - Q_\theta(s, a) \right)^2 \right]$$</div>
+<div class="formula" data-eq="(19)">$$\mathcal{L}(\theta) = \mathbb{E}_{(s, a, r, s') \sim \mathcal{D}}\left[ \left( r + \gamma \max_{a'} Q_{\theta^-}(s', a') - Q_\theta(s, a) \right)^2 \right]$$</div>
 
 <h3>6.2 经验回放（Experience Replay）</h3>
 <p>智能体把经历的四元组 $(s, a, r, s')$ 存入回放缓冲区 $\mathcal{D}$，训练时<strong>随机采样</strong>小批量。这样带来三大好处：① 打破样本时间相关性，稳定梯度；② 提高样本复用率；③ 平滑训练分布，减少灾难性遗忘。</p>
 
 <h3>6.3 目标网络（Target Network）</h3>
-<p>如果更新时用同一个网络既算目标又算预测，目标会随参数变化而"移动"，导致训练震荡。DQN 维护一个延迟更新的<strong>目标网络</strong> $Q_{\theta^-}$（每 $C$ 步从在线网络拷贝一次权重），使目标相对稳定，如式 (18) 所示。</p>
+<p>如果更新时用同一个网络既算目标又算预测，目标会随参数变化而"移动"，导致训练震荡。DQN 维护一个延迟更新的<strong>目标网络</strong> $Q_{\theta^-}$（每 $C$ 步从在线网络拷贝一次权重），使目标相对稳定，如式 (19) 所示。</p>
 
 <h3>6.4 Double DQN：缓解过估计</h3>
 <p>标准 DQN 的 $\max_{a'} Q(s', a')$ 会系统性高估价值。Double DQN 用<strong>在线网络选动作、目标网络估值</strong>，把"选择"与"评估"解耦，显著降低过估计：</p>
 
-<div class="formula" data-eq="(19)">$$y = r + \gamma Q_{\theta^-}\left(s', \arg\max_{a'} Q_\theta(s', a')\right)$$</div>
+<div class="formula" data-eq="(20)">$$y = r + \gamma Q_{\theta^-}\left(s', \arg\max_{a'} Q_\theta(s', a')\right)$$</div>
 
 <h3>6.5 Dueling DQN：分离优势与状态价值</h3>
 <p>Dueling 架构把 Q 值拆成两部分：状态价值 $V(s)$ 与动作优势 $A(s, a)$（该动作相对平均水平的优势）。当某些状态下动作选择并不重要时，网络只需学准确的 $V$ 即可：</p>
 
-<div class="formula" data-eq="(20)">$$Q(s, a) = V(s) + A(s, a) - \max_{a'} A(s, a')$$</div>
+<div class="formula" data-eq="(21)">$$Q(s, a) = V(s) + A(s, a) - \max_{a'} A(s, a')$$</div>
 
 <h3>6.6 DQN 架构总览</h3>
 <p>下图展示了 DQN 的完整数据流：状态输入网络，输出各动作 Q 值，经 argmax 选动作与环境交互，经验存入回放池，再抽样训练两个网络。</p>
@@ -552,14 +552,14 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>7.1 策略梯度定理</h3>
 <p>策略目标函数 $J(\theta) = \mathbb{E}_{s_0 \sim \rho_0}\left[ V^{\pi_\theta}(s_0) \right]$ 对参数的梯度可由下式给出（策略梯度定理，Policy Gradient Theorem）：</p>
 
-<div class="formula" data-eq="(21)">$$\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[ \nabla_\theta \log \pi_\theta(a \mid s) \, Q^{\pi_\theta}(s, a) \right]$$</div>
+<div class="formula" data-eq="(22)">$$\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[ \nabla_\theta \log \pi_\theta(a \mid s) \, Q^{\pi_\theta}(s, a) \right]$$</div>
 
 <p>注意：该梯度 <strong>不包含对状态分布 $\rho^\pi$ 的导数</strong>，因此可以直接用采样轨迹估计梯度，无需环境模型。</p>
 
 <h3>7.2 REINFORCE 算法</h3>
 <p>REINFORCE 是最简单的策略梯度算法：用蒙特卡洛采样的完整回报 $G_t$ 代替 $Q^{\pi_\theta}(s, a)$，对每条轨迹做一次梯度上升更新：</p>
 
-<div class="formula" data-eq="(22)">$$\theta \leftarrow \theta + \alpha \sum_{t} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \, G_t$$</div>
+<div class="formula" data-eq="(23)">$$\theta \leftarrow \theta + \alpha \sum_{t} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \, G_t$$</div>
 
 <div class="callout warn">
 <div class="callout-title">REINFORCE 的局限</div>
@@ -569,7 +569,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>7.3 基线（Baseline）降低方差</h3>
 <p>从回报中减去一个只与状态有关的基线 $b(s)$（如状态价值 $V(s)$），梯度的期望不变，但方差显著下降：</p>
 
-<div class="formula">$$\nabla_\theta J(\theta) = \mathbb{E}_{\tau}\left[ \sum_t \nabla_\theta \log \pi_\theta(a_t \mid s_t) \left( G_t - b(s_t) \right) \right]$$</div>
+<div class="formula" data-eq="(24)">$$\nabla_\theta J(\theta) = \mathbb{E}_{\tau}\left[ \sum_t \nabla_\theta \log \pi_\theta(a_t \mid s_t) \left( G_t - b(s_t) \right) \right]$$</div>
 
 <p>最常用的基线是状态价值函数 $V(s)$，而 $G_t - V(s_t)$ 就是<strong>优势（advantage）</strong>的概念雏形——这自然引出了下一章的 Actor-Critic 架构。</p>
 
@@ -597,7 +597,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>8.2 优势函数（Advantage）</h3>
 <p>优势函数衡量"在状态 $s$ 采取动作 $a$ 相比平均水平好多少"：</p>
 
-<div class="formula" data-eq="(23)">$$A^{\pi}(s, a) = Q^{\pi}(s, a) - V^{\pi}(s)$$</div>
+<div class="formula" data-eq="(25)">$$A^{\pi}(s, a) = Q^{\pi}(s, a) - V^{\pi}(s)$$</div>
 
 <p>Actor 的梯度目标改为最大化优势：$\nabla_\theta J = \mathbb{E}\left[ \nabla_\theta \log \pi_\theta(a \mid s) \, A(s, a) \right]$。Critic 提供的优势估计 $A \approx r + \gamma V(s') - V(s)$（即 TD 误差）方差远小于 MC 回报，训练更稳定。</p>
 
@@ -665,7 +665,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>9.2 PPO Clip 目标函数</h3>
 <p>PPO 用一阶近似的 Clip 约束替代 TRPO 的二次约束：定义新旧策略的比率 $r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{old}}(a_t \mid s_t)}$，目标函数为：</p>
 
-<div class="formula" data-eq="(24)">$$\mathcal{L}^{CLIP}(\theta) = \mathbb{E}_t\left[ \min\left( r_t(\theta) A_t, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) A_t \right) \right]$$</div>
+<div class="formula" data-eq="(26)">$$\mathcal{L}^{CLIP}(\theta) = \mathbb{E}_t\left[ \min\left( r_t(\theta) A_t, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) A_t \right) \right]$$</div>
 
 <p>当优势 $A_t &gt; 0$ 时，目标希望增大动作概率；但当概率比超过 $1 + \epsilon$ 时，收益被截断——防止一步更新过大。当 $A_t &lt; 0$ 时同理。由此，PPO 在保持训练稳定的同时只需要一阶梯度，实现非常简单。</p>
 
@@ -1486,20 +1486,20 @@ ACTION_BOUND = <span class="num">1.0</span>
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-<li>Sutton, R. S., &amp; Barto, A. G. (2018). Reinforcement Learning: An Introduction, 2nd Edition. <em>MIT Press</em>. (RL 标准教科书)</li>
-<li>Watkins, C. J. C. H., &amp; Dayan, P. (1992). Q-learning. <em>Machine Learning, 8(3-4), 279-292</em>. (Q-Learning 经典论文)</li>
-<li>Rummery, G. A., &amp; Niranjan, M. (1994). On-line Q-learning using connectionist systems. <em>CUED/F-INFENG/TR 166</em>. (SARSA 雏形)</li>
-<li>Mnih, V., et al. (2013). Playing Atari with deep reinforcement learning. <em>arXiv:1312.5602</em>. (DQN 首篇)</li>
-<li>Mnih, V., et al. (2015). Human-level control through deep reinforcement learning. <em>Nature, 518(7540), 529-533</em>. (Nature DQN)</li>
-<li>Van Hasselt, H., Guez, A., &amp; Silver, D. (2016). Deep reinforcement learning with double Q-learning. <em>AAAI 2016</em>. (Double DQN)</li>
-<li>Wang, Z., et al. (2016). Dueling network architectures for deep reinforcement learning. <em>ICML 2016</em>. (Dueling DQN)</li>
-<li>Williams, R. J. (1992). Simple statistical gradient-following algorithms for connectionist reinforcement learning. <em>Machine Learning, 8(3-4), 229-256</em>. (REINFORCE)</li>
-<li>Mnih, V., et al. (2016). Asynchronous methods for deep reinforcement learning. <em>ICML 2016</em>. (A3C)</li>
-<li>Schulman, J., et al. (2017). Proximal policy optimization algorithms. <em>arXiv:1707.06347</em>. (PPO)</li>
-<li>Schulman, J., et al. (2015). Trust region policy optimization. <em>ICML 2015</em>. (TRPO)</li>
-<li>Lillicrap, T. P., et al. (2016). Continuous control with deep reinforcement learning. <em>ICLR 2016</em>. (DDPG)</li>
-<li>Fujimoto, S., et al. (2018). Addressing function approximation error in actor-critic methods. <em>ICML 2018</em>. (TD3)</li>
-<li>Silver, D., et al. (2016). Mastering the game of Go with deep neural networks and tree search. <em>Nature, 529(7587), 484-489</em>. (AlphaGo)</li>
+<li>Sutton, R. S., &amp; Barto, A. G. (2018). <em>Reinforcement Learning: An Introduction</em>, 2nd Edition. MIT Press. (RL 标准教科书)</li>
+<li>Watkins, C. J. C. H., &amp; Dayan, P. (1992). <em>Q-learning</em>. Machine Learning, 8(3-4), 279-292. (Q-Learning 经典论文)</li>
+<li>Rummery, G. A., &amp; Niranjan, M. (1994). <em>On-line Q-learning using connectionist systems</em>. CUED/F-INFENG/TR 166. (SARSA 雏形)</li>
+<li>Mnih, V., et al. (2013). <em>Playing Atari with deep reinforcement learning</em>. arXiv:1312.5602. (DQN 首篇)</li>
+<li>Mnih, V., et al. (2015). <em>Human-level control through deep reinforcement learning</em>. Nature, 518(7540), 529-533. (Nature DQN)</li>
+<li>Van Hasselt, H., Guez, A., &amp; Silver, D. (2016). <em>Deep reinforcement learning with double Q-learning</em>. AAAI 2016. (Double DQN)</li>
+<li>Wang, Z., et al. (2016). <em>Dueling network architectures for deep reinforcement learning</em>. ICML 2016. (Dueling DQN)</li>
+<li>Williams, R. J. (1992). <em>Simple statistical gradient-following algorithms for connectionist reinforcement learning</em>. Machine Learning, 8(3-4), 229-256. (REINFORCE)</li>
+<li>Mnih, V., et al. (2016). <em>Asynchronous methods for deep reinforcement learning</em>. ICML 2016. (A3C)</li>
+<li>Schulman, J., et al. (2017). <em>Proximal policy optimization algorithms</em>. arXiv:1707.06347. (PPO)</li>
+<li>Schulman, J., et al. (2015). <em>Trust region policy optimization</em>. ICML 2015. (TRPO)</li>
+<li>Lillicrap, T. P., et al. (2016). <em>Continuous control with deep reinforcement learning</em>. ICLR 2016. (DDPG)</li>
+<li>Fujimoto, S., et al. (2018). <em>Addressing function approximation error in actor-critic methods</em>. ICML 2018. (TD3)</li>
+<li>Silver, D., et al. (2016). <em>Mastering the game of Go with deep neural networks and tree search</em>. Nature, 529(7587), 484-489. (AlphaGo)</li>
 </ol>
 </section>
 

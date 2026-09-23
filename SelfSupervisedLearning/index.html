@@ -143,7 +143,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges" data-page-node-id="PM9ilCgQETu7TLXMHs9YE1">
     <span class="badge" data-page-node-id="YDHwGXcNZabeNAbf4h8kLT">6 个章节</span>
     <span class="badge" data-page-node-id="cGtv4jTEHahKjuLh6XTIAe">12 张示例图</span>
-    <span class="badge" data-page-node-id="2jD6rB0mfADjNS60GI5pr7">20 个公式</span>
+    <span class="badge" data-page-node-id="2jD6rB0mfADjNS60GI5pr7">22 个公式</span>
     <span class="badge" data-page-node-id="aCZnELKVxlGG6bRaLJoHHH">26 篇参考文献</span>
   </div>
 </section>
@@ -895,7 +895,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li data-page-node-id="dinoV2FlowLi3"><strong>图像级损失。</strong>教师输出经 Sinkhorn 中心化与低温锐化后作为软标签，学生以常温输出与之做交叉熵，即公式 (16)(17) 的形式；教师参数仍按公式 (18) 做 EMA 更新。</li>
 <li data-page-node-id="dinoV2FlowLi4"><strong>patch 级损失（iBOT 式掩码预测）。</strong>对每个被掩码的位置 $m$，学生输出该位置的语义分布 $q^{\text{s}}_{m}$，去匹配教师在同一位置的分布 $q^{\text{t}}_{m}$：</li>
 </ol>
-<div class="formula" data-page-node-id="dinoV2FlowF1">$$\mathcal{L}_{\text{iBOT}} = -\frac{1}{M}\sum_{m=1}^{M}\sum_{k=1}^{K} q^{\text{t}}_{m,k}\;\log q^{\text{s}}_{m,k}$$</div>
+<div class="formula" data-page-node-id="dinoV2FlowF1" data-eq="(20)">$$\mathcal{L}_{\text{iBOT}} = -\frac{1}{M}\sum_{m=1}^{M}\sum_{k=1}^{K} q^{\text{t}}_{m,k}\;\log q^{\text{s}}_{m,k}$$</div>
 <ol start="5" data-page-node-id="dinoV2FlowList2">
 <li data-page-node-id="dinoV2FlowLi5"><strong>正则与防坍缩。</strong>图像级与 patch 级两个目标分别挂载在<strong>解耦的预测头</strong>上，避免目标互相拉扯；批内再加 KoLeo 正则（公式 19），让特征在空间中均匀铺开。</li>
 <li data-page-node-id="dinoV2FlowLi6"><strong>工程与高分辨率收尾。</strong>训练全程使用 FlashAttention、FSDP、sequence packing，使 ViT-g/14（约 11 亿参数）能在亿级数据上训练；在训练的最后约 10k 步把分辨率提升到 518，专门校准 patch 特征在高分辨率下的表现。</li>
@@ -906,7 +906,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p data-page-node-id="438ezfqD54B8GnVB7wmqve">DINO v3（2025.08）把 DINO 的配方推到了一个新的量级：<strong data-page-node-id="nNyC02xCHjQrEpfT7m2FG6">ViT-7B/16（约 67 亿参数）、LVD-1689M 约 17 亿张图像</strong>，另有一套约 4.93 亿张的卫星遥感数据用于该领域。但真正值得学习的是它解决的那个<strong data-page-node-id="LmENonZuWEbf2IJw4fBkJ8">技术难题</strong>，因为它暴露了自监督在大规模训练下的一个结构性缺陷。</p>
 <p data-page-node-id="tQ8jI6HPMPW4rgLGsPAb9o"><strong data-page-node-id="mrSTsWfxpyqscIq3zV5deO">问题：全局特征在变好，密集特征却在退化。</strong>在超长训练过程中，图像级（全局）表示的指标持续上升，但 patch 级（密集）特征却逐渐"塌陷"——本应互相区分的不同图块开始变得相似。原因是训练目标主要由全局对比/蒸馏驱动，对 patch 之间<strong data-page-node-id="MfoJcM8zYrjZJtr534UMOW">相对关系</strong>的约束很弱。这直接影响分割、深度估计、检测这类需要逐像素输出的任务，而这恰恰是 DINO v2 相对弱于专用系统的领域。</p>
 <p data-page-node-id="jNFgcy5WbJ69p2uGilwhjH">解决方案是 <strong data-page-node-id="FgWYuAeyDkRgTBy5jFwGw8">Gram Anchoring</strong>（Gram 锚定）：不直接约束单个 patch 特征，而是约束 patch 特征之间的<strong data-page-node-id="WAhgGDXEyvsh4iaqfg4Upt">相似度结构</strong>。具体做法是把当前模型的 patch 特征 Gram 矩阵拉近一个较早、尚未退化的"Gram 教师"模型的 Gram 矩阵：</p>
-<div class="formula" data-eq="(20)" data-page-node-id="DZ4l5eqPVTqdhDcCiUIrjw">$$\mathcal{L}_{\text{Gram}} = \Big\|\, G_\theta(X) \;-\; G_{\theta_{\text{ref}}}(X) \,\Big\|_{F}^{2}, \qquad G_\theta(X) = \tilde{Z}_\theta \,\tilde{Z}_\theta^{\top}, \quad \tilde{Z} = \text{L2 归一化的 patch 特征}$$</div>
+<div class="formula" data-eq="(21)" data-page-node-id="DZ4l5eqPVTqdhDcCiUIrjw">$$\mathcal{L}_{\text{Gram}} = \Big\|\, G_\theta(X) \;-\; G_{\theta_{\text{ref}}}(X) \,\Big\|_{F}^{2}, \qquad G_\theta(X) = \tilde{Z}_\theta \,\tilde{Z}_\theta^{\top}, \quad \tilde{Z} = \text{L2 归一化的 patch 特征}$$</div>
 <p data-page-node-id="N05Ir522hR5KE7xZkhzrWu">其中 $G$ 只在全局裁剪（而非局部裁剪）上计算。这个设计很巧妙：<strong data-page-node-id="OLTWxeugXbQzYBQIXmGHr3">约束的是相对结构，而非绝对取值</strong>——因此 patch 特征仍然可以自由演化（保留继续学习的空间），只要它们之间的相似度关系保持一致即可。训练上分两段：先取一个较早、密集特征尚未退化的检查点作为<strong>固定的</strong> Gram 教师；训练一段时间后，改为每 10k 次迭代把 Gram 教师更新为当前的 EMA 教师（这一阶段称为 refinement）。论文报告在约百万次迭代后引入该正则，能快速"修复"已经退化的密集特征，在分割与深度估计上带来显著提升，同时不影响全局性能。</p>
 <div class="svg-box" data-page-node-id="vfFLLVPH7DiXUL1CiD0hsC">
 <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" data-page-node-id="msycqDPPnaGAIF3QiYVcF2">
@@ -952,13 +952,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 <h4 data-page-node-id="dinoV3FlowH4">实现：DINO v3 的训练流程</h4>
 <p data-page-node-id="dinoV3FlowP0">v3 的配方可以看作"v2 的损失 + Gram 正则 + 更大规模 + 架构更新"。总损失为四项的加权和：</p>
-<div class="formula" data-page-node-id="dinoV3FlowF1">$$\mathcal{L} = \lambda_{\text{img}}\,\mathcal{L}_{\text{DINO}} + \lambda_{\text{patch}}\,\mathcal{L}_{\text{iBOT}} + \lambda_{\text{KoLeo}}\,\mathcal{L}_{\text{KoLeo}} + \lambda_{\text{Gram}}\,\mathcal{L}_{\text{Gram}}$$</div>
+<div class="formula" data-page-node-id="dinoV3FlowF1" data-eq="(22)">$$\mathcal{L} = \lambda_{\text{img}}\,\mathcal{L}_{\text{DINO}} + \lambda_{\text{patch}}\,\mathcal{L}_{\text{iBOT}} + \lambda_{\text{KoLeo}}\,\mathcal{L}_{\text{KoLeo}} + \lambda_{\text{Gram}}\,\mathcal{L}_{\text{Gram}}$$</div>
 <p data-page-node-id="dinoV3FlowP1">单步训练流程如下，与前两代相比，红色标注的是 v3 新增的环节：</p>
 <ol data-page-node-id="dinoV3FlowList">
 <li data-page-node-id="dinoV3FlowLi1"><strong>数据准备（LVD-1689M）。</strong>从约 170 亿张的候选图像池出发，做多层级聚类与去重，筛出约 17 亿张高多样性图像；训练中混合使用来自大规模 web 子集的<em>异质 batch</em> 与来自 ImageNet 等干净数据集的<em>同质 batch</em>，兼顾泛化与基准表现。</li>
 <li data-page-node-id="dinoV3FlowLi2"><strong>视图与掩码。</strong>延续 2 个全局视图 + 8 个局部视图的配置，教师只看全局视图，学生看全部；学生的输入再随机掩码约 40% 的 patch 做 iBOT 式预测。位置编码从固定式换成 <strong>Axial RoPE</strong>（轴向旋转位置编码，带 jitter），使模型对缩放、裁剪、高分辨率输入更鲁棒。</li>
 <li data-page-node-id="dinoV3FlowLi3"><strong>前三大损失与 v2 一致。</strong>图像级 DINO 蒸馏（公式 16/17，教师侧用 Sinkhorn 中心化）、patch 级 iBOT 掩码预测、KoLeo 正则（公式 19），教师参数仍按 EMA 更新。</li>
-<li data-page-node-id="dinoV3FlowLi4"><strong>开启 Gram Anchoring（v3 新增）。</strong>先按 v2 配方训练约百万次迭代，让密集特征先自然形成结构；随后取一个密集特征尚未退化的检查点作为<strong>固定的 Gram 教师</strong>，用公式 (20) 约束当前模型的 patch Gram 矩阵与其一致（仅在全局视图上计算）。训练一段时间后进入 refinement 阶段，每 10k 次迭代把 Gram 教师更新为当前的 EMA 教师，使锚定目标既稳定又跟得上训练进度。</li>
+<li data-page-node-id="dinoV3FlowLi4"><strong>开启 Gram Anchoring（v3 新增）。</strong>先按 v2 配方训练约百万次迭代，让密集特征先自然形成结构；随后取一个密集特征尚未退化的检查点作为<strong>固定的 Gram 教师</strong>，用公式 (21) 约束当前模型的 patch Gram 矩阵与其一致（仅在全局视图上计算）。训练一段时间后进入 refinement 阶段，每 10k 次迭代把 Gram 教师更新为当前的 EMA 教师，使锚定目标既稳定又跟得上训练进度。</li>
 <li data-page-node-id="dinoV3FlowLi5"><strong>训练工程。</strong>ViT-7B/16（约 67 亿参数）采用 FSDP2 + bf16/fp8 混合精度 + FlashAttention + 恒定学习率；在基础分辨率预训练后，再做高分辨率适配（只微调 LayerNorm、register token 相关层等少量参数），使模型迁移到 518 甚至更高分辨率。</li>
 <li data-page-node-id="dinoV3FlowLi6"><strong>Post-hoc 交付。</strong>训练完成后提供一系列后处理能力：<strong>多教师蒸馏</strong>（从 ViT-7B 蒸馏出 ViT-S+/B/L/H+ 与 ConvNeXt 等小模型，同时对齐 CLS 与 patch 特征）、<strong>文本对齐</strong>（冻结视觉骨干，接浅层头映射到文本嵌入空间，获得类似 CLIP 的图文检索能力）。</li>
 </ol>
@@ -1075,32 +1075,32 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="refs" data-page-node-id="q4E1pc40KBNo8Fh4CpxHF4"><h2 data-page-node-id="nZ9O7Pmio5NLT1YGtIqUP2">参考文献</h2>
 <ol data-page-node-id="GsEfKlGFH7UpI17kmlL6U0">
-<li data-page-node-id="9z3j8DFJG8wpKDiJr9J1qr">Dosovitskiy, A. et al. (2014). Discriminative Unsupervised Feature Learning with Convolutional Neural Networks. <em data-page-node-id="KXS6kP45EwDfzzhQAeI6Oi">NeurIPS</em>.（Exemplar CNN，用变换构造伪类别）</li>
-<li data-page-node-id="VGxZDceAS8rACYzyVrJd95">Doersch, C., Gupta, A., &amp; Efros, A. A. (2015). Unsupervised Visual Representation Learning by Context Prediction. <em data-page-node-id="u3YLYHm0KRqxhYDk6Br5Ck">ICCV</em>. arXiv:1505.05192.</li>
-<li data-page-node-id="BtH6fBXmje3M7o5O9x1uAR">Pathak, D., Krähenbühl, P., Donahue, J., Darrell, T., &amp; Efros, A. A. (2016). Context Encoders: Feature Learning by Inpainting. <em data-page-node-id="Jv9kSLnuQb1OD1xw9qiqYm">CVPR</em>. arXiv:1604.07379.</li>
-<li data-page-node-id="58lhk4N31IrTj3vpyPy4VD">Zhang, R., Isola, P., &amp; Efros, A. A. (2016). Colorful Image Colorization. <em data-page-node-id="MAAhzS9TuEjC5feI5rBPxc">ECCV</em>. arXiv:1603.08511.</li>
-<li data-page-node-id="aaeHAGX4ItzIHVU2tNtC2t">Noroozi, M., &amp; Favaro, P. (2016). Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles. <em data-page-node-id="NNurZtxqh5SS2Kcg6vEcfo">ECCV</em>. arXiv:1603.09246.</li>
-<li data-page-node-id="1oZlv8eHuFo9DiiBSsyjSe">Zhang, R., Isola, P., &amp; Efros, A. A. (2017). Split-Brain Autoencoders: Unsupervised Learning by Cross-Channel Prediction. <em data-page-node-id="Dex2BnlroefpLvVedRQiDt">CVPR</em>. arXiv:1611.09842.</li>
-<li data-page-node-id="ghEFsSvkKPJv0UE5SHojL8">Gidaris, S., Singh, P., &amp; Komodakis, N. (2018). Unsupervised Representation Learning by Predicting Image Rotations. <em data-page-node-id="d62gI4atnY85iLu2MqdlYW">ICLR</em>. arXiv:1803.07728.</li>
-<li data-page-node-id="hVJiKjRbIEgIHFrTfKf52u">Radford, A., Metz, L., &amp; Chintala, S. (2016). Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks. <em data-page-node-id="20Hn3EYSk4uOQin7KWPosp">ICLR</em>. arXiv:1511.06434.（DCGAN，判别器特征可迁移）</li>
-<li data-page-node-id="IJmhAAu44wxWPcpCS7Clna">Donahue, J., Krähenbühl, P., &amp; Darrell, T. (2017). Adversarial Feature Learning. <em data-page-node-id="HtJXyQsHXocoULSM5AJFNn">ICLR</em>. arXiv:1605.09782.</li>
-<li data-page-node-id="Ph0rGzPVDq17l72fDeck3t">van den Oord, A., Li, Y., &amp; Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. arXiv:1807.03748.（InfoNCE）</li>
-<li data-page-node-id="jL0NYEWFLYU0PMj81MB4M7">Gutmann, M., &amp; Hyvärinen, A. (2010). Noise-Contrastive Estimation: A New Estimation Principle for Unnormalized Statistical Models. <em data-page-node-id="Scd7A8ZWMiOhIMF2ao5PAt">AISTATS</em>.</li>
-<li data-page-node-id="jSqQLXBKqSZZOttaHjvko6">Wu, Z. et al. (2018). Unsupervised Feature Learning via Non-Parametric Instance Discrimination. <em data-page-node-id="ko2VL6jq2kf1DI6RRFErsA">CVPR</em>. arXiv:1805.01978.</li>
-<li data-page-node-id="rLrzTNsyeZ2zFljC5qcGMR">Chen, T., Kornblith, S., Norouzi, M., &amp; Hinton, G. (2020). A Simple Framework for Contrastive Learning of Visual Representations. <em data-page-node-id="uJjQME41J8Jcz030F10u7D">ICML</em>. arXiv:2002.05709.（SimCLR）</li>
-<li data-page-node-id="aKMrFZGH3hVYsISAhMARgn">Chen, X., Fan, H., Girshick, R., &amp; He, K. (2020). Improved Baselines with Momentum Contrastive Learning. arXiv:2003.04297.（MoCo v2）</li>
-<li data-page-node-id="OzAHXwEpkIgbQndCG6NlnS">He, K., Fan, H., Wu, Y., Xie, S., &amp; Girshick, R. (2020). Momentum Contrast for Unsupervised Visual Representation Learning. <em data-page-node-id="cXxepMjxZMJ8PEs8ybR4y1">CVPR</em>. arXiv:1911.05722.（MoCo）</li>
-<li data-page-node-id="h4j8kdL7Rhp463wYlWt5td">Caron, M., Misra, I., Mairal, J., Goyal, P., Bojanowski, P., &amp; Joulin, A. (2020). Unsupervised Learning of Visual Features by Contrasting Cluster Assignments. <em data-page-node-id="VtDmJ9yREYQofn35gAZ9gy">NeurIPS</em>. arXiv:2006.09882.（SwAV）</li>
-<li data-page-node-id="ZMeFUEj8bw8NRHGdwszCAI">Grill, J.-B. et al. (2020). Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning. <em data-page-node-id="4BJrDBb2DDWrq7s3k4ML9b">NeurIPS</em>. arXiv:2006.07733.（BYOL）</li>
-<li data-page-node-id="jNeRiBAEPobBFYXahCrExP">Chen, X., &amp; He, K. (2021). Exploring Simple Siamese Representation Learning. <em data-page-node-id="BAj1CRBZHS7T6Y74lwb5Pf">CVPR</em>. arXiv:2011.10566.（SimSiam）</li>
-<li data-page-node-id="Sy6fPsBRZFSTRHKC1PDtVz">Zbontar, J., Jing, L., Misra, I., LeCun, Y., &amp; Deny, S. (2021). Barlow Twins: Self-Supervised Learning via Redundancy Reduction. <em data-page-node-id="qxWeqQ3tH2lDX3hAUcgZGJ">ICML</em>. arXiv:2103.03230.</li>
-<li data-page-node-id="E6LrKXHDbqX3CFcNqmA7mO">Bardes, A., Ponce, J., &amp; LeCun, Y. (2022). VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning. <em data-page-node-id="s6udroFoxHh4c7Kfr6GFbl">ICLR</em>. arXiv:2105.04906.</li>
-<li data-page-node-id="UfIWbtqqqQGBk83XH1AshC">Wang, T., &amp; Isola, P. (2020). Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere. <em data-page-node-id="678Q1NfwRlkgSlNUVdkm3M">ICML</em>. arXiv:2005.10242.</li>
-<li data-page-node-id="xrt4NV8lcaH3N12qlbFbJ2">Richemond, P. H. et al. (2021). BYOL Works Even Without Batch Statistics. arXiv:2010.10241.</li>
-<li data-page-node-id="P3BCFNEox97JBORaIf8APW">Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., &amp; Joulin, A. (2021). Emerging Properties in Self-Supervised Vision Transformers. <em data-page-node-id="e2DFyLkPzdvn8S3GcDh7bk">ICCV</em>. arXiv:2104.14294.（DINO v1）</li>
-<li data-page-node-id="A5rkUgy6Cj4FcRVjxt7AD2">Oquab, M. et al. (2024). DINOv2: Learning Robust Visual Features without Supervision. <em data-page-node-id="eV5xzk61JPqSFS2cxjFDnb">TMLR</em>. arXiv:2304.07193.</li>
-<li data-page-node-id="Q95W3EdlHyfAqU1N3Z4tMB">Darcet, T., Oquab, M., Mairal, J., &amp; Bojanowski, P. (2024). Vision Transformers Need Registers. <em data-page-node-id="GbF8OwuSDNGU08G2scIqZS">ICLR</em>. arXiv:2309.16588.</li>
-<li data-page-node-id="APmiBMS4fzN4Qe4e08nBg9">Siméoni, O., Vo, H. V., Seitzer, M. et al. (2025). DINOv3. arXiv:2508.10104.</li>
+<li data-page-node-id="9z3j8DFJG8wpKDiJr9J1qr">Dosovitskiy, A. et al. (2014). <em data-page-node-id="KXS6kP45EwDfzzhQAeI6Oi">Discriminative Unsupervised Feature Learning with Convolutional Neural Networks</em>. NeurIPS. (Exemplar CNN，用变换构造伪类别)</li>
+<li data-page-node-id="VGxZDceAS8rACYzyVrJd95">Doersch, C., Gupta, A., &amp; Efros, A. A. (2015). <em data-page-node-id="u3YLYHm0KRqxhYDk6Br5Ck">Unsupervised Visual Representation Learning by Context Prediction</em>. ICCV. arXiv:1505.05192.</li>
+<li data-page-node-id="BtH6fBXmje3M7o5O9x1uAR">Pathak, D., Krähenbühl, P., Donahue, J., Darrell, T., &amp; Efros, A. A. (2016). <em data-page-node-id="Jv9kSLnuQb1OD1xw9qiqYm">Context Encoders: Feature Learning by Inpainting</em>. CVPR. arXiv:1604.07379.</li>
+<li data-page-node-id="58lhk4N31IrTj3vpyPy4VD">Zhang, R., Isola, P., &amp; Efros, A. A. (2016). <em data-page-node-id="MAAhzS9TuEjC5feI5rBPxc">Colorful Image Colorization</em>. ECCV. arXiv:1603.08511.</li>
+<li data-page-node-id="aaeHAGX4ItzIHVU2tNtC2t">Noroozi, M., &amp; Favaro, P. (2016). <em data-page-node-id="NNurZtxqh5SS2Kcg6vEcfo">Unsupervised Learning of Visual Representations by Solving Jigsaw Puzzles</em>. ECCV. arXiv:1603.09246.</li>
+<li data-page-node-id="1oZlv8eHuFo9DiiBSsyjSe">Zhang, R., Isola, P., &amp; Efros, A. A. (2017). <em data-page-node-id="Dex2BnlroefpLvVedRQiDt">Split-Brain Autoencoders: Unsupervised Learning by Cross-Channel Prediction</em>. CVPR. arXiv:1611.09842.</li>
+<li data-page-node-id="ghEFsSvkKPJv0UE5SHojL8">Gidaris, S., Singh, P., &amp; Komodakis, N. (2018). <em data-page-node-id="d62gI4atnY85iLu2MqdlYW">Unsupervised Representation Learning by Predicting Image Rotations</em>. ICLR. arXiv:1803.07728.</li>
+<li data-page-node-id="hVJiKjRbIEgIHFrTfKf52u">Radford, A., Metz, L., &amp; Chintala, S. (2016). <em data-page-node-id="20Hn3EYSk4uOQin7KWPosp">Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks</em>. ICLR. arXiv:1511.06434. (DCGAN，判别器特征可迁移)</li>
+<li data-page-node-id="IJmhAAu44wxWPcpCS7Clna">Donahue, J., Krähenbühl, P., &amp; Darrell, T. (2017). <em data-page-node-id="HtJXyQsHXocoULSM5AJFNn">Adversarial Feature Learning</em>. ICLR. arXiv:1605.09782.</li>
+<li data-page-node-id="Ph0rGzPVDq17l72fDeck3t">van den Oord, A., Li, Y., &amp; Vinyals, O. (2018). <em>Representation Learning with Contrastive Predictive Coding</em>. arXiv:1807.03748. (InfoNCE)</li>
+<li data-page-node-id="jL0NYEWFLYU0PMj81MB4M7">Gutmann, M., &amp; Hyvärinen, A. (2010). <em data-page-node-id="Scd7A8ZWMiOhIMF2ao5PAt">Noise-Contrastive Estimation: A New Estimation Principle for Unnormalized Statistical Models</em>. AISTATS.</li>
+<li data-page-node-id="jSqQLXBKqSZZOttaHjvko6">Wu, Z. et al. (2018). <em data-page-node-id="ko2VL6jq2kf1DI6RRFErsA">Unsupervised Feature Learning via Non-Parametric Instance Discrimination</em>. CVPR. arXiv:1805.01978.</li>
+<li data-page-node-id="rLrzTNsyeZ2zFljC5qcGMR">Chen, T., Kornblith, S., Norouzi, M., &amp; Hinton, G. (2020). <em data-page-node-id="uJjQME41J8Jcz030F10u7D">A Simple Framework for Contrastive Learning of Visual Representations</em>. ICML. arXiv:2002.05709. (SimCLR)</li>
+<li data-page-node-id="aKMrFZGH3hVYsISAhMARgn">Chen, X., Fan, H., Girshick, R., &amp; He, K. (2020). <em>Improved Baselines with Momentum Contrastive Learning</em>. arXiv:2003.04297. (MoCo v2)</li>
+<li data-page-node-id="OzAHXwEpkIgbQndCG6NlnS">He, K., Fan, H., Wu, Y., Xie, S., &amp; Girshick, R. (2020). <em data-page-node-id="cXxepMjxZMJ8PEs8ybR4y1">Momentum Contrast for Unsupervised Visual Representation Learning</em>. CVPR. arXiv:1911.05722. (MoCo)</li>
+<li data-page-node-id="h4j8kdL7Rhp463wYlWt5td">Caron, M., Misra, I., Mairal, J., Goyal, P., Bojanowski, P., &amp; Joulin, A. (2020). <em data-page-node-id="VtDmJ9yREYQofn35gAZ9gy">Unsupervised Learning of Visual Features by Contrasting Cluster Assignments</em>. NeurIPS. arXiv:2006.09882. (SwAV)</li>
+<li data-page-node-id="ZMeFUEj8bw8NRHGdwszCAI">Grill, J.-B. et al. (2020). <em data-page-node-id="4BJrDBb2DDWrq7s3k4ML9b">Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning</em>. NeurIPS. arXiv:2006.07733. (BYOL)</li>
+<li data-page-node-id="jNeRiBAEPobBFYXahCrExP">Chen, X., &amp; He, K. (2021). <em data-page-node-id="BAj1CRBZHS7T6Y74lwb5Pf">Exploring Simple Siamese Representation Learning</em>. CVPR. arXiv:2011.10566. (SimSiam)</li>
+<li data-page-node-id="Sy6fPsBRZFSTRHKC1PDtVz">Zbontar, J., Jing, L., Misra, I., LeCun, Y., &amp; Deny, S. (2021). <em data-page-node-id="qxWeqQ3tH2lDX3hAUcgZGJ">Barlow Twins: Self-Supervised Learning via Redundancy Reduction</em>. ICML. arXiv:2103.03230.</li>
+<li data-page-node-id="E6LrKXHDbqX3CFcNqmA7mO">Bardes, A., Ponce, J., &amp; LeCun, Y. (2022). <em data-page-node-id="s6udroFoxHh4c7Kfr6GFbl">VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning</em>. ICLR. arXiv:2105.04906.</li>
+<li data-page-node-id="UfIWbtqqqQGBk83XH1AshC">Wang, T., &amp; Isola, P. (2020). <em data-page-node-id="678Q1NfwRlkgSlNUVdkm3M">Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere</em>. ICML. arXiv:2005.10242.</li>
+<li data-page-node-id="xrt4NV8lcaH3N12qlbFbJ2">Richemond, P. H. et al. (2021). <em>BYOL Works Even Without Batch Statistics</em>. arXiv:2010.10241.</li>
+<li data-page-node-id="P3BCFNEox97JBORaIf8APW">Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., &amp; Joulin, A. (2021). <em data-page-node-id="e2DFyLkPzdvn8S3GcDh7bk">Emerging Properties in Self-Supervised Vision Transformers</em>. ICCV. arXiv:2104.14294. (DINO v1)</li>
+<li data-page-node-id="A5rkUgy6Cj4FcRVjxt7AD2">Oquab, M. et al. (2024). <em data-page-node-id="eV5xzk61JPqSFS2cxjFDnb">DINOv2: Learning Robust Visual Features without Supervision</em>. TMLR. arXiv:2304.07193.</li>
+<li data-page-node-id="Q95W3EdlHyfAqU1N3Z4tMB">Darcet, T., Oquab, M., Mairal, J., &amp; Bojanowski, P. (2024). <em data-page-node-id="GbF8OwuSDNGU08G2scIqZS">Vision Transformers Need Registers</em>. ICLR. arXiv:2309.16588.</li>
+<li data-page-node-id="APmiBMS4fzN4Qe4e08nBg9">Siméoni, O., Vo, H. V., Seitzer, M. et al. (2025). <em>DINOv3</em>. arXiv:2508.10104.</li>
 </ol>
 </section>
 

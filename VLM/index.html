@@ -716,23 +716,23 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="refs"><h2>参考文献</h2>
 <ol>
-<li>Alayrac, J.-B., Donahue, J., Luc, P. et al. (2022). Flamingo: a Visual Language Model for Few-Shot Learning. <em>NeurIPS</em>. arXiv:2204.14198.（门控交叉注意力、Perceiver Resampler、交错图文训练）</li>
-<li>Li, J., Li, D., Savarese, S., Hoi, S. (2023). BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. <em>ICML</em>. arXiv:2301.12597.（Q-Former 两阶段训练与 188M 可训练参数）</li>
-<li>Li, J., Li, D., Xiong, C., Hoi, S. (2022). BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation. <em>ICML</em>. arXiv:2201.12086.（ITC / ITM / ITG 三目标的来源，CapFilt 数据清洗）</li>
-<li>Liu, H., Li, C., Wu, Q., Lee, Y. (2023). Visual Instruction Tuning (LLaVA). <em>NeurIPS</em>. arXiv:2304.08485.（两层 MLP 投影与 158K 视觉指令数据）</li>
-<li>Liu, H., Li, C., Li, Y., Lee, Y. (2024). Improved Baselines with Visual Instruction Tuning. <em>CVPR</em>. arXiv:2310.03744.（LLaVA-1.5：把 MLP 换成两层、加入学术 VQA 数据）</li>
-<li>Dai, W., Li, J., Li, D. et al. (2023). InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning. <em>NeurIPS</em>. arXiv:2305.06500.（指令感知的 Q-Former）</li>
-<li>Zhu, D., Chen, J., Shen, X. et al. (2023). MiniGPT-4: Enhancing Vision-Language Understanding with Advanced Large Language Models. arXiv:2304.10592.（只训投影层的对照方案）</li>
-<li>Radford, A., Kim, J. W., Hallacy, C. et al. (2021). Learning Transferable Visual Models From Natural Language Supervision (CLIP). <em>ICML</em>.（本系列前置模块，视觉编码器的来源）</li>
-<li>Li, J., Li, D., Savarese, S., Hoi, S. (2023). BLIP-2 论文附录：Q-Former 结构与注意力掩码策略。arXiv:2301.12597v3.（三种损失各自的注意力掩码设计）</li>
-<li>Brock, A., De, S., Smith, S. L., Simonyan, K. (2021). High-Performance Large-Scale Image Recognition Without Normalization (NFNet). <em>ICML</em>. arXiv:2102.06171.（Flamingo 视觉编码器的基础）</li>
-<li>Hoffmann, J., Borgeaud, S., Mensch, A. et al. (2022). Training Compute-Optimal Large Language Models (Chinchilla). <em>NeurIPS</em>. arXiv:2203.15556.（Flamingo 所用语言模型的来源）</li>
-<li>Jaegle, A., Borgeaud, S., Alayrac, J.-B. et al. (2022). Perceiver IO: A General Architecture for Structured Inputs and Outputs. <em>ICLR</em>. arXiv:2107.14795.（Perceiver Resampler 的思想来源）</li>
-<li>Awadalla, A., Gao, I., Gardner, J. et al. (2023). OpenFlamingo: An Open-Source Framework for Training Large Autoregressive Vision-Language Models. arXiv:2308.01390.（Flamingo 的开源复现）</li>
-<li>Laurençon, H., Saulnier, L., Tronchon, L. et al. (2023). OBELICS: An Open Web-Scale Filtered Dataset of Interleaved Image-Text Documents. <em>NeurIPS</em>. arXiv:2306.16527.（交错图文数据的开源替代）</li>
-<li>Dosovitskiy, A., Beyer, L., Kolesnikov, A. et al. (2021). An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale. <em>ICLR</em>. arXiv:2010.11929.（patch 化的原始出处）</li>
-<li>Vaswani, A., Shazeer, N., Parmar, N. et al. (2017). Attention Is All You Need. <em>NeurIPS</em>. arXiv:1706.03762.（交叉注意力算子的基础）</li>
-<li>Zhang, R., Han, J., Zhou, A. et al. (2023). LLaMA-Adapter: Efficient Fine-Tuning of Language Models with Zero-initialized Attention. <em>ICLR</em>. arXiv:2303.16199.（零初始化门控的同期工作，与 Flamingo 的门控思想呼应）</li>
+<li>Alayrac, J.-B., Donahue, J., Luc, P. et al. (2022). <em>Flamingo: a Visual Language Model for Few-Shot Learning</em>. NeurIPS. arXiv:2204.14198. (门控交叉注意力、Perceiver Resampler、交错图文训练)</li>
+<li>Li, J., Li, D., Savarese, S., Hoi, S. (2023). <em>BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models</em>. ICML. arXiv:2301.12597. (Q-Former 两阶段训练与 188M 可训练参数)</li>
+<li>Li, J., Li, D., Xiong, C., Hoi, S. (2022). <em>BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation</em>. ICML. arXiv:2201.12086. (ITC / ITM / ITG 三目标的来源，CapFilt 数据清洗)</li>
+<li>Liu, H., Li, C., Wu, Q., Lee, Y. (2023). <em>Visual Instruction Tuning (LLaVA)</em>. NeurIPS. arXiv:2304.08485. (两层 MLP 投影与 158K 视觉指令数据)</li>
+<li>Liu, H., Li, C., Li, Y., Lee, Y. (2024). <em>Improved Baselines with Visual Instruction Tuning</em>. CVPR. arXiv:2310.03744. (LLaVA-1.5：把 MLP 换成两层、加入学术 VQA 数据)</li>
+<li>Dai, W., Li, J., Li, D. et al. (2023). <em>InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning</em>. NeurIPS. arXiv:2305.06500. (指令感知的 Q-Former)</li>
+<li>Zhu, D., Chen, J., Shen, X. et al. (2023). <em>MiniGPT-4: Enhancing Vision-Language Understanding with Advanced Large Language Models</em>. arXiv:2304.10592. (只训投影层的对照方案)</li>
+<li>Radford, A., Kim, J. W., Hallacy, C. et al. (2021). <em>Learning Transferable Visual Models From Natural Language Supervision (CLIP)</em>. ICML. (本系列前置模块，视觉编码器的来源)</li>
+<li>Li, J., Li, D., Savarese, S., Hoi, S. (2023). <em>BLIP-2 论文附录：Q-Former 结构与注意力掩码策略</em>. arXiv:2301.12597v3. (三种损失各自的注意力掩码设计)</li>
+<li>Brock, A., De, S., Smith, S. L., Simonyan, K. (2021). <em>High-Performance Large-Scale Image Recognition Without Normalization (NFNet)</em>. ICML. arXiv:2102.06171. (Flamingo 视觉编码器的基础)</li>
+<li>Hoffmann, J., Borgeaud, S., Mensch, A. et al. (2022). <em>Training Compute-Optimal Large Language Models (Chinchilla)</em>. NeurIPS. arXiv:2203.15556. (Flamingo 所用语言模型的来源)</li>
+<li>Jaegle, A., Borgeaud, S., Alayrac, J.-B. et al. (2022). <em>Perceiver IO: A General Architecture for Structured Inputs and Outputs</em>. ICLR. arXiv:2107.14795. (Perceiver Resampler 的思想来源)</li>
+<li>Awadalla, A., Gao, I., Gardner, J. et al. (2023). <em>OpenFlamingo: An Open-Source Framework for Training Large Autoregressive Vision-Language Models</em>. arXiv:2308.01390. (Flamingo 的开源复现)</li>
+<li>Laurençon, H., Saulnier, L., Tronchon, L. et al. (2023). <em>OBELICS: An Open Web-Scale Filtered Dataset of Interleaved Image-Text Documents</em>. NeurIPS. arXiv:2306.16527. (交错图文数据的开源替代)</li>
+<li>Dosovitskiy, A., Beyer, L., Kolesnikov, A. et al. (2021). <em>An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</em>. ICLR. arXiv:2010.11929. (patch 化的原始出处)</li>
+<li>Vaswani, A., Shazeer, N., Parmar, N. et al. (2017). <em>Attention Is All You Need</em>. NeurIPS. arXiv:1706.03762. (交叉注意力算子的基础)</li>
+<li>Zhang, R., Han, J., Zhou, A. et al. (2023). <em>LLaMA-Adapter: Efficient Fine-Tuning of Language Models with Zero-initialized Attention</em>. ICLR. arXiv:2303.16199. (零初始化门控的同期工作，与 Flamingo 的门控思想呼应)</li>
 </ol>
 </section>
 

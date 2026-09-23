@@ -147,7 +147,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">13 个章节</span>
     <span class="badge">6 张示例图</span>
-    <span class="badge">22 个公式</span>
+    <span class="badge">25 个公式</span>
     <span class="badge">18 篇参考文献</span>
   </div>
 </section>
@@ -440,7 +440,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>5.3 GPT-3：规模即一切（2020）</h3>
 <p>GPT-3 是规模扩展的极致实践：参数量从 1.5B 跃升到 <strong>175B</strong>，训练数据约 500B tokens（Common Crawl 过滤后约 499B + 其他高质量语料）。GPT-3 论文标题 <em>"Language Models are Few-Shot Learners"</em> 揭示了一个惊人现象：</p>
-<div class="formula">$$\text{In-Context Learning}:\quad P(\text{output} \mid \text{prompt} + \text{examples} + \text{query})$$</div>
+<div class="formula" data-eq="(8)">$$\text{In-Context Learning}:\quad P(\text{output} \mid \text{prompt} + \text{examples} + \text{query})$$</div>
 <p>无需任何梯度更新，只需在输入中给出几个示例（few-shot prompt），GPT-3 就能学会执行新任务。这种能力被称为<strong>In-Context Learning（ICL）</strong>，是大模型最重要的涌现能力之一。</p>
 
 <div class="svg-box">
@@ -510,7 +510,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>6.1 自回归语言模型</h3>
 <p>GPT 的预训练目标是<strong>自回归语言模型</strong>（Autoregressive Language Model），即给定前 $k$ 个 token，预测第 $k+1$ 个 token 的条件概率：</p>
-<div class="formula" data-eq="(8)">$$\mathcal{L}_{\text{LM}} = -\sum_{t=1}^{L} \log P(x_t \mid x_1, x_2, \ldots, x_{t-1}; \theta)$$</div>
+<div class="formula" data-eq="(9)">$$\mathcal{L}_{\text{LM}} = -\sum_{t=1}^{L} \log P(x_t \mid x_1, x_2, \ldots, x_{t-1}; \theta)$$</div>
 <p>这是一个<strong>最大似然估计</strong>（MLE）目标，也称为负对数似然（NLL）。模型参数 $\theta$ 通过最小化该损失来学习。</p>
 
 <h3>6.2 与 BERT 的掩码语言模型对比</h3>
@@ -525,7 +525,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>6.3 输出层：从隐状态到概率分布</h3>
 <p>GPT 的输出层将最后一层的隐状态 $\mathbf{H}^{(N)} \in \mathbb{R}^{L \times d}$ 映射到词表上的概率分布。关键设计：<strong>与 token embedding 共享权重</strong>：</p>
-<div class="formula" data-eq="(9)">$$P(x_t \mid x_{&lt;t}) = \text{softmax}(\mathbf{H}^{(N)}_{t} \cdot \mathbf{E}^T)$$</div>
+<div class="formula" data-eq="(10)">$$P(x_t \mid x_{&lt;t}) = \text{softmax}(\mathbf{H}^{(N)}_{t} \cdot \mathbf{E}^T)$$</div>
 <p>其中 $\mathbf{E} \in \mathbb{R}^{V \times d}$ 是 token embedding 矩阵，$\mathbf{E}^T \in \mathbb{R}^{d \times V}$。这种<strong>权重共享</strong>减少了参数量（$V \times d$ 的矩阵不重复存储），而且在语义上自然：输出空间和输入空间是同一个词表。</p>
 
 <div class="callout">
@@ -541,12 +541,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>7.1 Kaplan Scaling Laws（2020）</h3>
 <p>2020 年，OpenAI 发表了 <em>"Scaling Laws for Neural Language Models"</em>，系统研究了模型规模、数据量和计算量对性能的影响。核心发现是：损失随这三个因素呈<strong>幂律</strong>下降：</p>
-<div class="formula" data-eq="(10)">$$L(N) = \left(\frac{N_c}{N}\right)^{\alpha_N}, \quad L(D) = \left(\frac{D_c}{D}\right)^{\alpha_D}, \quad L(C) = \left(\frac{C_c}{C}\right)^{\alpha_C}$$</div>
+<div class="formula" data-eq="(11)">$$L(N) = \left(\frac{N_c}{N}\right)^{\alpha_N}, \quad L(D) = \left(\frac{D_c}{D}\right)^{\alpha_D}, \quad L(C) = \left(\frac{C_c}{C}\right)^{\alpha_C}$$</div>
 <p>其中 $N$ 是参数量，$D$ 是数据量（tokens），$C$ 是计算量（FLOPs），$L$ 是测试损失。Kaplan 的结论是：<strong>模型规模是最重要的因素</strong>，建议在计算预算有限时优先扩大模型而非数据。</p>
 
 <h3>7.2 Chinchilla Scaling Laws（2022）</h3>
 <p>2022 年，DeepMind 发表了 <em>"Training Compute-Optimal Large Language Models"</em>（Chinchilla 论文），修正了 Kaplan 的结论。通过更精细的实验，发现最优策略是<strong>模型和数据等比例扩展</strong>：</p>
-<div class="formula" data-eq="(11)">$$N_{\text{opt}} \propto C^{0.5}, \quad D_{\text{opt}} \propto C^{0.5}$$</div>
+<div class="formula" data-eq="(12)">$$N_{\text{opt}} \propto C^{0.5}, \quad D_{\text{opt}} \propto C^{0.5}$$</div>
 <p>即给定计算预算 $C$，最优参数量 $N$ 和最优数据量 $D$ 应各占 $C$ 的平方根比例。这意味着 Kaplan 的策略<strong>过度扩大模型而训练不足</strong>——GPT-3（175B 参数，300B tokens）实际上是"参数过剩、数据不足"。按 Chinchilla 规律，175B 参数的模型应训练约 3.5T tokens，而非 300B。</p>
 
 <div class="callout warn">
@@ -605,7 +605,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>8.1 In-Context Learning 的定义</h3>
 <p>In-Context Learning（ICL）是 GPT-3 发现的核心能力：模型在不更新参数的情况下，仅通过<strong>上下文中的示例</strong>就能学会执行新任务。形式化地，给定 prompt $\mathbf{c} = (x_1, y_1, \ldots, x_k, y_k, x_{\text{query}})$，模型直接输出：</p>
-<div class="formula" data-eq="(12)">$$\hat{y} = \arg\max_y P(y \mid \mathbf{c}, \theta)$$</div>
+<div class="formula" data-eq="(13)">$$\hat{y} = \arg\max_y P(y \mid \mathbf{c}, \theta)$$</div>
 <p>注意这里 $\theta$ <strong>不更新</strong>——模型参数在预训练后固定，ICL 纯粹是通过前向传播完成的。</p>
 
 <h3>8.2 ICL 的工作原理</h3>
@@ -618,8 +618,8 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>8.3 Chain-of-Thought（CoT）推理</h3>
 <p>2022 年，Wei 等人发现：在 prompt 中加入 "Let's think step by step"，并在示例中展示<strong>推理过程</strong>而非仅给答案，能让大模型在数学、逻辑等复杂推理任务上的表现大幅提升：</p>
-<div class="formula">$$\text{Standard:} \quad P(\text{answer} \mid \text{question})$$</div>
-<div class="formula">$$\text{CoT:} \quad P(\text{reasoning} \rightarrow \text{answer} \mid \text{question})$$</div>
+<div class="formula" data-eq="(14)">$$\text{Standard:} \quad P(\text{answer} \mid \text{question})$$</div>
+<div class="formula" data-eq="(15)">$$\text{CoT:} \quad P(\text{reasoning} \rightarrow \text{answer} \mid \text{question})$$</div>
 
 <p>CoT 将复杂问题分解为中间步骤，每步都是下一个 token 的预测，降低了单步难度。这本质上是利用了自回归模型的"逐步生成"特性来模拟人类的"逐步推理"过程。</p>
 
@@ -698,13 +698,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>9.3 奖励模型的训练</h3>
 <p>奖励模型（Reward Model, RM）的目标是学习一个函数 $r_\phi(x, y)$，给定提示 $x$ 和回答 $y$，输出一个标量奖励。训练数据是人类对多个回答的偏好排序。使用 Bradley-Terry 模型将排序转化为概率：</p>
-<div class="formula" data-eq="(13)">$$P(y_w \succ y_l \mid x) = \sigma(r_\phi(x, y_w) - r_\phi(x, y_l))$$</div>
+<div class="formula" data-eq="(16)">$$P(y_w \succ y_l \mid x) = \sigma(r_\phi(x, y_w) - r_\phi(x, y_l))$$</div>
 <p>其中 $y_w$ 是更好的回答，$y_l$ 是较差的回答，$\sigma$ 是 sigmoid 函数。损失函数为负对数似然：</p>
-<div class="formula" data-eq="(14)">$$\mathcal{L}_{\text{RM}} = -\log \sigma(r_\phi(x, y_w) - r_\phi(x, y_l))$$</div>
+<div class="formula" data-eq="(17)">$$\mathcal{L}_{\text{RM}} = -\log \sigma(r_\phi(x, y_w) - r_\phi(x, y_l))$$</div>
 
 <h3>9.4 PPO 强化学习</h3>
 <p>第三阶段使用 PPO（Proximal Policy Optimization）微调 SFT 模型。目标函数为：</p>
-<div class="formula" data-eq="(15)">$$\max_\theta \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_\theta(\cdot|x)} \left[ r_\phi(x, y) - \beta \log \frac{\pi_\theta(y|x)}{\pi_{\text{SFT}}(y|x)} \right]$$</div>
+<div class="formula" data-eq="(18)">$$\max_\theta \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_\theta(\cdot|x)} \left[ r_\phi(x, y) - \beta \log \frac{\pi_\theta(y|x)}{\pi_{\text{SFT}}(y|x)} \right]$$</div>
 <p>其中 $\pi_\theta$ 是正在优化的策略（GPT 模型），$\pi_{\text{SFT}}$ 是 SFT 模型作为参考。KL 惩罚项 $\beta \log \frac{\pi_\theta}{\pi_{\text{SFT}}}$ 防止模型偏离 SFT 太远——避免为追求奖励而生成不自然的文本。</p>
 
 <div class="callout">
@@ -722,20 +722,20 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>给定输入 token 序列 $\mathbf{x} = (x_1, \ldots, x_L)$，GPT 的前向传播如下：</p>
 
 <h4>步骤 1：Embedding</h4>
-<div class="formula" data-eq="(16)">$$\mathbf{H}^{(0)} = \mathbf{E}[\mathbf{x}] + \mathbf{P} \in \mathbb{R}^{L \times d}$$</div>
+<div class="formula" data-eq="(19)">$$\mathbf{H}^{(0)} = \mathbf{E}[\mathbf{x}] + \mathbf{P} \in \mathbb{R}^{L \times d}$$</div>
 
 <h4>步骤 2：Layer $\ell$ 的自注意力</h4>
-<div class="formula" data-eq="(17)">$$\mathbf{Q} = \mathbf{H}^{(\ell-1)}\mathbf{W}_Q, \quad \mathbf{K} = \mathbf{H}^{(\ell-1)}\mathbf{W}_K, \quad \mathbf{V} = \mathbf{H}^{(\ell-1)}\mathbf{W}_V$$</div>
-<div class="formula" data-eq="(18)">$$\mathbf{A} = \text{softmax}\left(\frac{\mathbf{Q}\mathbf{K}^T}{\sqrt{d_k}} + \mathbf{M}\right)\mathbf{V}$$</div>
+<div class="formula" data-eq="(20)">$$\mathbf{Q} = \mathbf{H}^{(\ell-1)}\mathbf{W}_Q, \quad \mathbf{K} = \mathbf{H}^{(\ell-1)}\mathbf{W}_K, \quad \mathbf{V} = \mathbf{H}^{(\ell-1)}\mathbf{W}_V$$</div>
+<div class="formula" data-eq="(21)">$$\mathbf{A} = \text{softmax}\left(\frac{\mathbf{Q}\mathbf{K}^T}{\sqrt{d_k}} + \mathbf{M}\right)\mathbf{V}$$</div>
 
 <h4>步骤 3：多头拼接 + 残差 + LayerNorm</h4>
-<div class="formula" data-eq="(19)">$$\mathbf{H}'^{(\ell)} = \text{LayerNorm}\left(\mathbf{H}^{(\ell-1)} + \text{MultiHead}(\mathbf{H}^{(\ell-1)})\right)$$</div>
+<div class="formula" data-eq="(22)">$$\mathbf{H}'^{(\ell)} = \text{LayerNorm}\left(\mathbf{H}^{(\ell-1)} + \text{MultiHead}(\mathbf{H}^{(\ell-1)})\right)$$</div>
 
 <h4>步骤 4：FFN + 残差 + LayerNorm</h4>
-<div class="formula" data-eq="(20)">$$\mathbf{H}^{(\ell)} = \text{LayerNorm}\left(\mathbf{H}'^{(\ell)} + \text{FFN}(\mathbf{H}'^{(\ell)})\right)$$</div>
+<div class="formula" data-eq="(23)">$$\mathbf{H}^{(\ell)} = \text{LayerNorm}\left(\mathbf{H}'^{(\ell)} + \text{FFN}(\mathbf{H}'^{(\ell)})\right)$$</div>
 
 <h4>步骤 5：输出概率分布</h4>
-<div class="formula" data-eq="(21)">$$P(x_{L+1} \mid x_1, \ldots, x_L) = \text{softmax}(\mathbf{H}^{(N)}_{L} \cdot \mathbf{E}^T)$$</div>
+<div class="formula" data-eq="(24)">$$P(x_{L+1} \mid x_1, \ldots, x_L) = \text{softmax}(\mathbf{H}^{(N)}_{L} \cdot \mathbf{E}^T)$$</div>
 
 <h3>10.2 参数量计算</h3>
 <p>对于 $N$ 层 GPT 模型，各组件参数量：</p>
@@ -753,7 +753,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>10.3 计算量估算</h3>
 <p>前向传播的 FLOPs 约为 $2 \times$ 参数量 $\times$ tokens 数。训练时需要前向 + 反向（约 3 倍前向），因此训练 FLOPs 为：</p>
-<div class="formula" data-eq="(22)">$$C \approx 6 \times N_{\text{params}} \times N_{\text{tokens}}$$</div>
+<div class="formula" data-eq="(25)">$$C \approx 6 \times N_{\text{params}} \times N_{\text{tokens}}$$</div>
 <p>以 GPT-3 为例：$6 \times 175\text{B} \times 300\text{B} \approx 3.15 \times 10^{23}$ FLOPs，相当于约 3500 块 V100 GPU 运行 10 天。</p>
 
 </section>
@@ -1017,24 +1017,24 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-  <li>Vaswani, A., et al. (2017). Attention is all you need. <em>NeurIPS 2017</em>.</li>
-  <li>Radford, A., Narasimhan, K., Salimans, T., &amp; Sutskever, I. (2018). Improving language understanding by generative pre-training. <em>OpenAI Technical Report</em>. (GPT-1)</li>
-  <li>Radford, A., et al. (2019). Language models are unsupervised multitask learners. <em>OpenAI Technical Report</em>. (GPT-2)</li>
-  <li>Brown, T., et al. (2020). Language models are few-shot learners. <em>NeurIPS 2020</em>. (GPT-3)</li>
-  <li>Kaplan, J., et al. (2020). Scaling laws for neural language models. <em>arXiv:2001.08361</em>.</li>
-  <li>Hoffmann, J., et al. (2022). Training compute-optimal large language models. <em>NeurIPS 2022</em>. (Chinchilla)</li>
-  <li>Wei, J., et al. (2022). Emergent abilities of large language models. <em>TMLR 2022</em>.</li>
-  <li>Wei, J., et al. (2022). Chain-of-thought prompting elicits reasoning in large language models. <em>NeurIPS 2022</em>.</li>
-  <li>Devlin, J., et al. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>NAACL 2019</em>.</li>
-  <li>Ouyang, L., et al. (2022). Training language models to follow instructions with human feedback. <em>NeurIPS 2022</em>. (InstructGPT)</li>
-  <li>Christiano, P., et al. (2017). Deep reinforcement learning from human preferences. <em>NeurIPS 2017</em>.</li>
-  <li>Schulman, J., et al. (2017). Proximal policy optimization algorithms. <em>arXiv:1707.06347</em>.</li>
-  <li>Rafailov, R., et al. (2023). Direct preference optimization: Your language model is secretly a reward model. <em>NeurIPS 2023</em>.</li>
-  <li>Schaeffer, R., et al. (2023). Are emergent abilities of large language models a mirage? <em>NeurIPS 2023</em>.</li>
-  <li>Sennrich, R., Haddow, B., &amp; Birch, A. (2016). Neural machine translation of rare words with subword units. <em>ACL 2016</em>. (BPE)</li>
-  <li>Su, J., et al. (2021). RoFormer: Enhanced transformer with rotary position embedding. <em>arXiv:2104.09864</em>. (RoPE)</li>
-  <li>Fedus, W., Zoph, B., &amp; Shazeer, N. (2022). Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity. <em>JMLR 2022</em>. (MoE)</li>
-  <li>OpenAI (2023). GPT-4 technical report. <em>arXiv:2303.08774</em>.</li>
+  <li>Vaswani, A., et al. (2017). <em>Attention is all you need</em>. NeurIPS 2017.</li>
+  <li>Radford, A., Narasimhan, K., Salimans, T., &amp; Sutskever, I. (2018). <em>Improving language understanding by generative pre-training</em>. OpenAI Technical Report. (GPT-1)</li>
+  <li>Radford, A., et al. (2019). <em>Language models are unsupervised multitask learners</em>. OpenAI Technical Report. (GPT-2)</li>
+  <li>Brown, T., et al. (2020). <em>Language models are few-shot learners</em>. NeurIPS 2020. (GPT-3)</li>
+  <li>Kaplan, J., et al. (2020). <em>Scaling laws for neural language models</em>. arXiv:2001.08361.</li>
+  <li>Hoffmann, J., et al. (2022). <em>Training compute-optimal large language models</em>. NeurIPS 2022. (Chinchilla)</li>
+  <li>Wei, J., et al. (2022). <em>Emergent abilities of large language models</em>. TMLR 2022.</li>
+  <li>Wei, J., et al. (2022). <em>Chain-of-thought prompting elicits reasoning in large language models</em>. NeurIPS 2022.</li>
+  <li>Devlin, J., et al. (2019). <em>BERT: Pre-training of deep bidirectional transformers for language understanding</em>. NAACL 2019.</li>
+  <li>Ouyang, L., et al. (2022). <em>Training language models to follow instructions with human feedback</em>. NeurIPS 2022. (InstructGPT)</li>
+  <li>Christiano, P., et al. (2017). <em>Deep reinforcement learning from human preferences</em>. NeurIPS 2017.</li>
+  <li>Schulman, J., et al. (2017). <em>Proximal policy optimization algorithms</em>. arXiv:1707.06347.</li>
+  <li>Rafailov, R., et al. (2023). <em>Direct preference optimization: Your language model is secretly a reward model</em>. NeurIPS 2023.</li>
+  <li>Schaeffer, R., et al. (2023). <em>Are emergent abilities of large language models a mirage</em>? NeurIPS 2023.</li>
+  <li>Sennrich, R., Haddow, B., &amp; Birch, A. (2016). <em>Neural machine translation of rare words with subword units</em>. ACL 2016. (BPE)</li>
+  <li>Su, J., et al. (2021). <em>RoFormer: Enhanced transformer with rotary position embedding</em>. arXiv:2104.09864. (RoPE)</li>
+  <li>Fedus, W., Zoph, B., &amp; Shazeer, N. (2022). <em>Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity</em>. JMLR 2022. (MoE)</li>
+  <li>OpenAI (2023). <em>GPT-4 technical report</em>. arXiv:2303.08774.</li>
 </ol>
 </section>
 

@@ -795,7 +795,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <tr><td>InfoNCE（对称）</td><td>$\text{CE}(\mathbf{S}, I) + \text{CE}(\mathbf{S}^{\top}, I)$</td><td>行、列各一次，分母遍历整批</td></tr>
 <tr><td>Sigmoid 损失</td><td>$-\frac{1}{N}\sum_{ij}\log\sigma(y_{ij}(t\,\mathbf{i}_i\!\cdot\!\mathbf{t}_j + b))$</td><td>逐格独立，$b$ 处理正负不平衡</td></tr>
 <tr><td>ITM（硬负例）</td><td>二分类 + $\arg\max_{j\neq i}\mathbf{i}_i\!\cdot\!\mathbf{t}_j$</td><td>把难度提到能力边界</td></tr>
-<tr><td>ITG</td><td>$-\sum_l \log P(w_l \mid w_{<l}, \text{image})$</td><td>因果注意力，只能生成不能判别</td></tr>
+<tr><td>ITG</td><td>$-\sum_l \log P(w_l \mid w_{&lt;l}, \text{image})$</td><td>因果注意力，只能生成不能判别</td></tr>
 <tr><td>Zero-shot</td><td>$\arg\max_k \mathbf{i}\cdot\bar{\mathbf{t}}_k$</td><td>分类器由文本现场生成</td></tr>
 </table>
 </div>
@@ -818,22 +818,22 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="refs"><h2>参考文献</h2>
 <ol>
-<li>Radford, A., Kim, J. W., Hallacy, C. et al. (2021). Learning Transferable Visual Models From Natural Language Supervision. <em>ICML</em>.（CLIP 原始论文，双塔 + 对称 InfoNCE + 零样本迁移）</li>
-<li>Zhai, X., Mustafa, B., Kolesnikov, A., &amp; Beyer, L. (2023). Sigmoid Loss for Language Image Pre-Training. <em>ICCV</em>. arXiv:2303.15343.（SigLIP，逐对 sigmoid 损失与批量解耦）</li>
-<li>Li, J., Li, D., Xiong, C., &amp; Hoi, S. (2022). BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation. <em>ICML</em>. arXiv:2201.12086.（MED 架构与 CapFilt）</li>
-<li>Li, J., Li, D., Savarese, S., &amp; Hoi, S. (2023). BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. <em>ICML</em>. arXiv:2301.12597.（Q-Former 与两阶段冻结训练）</li>
-<li>Li, J., Selvaraju, R., Gotmare, A. et al. (2021). Align before Fuse: Vision and Language Representation Learning with Momentum Distillation. <em>NeurIPS</em>.（ALBEF，BLIP 的 ITC 动量编码器与软标签来源）</li>
-<li>Jia, C., Yang, Y., Xia, Y. et al. (2021). Scaling Up Visual and Vision-Language Representation Learning with Noisy Text Supervision. <em>ICML</em>.（ALIGN，18 亿噪声图文对，规模抵消噪声的路线）</li>
-<li>Zhai, X., Wang, X., Mustafa, B. et al. (2022). LiT: Zero-Shot Transfer with Locked-image Text Tuning. <em>CVPR</em>.（冻结视觉塔只训文本塔，SigLiT 的前身）</li>
-<li>Lee, J., Lee, S., Kim, S. et al. (2024). A Model of Optimal Embeddings for SigLIP. arXiv:2409.14507.（SigLIP 最优嵌入的几何分析，温度决定表征结构）</li>
-<li>Tschannen, M., Djolonga, J., Rubachev, I. et al. (2024). SigLIP 2: Multilingual Vision-Language Encoders with Improved Semantic Understanding, Localization, and Dense Features. arXiv:2502.14786.（多任务、多语言与密集特征的扩展）</li>
-<li>Cherti, M., Beaumont, R., Wightman, R. et al. (2023). Reproducible Scaling Laws for Contrastive Language-Image Learning. <em>CVPR</em>.（OpenCLIP，开源复现与缩放律）</li>
-<li>Sun, Q., Fang, Y., Wu, L. et al. (2023). EVA-CLIP: Improved Training Techniques for CLIP at Scale. arXiv:2303.15389.（用掩码预训练的 EVA 作视觉塔）</li>
-<li>Liu, H., Li, C., Wu, Q., &amp; Lee, Y. J. (2023). Visual Instruction Tuning. <em>NeurIPS</em>.（LLaVA，CLIP 视觉塔 + 线性投影接 LLM）</li>
-<li>Dai, W., Li, J., Li, D. et al. (2023). InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning. <em>NeurIPS</em>. arXiv:2305.06500.（把指令也送进 Q-Former）</li>
-<li>Oord, A. van den, Li, Y., &amp; Vinyals, O. (2018). Representation Learning with Contrastive Predictive Coding. arXiv:1807.03748.（InfoNCE 的原始出处）</li>
-<li>Alayrac, J.-B., Donahue, J., Luc, P. et al. (2022). Flamingo: a Visual Language Model for Few-Shot Learning. <em>NeurIPS</em>.（BLIP-2 的对照基线，门控交叉注意力路线）</li>
-<li>Wu, Y., Chen, K., Zhang, T. et al. (2024). HoVLE / 多模态大模型综述. arXiv:2306.13549.（《A Survey on Multimodal Large Language Models》，架构演进梳理）</li>
+<li>Radford, A., Kim, J. W., Hallacy, C. et al. (2021). <em>Learning Transferable Visual Models From Natural Language Supervision</em>. ICML. (CLIP 原始论文，双塔 + 对称 InfoNCE + 零样本迁移)</li>
+<li>Zhai, X., Mustafa, B., Kolesnikov, A., &amp; Beyer, L. (2023). <em>Sigmoid Loss for Language Image Pre-Training</em>. ICCV. arXiv:2303.15343. (SigLIP，逐对 sigmoid 损失与批量解耦)</li>
+<li>Li, J., Li, D., Xiong, C., &amp; Hoi, S. (2022). <em>BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation</em>. ICML. arXiv:2201.12086. (MED 架构与 CapFilt)</li>
+<li>Li, J., Li, D., Savarese, S., &amp; Hoi, S. (2023). <em>BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models</em>. ICML. arXiv:2301.12597. (Q-Former 与两阶段冻结训练)</li>
+<li>Li, J., Selvaraju, R., Gotmare, A. et al. (2021). <em>Align before Fuse: Vision and Language Representation Learning with Momentum Distillation</em>. NeurIPS. (ALBEF，BLIP 的 ITC 动量编码器与软标签来源)</li>
+<li>Jia, C., Yang, Y., Xia, Y. et al. (2021). <em>Scaling Up Visual and Vision-Language Representation Learning with Noisy Text Supervision</em>. ICML. (ALIGN，18 亿噪声图文对，规模抵消噪声的路线)</li>
+<li>Zhai, X., Wang, X., Mustafa, B. et al. (2022). <em>LiT: Zero-Shot Transfer with Locked-image Text Tuning</em>. CVPR. (冻结视觉塔只训文本塔，SigLiT 的前身)</li>
+<li>Lee, J., Lee, S., Kim, S. et al. (2024). <em>A Model of Optimal Embeddings for SigLIP</em>. arXiv:2409.14507. (SigLIP 最优嵌入的几何分析，温度决定表征结构)</li>
+<li>Tschannen, M., Djolonga, J., Rubachev, I. et al. (2024). <em>SigLIP 2: Multilingual Vision-Language Encoders with Improved Semantic Understanding, Localization, and Dense Features</em>. arXiv:2502.14786. (多任务、多语言与密集特征的扩展)</li>
+<li>Cherti, M., Beaumont, R., Wightman, R. et al. (2023). <em>Reproducible Scaling Laws for Contrastive Language-Image Learning</em>. CVPR. (OpenCLIP，开源复现与缩放律)</li>
+<li>Sun, Q., Fang, Y., Wu, L. et al. (2023). <em>EVA-CLIP: Improved Training Techniques for CLIP at Scale</em>. arXiv:2303.15389. (用掩码预训练的 EVA 作视觉塔)</li>
+<li>Liu, H., Li, C., Wu, Q., &amp; Lee, Y. J. (2023). <em>Visual Instruction Tuning</em>. NeurIPS. (LLaVA，CLIP 视觉塔 + 线性投影接 LLM)</li>
+<li>Dai, W., Li, J., Li, D. et al. (2023). <em>InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning</em>. NeurIPS. arXiv:2305.06500. (把指令也送进 Q-Former)</li>
+<li>Oord, A. van den, Li, Y., &amp; Vinyals, O. (2018). <em>Representation Learning with Contrastive Predictive Coding</em>. arXiv:1807.03748. (InfoNCE 的原始出处)</li>
+<li>Alayrac, J.-B., Donahue, J., Luc, P. et al. (2022). <em>Flamingo: a Visual Language Model for Few-Shot Learning</em>. NeurIPS. (BLIP-2 的对照基线，门控交叉注意力路线)</li>
+<li>Wu, Y., Chen, K., Zhang, T. et al. (2024). <em>HoVLE / 多模态大模型综述</em>. arXiv:2306.13549. (《A Survey on Multimodal Large Language Models》，架构演进梳理)</li>
 </ol>
 </section>
 

@@ -139,7 +139,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">7 个章节</span>
     <span class="badge">3 张示例图</span>
-    <span class="badge">19 个公式</span>
+    <span class="badge">17 个公式</span>
     <span class="badge">15 篇参考文献</span>
   </div>
 </section>
@@ -570,9 +570,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>过滤流程</h4>
 <p>假设邮件包含 $n$ 个词 $\mathbf{x} = (w_1, w_2, \ldots, w_n)$，用多项式 NB：</p>
-<div class="formula" data-eq="(15)">$$P(\text{spam} \mid \mathbf{x}) \propto P(\text{spam}) \prod_{i=1}^{n} P(w_i \mid \text{spam})$$</div>
+<div class="formula">$$P(\text{spam} \mid \mathbf{x}) \propto P(\text{spam}) \prod_{i=1}^{n} P(w_i \mid \text{spam})$$</div>
 <p>预测规则：</p>
-<div class="formula" data-eq="(16)">$$\text{预测} = \begin{cases} \text{spam} & \text{if } \frac{P(\text{spam} \mid \mathbf{x})}{P(\text{ham} \mid \mathbf{x})} > \tau \\ \text{ham} & \text{otherwise} \end{cases}$$</div>
+<div class="formula">$$\text{预测} = \begin{cases} \text{spam} & \text{if } \frac{P(\text{spam} \mid \mathbf{x})}{P(\text{ham} \mid \mathbf{x})} > \tau \\ \text{ham} & \text{otherwise} \end{cases}$$</div>
 <p>其中 $\tau$ 是决策阈值。$\tau > 1$ 时更保守（需更强证据才判 spam），$\tau < 1$ 时更激进。</p>
 
 <h4>词频表示例</h4>
@@ -610,12 +610,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>4.2 在线学习与增量更新</h3>
 <p>朴素贝叶斯天然支持<strong>在线更新</strong>：当新样本到来时，只需更新计数器（$N_y$ 和 $N_{y,x_i}$），无需重新训练。这使它在流式数据场景中极其高效。</p>
-<div class="formula" data-eq="(17)">$$\hat{P}(x_i \mid y)^{(t+1)} = \frac{N_{y,x_i}^{(t)} + \mathbb{I}(y^{(t)} = y,\; x_i^{(t)} = x_i) + \alpha}{N_y^{(t)} + \mathbb{I}(y^{(t)} = y) + \alpha|V_i|}$$</div>
+<div class="formula" data-eq="(15)">$$\hat{P}(x_i \mid y)^{(t+1)} = \frac{N_{y,x_i}^{(t)} + \mathbb{I}(y^{(t)} = y,\; x_i^{(t)} = x_i) + \alpha}{N_y^{(t)} + \mathbb{I}(y^{(t)} = y) + \alpha|V_i|}$$</div>
 <p>其中上标 $(t)$ 表示时刻，$\mathbb{I}$ 是指示函数：当新样本 $\mathbf{x}^{(t)}$ 的类别 $y^{(t)}$ 等于 $y$ 时，分母 $N_y$ 加 $1$；若同时其特征 $i$ 取值为 $x_i$，则分子 $N_{y,x_i}$ 再加 $1$。新样本不属于类别 $y$ 时分子分母均不变。</p>
 
 <h3>4.3 补充朴素贝叶斯（Complement NB）</h3>
 <p>当数据类别<strong>极度不平衡</strong>时，标准朴素贝叶斯的先验会偏向多数类。<strong>补充朴素贝叶斯</strong>（Complement NB）不直接计算每类的概率，而是计算<strong>不属于该类的概率</strong>——其中 $\bar{y}$ 表示除 $y$ 以外的所有类别（补集），$N_{\bar{y},i}$ 为补集中特征 $i$ 的计数、$N_{\bar{y}}$ 为补集总词数——然后选择补集概率最小的类：</p>
-<div class="formula" data-eq="(18)">$$\hat{y} = \arg\min_y \; \sum_{i} x_i \log\frac{N_{\bar{y},i} + \alpha}{N_{\bar{y}} + \alpha d}$$</div>
+<div class="formula" data-eq="(16)">$$\hat{y} = \arg\min_y \; \sum_{i} x_i \log\frac{N_{\bar{y},i} + \alpha}{N_{\bar{y}} + \alpha d}$$</div>
 <p>Complement NB 在文本分类的不平衡数据集上表现优于标准多项式 NB。</p>
 
 <h3>4.4 从朴素贝叶斯到贝叶斯网络</h3>
@@ -625,7 +625,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>贝叶斯网络</h4>
 <p><strong>贝叶斯网络</strong>（Bayesian Network）是朴素贝叶斯的推广：一个有向无环图（DAG），节点表示随机变量，边表示直接依赖关系。每对父子节点之间对应一个条件概率 $P(\text{子} \mid \text{父})$。联合分布分解为：</p>
-<div class="formula" data-eq="(19)">$$P(X_1, X_2, \ldots, X_n) = \prod_{i=1}^{n} P(X_i \mid \text{Pa}(X_i))$$</div>
+<div class="formula" data-eq="(17)">$$P(X_1, X_2, \ldots, X_n) = \prod_{i=1}^{n} P(X_i \mid \text{Pa}(X_i))$$</div>
 <p>其中 $\text{Pa}(X_i)$ 是 $X_i$ 的父节点集合。</p>
 
 <div class="svg-box">

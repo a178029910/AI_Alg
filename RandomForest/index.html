@@ -142,7 +142,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">8 个章节</span>
     <span class="badge">5 张示例图</span>
-    <span class="badge">18 个公式</span>
+    <span class="badge">19 个公式</span>
     <span class="badge">14 篇参考文献</span>
   </div>
 </section>
@@ -720,16 +720,16 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>4.2 加法模型与前向分步算法</h3>
 <p>Boosting 家族（AdaBoost、GBDT、XGBoost）都可以统一到<strong>加法模型（Additive Model）</strong>框架下：最终模型是一组基学习器 $b_m(x)$ 的加权求和：</p>
 
-<div class="formula" data-eq="(16)">$$F_M(x) = \sum_{m=1}^{M} \beta_m \, f_m(x)$$</div>
+<div class="formula" data-eq="(10)">$$F_M(x) = \sum_{m=1}^{M} \beta_m \, f_m(x)$$</div>
 
 <p>直接联合优化所有 $(\beta_m, f_m)$ 是困难的，因此采用<strong>前向分步算法（Forward Stagewise Algorithm）</strong>：从 $m=1$ 到 $M$ 逐轮求解——每轮只优化当前新增的学习器，固定之前已经学到的部分：</p>
 
-<div class="formula" data-eq="(17)">$$(\beta_m, f_m) = \arg\min_{\beta, f} \sum_{i=1}^{N} L\left(y_i, \; F_{m-1}(x_i) + \beta f(x_i)\right)$$</div>
+<div class="formula" data-eq="(11)">$$(\beta_m, f_m) = \arg\min_{\beta, f} \sum_{i=1}^{N} L\left(y_i, \; F_{m-1}(x_i) + \beta f(x_i)\right)$$</div>
 
 <h3>4.3 指数损失函数与 AdaBoost 关系</h3>
 <p>当损失函数取<strong>指数损失</strong> $L(y, F(x)) = \exp(-y F(x))$（其中 $y \in \{-1, +1\}$）时，前向分步算法推出的加权更新规则恰与 AdaBoost 完全等价——这是统计学习视角对 AdaBoost 的标准解释：</p>
 
-<div class="formula" data-eq="(18)">$$L(y, F(x)) = e^{-y F(x)}$$</div>
+<div class="formula" data-eq="(12)">$$L(y, F(x)) = e^{-y F(x)}$$</div>
 
 <p>指数损失对错分样本施加指数级惩罚，天然地在每轮迭代中"放大"难样本的权重，这正是 AdaBoost 权重更新机制的内在原因。</p>
 
@@ -741,26 +741,26 @@ tr:hover td { background: var(--c-primary-ghost); }
 <ol>
 <li>在权重 $w^{(m)}$ 下训练弱分类器 $f_m(x)$，使其加权误差最小。</li>
 <li>计算加权错误率 $\epsilon_m = \frac{\sum_i w_i^{(m)} \mathbb{I}[f_m(x_i) \neq y_i]}{\sum_i w_i^{(m)}}$。</li>
-<li>计算弱分类器权重 $\alpha_m$（见公式 (11)）。</li>
-<li>更新样本权重（见公式 (10)），并归一化。</li>
+<li>计算弱分类器权重 $\alpha_m$（见公式 (14)）。</li>
+<li>更新样本权重（见公式 (13)），并归一化。</li>
 </ol></li>
-<li><strong>输出</strong>：加权组合的最终强分类器（见公式 (12)）。</li>
+<li><strong>输出</strong>：加权组合的最终强分类器（见公式 (15)）。</li>
 </ol>
 
 <h3>4.5 样本权重更新</h3>
 <p>每轮迭代后，<strong>提高被分错样本的权重、降低被分对样本的权重</strong>，使下一轮弱学习器被迫更关注"难样本"：</p>
 
-<div class="formula" data-eq="(10)">$$w_i^{(m+1)} = w_i^{(m)} \cdot \exp\left(-\alpha_m \, y_i \, f_m(x_i)\right), \quad \text{再归一化至 } \sum_i w_i = 1$$</div>
+<div class="formula" data-eq="(13)">$$w_i^{(m+1)} = w_i^{(m)} \cdot \exp\left(-\alpha_m \, y_i \, f_m(x_i)\right), \quad \text{再归一化至 } \sum_i w_i = 1$$</div>
 
 <h3>4.6 弱分类器权重</h3>
 <p>每个弱分类器的发言权重由它的错误率决定——<strong>错误率越低，权重越大</strong>：</p>
 
-<div class="formula" data-eq="(11)">$$\alpha_m = \frac{1}{2} \ln \frac{1 - \epsilon_m}{\epsilon_m}$$</div>
+<div class="formula" data-eq="(14)">$$\alpha_m = \frac{1}{2} \ln \frac{1 - \epsilon_m}{\epsilon_m}$$</div>
 
 <p>当 $\epsilon_m < 0.5$ 时 $\alpha_m > 0$，错误率越低 $\alpha_m$ 越大；若某轮 $\epsilon_m \geq 0.5$（弱于随机猜测），则停止迭代或翻转分类器。</p>
 
 <h3>4.7 最终分类器</h3>
-<div class="formula" data-eq="(12)">$$F(x) = \operatorname{sign}\left( \sum_{m=1}^{M} \alpha_m \, f_m(x) \right)$$</div>
+<div class="formula" data-eq="(15)">$$F(x) = \operatorname{sign}\left( \sum_{m=1}^{M} \alpha_m \, f_m(x) \right)$$</div>
 
 <p>预测时每个弱分类器按 $\alpha_m$ 加权投票，符号函数给出最终类别。下图展示 AdaBoost 的迭代与权重更新流程：</p>
 
@@ -848,7 +848,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>5.2 损失函数的负梯度（Pseudo-Residual）</h3>
 <p>对当前集成模型 $F_{m-1}(x)$，第 $m$ 轮针对每个样本 $x_i$ 计算损失函数 $L$ 关于当前预测值的<strong>负梯度</strong>，作为该轮的"伪残差"：</p>
 
-<div class="formula" data-eq="(13)">$$r_{im} = -\left[ \frac{\partial L\big(y_i, F(x_i)\big)}{\partial F(x_i)} \right]_{F(x) = F_{m-1}(x)}$$</div>
+<div class="formula" data-eq="(16)">$$r_{im} = -\left[ \frac{\partial L\big(y_i, F(x_i)\big)}{\partial F(x_i)} \right]_{F(x) = F_{m-1}(x)}$$</div>
 
 <p>当 $L$ 取平方误差 $L = \frac{1}{2}(y - F)^2$ 时，负梯度恰好是 $y_i - F_{m-1}(x_i)$——即<strong>普通残差</strong>；取指数损失时退化为 AdaBoost。这一观点把"梯度下降"从参数空间推广到了<strong>函数空间</strong>。与 AdaBoost 相比，GBDT 将指数损失替换为任意可微损失，将样本权重调整替换为直接拟合负梯度，从而更灵活、更鲁棒。</p>
 
@@ -857,7 +857,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li>初始化：$F_0(x) = \arg\min_c \sum_i L(y_i, c)$（平方损失下即样本均值）。</li>
 <li>对 $m = 1, \dots, M$：
 <ol>
-<li>计算伪残差 $r_{im}$（公式 (13)）。</li>
+<li>计算伪残差 $r_{im}$（公式 (16)）。</li>
 <li>用回归树拟合 $\{(x_i, r_{im})\}$，得到叶子区域 $R_{jm}$。</li>
 <li>对每个叶子求最优输出 $c_{jm} = \arg\min_c \sum_{x_i \in R_{jm}} L\big(y_i, F_{m-1}(x_i) + c\big)$。</li>
 <li>更新模型 $F_m(x) = F_{m-1}(x) + \nu \sum_j c_{jm} \mathbb{I}[x \in R_{jm}]$，其中 $\nu$ 为学习率（shrinkage）。</li>
@@ -868,7 +868,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>5.4 GBDT 分类（对数几率损失）</h3>
 <p>二分类场景采用<strong>对数几率损失（Logistic Loss）</strong> $L(y, F) = \log\big(1 + e^{-2yF}\big)$（$y \in \{-1, +1\}$），其负梯度为：</p>
 
-<div class="formula">$$\tilde{r}_{im} = \frac{2 y_i}{1 + e^{2 y_i F_{m-1}(x_i)}}$$</div>
+<div class="formula" data-eq="(17)">$$\tilde{r}_{im} = \frac{2 y_i}{1 + e^{2 y_i F_{m-1}(x_i)}}$$</div>
 
 <p>最终的输出经 sigmoid 变换 $p = 1 / (1 + e^{-2F(x)})$ 得到类别概率。多分类则采用 One-vs-Rest 叠加 softmax 变换。</p>
 
@@ -881,14 +881,14 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>6.1 XGBoost 的目标函数</h3>
 <p><strong>XGBoost（eXtreme Gradient Boosting）</strong> 由陈天奇等于 2014 年提出，是 GBDT 的极致工程化版本。与经典 GBDT 相比，它在目标函数中显式加入<strong>正则化项</strong>（叶子数 + 叶子权重的 L2 惩罚），从源头控制模型复杂度、抑制过拟合：</p>
 
-<div class="formula" data-eq="(14)">$$\mathcal{L}^{(t)} = \sum_{i=1}^{N} L\left(y_i, \; \hat{y}_i^{(t-1)} + f_t(x_i)\right) + \Omega(f_t), \qquad \Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2$$</div>
+<div class="formula" data-eq="(18)">$$\mathcal{L}^{(t)} = \sum_{i=1}^{N} L\left(y_i, \; \hat{y}_i^{(t-1)} + f_t(x_i)\right) + \Omega(f_t), \qquad \Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2$$</div>
 
 <p>其中 $T$ 为叶子数，$w_j$ 为叶子得分，$\gamma$、$\lambda$ 为正则系数。</p>
 
 <h3>6.2 二阶泰勒展开近似</h3>
 <p>经典 GBDT 只利用一阶导数（负梯度），XGBoost 则对损失函数做<strong>二阶泰勒展开</strong>，同时利用一阶导 $g_i$ 与二阶导 $h_i$，逼近精度更高、收敛更快：</p>
 
-<div class="formula" data-eq="(15)">$$\mathcal{L}^{(t)} \approx \sum_{i=1}^{n} \left[ L(y_i, \hat{y}_i^{(t-1)}) + g_i f_t(x_i) + \frac{1}{2} h_i f_t^2(x_i) \right] + \Omega(f_t)$$</div>
+<div class="formula" data-eq="(19)">$$\mathcal{L}^{(t)} \approx \sum_{i=1}^{n} \left[ L(y_i, \hat{y}_i^{(t-1)}) + g_i f_t(x_i) + \frac{1}{2} h_i f_t^2(x_i) \right] + \Omega(f_t)$$</div>
 
 <p>其中 $g_i = \partial_{\hat{y}^{(t-1)}} L(y_i, \hat{y}^{(t-1)})$，$h_i = \partial^2_{\hat{y}^{(t-1)}} L(y_i, \hat{y}^{(t-1)})$。由于常数项不影响优化，目标简化为对每个叶子求解最优权重 $w_j^* = -G_j / (H_j + \lambda)$，并按"增益公式" $\text{Gain} = \frac{1}{2}\left[\frac{G_L^2}{H_L+\lambda} + \frac{G_R^2}{H_R+\lambda} - \frac{(G_L+G_R)^2}{H_L+H_R+\lambda}\right] - \gamma$ 决定是否分裂。</p>
 

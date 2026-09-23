@@ -145,13 +145,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="hero" class="hero" data-page-node-id="W6r2JGXu5wvfMkliXMdO8W">
   <h1 data-page-node-id="wdzTAF0c58RjWfqotEUBkF">条件随机场</h1>
-  <div class="subtitle" data-page-node-id="bBNLdMm7z9BaRdbEjSjCqH">CRF</div>
+  <div class="subtitle" data-page-node-id="bBNLdMm7z9BaRdbEjSjCqH">Conditional Random Field</div>
   <p class="hero-intro" data-page-node-id="UFEJIjnsAcdXplDnGx6CGV">判别式概率图模型，直接对条件概率 P(y|x) 建模。通过全局归一化解决标注偏置问题，结合前向-后向算法与 Viterbi 解码，是序列标注的核心方法。</p>
   <div class="badges" data-page-node-id="jsNCVqsnHF2x2nRfJloGWV">
     <span class="badge" data-page-node-id="IUbn9L97EUg0zSg1V2r1ko">12 个章节</span>
     <span class="badge" data-page-node-id="QV9iV5DlKCexLX9nj5frGG">10 张示例图</span>
-    <span class="badge" data-page-node-id="NGbKSmkvevGF3M6SOE2ray">30 个公式</span>
-    <span class="badge" data-page-node-id="aOfkZOSpgRmFbvTC2wEBUi">16 篇参考文献</span>
+    <span class="badge" data-page-node-id="NGbKSmkvevGF3M6SOE2ray">25 个公式</span>
+    <span class="badge" data-page-node-id="aOfkZOSpgRmFbvTC2wEBUi">17 篇参考文献</span>
   </div>
 </section>
 
@@ -177,40 +177,40 @@ tr:hover td { background: var(--c-primary-ghost); }
         </linearGradient>
       </defs>
       <rect x="100" y="40" width="600" height="240" rx="12" fill="url(#crfGrad1)" stroke="#e2e8f0" stroke-width="1" data-page-node-id="seOyC2FQJpOfRFtJ3EjgGW"/>
-      <text x="400" y="30" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="y18ZmdilJsTHLIHSxR9UwM">线性链 CRF 结构图</text>
+      <text x="400" y="30" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="y18ZmdilJsTHLIHSxR9UwM">线性链 CRF 结构图</text>
       <!-- Y nodes -->
-      <circle cx="180" cy="120" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node" data-page-node-id="aDBMLAKMYtHZEcmh4x2GKi"/>
-      <text x="180" y="126" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="FYd35JqDGvTmAl2o9X5xiG">y₁</text>
-      <circle cx="340" cy="120" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node" data-page-node-id="UeDv3ayVuML2eeXCvsUIdT"/>
-      <text x="340" y="126" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="JE2CKelgIpSjbT2Ff45jvq">y₂</text>
-      <circle cx="500" cy="120" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node" data-page-node-id="Gt8SqGCp2mDWcqNCXZN5Dw"/>
-      <text x="500" y="126" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="ElzlF072owFlAD2VSrVWwY">y₃</text>
-      <circle cx="660" cy="120" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node" data-page-node-id="2KjkIp6i7yP33wDmSwQfTO"/>
-      <text x="660" y="126" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="hMwMq9zqaWNJi8CNX283kU">y_T</text>
+      <circle cx="180" cy="100" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" data-page-node-id="aDBMLAKMYtHZEcmh4x2GKi"/>
+      <text x="180" y="106" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="FYd35JqDGvTmAl2o9X5xiG">y₁</text>
+      <circle cx="340" cy="100" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" data-page-node-id="UeDv3ayVuML2eeXCvsUIdT"/>
+      <text x="340" y="106" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="JE2CKelgIpSjbT2Ff45jvq">y₂</text>
+      <circle cx="500" cy="100" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" data-page-node-id="Gt8SqGCp2mDWcqNCXZN5Dw"/>
+      <text x="500" y="106" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="ElzlF072owFlAD2VSrVWwY">y₃</text>
+      <circle cx="660" cy="100" r="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" data-page-node-id="2KjkIp6i7yP33wDmSwQfTO"/>
+      <text x="660" y="106" text-anchor="middle" font-size="16" fill="#2563eb" font-weight="700" data-page-node-id="hMwMq9zqaWNJi8CNX283kU">y_T</text>
       <!-- Y-Y edges -->
-      <line x1="208" y1="120" x2="312" y2="120" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="wKmo5Ewge6SbzeTokJQbrD"/>
-      <line x1="368" y1="120" x2="472" y2="120" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="vccMUKBjeHWYohIBGdZmhC"/>
-      <line x1="528" y1="120" x2="632" y2="120" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="GAokt5WM5fa36QF6O7b10V"/>
-      <text x="260" y="108" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="vDC71D30GX0ONyCn5TqYSy">转移</text>
-      <text x="420" y="108" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="ye7mpCvpeAhfDj4s3GOw0g">转移</text>
-      <text x="580" y="108" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="JZsySS0WPqlA6rHTW9TtsO">转移</text>
+      <line x1="208" y1="100" x2="312" y2="100" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,3" data-page-node-id="wKmo5Ewge6SbzeTokJQbrD"/>
+      <line x1="368" y1="100" x2="472" y2="100" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,3" data-page-node-id="vccMUKBjeHWYohIBGdZmhC"/>
+      <line x1="528" y1="100" x2="632" y2="100" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="6,3" data-page-node-id="GAokt5WM5fa36QF6O7b10V"/>
+      <text x="260" y="88" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="vDC71D30GX0ONyCn5TqYSy">转移</text>
+      <text x="420" y="88" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="ye7mpCvpeAhfDj4s3GOw0g">转移</text>
+      <text x="580" y="88" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="JZsySS0WPqlA6rHTW9TtsO">转移</text>
       <!-- X nodes -->
-      <circle cx="180" cy="240" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="IwKrcU2AxnDVi9rMb8Uk54"/>
-      <text x="180" y="246" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="moEZv9G4edX9BDV9cUCOOy">x₁</text>
-      <circle cx="340" cy="240" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="KcZ4HZeODa6rVw42cDlMwl"/>
-      <text x="340" y="246" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="p0aIhxcm37cIJIUhQVE78a">x₂</text>
-      <circle cx="500" cy="240" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="QDXFdWUxEj7sASD4Ur2ooC"/>
-      <text x="500" y="246" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="wFrbtlaeKiBcBGggnzlAlg">x₃</text>
-      <circle cx="660" cy="240" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="TFNZBxkAHOOOuH2Fbsc3wU"/>
-      <text x="660" y="246" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="72K1GsmcAgkOSGDC1PC0lA">x_T</text>
-      <!-- Y-X edges (emission, dashed) -->
-      <line x1="180" y1="148" x2="180" y2="212" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="n1TIfLUZNHorKiEYPjzUtl"/>
-      <line x1="340" y1="148" x2="340" y2="212" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="4xyIZTTHpKIJehvXEUbcg9"/>
-      <line x1="500" y1="148" x2="500" y2="212" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="4hC0BucOAJzWiGyKEeVUyl"/>
-      <line x1="660" y1="148" x2="660" y2="212" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="qmsd1NpJGbt7DNMIIjM0bz"/>
-      <text x="700" y="184" font-size="11" fill="#059669" data-page-node-id="VLlbZR8ZNhnHAtRuPAXpQ1">观测→标签</text>
-      <text x="20" y="120" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="402SvjejqN5RMwD4G2YUWC">标签层</text>
-      <text x="20" y="240" font-size="13" fill="#7c3aed" font-weight="600" data-page-node-id="CoUs3bpnrzluiCQDldmb9n">观测层</text>
+      <circle cx="180" cy="220" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="IwKrcU2AxnDVi9rMb8Uk54"/>
+      <text x="180" y="226" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="moEZv9G4edX9BDV9cUCOOy">x₁</text>
+      <circle cx="340" cy="220" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="KcZ4HZeODa6rVw42cDlMwl"/>
+      <text x="340" y="226" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="p0aIhxcm37cIJIUhQVE78a">x₂</text>
+      <circle cx="500" cy="220" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="QDXFdWUxEj7sASD4Ur2ooC"/>
+      <text x="500" y="226" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="wFrbtlaeKiBcBGggnzlAlg">x₃</text>
+      <circle cx="660" cy="220" r="28" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" data-page-node-id="TFNZBxkAHOOOuH2Fbsc3wU"/>
+      <text x="660" y="226" text-anchor="middle" font-size="16" fill="#7c3aed" font-weight="700" data-page-node-id="72K1GsmcAgkOSGDC1PC0lA">x_T</text>
+      <!-- Y-X edges (emission) -->
+      <line x1="180" y1="128" x2="180" y2="192" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="n1TIfLUZNHorKiEYPjzUtl"/>
+      <line x1="340" y1="128" x2="340" y2="192" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="4xyIZTTHpKIJehvXEUbcg9"/>
+      <line x1="500" y1="128" x2="500" y2="192" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="4hC0BucOAJzWiGyKEeVUyl"/>
+      <line x1="660" y1="128" x2="660" y2="192" stroke="#059669" stroke-width="2" stroke-dasharray="4,3" data-page-node-id="qmsd1NpJGbt7DNMIIjM0bz"/>
+      <text x="20" y="164" font-size="11" fill="#059669" data-page-node-id="VLlbZR8ZNhnHAtRuPAXpQ1">观测→标签</text>
+      <text x="20" y="105" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="402SvjejqN5RMwD4G2YUWC">标签层</text>
+      <text x="20" y="225" font-size="13" fill="#7c3aed" font-weight="600" data-page-node-id="CoUs3bpnrzluiCQDldmb9n">观测层</text>
     </svg>
   </div>
   <p data-page-node-id="m5kN3BkoNbEDPiY86jJrtm">上图是<strong data-page-node-id="8TDjyW1PSeaF6xa7GsoKPn">线性链 CRF</strong>（Linear-chain CRF）的结构：上方是标签变量 $y_1, \ldots, y_T$，相邻标签之间由<strong data-page-node-id="HcPic7uDft7Z50nMEJ4iPh">转移</strong>关系相连；下方是观测变量 $x_1, \ldots, x_T$，每个观测向对应标签提供<strong data-page-node-id="UANkDX9fwhLhL4O0g42E1A">观测证据</strong>。注意两个关键点：观测变量之间<strong data-page-node-id="wzFeRi4cxMuCk0F0vErwTY">没有</strong>任何独立性假设，标签层也<strong data-page-node-id="SZl05C6sKRStLQnTx0VxD3">不做</strong>逐位置归一化——整个模型只有一个归一化常数，作用在整条序列上。</p>
@@ -238,7 +238,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <p data-page-node-id="T50vRydRUrMEEmrxWoXHJd">分母 $Z(\mathbf{x})$ 称为<strong data-page-node-id="vwYP8YrCVkqQEc0MDFobMc">配分函数</strong>（partition function）。它遍历标签空间 $\mathcal{Y}^T$ 中<em data-page-node-id="bIh3RRupoawqdBVBAnnzAz">所有</em> $m^T$ 条候选序列，因此是<strong data-page-node-id="qxK71s0wPOF3uaFjpvWFlx">唯一的、全局的</strong>归一化常数——这正是"全局归一化"四个字的全部含义，也是 CRF 与后续要讲的 MEMM 的根本分野。</p>
   <div class="svg-box" data-page-node-id="t3hRcgwa2XGjTXFedxPxDM">
     <svg viewBox="0 0 820 210" xmlns="http://www.w3.org/2000/svg" data-page-node-id="fHOiCGYXRAVlm3fcLEdF7L">
-      <text x="410" y="26" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="oQJxsYwYcniuihQwIva6Jx">CRF 的计算流程：打分 → 指数化 → 全局归一化 → 概率</text>
+      <text x="410" y="26" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="oQJxsYwYcniuihQwIva6Jx">CRF 的计算流程：打分 → 指数化 → 全局归一化 → 概率</text>
       <defs data-page-node-id="CBTyYuC8Hlw8to6OQDDS3J">
         <marker id="fl-arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" data-page-node-id="w7QcX5C2Ln2mw57JfcQZLS">
           <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" data-page-node-id="r0tHAb68qIXoAPLta1LOX5"/>
@@ -303,11 +303,11 @@ tr:hover td { background: var(--c-primary-ghost); }
     <li data-page-node-id="9vbzPCv2HAGbgElkCynQTe"><strong data-page-node-id="dC7afbkoH6G5SDbXMtPEy5">观测独立假设</strong>：观测只依赖当前状态，$P(x_t \mid y_t, \mathbf{x}_{\setminus t}, \mathbf{y}) = P(x_t \mid y_t)$。</li>
   </ol>
   <p data-page-node-id="FceEuRsaP9MSBlibl18ANX">联合概率因此分解为转移概率与发射概率的连乘：</p>
-  <div class="formula" data-eq="(4)" data-page-node-id="80KDXlGxRLpHRehjY6xu2k">$$P(\mathbf{x}, \mathbf{y}) = \prod_{t=1}^{T} P(y_t \mid y_{t-1}) \cdot P(x_t \mid y_t)$$</div>
+  <div class="formula" data-eq="(4)" data-page-node-id="80KDXlGxRLpHRehjY6xu2k">$$P(\mathbf{x}, \mathbf{y}) = P(y_1) \prod_{t=1}^{T} P(x_t \mid y_t) \prod_{t=2}^{T} P(y_t \mid y_{t-1})$$</div>
   <p data-page-node-id="jVBc3epwUIe1wYIi4vfhDX">HMM 的三个标准问题——评估、解码、学习——分别由前向算法、Viterbi 算法和 Baum-Welch（EM）求解。它的致命短板出在观测独立假设上：$P(x_t \mid y_t)$ 要求观测是"可分解"的，于是像"当前词首字母大写 <em data-page-node-id="XJMh8800Pvo719M33Bl6Zj">且</em> 前一个词是 Mr."这类<strong data-page-node-id="PB5WOvxDKCExsb9ZKO3ZfC">重叠特征</strong>（overlapping features）无法被直接使用，只能退化成若干个互不相关的独立因子，丢失了大量判别信息。</p>
   <div class="svg-box" data-page-node-id="mG5BE314NIYMJaTgn2WtfN">
     <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" data-page-node-id="RTmJDRjtEe3GXjRxGyQFEL">
-      <text x="380" y="24" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="v8QDHYoX6fvBhpYgRTD9sY">HMM 结构图（有向）</text>
+      <text x="380" y="24" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="v8QDHYoX6fvBhpYgRTD9sY">HMM 结构图</text>
       <ellipse cx="120" cy="80" rx="35" ry="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" data-page-node-id="JO1QU9F2eW9kWhD2yiy8Xq"/>
       <text x="120" y="86" text-anchor="middle" font-size="14" fill="#2563eb" font-weight="700" data-page-node-id="TxlZPId7DcdIjwEh3vXre0">y₁</text>
       <ellipse cx="300" cy="80" rx="35" ry="28" fill="#dbeafe" stroke="#2563eb" stroke-width="2" data-page-node-id="hUzfJJoCAHzHK93VucPDvq"/>
@@ -352,6 +352,7 @@ tr:hover td { background: var(--c-primary-ghost); }
       <tr data-page-node-id="pSnsxTbsNTTueIiNXHa0BS"><th data-page-node-id="7R9tY6nX0B2c34TkD0AAiF">路径所经状态的出度序列</th><th data-page-node-id="NZAAHkxRToyL56li8itcK3">第一步因子</th><th data-page-node-id="aGvxVe1GwMmAglCXqyylLX">第二步因子</th><th data-page-node-id="kZmrVN8dXNMRGHiRyX78pf">连乘得分</th></tr>
       <tr data-page-node-id="AlBKNyReXxYwOlq5pJgVEJ"><td data-page-node-id="F3hzPkKKsnUxLOG3g5TfQb">1, 1</td><td data-page-node-id="jXMQ7XEg8hFQDkb7duiqgj">$1.00$</td><td data-page-node-id="FA46Eu1rNtXFOLLjRvukK2">$1.00$</td><td data-page-node-id="wec0kTvkF3KIF3YRdgSDqV">$1.00$</td></tr>
       <tr data-page-node-id="mVL6wJNEZH78gFuMqm831A"><td data-page-node-id="zS74Bkb4PdZH5Qg9tEl2Kr">1, 2</td><td data-page-node-id="mVaSW33NDXekDarH5hctLh">$1.00$</td><td data-page-node-id="llcQ3DIawTAtLdG9O4lAo2">$0.50$</td><td data-page-node-id="a7lGPLVJCfovjkzDFJ5nXi">$0.50$</td></tr>
+      <tr><td>2, 1</td><td>$0.50$</td><td>$1.00$</td><td>$0.50$</td></tr>
       <tr data-page-node-id="B49wk6K6E3EKrKvWtlCyDY"><td data-page-node-id="KtlYoNf0uoTBxBoDeasZfl">2, 2</td><td data-page-node-id="DJliXm1sgyVaOeXA0sNCVZ">$0.50$</td><td data-page-node-id="J5haWt9u6HNCmHTmIyd8sA">$0.50$</td><td data-page-node-id="QYLKIQDLq39bKEPMR9wRzQ">$0.25$</td></tr>
     </table>
   </div>
@@ -368,8 +369,8 @@ tr:hover td { background: var(--c-primary-ghost); }
     </table>
   </div>
   <div class="svg-box" data-page-node-id="0UN8291g9xcF8BomyCPdgh">
-    <svg viewBox="0 0 820 260" xmlns="http://www.w3.org/2000/svg" data-page-node-id="bQUEOwaHGdItqBSElVxtBi">
-      <text x="410" y="24" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="Ls9MTVL6EdGxskHD81idjb">局部归一化 vs 全局归一化：标注偏置的根源</text>
+    <svg viewBox="0 0 820 196" xmlns="http://www.w3.org/2000/svg" data-page-node-id="bQUEOwaHGdItqBSElVxtBi">
+      <text x="410" y="24" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="Ls9MTVL6EdGxskHD81idjb">局部归一化 vs 全局归一化：标注偏置的根源</text>
       <!-- MEMM -->
       <text x="205" y="56" text-anchor="middle" font-size="13" fill="#ea580c" font-weight="700" data-page-node-id="ZW2rJMCU548j5iGR7zi5dx">MEMM：每个位置各自归一化</text>
       <rect x="60" y="70" width="80" height="46" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" data-page-node-id="6ShsfmNzFvy3s3gyNFSyKJ"/>
@@ -385,7 +386,7 @@ tr:hover td { background: var(--c-primary-ghost); }
       <line x1="245" y1="93" x2="268" y2="93" stroke="#ea580c" stroke-width="1.5" data-page-node-id="jBKjlgyk5Uj5unica6JspU"/>
       <text x="205" y="140" text-anchor="middle" font-size="11" fill="#ea580c" data-page-node-id="Ran2dwJpcbxq44l16DYfMk">低出度状态 → 概率被放大 → 标注偏置</text>
       <!-- divider -->
-      <line x1="410" y1="50" x2="410" y2="230" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="5,4" data-page-node-id="3BUFKWRDH5aVkIlWvSp6dE"/>
+      <line x1="410" y1="50" x2="410" y2="186" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="5,4" data-page-node-id="3BUFKWRDH5aVkIlWvSp6dE"/>
       <!-- CRF -->
       <text x="615" y="56" text-anchor="middle" font-size="13" fill="#059669" font-weight="700" data-page-node-id="AK3skjOAAIDCFUdUcqCnjE">CRF：整条序列一次归一化</text>
       <rect x="470" y="66" width="290" height="86" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" data-page-node-id="L65eMlrx753p0ZwriMC35W"/>
@@ -427,7 +428,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <p data-page-node-id="gHBV0gv30zSLV3bKBMuEtr">CRF 的关键优势在于这些特征可以<strong data-page-node-id="6AIzKEJwsYVXIHQM7OOshs">重叠</strong>（overlapping）：同一个观测 $x_t$ 可以同时命中"首字母大写""以 -tion 结尾""前一个词是 the"三个特征，三份得分叠加进总分。HMM 要求 $P(x_t \mid y_t)$ 可分解，无法做到这一点；这正是判别式建模带来的直接收益。</p>
   <div class="svg-box" data-page-node-id="nbJ2BByB8MAEfNH1QjHsxa">
     <svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" data-page-node-id="mRN3JNLvM4GIJOfQK3oo5U">
-      <text x="380" y="24" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="KYUV4E75mszFPWzQ4ucgxa">CRF 的两类特征函数</text>
+      <text x="380" y="24" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="KYUV4E75mszFPWzQ4ucgxa">CRF 的两类特征函数</text>
       <rect x="60" y="50" width="160" height="50" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="cyGCvnaCOpCZpDeyDaN05T"/>
       <text x="140" y="80" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="CEiNhozolFiNq4D0INSMNg">转移特征 t_k</text>
       <rect x="300" y="50" width="160" height="50" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="UUMtfh0OGhKpNdxXBf5kGx"/>
@@ -529,7 +530,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   </div>
   <h3 data-page-node-id="JsvadiO4kcxodSWy2ve7ZP">5.2 前向递推</h3>
   <p data-page-node-id="kH9IQRLh8GhK8gWFYgoICe">定义<strong data-page-node-id="3nQQU0SGfpE6gU3ome4VeL">前向变量</strong> $\alpha_t(y)$：以标签 $y$ 结尾的<em data-page-node-id="64ntGfGrVJrsD7EwGSO9KY">全部前缀路径</em>的得分之和。它满足一个只依赖前一步的递推：</p>
-  <div class="formula" data-eq="(12)" data-page-node-id="1jy4B7hgbz0RDD55sUDZ4h">$$\alpha_t(y) = \sum_{y'} \alpha_{t-1}(y') \, M_t(y', y \mid \mathbf{x}), \qquad \alpha_1(y) = M_1(y_0, y \mid \mathbf{x})$$</div>
+  <div class="formula" data-eq="(12)" data-page-node-id="1jy4B7hgbz0RDD55sUDZ4h">$$\alpha_t(y) = \sum_{y'} \alpha_{t-1}(y') \, M_t(y', y \mid \mathbf{x}), \qquad \alpha_1(y) = \sum_{y'} M_1(y', y \mid \mathbf{x})$$</div>
   <p data-page-node-id="tMPQGABt93Kr4Ei57xrGYk">递推到序列末端，把最后一步的所有标签加起来，就得到配分函数：$Z(\mathbf{x}) = \sum_{y} \alpha_T(y)$。这一步正是公式 (10) 中矩阵连乘的逐项展开。</p>
   <h3 data-page-node-id="7cTGz2CM9gpGt9fPUt5aiC">5.3 后向递推</h3>
   <p data-page-node-id="ZA18ap6n1K8s4RCAdfG1f1"><strong data-page-node-id="Q4aRaQmtWtIoZRALoj0TPV">后向变量</strong> $\beta_t(y)$ 从另一端出发：以标签 $y$ 为起点、覆盖 $t$ 之后所有位置的路径得分之和：</p>
@@ -538,8 +539,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="formula" data-eq="(14)" data-page-node-id="UlKBZPCepAbWTViaDl5k0D">$$Z(\mathbf{x}) = \sum_{y} \alpha_t(y) \, \beta_t(y)$$</div>
   <div class="svg-box" data-page-node-id="gxYX574QueMpgvuTNUF3f9">
     <svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg" data-page-node-id="jNkhQBnTaZglBvQH3C6ypP">
-      <text x="400" y="24" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="wCCPK92zyoyuGfrep2GSIF">前向-后向算法：两个方向在任意位置对接</text>
-      <line x1="80" y1="130" x2="720" y2="130" stroke="#cbd5e1" stroke-width="2" data-page-node-id="A9CyArhkkgp443AhqHXMZz"/>
+      <text x="400" y="24" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="wCCPK92zyoyuGfrep2GSIF">前向-后向算法：两个方向在任意位置对接</text>
       <text x="50" y="60" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="vUA4ZKwscfezEWc26cpcqI">前向 →</text>
       <line x1="100" y1="55" x2="700" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#fwd-arrow)" data-page-node-id="OBz1upfNyRF30MYj7FrPMv"/>
       <text x="100" y="45" font-size="11" fill="#2563eb" data-page-node-id="JiI2ZpLJCtyV4jGcWoqiCk">α₁</text>
@@ -657,56 +657,9 @@ tr:hover td { background: var(--c-primary-ghost); }
   </div>
   <h4 data-page-node-id="hHt2piMp8DeHFbVRsKGgeq">第 4 步：回溯</h4>
   <p data-page-node-id="wlvr2bKzEt63e4EnK1i57F">$\delta_3$ 中最大者为 $\delta_3(\text{O}) = 4.5$，故 $y_3^{*} = \text{O}$；查 $\psi_3(\text{O}) = \text{I-PER}$，故 $y_2^{*} = \text{I-PER}$；再查 $\psi_2(\text{I-PER}) = \text{B-PER}$，故 $y_1^{*} = \text{B-PER}$。最终：</p>
-  <div class="formula" data-eq="(19)" data-page-node-id="G3Nd9fs5AV4TTwLX0ZKYUa">$$\mathbf{y}^{*} = (\text{B-PER},\; \text{I-PER},\; \text{O}), \qquad \text{score} = 4.5$$</div>
+  <div class="formula" data-page-node-id="G3Nd9fs5AV4TTwLX0ZKYUa">$$\mathbf{y}^{*} = (\text{B-PER},\; \text{I-PER},\; \text{O}), \qquad \text{score} = 4.5$$</div>
   <p data-page-node-id="HlKy6jtd9DZFTV41gMT8Cj">结果符合直觉："John Smith" 整体被识别为一个人名实体（B-PER → I-PER），"works" 落在实体之外（O）。这正是 <strong data-page-node-id="uHqHSQRgPtnIyrFQbdTDfG">转移约束</strong>在起作用——如果 $y_2$ 独立判断，未必会选 I-PER；是 B-PER → I-PER 的高转移得分把它"拉"了过来。</p>
-  <div class="svg-box" data-page-node-id="zutFQIaChvBV4mvBEaA6FC">
-    <svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="KiSP74po2hc0D01FCm2pu5">
-      <text x="410" y="24" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="lgc7yqEfZoujZFAizN3uLg">Viterbi 最优路径回溯（3 个标签 × 5 个时间步）</text>
-      <circle cx="120" cy="80" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="PS5sUlDmbgtTtWdaSOO8O5"/>
-      <text x="120" y="85" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="VvJlFWx8Z5ARydQOUAesBt">N</text>
-      <circle cx="120" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="OcP8rRRXs3kyTVKsFm36vZ"/>
-      <text x="120" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="EDOKEPXrkwa5wmk4GBXNz1">V</text>
-      <circle cx="120" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="h1xKH8lNx0KcDM9HaP5TiQ"/>
-      <text x="120" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="JoR9ZElUzFDCxIT7EMywzZ">ADJ</text>
-      <circle cx="260" cy="80" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="1odxV3AVZE7jb35sZPCxYR"/>
-      <text x="260" y="85" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="PaNwrZHAzlVy4UMFVpu5gl">N</text>
-      <circle cx="260" cy="150" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="lYLuFePonAVOkl9EoZfsvd"/>
-      <text x="260" y="155" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="r0yEVvmHfuwMMgwD4B1quS">V</text>
-      <circle cx="260" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="QjlXb90csUrBpwRzzIn2HZ"/>
-      <text x="260" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="hX3iRpRBKwIIFq3zqtRy8N">ADJ</text>
-      <circle cx="400" cy="80" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="SLVOyQJRADlSIpI0eH7Nrs"/>
-      <text x="400" y="85" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="SChwc50QDeqqDyZ5hXTSSU">N</text>
-      <circle cx="400" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="Jg3xJ78D8Ap7IdTiarJ0hO"/>
-      <text x="400" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="pdYAGspthKJgGR0YvGLFuZ">V</text>
-      <circle cx="400" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="fjn2OgItM9fDx7iF1KAeuQ"/>
-      <text x="400" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="MYskiCARa7xOzrOejzJdiI">ADJ</text>
-      <circle cx="540" cy="80" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="p2nmVBsyB3uILvfAx8rfNW"/>
-      <text x="540" y="85" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="VobgZd6MfwxBF4uO834OQj">N</text>
-      <circle cx="540" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="GlltqpQmsPFASb3GGgJf42"/>
-      <text x="540" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="3odhAyIYXbs3eBJHJ6Rqcp">V</text>
-      <circle cx="540" cy="220" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="WP2OkDlcDQhgE570ffuqkA"/>
-      <text x="540" y="225" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="LIq52CmOY8ZJ7wF8tWuFED">ADJ</text>
-      <circle cx="680" cy="80" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="glow-ring" data-page-node-id="ZVmnyDTV5hGjLZLrJ6mEBT"/>
-      <text x="680" y="85" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="EtahpTCPfl7RET3sdLnFgZ">N</text>
-      <circle cx="680" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="WO6D5UuoFu9BWJL4l7ubHo"/>
-      <text x="680" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="6cjULdXySr3prYifDbqtVS">V</text>
-      <circle cx="680" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="hmaz90GyamItXICdCJaoC6"/>
-      <text x="680" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="iYcrCFYBuIOMAFMZVj79Nc">ADJ</text>
-      <line x1="142" y1="80" x2="238" y2="150" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="gnymVt6VuCHcZCQBy79ZHu"/>
-      <line x1="282" y1="150" x2="378" y2="80" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="xGxzHrGn9ySnf0ll42r1A7"/>
-      <line x1="422" y1="80" x2="518" y2="220" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="5IKISVIEPY3ONzaFciWzGO"/>
-      <line x1="562" y1="220" x2="658" y2="80" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="D96HFDjYITlrYlP3dZkHO7"/>
-      <text x="748" y="85" font-size="13" fill="#059669" font-weight="700" data-page-node-id="hFSheXDPjKS87PAZ1HiwAV">✓ 最优</text>
-      <text x="40" y="85" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="KEztpWrxrkd9KF5xyUJDab">N</text>
-      <text x="40" y="155" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="9wcD8BngBGdz844EEYTsjV">V</text>
-      <text x="40" y="225" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="dDe9m1XFEdDJklTmtHHWVG">ADJ</text>
-      <text x="120" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="cef07qQ6FHCAEs8t6FJcKR">t=1</text>
-      <text x="260" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="Gs8ii8cD8HgoiJokh0MYCX">t=2</text>
-      <text x="400" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="M0UJYPceoC5eyBXQi0AEcW">t=3</text>
-      <text x="540" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="coBrAwTtKn3nR3TNK9ylca">t=4</text>
-      <text x="680" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="W2lah9lFC7lGA1QrjPwJI6">t=5</text>
-    </svg>
-  </div>
+  
 </section>
 
 
@@ -717,30 +670,30 @@ tr:hover td { background: var(--c-primary-ghost); }
   <p data-page-node-id="99vs1YavtJohfhSKvCVIp5">前面几章一直假设权重 $\lambda_k$ 是已知的。这一章解决的问题是：<strong data-page-node-id="1oK7s46NaHrXR5N71PzZcJ">给定标注数据，如何求出这些权重？</strong></p>
   <h3 data-page-node-id="nbxnEtOqSAhWdWaDEm7fQY">7.1 最大似然与对数似然</h3>
   <p data-page-node-id="7j08p2FkTRUafBFNmR8LTI">CRF 的标准做法是<strong data-page-node-id="e5AQWhIYaeGalH7AiQosoK">最大似然估计</strong>（MLE）。给定训练集 $\mathcal{D} = \{(\mathbf{x}^{(n)}, \mathbf{y}^{(n)})\}_{n=1}^{N}$，对每个样本取对数概率并求和：</p>
-  <div class="formula" data-eq="(20)" data-page-node-id="rhXqKSBUgzsc22Bd4O0FzN">$$\mathcal{L}(\boldsymbol{\theta}) = \sum_{n=1}^{N} \Big[ \underbrace{s(\mathbf{y}^{(n)}, \mathbf{x}^{(n)})}_{\text{训练数据的得分}} - \underbrace{\log Z(\mathbf{x}^{(n)})}_{\text{归一化项}} \Big]$$</div>
+  <div class="formula" data-eq="(19)" data-page-node-id="rhXqKSBUgzsc22Bd4O0FzN">$$\mathcal{L}(\boldsymbol{\theta}) = \sum_{n=1}^{N} \Big[ \underbrace{s(\mathbf{y}^{(n)}, \mathbf{x}^{(n)})}_{\text{训练数据的得分}} - \underbrace{\log Z(\mathbf{x}^{(n)})}_{\text{归一化项}} \Big]$$</div>
   <p data-page-node-id="MXq5cTMGgcBG1NtU4wEIj8">第一项鼓励模型给正确序列高分，第二项惩罚"给所有序列都打高分"——它把配分函数压住，使分布保持尖锐。这两项的关系是理解 CRF 学习的关键。</p>
   <h3 data-page-node-id="pVrHvQkRx0TaSBHzKEHvaS">7.2 梯度：经验期望减去模型期望</h3>
   <p data-page-node-id="B7N2D4elHBmMsNIf0tmbJ9">对权重 $\lambda_k$ 求偏导。由于 $\log Z$ 的导数等于模型分布下的期望，整个梯度可以写得极其干净：</p>
-  <div class="formula" data-eq="(21)" data-page-node-id="rL3J34qKDFNNxLpE2XVsGL">$$\frac{\partial \mathcal{L}}{\partial \lambda_k} = \sum_{n} \underbrace{\widetilde{E}[f_k]}_{\text{经验期望：特征在标注数据中出现几次}} \; - \; \sum_{n} \underbrace{E_{P_{\boldsymbol{\theta}}}[f_k]}_{\text{模型期望：模型当前认为它该出现几次}}$$</div>
+  <div class="formula" data-eq="(20)" data-page-node-id="rL3J34qKDFNNxLpE2XVsGL">$$\frac{\partial \mathcal{L}}{\partial \lambda_k} = \sum_{n} \underbrace{\widetilde{E}[f_k]}_{\text{经验期望：特征在标注数据中出现几次}} \; - \; \sum_{n} \underbrace{E_{P_{\boldsymbol{\theta}}}[f_k]}_{\text{模型期望：模型当前认为它该出现几次}}$$</div>
   <p data-page-node-id="WkvbHR7x03ehOIR3Is7QxD">其中模型期望的具体形式是遍历所有标签对、乘以它们的后验边缘概率：</p>
-  <div class="formula" data-eq="(22)" data-page-node-id="M9T0jIcOhNNhQQJLBBXPb3">$$E_{P_{\boldsymbol{\theta}}}[f_k] = \sum_{t=1}^{T} \sum_{y_{t-1}, y_t} f_k(y_{t-1}, y_t, \mathbf{x}, t) \cdot P(y_{t-1}, y_t \mid \mathbf{x})$$</div>
+  <div class="formula" data-eq="(21)" data-page-node-id="M9T0jIcOhNNhQQJLBBXPb3">$$E_{P_{\boldsymbol{\theta}}}[f_k] = \sum_{t=1}^{T} \sum_{y_{t-1}, y_t} f_k(y_{t-1}, y_t, \mathbf{x}, t) \cdot P(y_{t-1}, y_t \mid \mathbf{x})$$</div>
   <div class="callout success" data-page-node-id="bVKIa0fWHitk1e2scBlazr">
     <div class="callout-title" data-page-node-id="QG9Dl4h56mHIXBHAvl954I">闭环：为什么必须先学推断，再学参数</div>
-    <p data-page-node-id="yGzQwr25xTXfwmj532NcrO">公式 (22) 右侧的 $P(y_{t-1}, y_t \mid \mathbf{x})$ 正是第 5 章前向-后向算法算出来的<strong data-page-node-id="x7uGNcP3Rqq5T1Zxvmb66Q">相邻位置边缘概率</strong>。也就是说：<strong data-page-node-id="GBzMbqWGVjoevdzIq3LUOb">推断是学习的前提</strong>，第 5 章的算法在第 7 章才真正兑现价值——这正是把推断排在参数学习之前的理由。梯度的含义也很直观：当某个特征在训练数据里的出现频率高于模型的预期时，梯度为正，权重被推高，模型随之更倾向于产生该特征；当二者相等时梯度为零，即模型已<em data-page-node-id="OWB3RRF0Avfzko8JqtgUlT">复现</em>训练数据的特征统计量。</p>
+    <p data-page-node-id="yGzQwr25xTXfwmj532NcrO">公式 (21) 右侧的 $P(y_{t-1}, y_t \mid \mathbf{x})$ 正是第 5 章前向-后向算法算出来的<strong data-page-node-id="x7uGNcP3Rqq5T1Zxvmb66Q">相邻位置边缘概率</strong>。也就是说：<strong data-page-node-id="GBzMbqWGVjoevdzIq3LUOb">推断是学习的前提</strong>，第 5 章的算法在第 7 章才真正兑现价值——这正是把推断排在参数学习之前的理由。梯度的含义也很直观：当某个特征在训练数据里的出现频率高于模型的预期时，梯度为正，权重被推高，模型随之更倾向于产生该特征；当二者相等时梯度为零，即模型已<em data-page-node-id="OWB3RRF0Avfzko8JqtgUlT">复现</em>训练数据的特征统计量。</p>
   </div>
   <h3 data-page-node-id="OWb4GQE97ngVRnXpxqCruS">7.3 一个重要性质：目标函数是凸的</h3>
   <div class="callout warn" data-page-node-id="P3kJHO9FT2tnW8rFZ3yZLm">
     <div class="callout-title" data-page-node-id="b0HGZ8QrkdjrDqSCWe7k1E">线性链 CRF 的训练是凸优化问题</div>
-    <p data-page-node-id="luhltYGfdpuOKRda4okO0S">公式 (20) 中，得分项 $s(\mathbf{y}, \mathbf{x})$ 是参数 $\boldsymbol{\theta}$ 的<strong data-page-node-id="ubFRc2deKKiKHZrTeaVdpe">线性函数</strong>，$\log Z(\mathbf{x})$ 是<strong data-page-node-id="TOobcmWnCbn6VQeDXsJbAy">对数配分函数</strong>——它是指数族的累积量函数，必为凸函数。线性函数减去凸函数，结果仍然是凸函数；再叠加凸的正则项，凸性不变。因此线性链 CRF 的负对数似然是<strong data-page-node-id="jU7siLTTpE6vh2F9YF1Qhx">凸</strong>的，训练过程中<strong data-page-node-id="BhMY7wbncTtsuSJDrR1YrZ">不存在局部最优陷阱</strong>：L-BFGS 等一阶/拟牛顿方法收敛到的点就是全局最优。</p>
+    <p data-page-node-id="luhltYGfdpuOKRda4okO0S">公式 (19) 中，得分项 $s(\mathbf{y}, \mathbf{x})$ 是参数 $\boldsymbol{\theta}$ 的<strong data-page-node-id="ubFRc2deKKiKHZrTeaVdpe">线性函数</strong>，$\log Z(\mathbf{x})$ 是<strong data-page-node-id="TOobcmWnCbn6VQeDXsJbAy">对数配分函数</strong>——它是指数族的累积量函数，必为凸函数。线性函数减去凸函数，结果仍然是凸函数；再叠加凸的正则项，凸性不变。因此线性链 CRF 的负对数似然是<strong data-page-node-id="jU7siLTTpE6vh2F9YF1Qhx">凸</strong>的，训练过程中<strong data-page-node-id="BhMY7wbncTtsuSJDrR1YrZ">不存在局部最优陷阱</strong>：L-BFGS 等一阶/拟牛顿方法收敛到的点就是全局最优。</p>
     <p data-page-node-id="rioexlF5nPSAS3OOJ2eyB0">这是 CRF 相对神经网络训练的一个实打实的工程优势——不需要为"训练不稳定、初始化敏感"操心。需要注意的是，这个性质只对线性链结构成立；一般图结构的 CRF 推断本身是 NP-hard 的。</p>
   </div>
   <h3 data-page-node-id="UpdFPfRUKf7AcuPBYxUy8f">7.4 正则化</h3>
   <p data-page-node-id="9LpTL0jCLRhVylOk1DYrff">CRF 的特征数量（尤其在使用特征模板后）往往远超训练样本数，过拟合风险很高。标准的做法是在目标函数里减去正则项：</p>
-  <div class="formula" data-eq="(23)" data-page-node-id="xXV6pLW2QG7zSAWNepOY3p">$$\mathcal{L}_{\text{reg}}(\boldsymbol{\theta}) = \mathcal{L}(\boldsymbol{\theta}) - \alpha \sum_k |\lambda_k| - \frac{1}{2\sigma^2} \sum_k \lambda_k^{2}$$</div>
+  <div class="formula" data-eq="(22)" data-page-node-id="xXV6pLW2QG7zSAWNepOY3p">$$\mathcal{L}_{\text{reg}}(\boldsymbol{\theta}) = \mathcal{L}(\boldsymbol{\theta}) - \alpha \sum_k |\lambda_k| - \frac{1}{2\sigma^2} \sum_k \lambda_k^{2}$$</div>
   <ul data-page-node-id="vg5XkZVmVz9aKQBsBj6t2O">
     <li data-page-node-id="UoFdJvAkxJg4M59Zq6WlL0"><strong data-page-node-id="PwGc8NBdmi5jTjPsnjOhvI">L2 正则</strong>（右端第二项）使权重整体收缩，抑制过大权重，是最常用的选择；</li>
     <li data-page-node-id="o7vKfVI8ojS1KT3ZpOiz8O"><strong data-page-node-id="LFulcQE5FEUtXgH5uFuYoD">L1 正则</strong>（右端第一项）使不重要的权重精确趋近于零，实现<strong data-page-node-id="3kFohIz23gbSRfsEeJtnmC">自动特征选择</strong>——在特征成千上万时特别有用。它在零点不可导，需用次梯度或 OWL-QN 处理；</li>
-    <li data-page-node-id="7jH1CDtzFti7LRrCwjwEUK">两者按权重 $\alpha$ 组合即为<strong data-page-node-id="Tu2UYMr0XstTFMeFfDhYJH">弹性网</strong>（elastic net），兼顾稀疏性与稳定性。</li>
+    <li data-page-node-id="7jH1CDtzFti7LRrCwjwEUK">两者同时加入即为<strong data-page-node-id="Tu2UYMr0XstTFMeFfDhYJH">弹性网</strong>（elastic net）——L1 与 L2 各带独立系数（分别对应公式 (22) 中的 $\alpha$ 与 $1/(2\sigma^2)$），兼顾稀疏性与稳定性。</li>
   </ul>
   <h3 data-page-node-id="i7qbC9VPMUPMoodU6rSw9C">7.5 优化器选择</h3>
   <div class="table-wrap" data-page-node-id="d0nqZuLmMHhEyocCjtBZtn">
@@ -761,7 +714,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <section id="ch8" data-page-node-id="HZmrGpAo9uQBpSvs4xVxXf">
   <div class="part-label" data-page-node-id="YCR1pCxKFAbpc2pVuIqduv">第四部分 · 工程实践</div>
   <h2 data-page-node-id="daimgFlzRNvvJrkIDigVGs"><span class="num" data-page-node-id="fAMjQ8sdfftE2Ac2nLp3ZE">08</span> 端到端实现</h2>
-  <p data-page-node-id="QQsNwwRS8Hd8epgbFRsI19">下面用 PyTorch 实现一个完整的线性链 CRF，把第 4–7 章的公式逐一落地：<code data-page-node-id="xtDgdLpQZXQjzjO0QZBZaj">forward_algorithm</code> 对应公式 (12)(14)，<code data-page-node-id="D9hU7dTXkhq4ICcWKikBLI">viterbi_decode</code> 对应公式 (17)(18)，<code data-page-node-id="kS9MnuPspJuMR7N6oFXVuL">neg_log_likelihood</code> 对应公式 (20)。</p>
+  <p data-page-node-id="QQsNwwRS8Hd8epgbFRsI19">下面用 PyTorch 实现一个完整的线性链 CRF，把第 4–7 章的公式逐一落地：<code data-page-node-id="xtDgdLpQZXQjzjO0QZBZaj">forward_algorithm</code> 对应公式 (12)(14)，<code data-page-node-id="D9hU7dTXkhq4ICcWKikBLI">viterbi_decode</code> 对应公式 (17)(18)，<code data-page-node-id="kS9MnuPspJuMR7N6oFXVuL">neg_log_likelihood</code> 对应公式 (19)。</p>
   <div class="code-block" data-page-node-id="2MLncV7NbSXQJeQ2XI84OV">
     <div class="code-header" data-page-node-id="sZDEwsKS67IyTUv2TENFwN">linear_crf.py — 完整线性链 CRF 实现</div>
 <pre data-page-node-id="iohSWVhOcxYCLZDVFjziXZ">
@@ -785,12 +738,12 @@ tr:hover td { background: var(--c-primary-ghost); }
         alpha = <span class="fn" data-page-node-id="rqiZEYVNUTF0thzCr3WdIe">self</span>.start_transitions.<span class="fn" data-page-node-id="enm3hgYCvwvJ3xxldii8m2">unsqueeze</span>(<span class="num" data-page-node-id="o35PYdf6Jzh88QTuxon1yH">0</span>) + emissions[<span class="num" data-page-node-id="bABnedUDfQqCIsl2cclxur">0</span>]
         <span class="kw" data-page-node-id="3ki5EhcZnZWuPY7bG5EH8g">for</span> t <span class="kw" data-page-node-id="25r9Ne2RWiCnN6Cmh3I3Dv">in</span> <span class="fn" data-page-node-id="ADUYH50ZGciU1kr9WXEnM5">range</span>(<span class="num" data-page-node-id="duwvTxk6i9gWmGhjdcYyAE">1</span>, seq_len):
             <span class="com" data-page-node-id="5ZzDYLeDdY0XGkqwMQwXij"># broadcast: (batch, 1, num_tags) + (num_tags, num_tags) + (batch, num_tags, 1)</span>
-            broadcast_alpha = alpha.<span class="fn" data-page-node-id="InkP2UgfEnFPxFWstAyWe4">unsqueeze</span>(<span class="num" data-page-node-id="w9VBkRlX3x7YvpswDxfznX">2</span>)       <span class="com" data-page-node-id="54XUGV2FSHJATy4CcoLwvK"># (B, T, 1)</span>
-            broadcast_trans = <span class="fn" data-page-node-id="lG7YvvteRe17enzRcuFHUd">self</span>.transitions.<span class="fn" data-page-node-id="LDJRP2WwVZhZqhghMqpFjx">unsqueeze</span>(<span class="num" data-page-node-id="A9OIDjEOIV8jPhRIG87EQB">0</span>)  <span class="com" data-page-node-id="MXYA8Vdb9GUfa1FZJskFfo"># (1, T, T)</span>
-            broadcast_emit = emissions[t].<span class="fn" data-page-node-id="hFIrUcbJGnL4CdeI2gYUHT">unsqueeze</span>(<span class="num" data-page-node-id="xJGG6YvEi9jPZnQfyn8qxD">1</span>)     <span class="com" data-page-node-id="ExypfCzZVosk5hbZa2TMPb"># (B, 1, T)</span>
+            broadcast_alpha = alpha.<span class="fn" data-page-node-id="InkP2UgfEnFPxFWstAyWe4">unsqueeze</span>(<span class="num" data-page-node-id="w9VBkRlX3x7YvpswDxfznX">2</span>)       <span class="com" data-page-node-id="54XUGV2FSHJATy4CcoLwvK"># (B, num_tags, 1)</span>
+            broadcast_trans = <span class="fn" data-page-node-id="lG7YvvteRe17enzRcuFHUd">self</span>.transitions.<span class="fn" data-page-node-id="LDJRP2WwVZhZqhghMqpFjx">unsqueeze</span>(<span class="num" data-page-node-id="A9OIDjEOIV8jPhRIG87EQB">0</span>)  <span class="com" data-page-node-id="MXYA8Vdb9GUfa1FZJskFfo"># (1, num_tags, num_tags)</span>
+            broadcast_emit = emissions[t].<span class="fn" data-page-node-id="hFIrUcbJGnL4CdeI2gYUHT">unsqueeze</span>(<span class="num" data-page-node-id="xJGG6YvEi9jPZnQfyn8qxD">1</span>)     <span class="com" data-page-node-id="ExypfCzZVosk5hbZa2TMPb"># (B, 1, num_tags)</span>
             inner = broadcast_alpha + broadcast_trans + broadcast_emit
             <span class="com" data-page-node-id="QlYOmxzLGJeWuCDa4P6KUu"># 用 logsumexp 代替"先指数再求和"，避免数值溢出</span>
-            alpha_t = <span class="fn" data-page-node-id="cngOXa8OnS68bX0ikWFXEd">torch</span>.<span class="fn" data-page-node-id="sPvfCmR1XOV5nRZztHM7tj">logsumexp</span>(inner, dim=<span class="num" data-page-node-id="hfMfa479quXH3ta50o67wD">1</span>)   <span class="com" data-page-node-id="W1q2j4Kcb0bjncvztjszNn"># (B, T)</span>
+            alpha_t = <span class="fn" data-page-node-id="cngOXa8OnS68bX0ikWFXEd">torch</span>.<span class="fn" data-page-node-id="sPvfCmR1XOV5nRZztHM7tj">logsumexp</span>(inner, dim=<span class="num" data-page-node-id="hfMfa479quXH3ta50o67wD">1</span>)   <span class="com" data-page-node-id="W1q2j4Kcb0bjncvztjszNn"># (B, num_tags)</span>
             mask_t = mask[t].<span class="fn" data-page-node-id="Iuc7NyMGjQtlreYgGjfrQh">unsqueeze</span>(<span class="num" data-page-node-id="3BlgX6N0AlNA0WCZjfWn5K">1</span>)                        <span class="com" data-page-node-id="T1fv8408mogYAgiltd8ONY"># (B, 1)</span>
             alpha = alpha_t * mask_t + alpha * (<span class="num" data-page-node-id="aHBEhxKEfWUQp4BfL6QM9g">1</span> - mask_t)
         alpha = alpha + <span class="fn" data-page-node-id="XQClsSuDDhkCeMkPXuClS0">self</span>.end_transitions.<span class="fn" data-page-node-id="HVhyMPHvmajWoaGk32HoZl">unsqueeze</span>(<span class="num" data-page-node-id="BJ5aaqs3AbVvDWGeMgOQiq">0</span>)
@@ -803,14 +756,15 @@ tr:hover td { background: var(--c-primary-ghost); }
         history = []
         delta = <span class="fn" data-page-node-id="Rkd4AmkAtqDbczBn7Yg4oa">self</span>.start_transitions.<span class="fn" data-page-node-id="jE8icCD4GUHJPWPYAZCWF7">unsqueeze</span>(<span class="num" data-page-node-id="wljlhHrE1fSBqqt5ZDC9x0">0</span>) + emissions[<span class="num" data-page-node-id="EP0Yqh6faoEt8YZ5Clwu0A">0</span>]
         <span class="kw" data-page-node-id="uRYpPPnS4IX9uaHN3ZZVux">for</span> t <span class="kw" data-page-node-id="sDjL6NmoWVibSLmszEf79H">in</span> <span class="fn" data-page-node-id="loIaD9jRSW3EHH6F6AXgNn">range</span>(<span class="num" data-page-node-id="2m26xyxf6ASEecvNhO8d6m">1</span>, seq_len):
-            broadcast_delta = delta.<span class="fn" data-page-node-id="NXnpnbOi5kdN1bhZBCwxlj">unsqueeze</span>(<span class="num" data-page-node-id="i6vm8HGDBQKPiZMIbTJGGD">2</span>)           <span class="com" data-page-node-id="yAiGCZNNQKZ4hzkLI2jz3k"># (B, T, 1)</span>
-            broadcast_trans = <span class="fn" data-page-node-id="qW9Q6uOeTdlRki9CoZIzUG">self</span>.transitions.<span class="fn" data-page-node-id="16ZCDUEPlp1bubBOw288yI">unsqueeze</span>(<span class="num" data-page-node-id="tVc4gt0ZSjEh1BslkUKpGS">0</span>)  <span class="com" data-page-node-id="xRQTNoy8RKn9IPIsCo2kui"># (1, T, T)</span>
-            broadcast_emit = emissions[t].<span class="fn" data-page-node-id="tjIPdbco38K46k0ENhSDAb">unsqueeze</span>(<span class="num" data-page-node-id="sWhYv4QmakdIPTjjYXiKgb">1</span>)     <span class="com" data-page-node-id="23CvbkNiEA1XMLxHchTyUv"># (B, 1, T)</span>
+            broadcast_delta = delta.<span class="fn" data-page-node-id="NXnpnbOi5kdN1bhZBCwxlj">unsqueeze</span>(<span class="num" data-page-node-id="i6vm8HGDBQKPiZMIbTJGGD">2</span>)           <span class="com" data-page-node-id="yAiGCZNNQKZ4hzkLI2jz3k"># (B, num_tags, 1)</span>
+            broadcast_trans = <span class="fn" data-page-node-id="qW9Q6uOeTdlRki9CoZIzUG">self</span>.transitions.<span class="fn" data-page-node-id="16ZCDUEPlp1bubBOw288yI">unsqueeze</span>(<span class="num" data-page-node-id="tVc4gt0ZSjEh1BslkUKpGS">0</span>)  <span class="com" data-page-node-id="xRQTNoy8RKn9IPIsCo2kui"># (1, num_tags, num_tags)</span>
+            broadcast_emit = emissions[t].<span class="fn" data-page-node-id="tjIPdbco38K46k0ENhSDAb">unsqueeze</span>(<span class="num" data-page-node-id="sWhYv4QmakdIPTjjYXiKgb">1</span>)     <span class="com" data-page-node-id="23CvbkNiEA1XMLxHchTyUv"># (B, 1, num_tags)</span>
             inner = broadcast_delta + broadcast_trans + broadcast_emit
-            max_val, argmax_val = inner.<span class="fn" data-page-node-id="yJ7Zls4uHKJTvS1LIpUG3Q">max</span>(dim=<span class="num" data-page-node-id="YjofhOCx1vWJ1oKJjdlJjR">1</span>)        <span class="com" data-page-node-id="0DCAuEJ28RalinwXyQ5WBp"># (B, T)</span>
+            max_val, argmax_val = inner.<span class="fn" data-page-node-id="yJ7Zls4uHKJTvS1LIpUG3Q">max</span>(dim=<span class="num" data-page-node-id="YjofhOCx1vWJ1oKJjdlJjR">1</span>)        <span class="com" data-page-node-id="0DCAuEJ28RalinwXyQ5WBp"># (B, num_tags)</span>
             history.<span class="fn" data-page-node-id="gllgB9VuFKBCqiCQoQchZV">append</span>(argmax_val)                     <span class="com" data-page-node-id="kb8rssbI36tbLPbElGw6pD"># 保存回溯指针 psi</span>
             mask_t = mask[t].<span class="fn" data-page-node-id="LujYTENX1RiN9pyry0DAEu">unsqueeze</span>(<span class="num" data-page-node-id="nacE7toWW5C2L6AVXfcbuB">1</span>)
-            delta = max_val * mask_t + delta * (<span class="num" data-page-node-id="u74QIfsoeWDr5blo7mdf7c">1</span> - mask_t) + broadcast_emit.<span class="fn" data-page-node-id="VVvNszrbuuJGg0I0dZmkk6">squeeze</span>(<span class="num" data-page-node-id="wgv6p1oYWj8qIoHcACruNo">1</span>) * mask_t
+            <span class="com"># max_val 已含 emission（inner 里已加过），此处不可再加</span>
+            delta = max_val * mask_t + delta * (<span class="num" data-page-node-id="u74QIfsoeWDr5blo7mdf7c">1</span> - mask_t)
         delta = delta + <span class="fn" data-page-node-id="Gj8enJeEFvjAqEKn5O9qsi">self</span>.end_transitions.<span class="fn" data-page-node-id="Y6nXb6zlRmVxuQP1epMw2b">unsqueeze</span>(<span class="num" data-page-node-id="VNOuJ1yG6eAspMxOXZdl4A">0</span>)
         best_last = delta.<span class="fn" data-page-node-id="YE3jFbNIgWFBdOH4cU3VyQ">argmax</span>(dim=<span class="num" data-page-node-id="m1dqNfvRtKHEQRFChIW8pm">1</span>)                  <span class="com" data-page-node-id="EWYiZGj4LfKV52Bp5POA3X"># (B,)</span>
         <span class="com" data-page-node-id="Fng9KwLBr8G3lA4yVzrp1T"># 回溯</span>
@@ -837,7 +791,9 @@ tr:hover td { background: var(--c-primary-ghost); }
             trans = <span class="fn" data-page-node-id="W5rjzsBKDMLnbEBEpItJaP">self</span>.transitions[tags[t-<span class="num" data-page-node-id="MvDVqSge7yJIjAXSm0kUHJ">1</span>], tags[t]]
             emit = emissions[t].<span class="fn" data-page-node-id="vR4z9JvoXPNkmKgjaDynoT">gather</span>(<span class="num" data-page-node-id="0bX4FpkUAo4g9l09bFiMl0">1</span>, tags[t].<span class="fn" data-page-node-id="M3eqnZTixZmjJa7ISdhwC0">unsqueeze</span>(<span class="num" data-page-node-id="X8yGpbUROVDTGgv3HHHmXM">1</span>)).<span class="fn" data-page-node-id="iVf96jTg67tJapUrV9ykRL">squeeze</span>(<span class="num" data-page-node-id="isaCtqHzELNqGBPKexkSJZ">1</span>)
             score = score + (trans + emit) * mask[t]
-        last_tags = tags[-<span class="num" data-page-node-id="FArT1qFu5rZci3dCyXyTps">1</span>] * mask[-<span class="num" data-page-node-id="kuGE4wPB358b2CCqnN7TeK">1</span>].<span class="fn" data-page-node-id="QhNsXJ9vr0WaNJBuvePuP9">long</span>()
+        <span class="com"># 取每个样本最后一个「有效」位置的标签 —— 不能直接用 tags[-1]：变长序列末位是 padding</span>
+        last_idx = (mask.<span class="fn">sum</span>(<span class="num">0</span>).<span class="fn">long</span>() - <span class="num">1</span>).<span class="fn">clamp</span>(min=<span class="num">0</span>)
+        last_tags = tags[last_idx, <span class="fn">torch</span>.<span class="fn">arange</span>(batch_size, device=tags.device)]
         score = score + <span class="fn" data-page-node-id="J3vlg5DrJANGtVOBh8hN9o">self</span>.end_transitions.<span class="fn" data-page-node-id="kWmLlH6JTrEaq0idL2k7O6">gather</span>(<span class="num" data-page-node-id="5z6GDVJmBjV0NOArHQ0BTg">0</span>, last_tags)
         <span class="kw" data-page-node-id="lpp970LUT7YODJ8DoqVkQw">return</span> score
 </pre>
@@ -845,7 +801,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
   <h3 data-page-node-id="eMYeYGcZclKpikJ3grMZta">8.1 BiLSTM-CRF：表示学习 + 结构化推理</h3>
   <p data-page-node-id="8T5ceWYYA1ayaDWEB8hESh">现代 NER 系统通常把双向 LSTM 与 CRF 组合：BiLSTM 提取上下文表示，输出每个位置的 <strong data-page-node-id="iVmGL4NFkpbAfjFqdDSwvw">emission 得分</strong>（负责"这个位置像什么标签"）；CRF 层提供转移矩阵（负责"标签之间怎么组合"）。</p>
-  <p data-page-node-id="WcOspzkQStzmjsaWCQjVRK">关键在于<strong data-page-node-id="WSMXW9wu9bGGOqgV1gieLC">整个网络可以端到端训练</strong>：CRF 层对 emission 得分是可微的——负对数似然有两条梯度通路（$\log Z$ 与 gold 路径得分），它们都经由公式 (21)(22) 回传到 BiLSTM。因此 CRF 不是"外挂的后处理"，而是一个可微的结构层。</p>
+  <p data-page-node-id="WcOspzkQStzmjsaWCQjVRK">关键在于<strong data-page-node-id="WSMXW9wu9bGGOqgV1gieLC">整个网络可以端到端训练</strong>：CRF 层对 emission 得分是可微的——负对数似然有两条梯度通路（$\log Z$ 与 gold 路径得分），它们都经由公式 (20)(21) 回传到 BiLSTM。因此 CRF 不是"外挂的后处理"，而是一个可微的结构层。</p>
   <div class="code-block" data-page-node-id="S8dtQt0RG2ujKpG8KlD8LL">
     <div class="code-header" data-page-node-id="wpaYxntpviXs7dPCEBZgew">bilstm_crf.py — BiLSTM-CRF 模型</div>
 <pre data-page-node-id="27rJgItEM2dsBRozFEQJff">
@@ -1024,6 +980,55 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
 <span class="com" data-page-node-id="lPIC4ghX5ld5RFJr0EsVQJ"># 输出: 最优路径: ['N', 'V', 'N', 'ADJ', 'N']</span>
 </pre>
   </div>
+
+  <div class="svg-box" data-page-node-id="zutFQIaChvBV4mvBEaA6FC">
+    <svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" data-page-node-id="KiSP74po2hc0D01FCm2pu5">
+      <text x="410" y="24" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="lgc7yqEfZoujZFAizN3uLg">Viterbi 最优路径回溯（3 个标签 × 5 个时间步）</text>
+      <circle cx="120" cy="80" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="PS5sUlDmbgtTtWdaSOO8O5"/>
+      <text x="120" y="85" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="VvJlFWx8Z5ARydQOUAesBt">N</text>
+      <circle cx="120" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="OcP8rRRXs3kyTVKsFm36vZ"/>
+      <text x="120" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="EDOKEPXrkwa5wmk4GBXNz1">V</text>
+      <circle cx="120" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="h1xKH8lNx0KcDM9HaP5TiQ"/>
+      <text x="120" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="JoR9ZElUzFDCxIT7EMywzZ">ADJ</text>
+      <circle cx="260" cy="80" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="1odxV3AVZE7jb35sZPCxYR"/>
+      <text x="260" y="85" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="PaNwrZHAzlVy4UMFVpu5gl">N</text>
+      <circle cx="260" cy="150" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="lYLuFePonAVOkl9EoZfsvd"/>
+      <text x="260" y="155" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="r0yEVvmHfuwMMgwD4B1quS">V</text>
+      <circle cx="260" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="QjlXb90csUrBpwRzzIn2HZ"/>
+      <text x="260" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="hX3iRpRBKwIIFq3zqtRy8N">ADJ</text>
+      <circle cx="400" cy="80" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="SLVOyQJRADlSIpI0eH7Nrs"/>
+      <text x="400" y="85" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="SChwc50QDeqqDyZ5hXTSSU">N</text>
+      <circle cx="400" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="Jg3xJ78D8Ap7IdTiarJ0hO"/>
+      <text x="400" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="pdYAGspthKJgGR0YvGLFuZ">V</text>
+      <circle cx="400" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="fjn2OgItM9fDx7iF1KAeuQ"/>
+      <text x="400" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="MYskiCARa7xOzrOejzJdiI">ADJ</text>
+      <circle cx="540" cy="80" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="p2nmVBsyB3uILvfAx8rfNW"/>
+      <text x="540" y="85" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="VobgZd6MfwxBF4uO834OQj">N</text>
+      <circle cx="540" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="GlltqpQmsPFASb3GGgJf42"/>
+      <text x="540" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="3odhAyIYXbs3eBJHJ6Rqcp">V</text>
+      <circle cx="540" cy="220" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" data-page-node-id="WP2OkDlcDQhgE570ffuqkA"/>
+      <text x="540" y="225" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="LIq52CmOY8ZJ7wF8tWuFED">ADJ</text>
+      <circle cx="680" cy="80" r="22" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="glow-ring" data-page-node-id="ZVmnyDTV5hGjLZLrJ6mEBT"/>
+      <text x="680" y="85" text-anchor="middle" font-size="12" fill="#2563eb" font-weight="600" data-page-node-id="EtahpTCPfl7RET3sdLnFgZ">N</text>
+      <circle cx="680" cy="150" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="WO6D5UuoFu9BWJL4l7ubHo"/>
+      <text x="680" y="155" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="6cjULdXySr3prYifDbqtVS">V</text>
+      <circle cx="680" cy="220" r="22" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5" data-page-node-id="hmaz90GyamItXICdCJaoC6"/>
+      <text x="680" y="225" text-anchor="middle" font-size="12" fill="#94a3b8" font-weight="600" data-page-node-id="iYcrCFYBuIOMAFMZVj79Nc">ADJ</text>
+      <line x1="142" y1="80" x2="238" y2="150" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="gnymVt6VuCHcZCQBy79ZHu"/>
+      <line x1="282" y1="150" x2="378" y2="80" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="xGxzHrGn9ySnf0ll42r1A7"/>
+      <line x1="422" y1="80" x2="518" y2="220" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="5IKISVIEPY3ONzaFciWzGO"/>
+      <line x1="562" y1="220" x2="658" y2="80" stroke="#059669" stroke-width="3" class="flow-line" stroke-dasharray="8,4" data-page-node-id="D96HFDjYITlrYlP3dZkHO7"/>
+      <text x="748" y="85" font-size="13" fill="#059669" font-weight="700" data-page-node-id="hFSheXDPjKS87PAZ1HiwAV">✓ 最优</text>
+      <text x="40" y="85" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="KEztpWrxrkd9KF5xyUJDab">N</text>
+      <text x="40" y="155" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="9wcD8BngBGdz844EEYTsjV">V</text>
+      <text x="40" y="225" font-size="13" fill="#2563eb" font-weight="600" data-page-node-id="dDe9m1XFEdDJklTmtHHWVG">ADJ</text>
+      <text x="120" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="cef07qQ6FHCAEs8t6FJcKR">t=1</text>
+      <text x="260" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="Gs8ii8cD8HgoiJokh0MYCX">t=2</text>
+      <text x="400" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="M0UJYPceoC5eyBXQi0AEcW">t=3</text>
+      <text x="540" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="coBrAwTtKn3nR3TNK9ylca">t=4</text>
+      <text x="680" y="275" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="W2lah9lFC7lGA1QrjPwJI6">t=5</text>
+    </svg>
+  </div>
   <div class="callout success" data-page-node-id="984C8N5NgbIeRHlhKXmrkq">
     <div class="callout-title" data-page-node-id="7igSqJ57c3NGZOqlryL74o">实践建议</div>
     <ul data-page-node-id="9D8zZtFbKlJOTC7eqQetxZ">
@@ -1063,7 +1068,7 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
   </ul>
   <div class="svg-box" data-page-node-id="oin4s3IVVytEuhRzfQeErm">
     <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" data-page-node-id="1k9EpAdlsXJ9xueQwpoThu">
-      <text x="400" y="24" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="AsJ6hv3abaDDIDwUI9EIrT">CRF 变体图谱</text>
+      <text x="400" y="24" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="AsJ6hv3abaDDIDwUI9EIrT">CRF 变体图谱</text>
       <ellipse cx="400" cy="100" rx="80" ry="35" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="glow-ring" data-page-node-id="8iLS94KPFH7f5C5AjhySyN"/>
       <text x="400" y="96" text-anchor="middle" font-size="14" fill="#2563eb" font-weight="700" data-page-node-id="FOEUIjgeqSlB0wG1Vb7rXX">Linear-chain</text>
       <text x="400" y="112" text-anchor="middle" font-size="13" fill="#2563eb" data-page-node-id="o0mlrfP9j4NAgUYPi03DHE">CRF</text>
@@ -1133,11 +1138,11 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
   <p data-page-node-id="ImNHlDTFP9ep1fWNkAQ7JT">神经网络的 emission 得分相当于"每个位置独立判断最可能的标签"，但它<strong data-page-node-id="JEb24t7nvVLYQExG4yWLVe">不含</strong>标签之间的转移信息。CRF 层在其上施加全局归一化，保证输出的是<strong data-page-node-id="rz3ouiPkze10sAo06V5VrF">整条序列最优</strong>，而不是逐位置最优的简单拼接。</p>
   <div class="callout" data-page-node-id="xPhII3gryPjlcnTm0kEyTK">
     <div class="callout-title" data-page-node-id="A5THAnGKFXF1y7trRLDaAI">为什么 BERT 自己做不到？</div>
-    <p data-page-node-id="t2kKwaHdvd8bMYnDR7bDS4">BERT 的 token classification 是位置独立的（即便共享编码器），每个位置的 softmax 互不知情，因此可能输出 <code data-page-node-id="ekVDT63MubYL5pcvW9MGsU">O → I-PER</code> 这样的非法序列。CRF 层通过转移矩阵把 $P(y_t \mid y_{t-1})$ 显式建模（对应公式 (7) 中的转移特征），可以从结构上杜绝这类错误——把非法转移的权重设为 $-\infty$ 即可。</p>
+    <p data-page-node-id="t2kKwaHdvd8bMYnDR7bDS4">BERT 的 token classification 是位置独立的（即便共享编码器），每个位置的 softmax 互不知情，因此可能输出 <code data-page-node-id="ekVDT63MubYL5pcvW9MGsU">O → I-PER</code> 这样的非法序列。CRF 层通过转移得分矩阵建模标签之间的转移约束（对应公式 (7) 中的转移特征），可以从结构上杜绝这类错误——把非法转移的权重设为 $-\infty$ 即可。</p>
   </div>
   <div class="svg-box" data-page-node-id="rjo9OoYBY28dQZfTEdPPAt">
     <svg viewBox="0 0 820 240" xmlns="http://www.w3.org/2000/svg" data-page-node-id="lllhLyxHmwkBxmtqHWKtcQ">
-      <text x="410" y="24" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="GNkKbIHHpuOnlabDcEnp8x">BERT-CRF 架构示意</text>
+      <text x="410" y="24" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="GNkKbIHHpuOnlabDcEnp8x">BERT-CRF 架构示意</text>
       <rect x="30" y="100" width="50" height="40" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="sm2s8L4CUiCPoxqAeAPiYD"/>
       <text x="55" y="124" text-anchor="middle" font-size="11" fill="#7c3aed" font-weight="600" data-page-node-id="gXEUUtYEgjV09YFfqPrlvu">John</text>
       <rect x="85" y="100" width="50" height="40" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="EFzxqPKaFPSG4KqRob7zBI"/>
@@ -1225,9 +1230,9 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
   <p data-page-node-id="jj4J4cfXJP9Le4NY4Au1hm">本章把视角从线性链推广到任意无向图。如果只关心 NLP 的序列标注，这一章可以跳过；但它解释了第 4 章公式 (7) 中"按最大团分解"的来历，也是理解 skip-chain、tree CRF 等变体的基础。</p>
   <h3 data-page-node-id="FwbFQmDY3yNZACtSsUWBUN">11.1 因子分解与配分函数</h3>
   <p data-page-node-id="02jUssWqzSn7mLBYdj9DY3">无向图 $G = (V, E)$ 中，设 $\mathbf{Y} = \{Y_v\}_{v \in V}$。若联合分布可以分解为图中<strong data-page-node-id="Z5HwxArI0DCpfygF0u2eX8">最大团</strong>（maximal clique）上非负函数之积，则称该分布为 $G$ 上的马尔可夫随机场：</p>
-  <div class="formula" data-eq="(24)" data-page-node-id="PL3t2EtvyXprDMlNDplYX2">$$P(\mathbf{Y}) = \frac{1}{Z} \prod_{C \in \mathcal{C}} \psi_C(\mathbf{Y}_C)$$</div>
+  <div class="formula" data-eq="(23)" data-page-node-id="PL3t2EtvyXprDMlNDplYX2">$$P(\mathbf{Y}) = \frac{1}{Z} \prod_{C \in \mathcal{C}} \psi_C(\mathbf{Y}_C)$$</div>
   <p data-page-node-id="iOciRMaXupuNaTa6sIKpSx">其中 $\mathcal{C}$ 是所有最大团的集合，$\psi_C \geq 0$ 是团上的<strong data-page-node-id="piZsZ5wSOw4jqR3JGC7RmA">势函数</strong>（potential function），$Z$ 是配分函数：</p>
-  <div class="formula" data-eq="(25)" data-page-node-id="LwNWZvaEXaGxgv8cwtkmke">$$Z = \sum_{\mathbf{Y}} \prod_{C \in \mathcal{C}} \psi_C(\mathbf{Y}_C)$$</div>
+  <div class="formula" data-eq="(24)" data-page-node-id="LwNWZvaEXaGxgv8cwtkmke">$$Z = \sum_{\mathbf{Y}} \prod_{C \in \mathcal{C}} \psi_C(\mathbf{Y}_C)$$</div>
   <div class="callout" data-page-node-id="79agAEf2XYzzFxmGCzYxn9">
     <div class="callout-title" data-page-node-id="gX4wZXTg7t2WYKvzfoqI4A">Hammersley-Clifford 定理</div>
     <p data-page-node-id="TAuzZecLPgPHkGnHlDHr8O">若 $P(\mathbf{Y}) > 0$ 且满足 $G$ 上的局部马尔可夫性，则 $P$ 必定可以分解为 $G$ 上最大团的势函数之积。这一定理是公式 (7) 的直接依据——线性链的最大团都是相邻二元组，因此分布只需分解到"边"这一级。</p>
@@ -1236,15 +1241,15 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
   <p data-page-node-id="NV0lQxGxFUEgAoiYvP6kUB">下面考察四个二元变量 $Y_A, Y_B, Y_C, Y_D \in \{0, 1\}$ 构成的<strong data-page-node-id="aIaOCncCBoeGZAPboljqBf">4 节点环图</strong>（4-cycle）。它不是树，最大团恰好是四条边而非更大的三元组或四元组。</p>
   <div class="svg-box" data-page-node-id="QXwVVztrgBRUNQI4oyamRy">
     <svg viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg" style="width:72%;height:auto;display:block;margin:0 auto;" data-page-node-id="EtfwJ0xOP59ee45wl5sWZE">
-      <text x="340" y="26" text-anchor="middle" font-size="14" fill="#64748b" font-weight="600" data-page-node-id="FcnVr9uO471ijrNCEU0qDF">4 节点环图：最大团是四条边</text>
-      <line x1="400" y1="100" x2="520" y2="170" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="AEHh4mMnszH9GtDFkNYUXx"/>
-      <line x1="520" y1="170" x2="400" y2="280" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="xT8F5oiOnEMe4OLax5AAO2"/>
-      <line x1="400" y1="280" x2="280" y2="280" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="8kBhiXHMmIFf34ofT35X1w"/>
-      <line x1="280" y1="280" x2="400" y2="100" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="ADuz2nq1lHTbXZWASpUkRw"/>
+      <text x="340" y="26" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="600" data-page-node-id="FcnVr9uO471ijrNCEU0qDF">4 节点环图：最大团是四条边</text>
+      <line x1="422.5" y1="113.1" x2="497.5" y2="156.9" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="AEHh4mMnszH9GtDFkNYUXx"/>
+      <line x1="500.8" y1="187.6" x2="419.2" y2="262.4" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="xT8F5oiOnEMe4OLax5AAO2"/>
+      <line x1="374" y1="280" x2="306" y2="280" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="8kBhiXHMmIFf34ofT35X1w"/>
+      <line x1="294.4" y1="258.4" x2="385.6" y2="121.6" stroke="#2563eb" stroke-width="2.5" class="flow-line" stroke-dasharray="6,3" data-page-node-id="ADuz2nq1lHTbXZWASpUkRw"/>
       <text x="466" y="126" text-anchor="middle" font-size="13" fill="#64748b" data-page-node-id="jLZTOGyP1xuGuHlXplTewA">w₁</text>
-      <text x="448" y="242" text-anchor="middle" font-size="13" fill="#64748b" data-page-node-id="r9PhRLoCGO5YVzxMvSx4ZT">w₂</text>
+      <text x="473" y="244" text-anchor="middle" font-size="13" fill="#64748b" data-page-node-id="r9PhRLoCGO5YVzxMvSx4ZT">w₂</text>
       <text x="340" y="258" text-anchor="middle" font-size="13" fill="#64748b" data-page-node-id="RJF3mLbv3veh1rBrzwzJQC">w₃</text>
-      <text x="352" y="185" text-anchor="middle" font-size="13" fill="#64748b" data-page-node-id="gwe0GmThhdW65yGZTpPGJh">w₄</text>
+      <text x="325" y="180" text-anchor="middle" font-size="13" fill="#64748b" data-page-node-id="gwe0GmThhdW65yGZTpPGJh">w₄</text>
       <circle cx="400" cy="100" r="26" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node" data-page-node-id="vJrqEa8nWhsdgcFffzvvts"/>
       <text x="400" y="106" text-anchor="middle" font-size="15" fill="#2563eb" font-weight="700" data-page-node-id="FhmmkMprOP0o6B2g8bOh2e">Y_A</text>
       <circle cx="520" cy="170" r="26" fill="#dbeafe" stroke="#2563eb" stroke-width="2" class="pulse-node" data-page-node-id="n6fr3xBrntPjxJVprY02Ig"/>
@@ -1258,9 +1263,9 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
     </svg>
   </div>
   <p data-page-node-id="chQ7cyP5ziNElMFYbS7do5">三元组如 $\{A, B, D\}$ 缺少边 $BD$，不是团；四元组 $ABCD$ 同理。因此据 Hammersley-Clifford 定理，联合分布只在四条边上分解：</p>
-  <div class="formula" data-eq="(26)" data-page-node-id="wCmNi192WqqDAA2UTcQllU">$$P(\mathbf{Y}) = \frac{1}{Z}\, \psi_{AB}(Y_A, Y_B)\, \psi_{BC}(Y_B, Y_C)\, \psi_{CD}(Y_C, Y_D)\, \psi_{DA}(Y_D, Y_A)$$</div>
+  <div class="formula" data-page-node-id="wCmNi192WqqDAA2UTcQllU">$$P(\mathbf{Y}) = \frac{1}{Z}\, \psi_{AB}(Y_A, Y_B)\, \psi_{BC}(Y_B, Y_C)\, \psi_{CD}(Y_C, Y_D)\, \psi_{DA}(Y_D, Y_A)$$</div>
   <p data-page-node-id="jIkUzMMreQVFmuYBvJyEIf">为便于手算，取"奖励一致取值"的 Ising 型势函数：</p>
-  <div class="formula" data-eq="(27)" data-page-node-id="QNhx5KGIDx0zX2tCdULrxb">$$\psi(u, v) = \begin{cases} w, & u = v \\ 1, & u \neq v \end{cases}$$</div>
+  <div class="formula" data-page-node-id="QNhx5KGIDx0zX2tCdULrxb">$$\psi(u, v) = \begin{cases} w, & u = v \\ 1, & u \neq v \end{cases}$$</div>
   <p data-page-node-id="G0nqQNhnF2yfFjBdTvCWXE">取 $w = 2$（一致的权重是不一致的 2 倍）。此时每个位型的权重只取决于四条边上的<strong data-page-node-id="jf7fqqFhE96mn0qBUErfMT">不一致边数</strong> $m$：每条一致边贡献因子 2，每条不一致边贡献因子 1，故权重为 $2^{\,4-m}$。对全部 $2^4 = 16$ 种位型按 $m$ 分类：</p>
   <div class="table-wrap" data-page-node-id="duJpJFTkBVwRF3jAD6HgFS">
     <table data-page-node-id="fSN2pfMkEnaigagSFpsADf">
@@ -1271,7 +1276,7 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
     </table>
   </div>
   <p data-page-node-id="MBbSMjDryApHGubB9C0Qbn">注意 $m = 1$ 与 $m = 3$ 在环图上不可能出现（环长为偶数，翻转次数必为偶数）。把三行的"小计"相加，即得配分函数：</p>
-  <div class="formula" data-eq="(28)" data-page-node-id="iCNLdVSZLU8UfGHnnJc5OD">$$Z = 2 \times 2^{4} + 12 \times 2^{2} + 2 \times 2^{0} = 32 + 48 + 2 = 82$$</div>
+  <div class="formula" data-page-node-id="iCNLdVSZLU8UfGHnnJc5OD">$$Z = 2 \times 2^{4} + 12 \times 2^{2} + 2 \times 2^{0} = 32 + 48 + 2 = 82$$</div>
   <p data-page-node-id="SKXwmHcMFAZq3O8tjtLZv9">现在求边缘概率 $P(Y_A = 1)$。由于模型在位型翻转 $0 \leftrightarrow 1$ 下完全对称，直觉上应为 $1/2$；下面用求和验证。固定 $Y_A = 1$，对 $Y_B, Y_C, Y_D$ 的 8 种组合逐一代入：</p>
   <div class="table-wrap" data-page-node-id="oBawQqUklrwf1ibslcI9xM">
     <table data-page-node-id="YokF6uYIUEEnoMZDUjBDrA">
@@ -1281,7 +1286,7 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
     </table>
   </div>
   <p data-page-node-id="W5HLT77uWgv5McN9hxd66p">例如组合 $(0,0,0)$：$Y_A{=}1$ 与 $y_b{=}0$ 不一致得 1，$y_b{=}0$ 与 $y_c{=}0$ 一致得 2，$y_c{=}0$ 与 $y_d{=}0$ 一致得 2，$y_d{=}0$ 与 $Y_A{=}1$ 不一致得 1，乘积为 $1 \times 2 \times 2 \times 1 = 4$。求和得：</p>
-  <div class="formula" data-eq="(29)" data-page-node-id="LwChQYWHADf6sxSXdfpF2U">$$P(Y_A = 1) = \frac{4+4+1+4+4+4+4+16}{82} = \frac{41}{82} = \frac{1}{2}$$</div>
+  <div class="formula" data-page-node-id="LwChQYWHADf6sxSXdfpF2U">$$P(Y_A = 1) = \frac{4+4+1+4+4+4+4+16}{82} = \frac{41}{82} = \frac{1}{2}$$</div>
   <h3 data-page-node-id="XRGB4rCF3aAJ6hm6SaXuE0">11.3 非相邻变量为何仍相关</h3>
   <p data-page-node-id="gcQRSBkz2He76697dciRxA">边缘概率确为 $1/2$。那么 $Y_A$ 与不相邻的 $Y_C$ 是否独立？固定 $Y_A = Y_C = 1$，只剩 $Y_B, Y_D$ 求和：</p>
   <div class="table-wrap" data-page-node-id="EUg8xuPF2i3ZUowGhEfcnm">
@@ -1291,7 +1296,7 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
       <tr data-page-node-id="qfL8AtKMZJAXTlo9rnX4lh"><td data-page-node-id="3NdAPSiLJTVxZBCJ7rJBkw">权重</td><td data-page-node-id="6CdSLtCFzDuSsxwrB3eTBd">1</td><td data-page-node-id="Eq4Szscbn1yymwSyNBR6UC">4</td><td data-page-node-id="SvbDBHho7KjJd3yxP6vy2o">4</td><td data-page-node-id="2CuiNPl1oKL7enF12586KU">16</td></tr>
     </table>
   </div>
-  <div class="formula" data-eq="(30)" data-page-node-id="95L6tGyfxQwNfL4A623So8">$$P(Y_A{=}1, Y_C{=}1) = \frac{25}{82}, \qquad P(Y_C{=}1 \mid Y_A{=}1) = \frac{25/82}{41/82} = \frac{25}{41} \approx 0.61 \; > \; \frac{1}{2}$$</div>
+  <div class="formula" data-eq="(25)" data-page-node-id="95L6tGyfxQwNfL4A623So8">$$P(Y_A{=}1, Y_C{=}1) = \frac{25}{82}, \qquad P(Y_C{=}1 \mid Y_A{=}1) = \frac{25/82}{41/82} = \frac{25}{41} \approx 0.61 \; > \; \frac{1}{2}$$</div>
   <p data-page-node-id="0MjRCRQ00rMqyCobjE9CE3">$Y_A$ 与 $Y_C$ 之间没有直接连边，却通过 $Y_A{-}Y_B{-}Y_C$ 与 $Y_A{-}Y_D{-}Y_C$ 两条路径产生了<strong data-page-node-id="PobiNVrSUwBNGX1c529PbQ">正相关</strong>（$0.61 > 0.5$）。这正是无向图模型与朴素独立模型的关键区别：<strong data-page-node-id="dQABcVeAmxIDlDmdWnRc5Y">局部势函数经由配分函数产生全局关联效应</strong>。</p>
   <div class="callout success" data-page-node-id="1a6nFsWFgVz9Axp9m35LHO">
     <div class="callout-title" data-page-node-id="kvX5ulekFVojwELeMGT7Ph">本例小结</div>
@@ -1319,12 +1324,12 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
       <tr data-page-node-id="V48TqFnL6dA1TC3IMYrEpz"><td data-page-node-id="MKgiulMnK4wqkYW5VRThgr">3 选型</td><td data-page-node-id="p1JT2q9VonQ3nEOyQP7MbO">为什么不用 HMM？</td><td data-page-node-id="QvY3hnX7cV0gSkCq5qAPM7">生成式 / 判别式、标注偏置</td><td data-page-node-id="cRAh2WYjo6LEQVDIg9q033">(3)(4)(5)</td><td data-page-node-id="qfTmvzGDKPJVFfWDMOS9gg">模型选择与对比</td></tr>
       <tr data-page-node-id="eM3ySEMJWjdlQ62HERjL1m"><td data-page-node-id="FcGtBmaWNtvqSOZ9qiyrwo">4 形式化</td><td data-page-node-id="zHcAxE0gzX3hGBauvckybD">怎么写得能算？</td><td data-page-node-id="XuQKI6fFbwDy4C9rpuVyND">条件马尔可夫性、两类特征、特征模板</td><td data-page-node-id="oCpKY21OfCqX2n0jXjY3qN">(6)(7)(8)(9)(10)</td><td data-page-node-id="pdSETsqeGsX3S1jFdfvYKl">特征工程 / 参数化</td></tr>
       <tr data-page-node-id="lPUBesRCqzJBHFAbQIQ9hl"><td data-page-node-id="8JqXa7RiVnGTjG1qfJXswc">5 推断 I</td><td data-page-node-id="v6S2SYLyUk1ITYU9r4GUnH">$Z$ 与边缘概率怎么算？</td><td data-page-node-id="PU815lzwWaVjTLgFv1ucnw">前向-后向、logsumexp</td><td data-page-node-id="Zn5phrrHteteYmmfDHwAXY">(11)–(16)</td><td data-page-node-id="IwiiNO1NCNkEaaM2GaTRSP">配分函数、置信度</td></tr>
-      <tr data-page-node-id="5CS0DogdI5W4Eqs1J0A0Kd"><td data-page-node-id="Mf9ltshEXAuNlc3CanGISv">6 推断 II</td><td data-page-node-id="JFCdEy8RmPJPTow0x2MRq2">最优序列怎么求？</td><td data-page-node-id="bqcA7Gl8xLu3WAh2z90roV">Viterbi、回溯指针</td><td data-page-node-id="IiEST4cClvG3getBv50qTD">(17)–(19)</td><td data-page-node-id="AEyz8tSGoKocYsgccbyMMt">预测解码</td></tr>
-      <tr data-page-node-id="EoUOVyRB9tmLXrcI6QcEdD"><td data-page-node-id="Md0JhYoJmECttJ56XZOYPQ">7 学习</td><td data-page-node-id="7n9qZRPN4INERrsdtw696A">参数怎么求？</td><td data-page-node-id="5q1yAzlmxBrEwkjbPJc9hj">MLE、经验期望 − 模型期望、凸性</td><td data-page-node-id="RKe6sHr52yvoAFrtJJjldY">(20)–(23)</td><td data-page-node-id="2ggGpjfYV0HWCKQkX171rM">L-BFGS / SGD 训练</td></tr>
+      <tr data-page-node-id="5CS0DogdI5W4Eqs1J0A0Kd"><td data-page-node-id="Mf9ltshEXAuNlc3CanGISv">6 推断 II</td><td data-page-node-id="JFCdEy8RmPJPTow0x2MRq2">最优序列怎么求？</td><td data-page-node-id="bqcA7Gl8xLu3WAh2z90roV">Viterbi、回溯指针</td><td data-page-node-id="IiEST4cClvG3getBv50qTD">(17)(18)</td><td data-page-node-id="AEyz8tSGoKocYsgccbyMMt">预测解码</td></tr>
+      <tr data-page-node-id="EoUOVyRB9tmLXrcI6QcEdD"><td data-page-node-id="Md0JhYoJmECttJ56XZOYPQ">7 学习</td><td data-page-node-id="7n9qZRPN4INERrsdtw696A">参数怎么求？</td><td data-page-node-id="5q1yAzlmxBrEwkjbPJc9hj">MLE、经验期望 − 模型期望、凸性</td><td data-page-node-id="RKe6sHr52yvoAFrtJJjldY">(19)–(22)</td><td data-page-node-id="2ggGpjfYV0HWCKQkX171rM">L-BFGS / SGD 训练</td></tr>
       <tr data-page-node-id="zUbymZziW1zAz6Ptn4dwQ8"><td data-page-node-id="Mf4OFDlLLiUba6z2FOsByC">8 实现</td><td data-page-node-id="oCmPDkVPNj2HxZ4A0wjiGr">怎么跑起来？</td><td data-page-node-id="tWFmeUES7VyfyB8gCg4snN">BiLSTM/BERT-CRF、实体级 F1</td><td data-page-node-id="xBcur2n4nenysHWJu5vVRV">—</td><td data-page-node-id="WXbDrU8jegnugLjMAa3Ad6">端到端系统</td></tr>
       <tr data-page-node-id="yq6hlI9x7JpUuSuTOKQKXP"><td data-page-node-id="5jBqmCqfMgii50tC7ud7wl">9 应用</td><td data-page-node-id="eEUpCSAcCu2wbsM6ovyg76">用在哪些任务上？</td><td data-page-node-id="aBHoNARIqzzjUeysXB2mCV">Skip-chain / Tree / Semi-Markov</td><td data-page-node-id="6MrMozmGMb9dV8gkZh4cF0">—</td><td data-page-node-id="7FM3vBB3XEz81pqiaHbazY">NER、分词、生信</td></tr>
       <tr data-page-node-id="r4ii0dAId1vg003ZzCnDIa"><td data-page-node-id="ToBRFxkYjsOJUaXRzXrFJe">10 大模型</td><td data-page-node-id="NdEScPL0AZlpHolsdteQsA">现在还需要吗？</td><td data-page-node-id="AgIonl6fIKtU9fUnubueLG">表示学习 + 结构化推理分工</td><td data-page-node-id="IcQKddhr15WxNC2gjl77lw">—</td><td data-page-node-id="70JMyDXT0nkHzoESlsaBa0">BERT-CRF、LLM 混合</td></tr>
-      <tr data-page-node-id="cdhvlzMsLnvLByG0eU7wAe"><td data-page-node-id="OTHgpsh0bJBwCqcTqDOoCP">11 进阶</td><td data-page-node-id="zdpb1J51dISHK16xJnHzqe">一般图怎么办？</td><td data-page-node-id="EFHm2eHhKueEqHnXU6rJyr">最大团、势函数、Hammersley-Clifford</td><td data-page-node-id="208hcAN9KnmLUvP4Ly6MZv">(24)–(30)</td><td data-page-node-id="1GcRXUXk1uOs4xEBQhQEmZ">Skip-chain / 一般 CRF</td></tr>
+      <tr data-page-node-id="cdhvlzMsLnvLByG0eU7wAe"><td data-page-node-id="OTHgpsh0bJBwCqcTqDOoCP">11 进阶</td><td data-page-node-id="zdpb1J51dISHK16xJnHzqe">一般图怎么办？</td><td data-page-node-id="EFHm2eHhKueEqHnXU6rJyr">最大团、势函数、Hammersley-Clifford</td><td data-page-node-id="208hcAN9KnmLUvP4Ly6MZv">(23)–(25)</td><td data-page-node-id="1GcRXUXk1uOs4xEBQhQEmZ">Skip-chain / 一般 CRF</td></tr>
     </table>
   </div>
   <div class="callout success" data-page-node-id="9RZB6znrtQkZ6LXI32s6mG">
@@ -1349,22 +1354,23 @@ labels = [<span class="str" data-page-node-id="hbKLpJUv7HBCmyZd26fNJB">"N"</span
 <section id="refs" data-page-node-id="Eeba4UbDjZCBm59gvAAeGq">
   <h2 data-page-node-id="qPnfmhq5aQl3BIdEfTZXK9">参考文献</h2>
   <ol data-page-node-id="kSGZcl61MAiHuxU4K14kQH">
-    <li data-page-node-id="c5MjhuAHID5ZmAwmMbgQYy">Lafferty, J., McCallum, A., &amp; Pereira, F. (2001). Conditional Random Fields: Probabilistic Models for Segmenting and Labeling Sequence Data. <em data-page-node-id="SKUfjYwX1KlpjvdQrosQ1Y">ICML</em>.（CRF 原始论文）</li>
-    <li data-page-node-id="smkxbEf5FUdS7ZzmICy40K">Sutton, C., &amp; McCallum, A. (2012). An Introduction to Conditional Random Fields. <em data-page-node-id="tLRQLZvlwDBd4lmI7pJAYF">Foundations and Trends in Machine Learning</em>, 4(4), 267-373.（最权威的系统教程）</li>
-    <li data-page-node-id="bm4LBr2p3qF6qEqbtL7P1R">Wallach, H. M. (2004). Conditional Random Fields: An Introduction. <em data-page-node-id="39DPxDnbNrYnoWm5UC6oSH">Technical Report MS-CIS-04-21</em>, University of Pennsylvania.</li>
-    <li data-page-node-id="ZMIyHTVSeM1C4FWjlyGFxD">Sha, F., &amp; Pereira, F. (2003). Shallow Parsing with Conditional Random Fields. <em data-page-node-id="PJa4dRKbEk7gEEfkaBYigi">NAACL</em>.</li>
-    <li data-page-node-id="DVRAYABFEk5AmuNe1ECryf">McCallum, A., &amp; Li, W. (2003). Early Results for Named Entity Recognition with Conditional Random Fields. <em data-page-node-id="u9DfgufxW9cLjsbVJGdMQ7">CoNLL</em>.（NER 上的开创性应用）</li>
-    <li data-page-node-id="kEMwrYetgkmX0HdxGTIWh2">Kumar, S., &amp; Hebert, M. (2003). Discriminative Random Fields. <em data-page-node-id="VKeRSFYlEIy7I8z72piBxv">ICML</em>.</li>
-    <li data-page-node-id="qw20lEtt2p7R9G6plLjhqK">Huang, Z., Xu, W., &amp; Yu, K. (2015). Bidirectional LSTM-CRF Models for Sequence Tagging. <em data-page-node-id="90Xg9n3itjojqO7X0aYNrG">arXiv:1508.01991</em>.（BiLSTM-CRF 架构）</li>
-    <li data-page-node-id="3qlaH3jLCbHPTEKHFGbeKY">Lample, G., Ballesteros, M., Subramanian, S., Kawakami, K., &amp; Dyer, C. (2016). Neural Architectures for Named Entity Recognition. <em data-page-node-id="PmGli1uqG9ndG6VUfBrwUw">NAACL</em>.</li>
-    <li data-page-node-id="YHDugQPRkbnUiNVwprWXkJ">Strubell, E., Verga, P., Andor, D., Weiss, D., &amp; McCallum, A. (2018). Linguistically-Informed Self-Attention for Semantic Role Labeling. <em data-page-node-id="F0kFhnfYlhGUBmgaThxL7Z">EMNLP</em>.</li>
-    <li data-page-node-id="TAXLN1BiBwhZor5AmA8FZl">Devlin, J., Chang, M. W., Lee, K., &amp; Toutanova, K. (2019). BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. <em data-page-node-id="l2K47Y8DSUYhsB47HK0HbV">NAACL</em>.（BERT-CRF 范式的基础）</li>
-    <li data-page-node-id="q74eTL6cK9WBdRSFtfvaL9">Sarawagi, S., &amp; Cohen, W. W. (2004). Semi-Markov Conditional Random Fields for Information Extraction. <em data-page-node-id="smBak1CRJyVtczSxd0x07R">NIPS</em>.</li>
-    <li data-page-node-id="XTmmjTOfDsRrZuZdYbNQgT">Koller, D., &amp; Friedman, N. (2009). <em data-page-node-id="UgoWp47bEuxorDSoAAaYzT">Probabilistic Graphical Models: Principles and Techniques</em>. MIT Press.（MRF 与因子分解的理论基础）</li>
-    <li data-page-node-id="47skUWOJpCqanDPfQv2S45">Murphy, K. P. (2022). <em data-page-node-id="gNlarxfCHTnDrKpTlsdXBB">Probabilistic Machine Learning: An Introduction</em>. MIT Press.（判别式序列模型的统一视角）</li>
-    <li data-page-node-id="d8sQoHy7WxCaQ1ycPF7wY3">Rabiner, L. R. (1989). A Tutorial on Hidden Markov Models and Selected Applications in Speech Recognition. <em data-page-node-id="sPfZBbaaU2KyR8Ma9KKBSj">Proceedings of the IEEE</em>, 77(2), 257-286.（HMM 经典教程）</li>
-    <li data-page-node-id="EufnHfdsPtQOLUmmJ7YmAB">Do, C. B., &amp; Batzoglou, S. (2008). What is the expectation maximization algorithm? <em data-page-node-id="aNlk4UY0ZynN9fd9lLjbfS">Nature Biotechnology</em>, 26(8), 897-899.</li>
-    <li data-page-node-id="94WczDP3t9EkZRp1CNF8vF">Brown, T. et al. (2020). Language Models are Few-Shot Learners. <em data-page-node-id="T8B1VmQpH91sLJC4FHZE24">NeurIPS</em>.</li>
+    <li data-page-node-id="c5MjhuAHID5ZmAwmMbgQYy">Lafferty, J., McCallum, A., &amp; Pereira, F. (2001). <em data-page-node-id="SKUfjYwX1KlpjvdQrosQ1Y">Conditional Random Fields: Probabilistic Models for Segmenting and Labeling Sequence Data</em>. ICML. (CRF 原始论文)</li>
+    <li data-page-node-id="smkxbEf5FUdS7ZzmICy40K">Sutton, C., &amp; McCallum, A. (2012). <em data-page-node-id="tLRQLZvlwDBd4lmI7pJAYF">An Introduction to Conditional Random Fields</em>. Foundations and Trends in Machine Learning, 4(4), 267-373. (最权威的系统教程)</li>
+    <li data-page-node-id="bm4LBr2p3qF6qEqbtL7P1R">Wallach, H. M. (2004). <em data-page-node-id="39DPxDnbNrYnoWm5UC6oSH">Conditional Random Fields: An Introduction</em>. Technical Report MS-CIS-04-21, University of Pennsylvania.</li>
+    <li data-page-node-id="ZMIyHTVSeM1C4FWjlyGFxD">Sha, F., &amp; Pereira, F. (2003). <em data-page-node-id="PJa4dRKbEk7gEEfkaBYigi">Shallow Parsing with Conditional Random Fields</em>. NAACL.</li>
+    <li data-page-node-id="DVRAYABFEk5AmuNe1ECryf">McCallum, A., &amp; Li, W. (2003). <em data-page-node-id="u9DfgufxW9cLjsbVJGdMQ7">Early Results for Named Entity Recognition with Conditional Random Fields</em>. CoNLL. (NER 上的开创性应用)</li>
+    <li data-page-node-id="kEMwrYetgkmX0HdxGTIWh2">Kumar, S., &amp; Hebert, M. (2003). <em data-page-node-id="VKeRSFYlEIy7I8z72piBxv">Discriminative Random Fields</em>. ICML.</li>
+    <li data-page-node-id="qw20lEtt2p7R9G6plLjhqK">Huang, Z., Xu, W., &amp; Yu, K. (2015). <em data-page-node-id="90Xg9n3itjojqO7X0aYNrG">Bidirectional LSTM-CRF Models for Sequence Tagging</em>. arXiv:1508.01991. (BiLSTM-CRF 架构)</li>
+    <li data-page-node-id="3qlaH3jLCbHPTEKHFGbeKY">Lample, G., Ballesteros, M., Subramanian, S., Kawakami, K., &amp; Dyer, C. (2016). <em data-page-node-id="PmGli1uqG9ndG6VUfBrwUw">Neural Architectures for Named Entity Recognition</em>. NAACL.</li>
+    <li>Strubell, E., Verga, P., Belanger, D., &amp; McCallum, A. (2017). <em>Fast and Accurate Entity Recognition with Iterated Dilated Convolutions</em>. EMNLP, 2670-2680. (IDCNN-CRF：用膨胀卷积替代 BiLSTM 提速)</li>
+    <li data-page-node-id="YHDugQPRkbnUiNVwprWXkJ">Strubell, E., Verga, P., Andor, D., Weiss, D., &amp; McCallum, A. (2018). <em data-page-node-id="F0kFhnfYlhGUBmgaThxL7Z">Linguistically-Informed Self-Attention for Semantic Role Labeling</em>. EMNLP.</li>
+    <li data-page-node-id="TAXLN1BiBwhZor5AmA8FZl">Devlin, J., Chang, M. W., Lee, K., &amp; Toutanova, K. (2019). <em data-page-node-id="l2K47Y8DSUYhsB47HK0HbV">BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</em>. NAACL. (BERT-CRF 范式的基础)</li>
+    <li data-page-node-id="q74eTL6cK9WBdRSFtfvaL9">Sarawagi, S., &amp; Cohen, W. W. (2004). <em data-page-node-id="smBak1CRJyVtczSxd0x07R">Semi-Markov Conditional Random Fields for Information Extraction</em>. NIPS.</li>
+    <li data-page-node-id="XTmmjTOfDsRrZuZdYbNQgT">Koller, D., &amp; Friedman, N. (2009). <em data-page-node-id="UgoWp47bEuxorDSoAAaYzT">Probabilistic Graphical Models: Principles and Techniques</em>. MIT Press. (MRF 与因子分解的理论基础)</li>
+    <li data-page-node-id="47skUWOJpCqanDPfQv2S45">Murphy, K. P. (2022). <em data-page-node-id="gNlarxfCHTnDrKpTlsdXBB">Probabilistic Machine Learning: An Introduction</em>. MIT Press. (判别式序列模型的统一视角)</li>
+    <li data-page-node-id="d8sQoHy7WxCaQ1ycPF7wY3">Rabiner, L. R. (1989). <em data-page-node-id="sPfZBbaaU2KyR8Ma9KKBSj">A Tutorial on Hidden Markov Models and Selected Applications in Speech Recognition</em>. Proceedings of the IEEE, 77(2), 257-286. (HMM 经典教程)</li>
+    <li data-page-node-id="EufnHfdsPtQOLUmmJ7YmAB">Do, C. B., &amp; Batzoglou, S. (2008). <em data-page-node-id="aNlk4UY0ZynN9fd9lLjbfS">What is the expectation maximization algorithm</em>? Nature Biotechnology, 26(8), 897-899.</li>
+    <li data-page-node-id="94WczDP3t9EkZRp1CNF8vF">Brown, T. et al. (2020). <em data-page-node-id="T8B1VmQpH91sLJC4FHZE24">Language Models are Few-Shot Learners</em>. NeurIPS.</li>
   </ol>
 </section>
 

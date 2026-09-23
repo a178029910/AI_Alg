@@ -140,7 +140,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">7 个章节</span>
     <span class="badge">6 张示例图</span>
-    <span class="badge">19 个公式</span>
+    <span class="badge">25 个公式</span>
     <span class="badge">15 篇参考文献</span>
   </div>
 </section>
@@ -254,9 +254,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>2.3 最大间隔优化问题</h3>
 <p>SVM 的目标是：在所有能正确分类的超平面中，找到使<strong>最小几何间隔最大化</strong>的那一个。即：</p>
-<div class="formula">$$\max_{\mathbf{w}, b} \quad \gamma = \min_{i} \frac{y_i(\mathbf{w} \cdot \mathbf{x}_i + b)}{\|\mathbf{w}\|}$$</div>
+<div class="formula" data-eq="(5)">$$\max_{\mathbf{w}, b} \quad \gamma = \min_{i} \frac{y_i(\mathbf{w} \cdot \mathbf{x}_i + b)}{\|\mathbf{w}\|}$$</div>
 <p>由于 $\mathbf{w}$ 和 $b$ 可以等比例缩放，我们令函数间隔 $\min_i y_i(\mathbf{w} \cdot \mathbf{x}_i + b) = 1$（即归一化约束），于是优化问题变为：</p>
-<div class="formula" data-eq="(5)">$$\min_{\mathbf{w}, b} \quad \frac{1}{2}\|\mathbf{w}\|^2 \qquad \text{s.t.} \quad y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1, \quad i = 1, \ldots, n$$</div>
+<div class="formula" data-eq="(6)">$$\min_{\mathbf{w}, b} \quad \frac{1}{2}\|\mathbf{w}\|^2 \qquad \text{s.t.} \quad y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1, \quad i = 1, \ldots, n$$</div>
 <p>这是一个<strong>凸二次规划</strong>（Convex Quadratic Programming）问题：目标函数是二次凸函数，约束是线性不等式。凸 QP 保证了<strong>全局最优解</strong>的存在性和唯一性——这是 SVM 相比感知机的巨大优势。</p>
 
 <div class="callout warn">
@@ -267,22 +267,22 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h3>2.4 对偶问题与 KKT 条件</h3>
 
 <h4>为什么要用对偶？</h4>
-<p>直接求解原始问题（公式 5）需要优化 $d+1$ 个变量（$\mathbf{w}$ 有 $d$ 个分量 + $b$），当特征维度很高时计算困难。通过<strong>拉格朗日对偶</strong>，我们可以将问题转化为只依赖 $n$ 个拉格朗日乘子 $\alpha_i$ 的对偶问题——变量数只与样本数有关，与特征维度无关，这一特性使得<strong>核技巧</strong>成为可能。</p>
+<p>直接求解原始问题（公式 6）需要优化 $d+1$ 个变量（$\mathbf{w}$ 有 $d$ 个分量 + $b$），当特征维度很高时计算困难。通过<strong>拉格朗日对偶</strong>，我们可以将问题转化为只依赖 $n$ 个拉格朗日乘子 $\alpha_i$ 的对偶问题——变量数只与样本数有关，与特征维度无关，这一特性使得<strong>核技巧</strong>成为可能。</p>
 
 <h4>拉格朗日函数</h4>
 <p>引入拉格朗日乘子 $\alpha_i \geq 0$，构造拉格朗日函数：</p>
-<div class="formula" data-eq="(6)">$$L(\mathbf{w}, b, \boldsymbol{\alpha}) = \frac{1}{2}\|\mathbf{w}\|^2 - \sum_{i=1}^{n} \alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right]$$</div>
+<div class="formula" data-eq="(7)">$$L(\mathbf{w}, b, \boldsymbol{\alpha}) = \frac{1}{2}\|\mathbf{w}\|^2 - \sum_{i=1}^{n} \alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right]$$</div>
 <p>根据 KKT 条件，对 $\mathbf{w}$ 和 $b$ 求偏导并令其为零：</p>
-<div class="formula" data-eq="(7)">$$\mathbf{w} = \sum_{i=1}^{n} \alpha_i y_i \mathbf{x}_i$$</div>
-<div class="formula" data-eq="(8)">$$\sum_{i=1}^{n} \alpha_i y_i = 0$$</div>
-<p>公式 (7) 揭示了 SVM 的一个深刻性质：<strong>权重向量是训练样本的线性组合</strong>，而且只有 $\alpha_i > 0$ 的样本（即支持向量）才贡献非零项。</p>
+<div class="formula" data-eq="(8)">$$\mathbf{w} = \sum_{i=1}^{n} \alpha_i y_i \mathbf{x}_i$$</div>
+<div class="formula" data-eq="(9)">$$\sum_{i=1}^{n} \alpha_i y_i = 0$$</div>
+<p>公式 (8) 揭示了 SVM 的一个深刻性质：<strong>权重向量是训练样本的线性组合</strong>，而且只有 $\alpha_i > 0$ 的样本（即支持向量）才贡献非零项。</p>
 
 <h4>对偶优化问题</h4>
-<p>将公式 (7) 和 (8) 代回拉格朗日函数，消去 $\mathbf{w}$ 和 $b$，得到对偶问题：</p>
-<div class="formula" data-eq="(9)">$$\max_{\boldsymbol{\alpha}} \quad W(\boldsymbol{\alpha}) = \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i=1}^{n}\sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j \, \mathbf{x}_i \cdot \mathbf{x}_j$$</div>
+<p>将公式 (8) 和 (9) 代回拉格朗日函数，消去 $\mathbf{w}$ 和 $b$，得到对偶问题：</p>
+<div class="formula" data-eq="(10)">$$\max_{\boldsymbol{\alpha}} \quad W(\boldsymbol{\alpha}) = \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i=1}^{n}\sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j \, \mathbf{x}_i \cdot \mathbf{x}_j$$</div>
 <p>约束条件为 $\alpha_i \geq 0$ 且 $\sum_i \alpha_i y_i = 0$。</p>
 <p>对偶问题的决策函数为：</p>
-<div class="formula" data-eq="(10)">$$f(\mathbf{x}) = \text{sign}\left( \sum_{i=1}^{n} \alpha_i y_i \, \langle \mathbf{x}_i, \mathbf{x} \rangle + b \right)$$</div>
+<div class="formula" data-eq="(11)">$$f(\mathbf{x}) = \text{sign}\left( \sum_{i=1}^{n} \alpha_i y_i \, \langle \mathbf{x}_i, \mathbf{x} \rangle + b \right)$$</div>
 
 <div class="callout">
 <div class="callout-title">对偶问题的关键优势</div>
@@ -295,7 +295,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>KKT 条件与互补松弛性</h4>
 <p>KKT 互补松弛条件为：</p>
-<div class="formula">$$\alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right] = 0, \quad \forall i$$</div>
+<div class="formula" data-eq="(12)">$$\alpha_i \left[ y_i(\mathbf{w} \cdot \mathbf{x}_i + b) - 1 \right] = 0, \quad \forall i$$</div>
 <p>在硬间隔下，这个条件把样本分成两类：</p>
 
 <table>
@@ -310,13 +310,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h4>从线性到非线性</h4>
 <p>现实中的数据往往<strong>线性不可分</strong>——无法用一个超平面将两类分开。解决思路是将数据从原始空间映射到更高维的空间，在高维空间中数据可能变得线性可分。</p>
 <p>设映射函数为 $\phi(\mathbf{x})$，则在高维空间中的决策函数为：</p>
-<div class="formula">$$f(\mathbf{x}) = \text{sign}\left( \sum_i \alpha_i y_i \, \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}) + b \right)$$</div>
+<div class="formula" data-eq="(13)">$$f(\mathbf{x}) = \text{sign}\left( \sum_i \alpha_i y_i \, \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}) + b \right)$$</div>
 <p>但显式计算 $\phi(\mathbf{x})$ 可能维度极高甚至无限维，计算不可行。<strong>核技巧</strong>的核心思想是：不显式计算映射，而是直接计算映射后的内积。</p>
 
-<div class="formula" data-eq="(11)">$$K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}_j)$$</div>
+<div class="formula" data-eq="(14)">$$K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}_j)$$</div>
 
 <p>将对偶问题中的内积替换为核函数：</p>
-<div class="formula" data-eq="(12)">$$\max_{\boldsymbol{\alpha}} \quad \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j y_i y_j \, K(\mathbf{x}_i, \mathbf{x}_j)$$</div>
+<div class="formula" data-eq="(15)">$$\max_{\boldsymbol{\alpha}} \quad \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j y_i y_j \, K(\mathbf{x}_i, \mathbf{x}_j)$$</div>
 
 <div class="svg-box">
 <svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
@@ -394,7 +394,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </table>
 
 <p>其中最常用的是 <strong>RBF（高斯）核</strong>：</p>
-<div class="formula" data-eq="(13)">$$K(\mathbf{x}, \mathbf{z}) = \exp\left(-\gamma \|\mathbf{x} - \mathbf{z}\|^2\right)$$</div>
+<div class="formula" data-eq="(16)">$$K(\mathbf{x}, \mathbf{z}) = \exp\left(-\gamma \|\mathbf{x} - \mathbf{z}\|^2\right)$$</div>
 <p>参数 $\gamma > 0$ 控制核的宽度：$\gamma$ 越大，核函数衰减越快，决策边界越复杂（可能过拟合）；$\gamma$ 越小，决策边界越平滑（可能欠拟合）。</p>
 
 <div class="callout warn">
@@ -438,7 +438,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>图中紫色圈标注的样本即为<strong>支持向量</strong>：落在间隔带内的样本满足 $0 &lt; \xi_i \le 1$，越过决策边界被误分类的样本满足 $\xi_i &gt; 1$。</p>
 
 <p>软间隔 SVM 的原始优化问题为：</p>
-<div class="formula" data-eq="(14)">$$\min_{\mathbf{w}, b, \boldsymbol{\xi}} \quad \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} \xi_i \qquad \text{s.t.} \quad y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0$$</div>
+<div class="formula" data-eq="(17)">$$\min_{\mathbf{w}, b, \boldsymbol{\xi}} \quad \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} \xi_i \qquad \text{s.t.} \quad y_i(\mathbf{w} \cdot \mathbf{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0$$</div>
 <p>其中 $C > 0$ 是正则化参数，控制间隔宽度与违反量之间的权衡：</p>
 <ul>
 <li><strong>$C \to \infty$</strong>：对违反零容忍，趋向硬间隔（可能过拟合）</li>
@@ -447,13 +447,13 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>软间隔的对偶问题</h4>
 <p>软间隔的对偶问题形式与硬间隔几乎相同，唯一区别是 $\alpha_i$ 多了一个上界约束 $C$：</p>
-<div class="formula" data-eq="(15)">$$\max_{\boldsymbol{\alpha}} \quad \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j y_i y_j \, K(\mathbf{x}_i, \mathbf{x}_j) \qquad \text{s.t.} \quad 0 \leq \alpha_i \leq C, \quad \sum_i \alpha_i y_i = 0$$</div>
+<div class="formula" data-eq="(18)">$$\max_{\boldsymbol{\alpha}} \quad \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j y_i y_j \, K(\mathbf{x}_i, \mathbf{x}_j) \qquad \text{s.t.} \quad 0 \leq \alpha_i \leq C, \quad \sum_i \alpha_i y_i = 0$$</div>
 
 <h4>偏置项 b 的计算</h4>
 <p>对于满足 $0 < \alpha_s < C$ 的支持向量（恰好在间隔边界上），可以计算偏置项：</p>
-<div class="formula" data-eq="(16)">$$b = y_s - \sum_{i=1}^{n} \alpha_i y_i \, K(\mathbf{x}_i, \mathbf{x}_s)$$</div>
+<div class="formula" data-eq="(19)">$$b = y_s - \sum_{i=1}^{n} \alpha_i y_i \, K(\mathbf{x}_i, \mathbf{x}_s)$$</div>
 <p>实践中通常对所有满足 $0 < \alpha_s < C$ 的支持向量取平均，以提高数值稳定性。若不存在这样的支持向量（全部支持向量都落在 $\alpha_s = C$ 上），则可改用两类间隔边界的中点：</p>
-<div class="formula">$$b = \frac{1}{2}\left( \max_{i:\, y_i = -1} f_{\text{raw}}(\mathbf{x}_i) + \min_{i:\, y_i = +1} f_{\text{raw}}(\mathbf{x}_i) \right)$$</div>
+<div class="formula" data-eq="(20)">$$b = \frac{1}{2}\left( \max_{i:\, y_i = -1} f_{\text{raw}}(\mathbf{x}_i) + \min_{i:\, y_i = +1} f_{\text{raw}}(\mathbf{x}_i) \right)$$</div>
 <p>其中 $f_{\text{raw}}(\mathbf{x}) = \sum_i \alpha_i y_i K(\mathbf{x}_i, \mathbf{x})$ 是不含偏置的判别值。</p>
 
 <h4>参数 $C$ 的影响</h4>
@@ -471,15 +471,15 @@ tr:hover td { background: var(--c-primary-ghost); }
 </div>
 
 <h3>2.7 决策函数与算法步骤</h3>
-<p>解出对偶问题后，把式 (7) 代回，决策函数就只依赖样本之间的内积；把内积换成核函数（式 (11)），即得核化形式 $f(\mathbf{x})$（式 (10)）。求和中只有 $\alpha_i &gt; 0$ 的样本起作用，它们正是<strong>支持向量</strong>——这也是该模型得名的原因。</p>
+<p>解出对偶问题后，把式 (8) 代回，决策函数就只依赖样本之间的内积；把内积换成核函数（式 (14)），即得核化形式 $f(\mathbf{x})$（式 (11)）。求和中只有 $\alpha_i &gt; 0$ 的样本起作用，它们正是<strong>支持向量</strong>——这也是该模型得名的原因。</p>
 <p>完整的训练与预测流程如下。其中 $n$ 为样本数、$d$ 为特征维数、$K$ 为所选核函数、$C$ 为惩罚系数、$\epsilon$ 为数值容差。</p>
 <h4>训练阶段</h4>
 <ol>
 <li><strong>构造核矩阵</strong>：计算 $K_{ij} = K(\mathbf{x}_i, \mathbf{x}_j)$，共 $O(n^2 d)$ 次运算。</li>
-<li><strong>求解对偶二次规划</strong>：在约束 $\sum_i \alpha_i y_i = 0$ 与 $0 \le \alpha_i \le C$（硬间隔时去掉上界）下取式 (15) 的最大值（硬间隔用式 (9)，核化形式为式 (12)），得到最优乘子 $\hat{\boldsymbol{\alpha}}$。工程上用 SMO 把这个大规模 QP 拆成一系列两变量子问题，见第三章。</li>
+<li><strong>求解对偶二次规划</strong>：在约束 $\sum_i \alpha_i y_i = 0$ 与 $0 \le \alpha_i \le C$（硬间隔时去掉上界）下取式 (18) 的最大值（硬间隔用式 (10)，核化形式为式 (15)），得到最优乘子 $\hat{\boldsymbol{\alpha}}$。工程上用 SMO 把这个大规模 QP 拆成一系列两变量子问题，见第三章。</li>
 <li><strong>提取支持向量</strong>：保留 $\hat{\alpha}_i &gt; \epsilon$ 的样本，其余样本对决策函数没有贡献。</li>
-<li><strong>求权重（线性核时）</strong>：$\hat{\mathbf{w}} = \sum_i \hat{\alpha}_i y_i \mathbf{x}_i$（式 (7)）；使用核函数时无需显式算出 $\mathbf{w}$。</li>
-<li><strong>求偏置</strong>：任取一个支持向量 $\mathbf{x}_s$，按式 (16) 得到 $b$；实现中通常对所有支持向量的结果取平均以减小数值误差。</li>
+<li><strong>求权重（线性核时）</strong>：$\hat{\mathbf{w}} = \sum_i \hat{\alpha}_i y_i \mathbf{x}_i$（式 (8)）；使用核函数时无需显式算出 $\mathbf{w}$。</li>
+<li><strong>求偏置</strong>：任取一个支持向量 $\mathbf{x}_s$，按式 (19) 得到 $b$；实现中通常对所有支持向量的结果取平均以减小数值误差。</li>
 </ol>
 <h4>预测阶段</h4>
 <ol>
@@ -575,7 +575,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>3.4 $\alpha_2$ 的解析解</h3>
 <p>固定其他变量后，$\alpha_2$ 的更新公式为：</p>
-<div class="formula">$$\alpha_2^{new} = \alpha_2^{old} + \frac{y_2(E_1 - E_2)}{\eta}$$</div>
+<div class="formula" data-eq="(21)">$$\alpha_2^{new} = \alpha_2^{old} + \frac{y_2(E_1 - E_2)}{\eta}$$</div>
 <p>其中 $\eta = K_{11} + K_{22} - 2K_{12}$ 是核函数在两个样本上的组合值。然后根据约束 $0 \leq \alpha_2 \leq C$ 对 $\alpha_2^{new}$ 进行裁剪，并由等式约束求出 $\alpha_1^{new}$。</p>
 
 <div class="callout">
@@ -619,7 +619,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>$\varepsilon$-不敏感损失</h4>
 <p>SVR 使用 <strong>$\varepsilon$-不敏感损失函数</strong>（$\varepsilon$-insensitive loss）：</p>
-<div class="formula">$$L_\varepsilon(y, f(\mathbf{x})) = \max(0, |y - f(\mathbf{x})| - \varepsilon)$$</div>
+<div class="formula" data-eq="(22)">$$L_\varepsilon(y, f(\mathbf{x})) = \max(0, |y - f(\mathbf{x})| - \varepsilon)$$</div>
 <p>这意味着：只要预测值与真实值的绝对差不超过 $\varepsilon$，损失就为零。$\varepsilon$ 定义了一条宽度为 $2\varepsilon$ 的<strong>不敏感带</strong>。</p>
 
 <div class="svg-box">
@@ -664,9 +664,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>SVR 的优化问题</h4>
 <p>SVR 的原始优化问题引入两组松弛变量 $\xi_i$ 和 $\xi_i^*$（分别对应上偏差和下偏差）：</p>
-<div class="formula" data-eq="(17)">$$\min_{\mathbf{w}, b, \boldsymbol{\xi}, \boldsymbol{\xi}^*} \quad \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} (\xi_i + \xi_i^*) \qquad \text{s.t.} \quad \begin{cases} y_i - f(\mathbf{x}_i) \leq \varepsilon + \xi_i \\ f(\mathbf{x}_i) - y_i \leq \varepsilon + \xi_i^* \\ \xi_i, \xi_i^* \geq 0 \end{cases}$$</div>
+<div class="formula" data-eq="(23)">$$\min_{\mathbf{w}, b, \boldsymbol{\xi}, \boldsymbol{\xi}^*} \quad \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} (\xi_i + \xi_i^*) \qquad \text{s.t.} \quad \begin{cases} y_i - f(\mathbf{x}_i) \leq \varepsilon + \xi_i \\ f(\mathbf{x}_i) - y_i \leq \varepsilon + \xi_i^* \\ \xi_i, \xi_i^* \geq 0 \end{cases}$$</div>
 <p>其对偶问题的决策函数为：</p>
-<div class="formula" data-eq="(18)">$$f(\mathbf{x}) = \sum_{i=1}^{n} (\alpha_i - \alpha_i^*) \, K(\mathbf{x}_i, \mathbf{x}) + b$$</div>
+<div class="formula" data-eq="(24)">$$f(\mathbf{x}) = \sum_{i=1}^{n} (\alpha_i - \alpha_i^*) \, K(\mathbf{x}_i, \mathbf{x}) + b$$</div>
 <p>其中 $\alpha_i$ 和 $\alpha_i^*$ 分别对应上下偏差的拉格朗日乘子。只有落在 $\varepsilon$-带之外的样本（$\alpha_i \neq 0$ 或 $\alpha_i^* \neq 0$）才是支持向量。</p>
 
 <h4>SVR 的关键参数</h4>
@@ -686,7 +686,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <h4>One-Class SVM 原理</h4>
 <p>Schölkopf 等人提出的 <strong>One-Class SVM</strong> 的思想是：将正常数据映射到高维空间中，找到一个将数据与原点分开的超平面，使得超平面距离原点尽可能远。等价地，在特征空间中寻找一个包含大部分数据的<strong>最小体积球</strong>。</p>
 
-<div class="formula" data-eq="(19)">$$\min_{\mathbf{w}, \boldsymbol{\xi}, \rho} \quad \frac{1}{2}\|\mathbf{w}\|^2 + \frac{1}{\nu n} \sum_{i=1}^{n} \xi_i - \rho \qquad \text{s.t.} \quad \mathbf{w} \cdot \phi(\mathbf{x}_i) \geq \rho - \xi_i, \quad \xi_i \geq 0$$</div>
+<div class="formula" data-eq="(25)">$$\min_{\mathbf{w}, \boldsymbol{\xi}, \rho} \quad \frac{1}{2}\|\mathbf{w}\|^2 + \frac{1}{\nu n} \sum_{i=1}^{n} \xi_i - \rho \qquad \text{s.t.} \quad \mathbf{w} \cdot \phi(\mathbf{x}_i) \geq \rho - \xi_i, \quad \xi_i \geq 0$$</div>
 <p>决策函数为 $f(\mathbf{x}) = \text{sign}(\mathbf{w} \cdot \phi(\mathbf{x}) - \rho)$：$f(\mathbf{x}) = +1$ 为正常，$f(\mathbf{x}) = -1$ 为异常。</p>
 
 <h4>参数 $\nu$ 的含义</h4>

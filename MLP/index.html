@@ -147,7 +147,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">13 个章节</span>
     <span class="badge">9 张示例图</span>
-    <span class="badge">52 个公式</span>
+    <span class="badge">33 个公式</span>
     <span class="badge">18 篇参考文献</span>
   </div>
 </section>
@@ -663,20 +663,20 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout">
 <div class="callout-title">什么是 Hadamard 积？</div>
 <p><strong>Hadamard 积</strong>（又称逐元素乘积、element-wise product）是两个<strong>相同维度</strong>的矩阵/向量对应位置元素相乘，结果维度不变。记作 $\mathbf{A} \odot \mathbf{B}$ 或 $\mathbf{A} \circ \mathbf{B}$。</p>
-<div class="formula" data-eq="(24a)">$$\mathbf{A} \odot \mathbf{B} = \begin{pmatrix} a_{11} b_{11} & a_{12} b_{12} \\ a_{21} b_{21} & a_{22} b_{22} \end{pmatrix}$$</div>
+<div class="formula" data-eq="(25)">$$\mathbf{A} \odot \mathbf{B} = \begin{pmatrix} a_{11} b_{11} & a_{12} b_{12} \\ a_{21} b_{21} & a_{22} b_{22} \end{pmatrix}$$</div>
 <p><strong>示例</strong>：$\begin{pmatrix} 1 \\ 2 \end{pmatrix} \odot \begin{pmatrix} 3 \\ 4 \end{pmatrix} = \begin{pmatrix} 3 \\ 8 \end{pmatrix}$，即 $1\times3=3$，$2\times4=8$。注意它与矩阵乘法 $\mathbf{AB}$ 完全不同——Hadamard 积不涉及行列内积，只是简单逐位相乘。</p>
 <p>在反向传播中，$\boldsymbol{\delta}^{(l)} \odot f'^{(l)}(\mathbf{z}^{(l)})$ 的含义是：将传回来的误差信号 $\boldsymbol{\delta}^{(l)}$ 的<strong>每个分量</strong>分别乘以对应神经元的激活导数 $f'^{(l)}(z_j^{(l)})$，从而得到当前层每个神经元对预激活值 $z_j^{(l)}$ 的误差梯度。这种逐元素操作使得不同神经元可以拥有不同的梯度缩放因子。</p>
 </div>
 
 <h3>6.3 隐藏层梯度</h3>
 <p>隐藏层的误差信号通过下一层的误差信号反向传播得到：</p>
-<div class="formula" data-eq="(25)">$$\boldsymbol{\delta}^{(l)} = \left(\mathbf{W}^{(l+1)}\right)^\top \boldsymbol{\delta}^{(l+1)} \odot f'^{(l)}(\mathbf{z}^{(l)})$$</div>
+<div class="formula" data-eq="(26)">$$\boldsymbol{\delta}^{(l)} = \left(\mathbf{W}^{(l+1)}\right)^\top \boldsymbol{\delta}^{(l+1)} \odot f'^{(l)}(\mathbf{z}^{(l)})$$</div>
 <p>这是反向传播的核心公式——它将第 $l+1$ 层的误差信号通过权重矩阵的转置传回第 $l$ 层，再乘以激活函数的导数得到本层的误差信号。</p>
 
 <h3>6.4 参数梯度</h3>
 <p>有了误差信号后，参数的梯度可以直接计算：</p>
-<div class="formula" data-eq="(26)">$$\frac{\partial L}{\partial \mathbf{W}^{(l)}} = \boldsymbol{\delta}^{(l)} \left(\mathbf{a}^{(l-1)}\right)^\top$$</div>
-<div class="formula" data-eq="(27)">$$\frac{\partial L}{\partial \mathbf{b}^{(l)}} = \boldsymbol{\delta}^{(l)}$$</div>
+<div class="formula" data-eq="(27)">$$\frac{\partial L}{\partial \mathbf{W}^{(l)}} = \boldsymbol{\delta}^{(l)} \left(\mathbf{a}^{(l-1)}\right)^\top$$</div>
+<div class="formula" data-eq="(28)">$$\frac{\partial L}{\partial \mathbf{b}^{(l)}} = \boldsymbol{\delta}^{(l)}$$</div>
 
 <div class="callout">
 <div class="callout-title">梯度维度检查</div>
@@ -704,52 +704,52 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout-title">网络结构与初始值</div>
 <p>输入 $\mathbf{x} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}$，真实标签 $y = 1$。</p>
 <p><strong>第 1 层权重与偏置</strong>（输入 → 隐藏，Sigmoid 激活）：</p>
-<div class="formula" data-eq="(27a)">$$\mathbf{W}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix}, \quad \mathbf{b}^{(1)} = \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix}$$</div>
+<div class="formula">$$\mathbf{W}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix}, \quad \mathbf{b}^{(1)} = \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix}$$</div>
 <p><strong>第 2 层权重与偏置</strong>（隐藏 → 输出，Sigmoid 激活）：</p>
-<div class="formula" data-eq="(27b)">$$\mathbf{W}^{(2)} = \begin{pmatrix} 0.8 & 0.2 \end{pmatrix}, \quad b^{(2)} = 0.05$$</div>
+<div class="formula">$$\mathbf{W}^{(2)} = \begin{pmatrix} 0.8 & 0.2 \end{pmatrix}, \quad b^{(2)} = 0.05$$</div>
 <p>学习率 $\eta = 0.1$。</p>
 </div>
 
 <h4>第 1 步：前向传播</h4>
 <p><strong>隐藏层预激活</strong>：</p>
-<div class="formula" data-eq="(27c)">$$\mathbf{z}^{(1)} = \mathbf{W}^{(1)} \mathbf{x} + \mathbf{b}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \end{pmatrix} + \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix} = \begin{pmatrix} 0.6 \\ -0.1 \end{pmatrix}$$</div>
+<div class="formula">$$\mathbf{z}^{(1)} = \mathbf{W}^{(1)} \mathbf{x} + \mathbf{b}^{(1)} = \begin{pmatrix} 0.5 & -0.5 \\ 0.1 & 0.3 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \end{pmatrix} + \begin{pmatrix} 0.1 \\ -0.2 \end{pmatrix} = \begin{pmatrix} 0.6 \\ -0.1 \end{pmatrix}$$</div>
 <p><strong>隐藏层激活值</strong>（$\sigma(0.6) = 0.6457$，$\sigma(-0.1) = 0.4750$）：</p>
-<div class="formula" data-eq="(27d)">$$\mathbf{a}^{(1)} = \sigma(\mathbf{z}^{(1)}) = \begin{pmatrix} 0.6457 \\ 0.4750 \end{pmatrix}$$</div>
+<div class="formula">$$\mathbf{a}^{(1)} = \sigma(\mathbf{z}^{(1)}) = \begin{pmatrix} 0.6457 \\ 0.4750 \end{pmatrix}$$</div>
 <p><strong>输出层预激活与激活值</strong>（$\sigma(0.6166) = 0.6499$）：</p>
-<div class="formula" data-eq="(27e)">$$z^{(2)} = \mathbf{W}^{(2)} \mathbf{a}^{(1)} + b^{(2)} = 0.8 \times 0.6457 + 0.2 \times 0.4750 + 0.05 = 0.6166$$</div>
-<div class="formula" data-eq="(27f)">$$\hat{y} = \sigma(z^{(2)}) = 0.6499$$</div>
+<div class="formula">$$z^{(2)} = \mathbf{W}^{(2)} \mathbf{a}^{(1)} + b^{(2)} = 0.8 \times 0.6457 + 0.2 \times 0.4750 + 0.05 = 0.6166$$</div>
+<div class="formula">$$\hat{y} = \sigma(z^{(2)}) = 0.6499$$</div>
 <p><strong>损失</strong>（MSE，单样本 $L = \frac{1}{2}(\hat{y} - y)^2$）：</p>
-<div class="formula" data-eq="(27g)">$$L = \frac{1}{2}(0.6499 - 1)^2 = \frac{1}{2}(0.3501)^2 = 0.0613$$</div>
+<div class="formula">$$L = \frac{1}{2}(0.6499 - 1)^2 = \frac{1}{2}(0.3501)^2 = 0.0613$$</div>
 
 <h4>第 2 步：输出层误差信号</h4>
 <p>Sigmoid 的导数 $\sigma'(z) = \sigma(z)(1 - \sigma(z))$。先计算损失对输出的梯度，再乘以激活导数：</p>
-<div class="formula" data-eq="(27h)">$$\frac{\partial L}{\partial \hat{y}} = \hat{y} - y = 0.6499 - 1 = -0.3501$$</div>
-<div class="formula" data-eq="(27i)">$$\delta^{(2)} = \frac{\partial L}{\partial z^{(2)}} = \frac{\partial L}{\partial \hat{y}} \cdot \sigma'(z^{(2)}) = -0.3501 \times 0.6499 \times (1 - 0.6499) = -0.3501 \times 0.2275 = -0.0796$$</div>
+<div class="formula">$$\frac{\partial L}{\partial \hat{y}} = \hat{y} - y = 0.6499 - 1 = -0.3501$$</div>
+<div class="formula">$$\delta^{(2)} = \frac{\partial L}{\partial z^{(2)}} = \frac{\partial L}{\partial \hat{y}} \cdot \sigma'(z^{(2)}) = -0.3501 \times 0.6499 \times (1 - 0.6499) = -0.3501 \times 0.2275 = -0.0796$$</div>
 
 <h4>第 3 步：隐藏层误差信号（反向传播）</h4>
 <p>利用公式 $\boldsymbol{\delta}^{(1)} = (\mathbf{W}^{(2)})^\top \delta^{(2)} \odot \sigma'(\mathbf{z}^{(1)})$，分两步计算。</p>
 <p><strong>3a.</strong> 将输出层误差通过权重转置传回隐藏层（矩阵乘法，$2 \times 1$ 结果）：</p>
-<div class="formula" data-eq="(27j)">$$(\mathbf{W}^{(2)})^\top \delta^{(2)} = \begin{pmatrix} 0.8 \\ 0.2 \end{pmatrix} \times (-0.0796) = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix}$$</div>
+<div class="formula">$$(\mathbf{W}^{(2)})^\top \delta^{(2)} = \begin{pmatrix} 0.8 \\ 0.2 \end{pmatrix} \times (-0.0796) = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix}$$</div>
 <p><strong>3b.</strong> 计算隐藏层各神经元的 Sigmoid 导数：</p>
-<div class="formula" data-eq="(27k)">$$\sigma'(0.6) = 0.6457 \times 0.3543 = 0.2288$$</div>
-<div class="formula" data-eq="(27l)">$$\sigma'(-0.1) = 0.4750 \times 0.5250 = 0.2494$$</div>
+<div class="formula">$$\sigma'(0.6) = 0.6457 \times 0.3543 = 0.2288$$</div>
+<div class="formula">$$\sigma'(-0.1) = 0.4750 \times 0.5250 = 0.2494$$</div>
 <p><strong>3c.</strong> Hadamard 积逐元素相乘，得到隐藏层误差信号：</p>
-<div class="formula" data-eq="(27m)">$$\boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix} \odot \begin{pmatrix} 0.2288 \\ 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0637 \times 0.2288 \\ -0.0159 \times 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
+<div class="formula">$$\boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0637 \\ -0.0159 \end{pmatrix} \odot \begin{pmatrix} 0.2288 \\ 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0637 \times 0.2288 \\ -0.0159 \times 0.2494 \end{pmatrix} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
 <p>观察：第 1 个隐藏神经元收到的误差 $(-0.0146)$ 比第 2 个 $(-0.0040)$ 大，因为它在输出层权重更大（$0.8$ vs $0.2$），对输出的影响更大。</p>
 
 <h4>第 4 步：计算参数梯度</h4>
 <p><strong>第 2 层（输出层）参数梯度</strong>：</p>
-<div class="formula" data-eq="(27n)">$$\frac{\partial L}{\partial \mathbf{W}^{(2)}} = \delta^{(2)} (\mathbf{a}^{(1)})^\top = -0.0796 \times \begin{pmatrix} 0.6457 & 0.4750 \end{pmatrix} = \begin{pmatrix} -0.0514 & -0.0378 \end{pmatrix}$$</div>
-<div class="formula" data-eq="(27o)">$$\frac{\partial L}{\partial b^{(2)}} = \delta^{(2)} = -0.0796$$</div>
+<div class="formula">$$\frac{\partial L}{\partial \mathbf{W}^{(2)}} = \delta^{(2)} (\mathbf{a}^{(1)})^\top = -0.0796 \times \begin{pmatrix} 0.6457 & 0.4750 \end{pmatrix} = \begin{pmatrix} -0.0514 & -0.0378 \end{pmatrix}$$</div>
+<div class="formula">$$\frac{\partial L}{\partial b^{(2)}} = \delta^{(2)} = -0.0796$$</div>
 <p><strong>第 1 层（隐藏层）参数梯度</strong>（$\mathbf{x} = (1, 0)^\top$）：</p>
-<div class="formula" data-eq="(27p)">$$\frac{\partial L}{\partial \mathbf{W}^{(1)}} = \boldsymbol{\delta}^{(1)} \mathbf{x}^\top = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix} \begin{pmatrix} 1 & 0 \end{pmatrix} = \begin{pmatrix} -0.0146 & 0 \\ -0.0040 & 0 \end{pmatrix}$$</div>
-<div class="formula" data-eq="(27q)">$$\frac{\partial L}{\partial \mathbf{b}^{(1)}} = \boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
+<div class="formula">$$\frac{\partial L}{\partial \mathbf{W}^{(1)}} = \boldsymbol{\delta}^{(1)} \mathbf{x}^\top = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix} \begin{pmatrix} 1 & 0 \end{pmatrix} = \begin{pmatrix} -0.0146 & 0 \\ -0.0040 & 0 \end{pmatrix}$$</div>
+<div class="formula">$$\frac{\partial L}{\partial \mathbf{b}^{(1)}} = \boldsymbol{\delta}^{(1)} = \begin{pmatrix} -0.0146 \\ -0.0040 \end{pmatrix}$$</div>
 <p>注意 $\frac{\partial L}{\partial W^{(1)}_{12}} = \delta^{(1)}_1 \times x_2 = -0.0146 \times 0 = 0$，因为输入 $x_2 = 0$，该权重梯度为零，本轮不会被更新。</p>
 
 <h4>第 5 步：梯度下降更新参数</h4>
 <p>以 $\eta = 0.1$ 更新第 2 层权重为例：</p>
-<div class="formula" data-eq="(27r)">$$W^{(2)}_1 \leftarrow 0.8 - 0.1 \times (-0.0514) = 0.8 + 0.00514 = 0.80514$$</div>
-<div class="formula" data-eq="(27s)">$$W^{(2)}_2 \leftarrow 0.2 - 0.1 \times (-0.0378) = 0.2 + 0.00378 = 0.20378$$</div>
+<div class="formula">$$W^{(2)}_1 \leftarrow 0.8 - 0.1 \times (-0.0514) = 0.8 + 0.00514 = 0.80514$$</div>
+<div class="formula">$$W^{(2)}_2 \leftarrow 0.2 - 0.1 \times (-0.0378) = 0.2 + 0.00378 = 0.20378$$</div>
 <p>损失 $L = 0.0613$，梯度为负表示应<strong>增大</strong>权重以降低损失——直觉正确，因为预测值 $\hat{y} = 0.6499 < 1 = y$，我们需要更大的权重让预测值更接近 1。</p>
 
 <div class="callout success">
@@ -809,17 +809,17 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>7.1 L2 正则化（权重衰减）</h3>
 <p>L2 正则化在损失函数中添加权重平方和惩罚项，鼓励权重取小值：</p>
-<div class="formula" data-eq="(28)">$$L_{\text{total}} = L_{\text{data}} + \lambda \sum_l \|\mathbf{W}^{(l)}\|_F^2$$</div>
+<div class="formula" data-eq="(29)">$$L_{\text{total}} = L_{\text{data}} + \lambda \sum_l \|\mathbf{W}^{(l)}\|_F^2$$</div>
 <p>其中 $\lambda$ 为正则化系数，$\|\cdot\|_F$ 为 Frobenius 范数。L2 正则化等价于在权重更新中引入衰减 $\mathbf{W} \leftarrow \mathbf{W}(1 - \eta\lambda) - \eta \nabla L$，因此也称为"权重衰减"。</p>
 
 <h3>7.2 L1 正则化</h3>
 <p>L1 正则化添加权重绝对值惩罚，产生稀疏权重（部分权重被推向 $0$）：</p>
-<div class="formula" data-eq="(29)">$$L_{\text{total}} = L_{\text{data}} + \lambda \sum_l \|\mathbf{W}^{(l)}\|_1$$</div>
+<div class="formula" data-eq="(30)">$$L_{\text{total}} = L_{\text{data}} + \lambda \sum_l \|\mathbf{W}^{(l)}\|_1$$</div>
 <p>L1 正则化自带特征选择功能——被置零的权重对应的输入特征被自动忽略。</p>
 
 <h3>7.3 Dropout</h3>
 <p>Dropout（Srivastava et al., 2014）是深度学习最成功的正则化技术之一。训练时随机将一定比例的神经元输出置零，测试时使用全部神经元但输出乘以保留概率：</p>
-<div class="formula" data-eq="(30)">$$\tilde{\mathbf{a}}^{(l)} = \mathbf{m}^{(l)} \odot \mathbf{a}^{(l)}, \quad \mathbf{m}^{(l)}_j \sim \text{Bernoulli}(p)$$</div>
+<div class="formula" data-eq="(31)">$$\tilde{\mathbf{a}}^{(l)} = \mathbf{m}^{(l)} \odot \mathbf{a}^{(l)}, \quad \mathbf{m}^{(l)}_j \sim \text{Bernoulli}(p)$$</div>
 <p>其中 $p$ 为保留概率（通常 $0.5$），$\mathbf{m}^{(l)}$ 为随机二值掩码。Dropout 等效于训练一个子网络的集成（ensemble），有效防止神经元间的共适应（co-adaptation）。</p>
 
 <div class="callout warn">
@@ -829,7 +829,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>7.4 批归一化（Batch Normalization）</h3>
 <p>Batch Normalization（Ioffe & Szegedy, 2015）对每层的激活值在小批量内进行标准化，稳定训练并加速收敛：</p>
-<div class="formula" data-eq="(31)">$$\hat{\mathbf{z}}^{(l)} = \gamma \cdot \frac{\mathbf{z}^{(l)} - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta$$</div>
+<div class="formula" data-eq="(32)">$$\hat{\mathbf{z}}^{(l)} = \gamma \cdot \frac{\mathbf{z}^{(l)} - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta$$</div>
 <p>其中 $\mu_B, \sigma_B^2$ 为小批量内的均值和方差，$\gamma, \beta$ 为可学习的缩放和平移参数。BN 虽然主要解决内部协变量偏移（internal covariate shift），但也有正则化效果——批统计量引入的噪声等效于一种正则化。</p>
 
 <h3>7.5 Early Stopping</h3>
@@ -965,7 +965,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>9.3 偏差-方差权衡</h3>
 <p>MLP 的泛化能力受<em>偏差</em>（模型表达能力不足导致的系统性误差）和<em>方差</em>（模型对训练数据过于敏感导致的波动）的权衡：</p>
-<div class="formula" data-eq="(32)">$$\text{Error} = \underbrace{\text{Bias}^2}_{\text{欠拟合}} + \underbrace{\text{Variance}}_{\text{过拟合}} + \underbrace{\text{Noise}}_{\text{不可约}}$$</div>
+<div class="formula" data-eq="(33)">$$\text{Error} = \underbrace{\text{Bias}^2}_{\text{欠拟合}} + \underbrace{\text{Variance}}_{\text{过拟合}} + \underbrace{\text{Noise}}_{\text{不可约}}$$</div>
 <ul>
   <li><strong>高偏差</strong>（欠拟合）：网络太浅/太窄 → 增加深度或宽度</li>
   <li><strong>高方差</strong>（过拟合）：网络太深/太宽 → 增加正则化（Dropout、L2、Early Stopping）</li>
@@ -1300,24 +1300,24 @@ scheduler = WarmupCosineScheduler(optimizer, warmup_steps=<span class="num">500<
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-  <li>McCulloch, W. S., & Pitts, W. (1943). A logical calculus of the ideas immanent in nervous activity. <em>Bulletin of Mathematical Biophysics</em>, 5(4), 115-133.</li>
-  <li>Rosenblatt, F. (1958). The perceptron: A probabilistic model for information storage and organization in the brain. <em>Psychological Review</em>, 65(6), 386-408.</li>
+  <li>McCulloch, W. S., & Pitts, W. (1943). <em>A logical calculus of the ideas immanent in nervous activity</em>. Bulletin of Mathematical Biophysics, 5(4), 115-133.</li>
+  <li>Rosenblatt, F. (1958). <em>The perceptron: A probabilistic model for information storage and organization in the brain</em>. Psychological Review, 65(6), 386-408.</li>
   <li>Minsky, M., & Papert, S. (1969). <em>Perceptrons: An Introduction to Computational Geometry</em>. MIT Press.</li>
-  <li>Rumelhart, D. E., Hinton, G. E., & Williams, R. J. (1986). Learning representations by back-propagating errors. <em>Nature</em>, 323, 533-536.</li>
-  <li>Hornik, K., Stinchcombe, M., & White, H. (1989). Multilayer feedforward networks are universal approximators. <em>Neural Networks</em>, 2(5), 359-366.</li>
-  <li>Nair, V., & Hinton, G. E. (2010). Rectified linear units improve restricted Boltzmann machines. <em>ICML 2010</em>.</li>
-  <li>Glorot, X., & Bengio, Y. (2010). Understanding the difficulty of training deep feedforward neural networks. <em>AISTATS 2010</em>.</li>
-  <li>Srivastava, N., et al. (2014). Dropout: A simple way to prevent neural networks from overfitting. <em>JMLR</em>, 15(1), 1929-1958.</li>
-  <li>Ioffe, S., & Szegedy, C. (2015). Batch normalization: Accelerating deep network training by reducing internal covariate shift. <em>ICML 2015</em>.</li>
-  <li>He, K., et al. (2015). Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification. <em>ICCV 2015</em>.</li>
-  <li>Kingma, D. P., & Ba, J. (2015). Adam: A method for stochastic optimization. <em>ICLR 2015</em>.</li>
-  <li>Telgarsky, M. (2016). Benefits of depth in neural networks. <em>COLT 2016</em>.</li>
-  <li>Loshchilov, I., & Hutter, F. (2019). Decoupled weight decay regularization (AdamW). <em>ICLR 2019</em>.</li>
-  <li>Tolstikhin, I., et al. (2021). MLP-Mixer: An all-MLP architecture for vision. <em>NeurIPS 2021</em>.</li>
-  <li>Liu, H., et al. (2021). Pay attention to MLPs (gMLP). <em>NeurIPS 2021</em>.</li>
-  <li>Hendrycks, D., & Gimpel, K. (2016). Gaussian error linear units (GELUs). <em>arXiv:1606.08415</em>.</li>
-  <li>LeCun, Y., et al. (1998). Efficient BackProp. <em>Neural Networks: Tricks of the Trade</em>, Springer.</li>
-  <li>Cybenko, G. (1989). Approximation by superpositions of a sigmoidal function. <em>Mathematics of Control, Signals, and Systems</em>, 2(4), 303-314.</li>
+  <li>Rumelhart, D. E., Hinton, G. E., & Williams, R. J. (1986). <em>Learning representations by back-propagating errors</em>. Nature, 323, 533-536.</li>
+  <li>Hornik, K., Stinchcombe, M., & White, H. (1989). <em>Multilayer feedforward networks are universal approximators</em>. Neural Networks, 2(5), 359-366.</li>
+  <li>Nair, V., & Hinton, G. E. (2010). <em>Rectified linear units improve restricted Boltzmann machines</em>. ICML 2010.</li>
+  <li>Glorot, X., & Bengio, Y. (2010). <em>Understanding the difficulty of training deep feedforward neural networks</em>. AISTATS 2010.</li>
+  <li>Srivastava, N., et al. (2014). <em>Dropout: A simple way to prevent neural networks from overfitting</em>. JMLR, 15(1), 1929-1958.</li>
+  <li>Ioffe, S., & Szegedy, C. (2015). <em>Batch normalization: Accelerating deep network training by reducing internal covariate shift</em>. ICML 2015.</li>
+  <li>He, K., et al. (2015). <em>Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification</em>. ICCV 2015.</li>
+  <li>Kingma, D. P., & Ba, J. (2015). <em>Adam: A method for stochastic optimization</em>. ICLR 2015.</li>
+  <li>Telgarsky, M. (2016). <em>Benefits of depth in neural networks</em>. COLT 2016.</li>
+  <li>Loshchilov, I., & Hutter, F. (2019). <em>Decoupled weight decay regularization (AdamW)</em>. ICLR 2019.</li>
+  <li>Tolstikhin, I., et al. (2021). <em>MLP-Mixer: An all-MLP architecture for vision</em>. NeurIPS 2021.</li>
+  <li>Liu, H., et al. (2021). <em>Pay attention to MLPs (gMLP)</em>. NeurIPS 2021.</li>
+  <li>Hendrycks, D., & Gimpel, K. (2016). <em>Gaussian error linear units (GELUs)</em>. arXiv:1606.08415.</li>
+  <li>LeCun, Y., et al. (1998). <em>Efficient BackProp</em>. Neural Networks: Tricks of the Trade, Springer.</li>
+  <li>Cybenko, G. (1989). <em>Approximation by superpositions of a sigmoidal function</em>. Mathematics of Control, Signals, and Systems, 2(4), 303-314.</li>
 </ol>
 </section>
 

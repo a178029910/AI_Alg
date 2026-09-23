@@ -579,21 +579,21 @@ sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda)
 <section id="refs">
   <h2>参考文献</h2>
     <ol>
-    <li>Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). Attention is all you need. <em>Advances in Neural Information Processing Systems</em> (NeurIPS), 30. (Transformer 原始论文，自注意力/缩放点积/多头机制/位置编码)</li>
-    <li>Bahdanau, D., Cho, K., &amp; Bengio, Y. (2015). Neural machine translation by jointly learning to align and translate. <em>Proceedings of ICLR</em>. (注意力机制奠基论文，编解码器/对齐/翻译)</li>
-    <li>Devlin, J., Chang, M.-W., Lee, K., &amp; Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. <em>Proceedings of NAACL-HLT</em>, 4171-4186. (预训练 Encoder-only 模型/双向注意力/MLM)</li>
+    <li>Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). <em>Attention is all you need</em>. Advances in Neural Information Processing Systems (NeurIPS), 30. (Transformer 原始论文，自注意力/缩放点积/多头机制/位置编码)</li>
+    <li>Bahdanau, D., Cho, K., &amp; Bengio, Y. (2015). <em>Neural machine translation by jointly learning to align and translate</em>. Proceedings of ICLR. (注意力机制奠基论文，编解码器/对齐/翻译)</li>
+    <li>Devlin, J., Chang, M.-W., Lee, K., &amp; Toutanova, K. (2019). <em>BERT: Pre-training of deep bidirectional transformers for language understanding</em>. Proceedings of NAACL-HLT, 4171-4186. (预训练 Encoder-only 模型/双向注意力/MLM)</li>
     <li>Radford, A., Wu, J., Child, R., et al. (2019). <em>Language models are unsupervised multitask learners</em>. OpenAI. (GPT-2，Decoder-only 自回归/零样本学习)</li>
-    <li>Brown, T., Mann, B., Ryder, N., et al. (2020). Language models are few-shot learners. <em>Advances in Neural Information Processing Systems</em> (NeurIPS), 33, 1877-1901. (GPT-3，大规模预训练/少样本提示/涌现能力)</li>
-    <li>Dosovitskiy, A., Beyer, L., Kolesnikov, A., et al. (2021). An image is worth 16&#215;16 words: Transformers for image recognition at scale. <em>Proceedings of ICLR</em>. (ViT，图像分块/Patch Embedding/视觉 Transformer)</li>
-    <li>Shaw, P., Uszkoreit, J., &amp; Vaswani, A. (2018). Self-attention with relative position representations. <em>Proceedings of NAACL-HLT</em>, 464-468. (相对位置编码/注意力偏置)</li>
-    <li>Su, J., Lu, Y., Pan, S., et al. (2024). RoFormer: Enhanced transformer with rotary position embedding. <em>Neurocomputing</em>, 588, 127716. (旋转位置编码 RoPE/外推性/大模型广泛应用)</li>
-    <li>Press, O., Smith, N. A., &amp; Lewis, M. (2022). Train short, test long: Attention with linear biases enables input length extrapolation. <em>Proceedings of ICLR</em>. (ALiBi 位置编码/长度外推/线性偏置)</li>
-    <li>Shazeer, N. (2019). Fast transformer decoding with one write-head is all you need. arXiv:1911.02150. (Multi-Query Attention/解码加速/KV Cache 优化)</li>
-    <li>Ainslie, J., Lee-Thorp, J., de Jong, M., et al. (2023). GQA: Training generalized multi-query transformer models from multi-head checkpoints. <em>Proceedings of EMNLP</em>, 4895-4901. (分组查询注意力/MQA 推广/推理效率)</li>
-    <li>Dao, T., Fu, D., Ermon, S., et al. (2022). FlashAttention: Fast and memory-efficient exact attention with IO-awareness. <em>Advances in Neural Information Processing Systems</em> (NeurIPS), 35, 16344-16359. (IO 感知注意力/分块计算/精确注意力加速)</li>
-    <li>Kwon, W., Li, Z., Zhuang, S., et al. (2023). Efficient memory management for large language model serving with PagedAttention. <em>Proceedings of SOSP</em>, 611-626. (vLLM/PagedAttention/显存分页管理)</li>
-    <li>Leviathan, Y., Kalman, M., &amp; Matias, Y. (2023). Fast inference from transformers via speculative decoding. <em>Proceedings of ICML</em>, 19274-19286. (投机解码/Draft 模型/推理加速)</li>
-    <li>Xiong, R., Yang, Y., He, D., et al. (2020). On layer normalization in the transformer architecture. <em>Proceedings of ICML</em>, 10524-10533. (Pre-LN vs Post-LN 分析/训练稳定性/梯度流)</li>
+    <li>Brown, T., Mann, B., Ryder, N., et al. (2020). <em>Language models are few-shot learners</em>. Advances in Neural Information Processing Systems (NeurIPS), 33, 1877-1901. (GPT-3，大规模预训练/少样本提示/涌现能力)</li>
+    <li>Dosovitskiy, A., Beyer, L., Kolesnikov, A., et al. (2021). <em>An image is worth 16&#215;16 words: Transformers for image recognition at scale</em>. Proceedings of ICLR. (ViT，图像分块/Patch Embedding/视觉 Transformer)</li>
+    <li>Shaw, P., Uszkoreit, J., &amp; Vaswani, A. (2018). <em>Self-attention with relative position representations</em>. Proceedings of NAACL-HLT, 464-468. (相对位置编码/注意力偏置)</li>
+    <li>Su, J., Lu, Y., Pan, S., et al. (2024). <em>RoFormer: Enhanced transformer with rotary position embedding</em>. Neurocomputing, 588, 127716. (旋转位置编码 RoPE/外推性/大模型广泛应用)</li>
+    <li>Press, O., Smith, N. A., &amp; Lewis, M. (2022). <em>Train short, test long: Attention with linear biases enables input length extrapolation</em>. Proceedings of ICLR. (ALiBi 位置编码/长度外推/线性偏置)</li>
+    <li>Shazeer, N. (2019). <em>Fast transformer decoding with one write-head is all you need</em>. arXiv:1911.02150. (Multi-Query Attention/解码加速/KV Cache 优化)</li>
+    <li>Ainslie, J., Lee-Thorp, J., de Jong, M., et al. (2023). <em>GQA: Training generalized multi-query transformer models from multi-head checkpoints</em>. Proceedings of EMNLP, 4895-4901. (分组查询注意力/MQA 推广/推理效率)</li>
+    <li>Dao, T., Fu, D., Ermon, S., et al. (2022). <em>FlashAttention: Fast and memory-efficient exact attention with IO-awareness</em>. Advances in Neural Information Processing Systems (NeurIPS), 35, 16344-16359. (IO 感知注意力/分块计算/精确注意力加速)</li>
+    <li>Kwon, W., Li, Z., Zhuang, S., et al. (2023). <em>Efficient memory management for large language model serving with PagedAttention</em>. Proceedings of SOSP, 611-626. (vLLM/PagedAttention/显存分页管理)</li>
+    <li>Leviathan, Y., Kalman, M., &amp; Matias, Y. (2023). <em>Fast inference from transformers via speculative decoding</em>. Proceedings of ICML, 19274-19286. (投机解码/Draft 模型/推理加速)</li>
+    <li>Xiong, R., Yang, Y., He, D., et al. (2020). <em>On layer normalization in the transformer architecture</em>. Proceedings of ICML, 10524-10533. (Pre-LN vs Post-LN 分析/训练稳定性/梯度流)</li>
   </ol>
 </section>
 

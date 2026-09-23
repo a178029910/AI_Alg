@@ -220,7 +220,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p>状态空间 $S = \{$晴(S), 阴(C), 雨(R)$\}$。转移矩阵：</p>
 </div>
 
-<div class="formula multi" data-eq="(4)">$$\mathbf{P} = \begin{array}{c}
+<div class="formula multi">$$\mathbf{P} = \begin{array}{c}
 \begin{pmatrix} 0.7 & 0.2 & 0.1 \\ 0.3 & 0.4 & 0.3 \\ 0.2 & 0.3 & 0.5 \end{pmatrix}
 \begin{matrix} \text{晴} \\ \text{阴} \\ \text{雨} \end{matrix} \\[6pt]
 \begin{matrix} \text{晴} & \text{阴} & \text{雨} \end{matrix}
@@ -271,9 +271,9 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 
 <p><strong>Chapman-Kolmogorov 方程</strong>是马尔可夫链的核心递推关系：</p>
-<div class="formula" data-eq="(5)">$$p_{ij}^{(m+n)} = \sum_{k \in S} p_{ik}^{(m)} \cdot p_{kj}^{(n)}$$</div>
+<div class="formula" data-eq="(4)">$$p_{ij}^{(m+n)} = \sum_{k \in S} p_{ik}^{(m)} \cdot p_{kj}^{(n)}$$</div>
 <p>这意味着：从 $i$ 经 $m+n$ 步到 $j$，可以分解为先经 $m$ 步到某个中间状态 $k$，再经 $n$ 步从 $k$ 到 $j$，对所有中间状态 $k$ 求和。用矩阵表示就是：</p>
-<div class="formula" data-eq="(6)">$$\mathbf{P}^{(n)} = \mathbf{P}^n$$</div>
+<div class="formula" data-eq="(5)">$$\mathbf{P}^{(n)} = \mathbf{P}^n$$</div>
 <p>即 $n$ 步转移矩阵等于一步转移矩阵的 $n$ 次幂。</p>
 
 <div class="callout">
@@ -290,7 +290,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>2.5 状态分布的演化</h3>
 <p>时刻 $t$ 的状态分布 $\boldsymbol{\pi}^{(t)}$ 通过转移矩阵递推：</p>
-<div class="formula" data-eq="(7)">$$\boldsymbol{\pi}^{(t)} = \boldsymbol{\pi}^{(0)} \cdot \mathbf{P}^t$$</div>
+<div class="formula" data-eq="(6)">$$\boldsymbol{\pi}^{(t)} = \boldsymbol{\pi}^{(0)} \cdot \mathbf{P}^t$$</div>
 <p>即初始分布右乘转移矩阵的 $t$ 次幂。</p>
 
 <div class="callout">
@@ -314,7 +314,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>3.2 常返与周期</h3>
 <p>从状态 $i$ 出发，<strong>迟早回到 $i$ 的概率</strong>为：</p>
-<div class="formula" data-eq="(8)">$$f_{ii} = P(\text{ EVER return to } i \mid X_0 = i) = \sum_{n=1}^{\infty} f_{ii}^{(n)}$$</div>
+<div class="formula" data-eq="(7)">$$f_{ii} = P(\text{ EVER return to } i \mid X_0 = i) = \sum_{n=1}^{\infty} f_{ii}^{(n)}$$</div>
 <p>若 $f_{ii} = 1$，状态 $i$ 是<strong>常返</strong>的（Recurrent）；若 $f_{ii} < 1$，状态 $i$ 是<strong>非常返</strong>的（Transient）。</p>
 
 <table>
@@ -369,19 +369,19 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>3.4 平稳分布与极限分布</h3>
 <p>分布 $\boldsymbol{\pi}$ 是<strong>平稳分布</strong>（Stationary Distribution），如果它满足：</p>
-<div class="formula" data-eq="(9)">$$\boldsymbol{\pi} = \boldsymbol{\pi} \cdot \mathbf{P}$$</div>
+<div class="formula" data-eq="(8)">$$\boldsymbol{\pi} = \boldsymbol{\pi} \cdot \mathbf{P}$$</div>
 <p>即从 $\boldsymbol{\pi}$ 出发一步转移后仍为 $\boldsymbol{\pi}$，分布不再变化。这是一个<strong>左特征向量</strong>问题，对应特征值 1。</p>
 
 
 <p>对于遍历链，无论初始分布如何，状态分布收敛到唯一的平稳分布：</p>
-<div class="formula" data-eq="(10)">$$\lim_{n \to \infty} \boldsymbol{\pi}^{(0)} \mathbf{P}^n = \boldsymbol{\pi}^*$$</div>
+<div class="formula" data-eq="(9)">$$\lim_{n \to \infty} \boldsymbol{\pi}^{(0)} \mathbf{P}^n = \boldsymbol{\pi}^*$$</div>
 <p>且 $\boldsymbol{\pi}^*$ 就是平稳分布。逐元素写为：</p>
-<div class="formula" data-eq="(11)">$$\lim_{n \to \infty} p_{ij}^{(n)} = \pi_j^*, \quad \forall i$$</div>
+<div class="formula" data-eq="(10)">$$\lim_{n \to \infty} p_{ij}^{(n)} = \pi_j^*, \quad \forall i$$</div>
 <p>即长期来看，到达各状态的概率与起点无关。</p>
 
 
 <p>平稳分布可以用线性方程组求解——联立 $\boldsymbol{\pi} \mathbf{P} = \boldsymbol{\pi}$ 与归一化条件 $\sum \pi_i = 1$：</p>
-<div class="formula" data-eq="(12)">$$\begin{cases} \pi_j = \sum_{i} \pi_i \, p_{ij}, & \forall j \\ \sum_{j} \pi_j = 1 \end{cases}$$</div>
+<div class="formula" data-eq="(11)">$$\begin{cases} \pi_j = \sum_{i} \pi_i \, p_{ij}, & \forall j \\ \sum_{j} \pi_j = 1 \end{cases}$$</div>
 
 <div class="callout">
 <div class="callout-title">天气模型的平稳分布</div>
@@ -390,17 +390,17 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>3.5 细致平衡</h3>
 <p>如果存在分布 $\boldsymbol{\pi}$ 使得：</p>
-<div class="formula" data-eq="(13)">$$\pi_i \, p_{ij} = \pi_j \, p_{ji}, \quad \forall i, j$$</div>
+<div class="formula" data-eq="(12)">$$\pi_i \, p_{ij} = \pi_j \, p_{ji}, \quad \forall i, j$$</div>
 <p>则称链满足<strong>细致平衡</strong>（Detailed Balance）。满足细致平衡的链是可逆的，且 $\boldsymbol{\pi}$ 一定是平稳分布。细致平衡条件是 MCMC 算法的理论基础。</p>
 
 <h3>3.6 遍历定理与收敛速度</h3>
 <p>对于遍历马尔可夫链，时间平均等于空间平均（依概率 1）：</p>
-<div class="formula" data-eq="(14)">$$\frac{1}{n} \sum_{t=1}^{n} f(X_t) \xrightarrow{a.s.} E_{\pi}[f(X)] = \sum_{i} f(i) \pi_i$$</div>
+<div class="formula" data-eq="(13)">$$\frac{1}{n} \sum_{t=1}^{n} f(X_t) \xrightarrow{a.s.} E_{\pi}[f(X)] = \sum_{i} f(i) \pi_i$$</div>
 <p>这意味着：沿一条马尔可夫链轨迹的时间平均收敛到平稳分布下的期望。<strong>这是 MCMC 的理论基础</strong>——我们可以用马尔可夫链的样本均值来估计期望。</p>
 
 
 <p>遍历定理回答了"收敛到哪里"，而工程上同样关心"收敛得多快"——这由转移矩阵的<strong>谱隙</strong>（Spectral Gap）决定：</p>
-<div class="formula" data-eq="(15)">$$\text{Spectral Gap} = 1 - |\lambda_2|$$</div>
+<div class="formula" data-eq="(14)">$$\text{Spectral Gap} = 1 - |\lambda_2|$$</div>
 <p>其中 $\lambda_2$ 是转移矩阵的次大特征值（模长）。谱隙越大，收敛越快；谱隙接近 0 时收敛极慢。</p>
 
 <table>
@@ -416,7 +416,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>3.7 中心极限定理与误差分析</h3>
 <p>遍历定理是<strong>马尔可夫链的大数定律</strong>。对于马尔可夫链的中心极限定理，有：</p>
-<div class="formula" data-eq="(16)">$$\sqrt{n}\left(\frac{1}{n}\sum_{t=1}^{n} f(X_t) - E_\pi[f]\right) \xrightarrow{d} \mathcal{N}(0, \sigma_f^2)$$</div>
+<div class="formula" data-eq="(15)">$$\sqrt{n}\left(\frac{1}{n}\sum_{t=1}^{n} f(X_t) - E_\pi[f]\right) \xrightarrow{d} \mathcal{N}(0, \sigma_f^2)$$</div>
 <p>其中 $\sigma_f^2$ 与转移矩阵的谱性质有关。这为 MCMC 估计的误差分析提供了理论工具。</p>
 
 </section>
@@ -432,12 +432,12 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h3>4.2 生成元矩阵与转移概率矩阵</h3>
 <p>CTMC 由<strong>无穷小生成元矩阵</strong>（Generator Matrix）$\mathbf{Q}$ 描述：</p>
-<div class="formula" data-eq="(17)">$$\mathbf{Q} = \begin{pmatrix} -q_1 & q_{12} & \cdots & q_{1N} \\ q_{21} & -q_2 & \cdots & q_{2N} \\ \vdots & & \ddots & \vdots \\ q_{N1} & q_{N2} & \cdots & -q_N \end{pmatrix}$$</div>
+<div class="formula" data-eq="(16)">$$\mathbf{Q} = \begin{pmatrix} -q_1 & q_{12} & \cdots & q_{1N} \\ q_{21} & -q_2 & \cdots & q_{2N} \\ \vdots & & \ddots & \vdots \\ q_{N1} & q_{N2} & \cdots & -q_N \end{pmatrix}$$</div>
 <p>其中 $q_i = \sum_{j \neq i} q_{ij}$，每行之和为 0。</p>
 
 
 <p>有了生成元矩阵，任意时刻 $t$ 的转移概率矩阵就由矩阵指数给出：</p>
-<div class="formula" data-eq="(18)">$$\mathbf{P}(t) = e^{\mathbf{Q}t} = \sum_{k=0}^{\infty} \frac{(\mathbf{Q}t)^k}{k!}$$</div>
+<div class="formula" data-eq="(17)">$$\mathbf{P}(t) = e^{\mathbf{Q}t} = \sum_{k=0}^{\infty} \frac{(\mathbf{Q}t)^k}{k!}$$</div>
 <p>平稳分布满足 $\boldsymbol{\pi} \mathbf{Q} = \mathbf{0}$。</p>
 
 <h3>4.3 离散与连续对比</h3>
@@ -481,7 +481,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <li><strong>观测独立假设</strong>：$t$ 时刻的观测 $O_t$ 仅依赖于当前隐藏状态 $X_t$，与其他无关</li>
 </ol>
 
-<div class="formula" data-eq="(19)">$$P(O_1, \ldots, O_T \mid X_1, \ldots, X_T) = \prod_{t=1}^{T} P(O_t \mid X_t)$$</div>
+<div class="formula" data-eq="(18)">$$P(O_1, \ldots, O_T \mid X_1, \ldots, X_T) = \prod_{t=1}^{T} P(O_t \mid X_t)$$</div>
 
 <div class="svg-box">
 <svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
@@ -526,7 +526,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <h4>前向算法（评估）</h4>
 <p>定义<strong>前向概率</strong> $\alpha_t(i) = P(O_1, \ldots, O_t, X_t = s_i \mid \lambda)$：</p>
-<div class="formula" data-eq="(20)">$$\alpha_{t+1}(j) = \left[\sum_{i=1}^{N} \alpha_t(i) \, a_{ij}\right] b_j(O_{t+1})$$</div>
+<div class="formula" data-eq="(19)">$$\alpha_{t+1}(j) = \left[\sum_{i=1}^{N} \alpha_t(i) \, a_{ij}\right] b_j(O_{t+1})$$</div>
 <p>最终 $P(O \mid \lambda) = \sum_{i=1}^{N} \alpha_T(i)$。前向算法通过递推避免了枚举所有状态序列的 $O(N^T)$ 指数复杂度。</p>
 
 <h4>Viterbi 算法（解码）</h4>
@@ -542,7 +542,35 @@ tr:hover td { background: var(--c-primary-ghost); }
 <div class="callout-title">问题设定</div>
 <p>为了直观理解三大问题，先固定一个贯穿始终的小例子。每天的真实天气（晴 S / 雨 R）<strong>不可见</strong>，只能观测到当天的活动（散步 W / 购物 M / 清洁 C）。模型参数：</p>
 <div class="formula">$$\boldsymbol{\pi} = (0.6, 0.4), \quad \mathbf{A} = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}, \quad \mathbf{B} = \begin{pmatrix} 0.5 & 0.4 & 0.1 \\ 0.1 & 0.3 & 0.6 \end{pmatrix}$$</div>
-<p>观测序列 $O = (\text{散步}, \text{购物}, \text{清洁})$。三天的天气状态 $X_1, X_2, X_3$ 是我们想知道的隐藏变量。</p>
+<p>这三个参数分别负责"<strong>开局</strong>""<strong>演变</strong>""<strong>观测</strong>"三个环节，语义与读数如下（$N = 2$ 为状态数，$M = 3$ 为观测值种数）：</p>
+
+<table>
+<tr><th>参数</th><th>维度</th><th>含义</th><th>本例读数</th></tr>
+<tr>
+<td>$\boldsymbol{\pi}$　初始分布</td>
+<td>$N = 2$ 维</td>
+<td>$\pi_i = P(X_1 = s_i)$：<strong>第一天</strong>取各状态的概率</td>
+<td>第一天 $60\%$ 晴、$40\%$ 雨</td>
+</tr>
+<tr>
+<td>$\mathbf{A}$　转移概率</td>
+<td>$N \times N = 2 \times 2$</td>
+<td>$a_{ij} = P(X_{t+1} = s_j \mid X_t = s_i)$：<strong>行 = 今天</strong>、<strong>列 = 明天</strong></td>
+<td>晴→晴 $0.7$、晴→雨 $0.3$；雨→晴 $0.4$、雨→雨 $0.6$</td>
+</tr>
+<tr>
+<td>$\mathbf{B}$　发射概率</td>
+<td>$N \times M = 2 \times 3$</td>
+<td>$b_j(k) = P(O_t = v_k \mid X_t = s_j)$：<strong>行 = 隐藏状态</strong>、<strong>列 = 观测值</strong></td>
+<td>晴天更可能散步（$0.5$），雨天更可能清洁（$0.6$）</td>
+</tr>
+</table>
+
+<p>两个矩阵都满足<strong>每行之和为 1</strong>：$\mathbf{A}$ 的每一行是"明天天气"的条件分布，$\mathbf{B}$ 的每一行是"当天活动"的条件分布。此外 $\mathbf{A}, \mathbf{B}$ 不随时间改变（即时间齐次），所以不写下标 $t$。</p>
+
+<p>把三者连起来读，就是一条<strong>生成故事</strong>：先按 $\boldsymbol{\pi}$ 掷出第一天的天气；此后每天按 $\mathbf{A}$ 决定下一天的天气；再按当天的天气从 $\mathbf{B}$ 中掷出当天的活动。例如"今天是晴天"时，明天有 $0.7$ 的概率仍是晴天，而这一天有 $0.5$ 的概率观测到散步。</p>
+
+<p>记模型为 $\lambda = (\mathbf{A}, \mathbf{B}, \boldsymbol{\pi})$，给定时序观测 $O = (\text{散步}, \text{购物}, \text{清洁})$，则三天的天气 $X_1, X_2, X_3$ 就是我们想还原的隐藏变量——观测者只看得到活动串，看不到背后的天气，这正是"隐"字的含义。</p>
 </div>
 
 <div class="callout">
@@ -589,7 +617,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <ol>
 <li><strong>提议</strong>：从提议分布 $q(x' \mid x)$ 中采样新状态 $x'$；</li>
 <li><strong>计算接受概率</strong>：
-<div class="formula">$$\alpha(x, x') = \min\left(1, \frac{\pi(x') \, q(x \mid x')}{\pi(x) \, q(x' \mid x)}\right)$$</div>
+<div class="formula" data-eq="(20)">$$\alpha(x, x') = \min\left(1, \frac{\pi(x') \, q(x \mid x')}{\pi(x) \, q(x' \mid x)}\right)$$</div>
 </li>
 <li><strong>接受或拒绝</strong>：以概率 $\alpha$ 接受 $x'$（令 $x_{t+1} = x'$），否则拒绝（令 $x_{t+1} = x_t$）。</li>
 </ol>
@@ -987,20 +1015,20 @@ pr = <span class="fn">pagerank</span>(A)
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-<li>Markov, A. A. (1906). Extension of the law of large numbers to variables connected in a chain. <em>Izvestiya Fiziko-matematicheskogo obshchestva pri Kazanskom universitete</em>, 2nd series, 15, 135-156.</li>
-<li>Kolmogorov, A. N. (1931). Über die analytischen Methoden in der Wahrscheinlichkeitsrechnung. <em>Math. Ann.</em>, 104, 415-458.</li>
+<li>Markov, A. A. (1906). <em>Extension of the law of large numbers to variables connected in a chain</em>. Izvestiya Fiziko-matematicheskogo obshchestva pri Kazanskom universitete, 2nd series, 15, 135-156.</li>
+<li>Kolmogorov, A. N. (1931). <em>Über die analytischen Methoden in der Wahrscheinlichkeitsrechnung</em>. Math. Ann., 104, 415-458.</li>
 <li>Doob, J. L. (1953). <em>Stochastic Processes</em>. Wiley. (经典教材)</li>
-<li>Baum, L. E., &amp; Petrie, T. (1966). Statistical inference for probabilistic functions of finite state Markov chains. <em>Ann. Math. Statist.</em>, 37(6), 1554-1563. (HMM 基础)</li>
-<li>Viterbi, A. J. (1967). Error bounds for convolutional codes and an asymptotically optimum decoding algorithm. <em>IEEE Trans. Inf. Theory</em>, 13(2), 260-269. (Viterbi 算法)</li>
-<li>Baum, L. E., Petrie, T., Soules, G., &amp; Weiss, N. (1970). A maximization technique occurring in the statistical analysis of probabilistic functions of Markov chains. <em>Ann. Math. Statist.</em>, 41(1), 164-171. (Baum-Welch 算法)</li>
-<li>Metropolis, N., et al. (1953). Equation of state calculations by fast computing machines. <em>J. Chem. Phys.</em>, 21(6), 1087-1092. (MCMC 起源)</li>
-<li>Hastings, W. K. (1970). Monte Carlo sampling methods using Markov chains and their applications. <em>Biometrika</em>, 57(1), 97-109. (MH 算法)</li>
-<li>Geman, S., &amp; Geman, D. (1984). Stochastic relaxation, Gibbs distributions, and the Bayesian restoration of images. <em>IEEE Trans. Pattern Anal. Mach. Intell.</em>, 6(6), 721-741. (Gibbs 采样)</li>
-<li>Brin, S., &amp; Page, L. (1998). The anatomy of a large-scale hypertextual web search engine. <em>Computer Networks and ISDN Systems</em>, 30(1-7), 107-117. (PageRank)</li>
-<li>Rabiner, L. R. (1989). A tutorial on hidden Markov models and selected applications in speech recognition. <em>Proc. IEEE</em>, 77(2), 257-286. (HMM 教程经典)</li>
+<li>Baum, L. E., &amp; Petrie, T. (1966). <em>Statistical inference for probabilistic functions of finite state Markov chains</em>. Ann. Math. Statist., 37(6), 1554-1563. (HMM 基础)</li>
+<li>Viterbi, A. J. (1967). <em>Error bounds for convolutional codes and an asymptotically optimum decoding algorithm</em>. IEEE Trans. Inf. Theory, 13(2), 260-269. (Viterbi 算法)</li>
+<li>Baum, L. E., Petrie, T., Soules, G., &amp; Weiss, N. (1970). <em>A maximization technique occurring in the statistical analysis of probabilistic functions of Markov chains</em>. Ann. Math. Statist., 41(1), 164-171. (Baum-Welch 算法)</li>
+<li>Metropolis, N., et al. (1953). <em>Equation of state calculations by fast computing machines</em>. J. Chem. Phys., 21(6), 1087-1092. (MCMC 起源)</li>
+<li>Hastings, W. K. (1970). <em>Monte Carlo sampling methods using Markov chains and their applications</em>. Biometrika, 57(1), 97-109. (MH 算法)</li>
+<li>Geman, S., &amp; Geman, D. (1984). <em>Stochastic relaxation, Gibbs distributions, and the Bayesian restoration of images</em>. IEEE Trans. Pattern Anal. Mach. Intell., 6(6), 721-741. (Gibbs 采样)</li>
+<li>Brin, S., &amp; Page, L. (1998). <em>The anatomy of a large-scale hypertextual web search engine</em>. Computer Networks and ISDN Systems, 30(1-7), 107-117. (PageRank)</li>
+<li>Rabiner, L. R. (1989). <em>A tutorial on hidden Markov models and selected applications in speech recognition</em>. Proc. IEEE, 77(2), 257-286. (HMM 教程经典)</li>
 <li>Norris, J. R. (1997). <em>Markov Chains</em>. Cambridge University Press. (理论教材)</li>
 <li>Levin, D. A., Peres, Y., &amp; Wilmer, E. L. (2009). <em>Markov Chains and Mixing Times</em>. AMS. (混合时间专著)</li>
-<li>Andrieu, C., et al. (2003). An introduction to MCMC for machine learning. <em>Machine Learning</em>, 50(1-2), 5-43.</li>
+<li>Andrieu, C., et al. (2003). <em>An introduction to MCMC for machine learning</em>. Machine Learning, 50(1-2), 5-43.</li>
 <li>Bishop, C. M. (2006). <em>Pattern Recognition and Machine Learning</em>, Chapter 13. Springer. (HMM/CRF 章节)</li>
 </ol>
 </section>
