@@ -3,7 +3,7 @@
 <head data-page-node-id="GEifOAIWXiMKSRwv6uQP6e">
 <meta charset="UTF-8" data-page-node-id="g6rKCXHp2fmE5iDTdqyq28">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="HtjWgV9NHV4XGQlVxKmqX1">
-<title>自监督学习 — 代理任务 · 对比学习 · DINO 完整技术指南</title>
+<title>自监督学习 — Self-Supervised Learning 完整技术指南</title>
 <link rel="icon" type="image/png" href="../favicon.png" data-page-node-id="acSTqCNml1xxyWcVPtOLVd">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" data-page-node-id="jF6EMVhgeuWLs7yWBy8Jnc">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -72,7 +72,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-prim
 .svg-box:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .svg-box svg { max-width: 100%; height: auto; }
 .svg-box img { max-width: 100%; height: auto; border-radius: 8px; }
-.svg-cap { font-size: 13px; color: var(--c-text-soft); margin-top: 10px; text-align: center; }
+.svg-caption { font-size: 13px; color: var(--c-text-soft); margin-top: 10px; text-align: center; }
 @keyframes flow-dash { to { stroke-dashoffset: -20; } } @keyframes pulse-node { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } } @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } @keyframes glow-ring { 0%,100% { filter: drop-shadow(0 0 2px rgba(37,99,235,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(37,99,235,0.7)); } }
 .svg-box svg { animation: fade-in-up 0.6s ease-out; }
 .svg-box svg .flow-line { animation: flow-dash 1.5s linear infinite; }
@@ -280,15 +280,15 @@ tr:hover td { background: var(--c-primary-ghost); }
   <text x="336" y="74" text-anchor="middle" font-size="12.5" fill="#047857" font-weight="700" data-page-node-id="ApN19hZi9iOXPvujyrcsY1">② 拼图还原</text>
   <text x="336" y="92" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="bXShF10rjEfaxXDQjdhGpP">Jigsaw (2016)</text>
   <g data-page-node-id="I4Cw73PIWhfmF4vcm8avLX">
-    <rect x="285" y="104" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
-    <rect x="320" y="104" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
-    <rect x="355" y="104" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
-    <rect x="285" y="139" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
-    <rect x="320" y="139" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
-    <rect x="355" y="139" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
-    <rect x="285" y="174" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
-    <rect x="320" y="174" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
-    <rect x="355" y="174" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
+    <rect x="285" y="98" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
+    <rect x="320" y="98" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
+    <rect x="355" y="98" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
+    <rect x="285" y="133" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
+    <rect x="320" y="133" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
+    <rect x="355" y="133" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
+    <rect x="285" y="168" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
+    <rect x="320" y="168" width="32" height="32" rx="3" fill="#a7f3d0" stroke="#059669" stroke-width="1.2"/>
+    <rect x="355" y="168" width="32" height="32" rx="3" fill="#d1fae5" stroke="#059669" stroke-width="1.2"/>
   </g>
   <text x="336" y="214" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="Af5JhHOy8ts4MgySbUHGsn">标签：3×3 块的排列序号</text>
   <text x="336" y="234" text-anchor="middle" font-size="10.5" fill="#475569" data-page-node-id="fldJigLoss">损失：排列序号交叉熵</text>
@@ -472,7 +472,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <line x1="545" y1="112" x2="643" y2="137" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="vGgvUpNtQ6D8xYBGRCiAXy"/>
   <line x1="543" y1="116" x2="597" y2="150" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,3" data-page-node-id="vGgvUpNtQ6D8NewThirdLine"/>
   <text x="640" y="172" font-size="10.5" fill="#dc2626" font-weight="700" text-anchor="middle" data-page-node-id="edK2rVquiTFTjiSkbxR5PU">推远</text>
-  <text x="640" y="185" font-size="9.5" fill="#94a3b8" text-anchor="middle" data-page-node-id="SbKUvMl8dEX9OsONRSuBGQ">其他图像</text>
+  <text x="640" y="200" font-size="9.5" fill="#94a3b8" text-anchor="middle" data-page-node-id="SbKUvMl8dEX9OsONRSuBGQ">其他图像</text>
   <!-- loss -->
   <line x1="690" y1="116" x2="740" y2="116" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ssl-ar)" data-page-node-id="43pVZsE6C4fdQ1DiF7xfV6"/>
   <rect x="744" y="76" width="110" height="80" rx="9" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6" data-page-node-id="AmBb7A8zPSByh9vMjCmkIU"/>
@@ -497,7 +497,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p data-page-node-id="unW5CWMu8BQ867S4oOKopd">在 SimCLR 之前，Instance Discrimination（Wu 等，2018）已把"让每个样本自成一类"的思路引入对比学习。SimCLR（2020.02）的价值在于<strong data-page-node-id="hoqdZ4r3pY8xI2yH2ZF3tb">把对比学习简化到只剩必要组件</strong>，并系统地做了消融实验，回答"到底哪些设计是关键的"。它的框架极简：同一张图做两次随机增广得到两个视图，分别过同一个编码器与投影头，用对称的 NT-Xent 损失训练：</p>
 <div class="svg-box" data-page-node-id="simclrFig2Box">
 <img src="simclr_framework.png" alt="SimCLR 双分支对比学习框架" />
-<div class="svg-cap">图 1　SimCLR 双分支框架示意。一张图从增广族 $\mathcal{T}$ 采样两个增广算子 $t, t'$，得到两个相关视图 $\tilde{x}_i, \tilde{x}_j$；各自经过共享编码器 $f(\cdot)$ 得到表征 $h_i, h_j$，再经投影头 $g(\cdot)$ 映射到对比损失所在空间；训练目标是最上方 "Maximize agreement"——最大化两个投影向量的一致性。与 3.1 节通用框架的差别在于：SimCLR 的负样本全部来自当前 batch，因此图中没有显式负样本，模型只需把同图两视图拉近即可，代价是大 batch。</div>
+<div class="svg-caption">图 1：SimCLR 双分支框架示意 — 一张图从增广族 $\mathcal{T}$ 采样两个增广算子 $t, t'$，得到两个相关视图 $\tilde{x}_i, \tilde{x}_j$；各自经过共享编码器 $f(\cdot)$ 得到表征 $h_i, h_j$，再经投影头 $g(\cdot)$ 映射到对比损失所在空间；训练目标是最上方 "Maximize agreement"——最大化两个投影向量的一致性。与 3.1 节通用框架的差别在于：SimCLR 的负样本全部来自当前 batch，因此图中没有显式负样本，模型只需把同图两视图拉近即可，代价是大 batch。</div>
 </div>
 <div class="formula" data-eq="(10)" data-page-node-id="ji0FOcGXBSq9XgmgUXAsvf">$$\mathcal{L} = \frac{1}{2N}\sum_{i=1}^{N}\Big[\;\ell\big(i,\, j(i)\big) + \ell\big(j(i),\, i\big)\Big], \qquad \ell(i,j) = -\log\frac{\exp\big(\text{sim}(z_i,z_j)/\tau\big)}{\sum_{k\ne i}\exp\big(\text{sim}(z_i,z_k)/\tau\big)}$$</div>
 <p data-page-node-id="Nl3gPslGqoMUwyN2rQUVue">SimCLR 的四个结论，每一个都影响了后续所有工作：</p>
@@ -818,7 +818,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p data-page-node-id="EV10ZKgfDeJTND4hrXz7jC">DINO 的损失是教师与学生在多个视图上的交叉熵：</p>
 <div class="svg-box" data-page-node-id="dinoFig2Box">
 <img src="dino_v1_framework.png" alt="DINO v1 自蒸馏框架示意" />
-<div class="svg-cap">图 2　DINO v1 自蒸馏框架示意。输入图像 $x$ 经增广得到 2 个全局视图 $x_1^g, x_2^g$ 与 1 个局部视图 $x^l$；教师网络 $g_{\theta_t}$ 只看全局视图，学生网络 $g_{\theta_s}$ 看全部视图。教师的输出分布 $P_t$ 经中心化（减 $c$）与低温锐化（$\tau_t = 0.04$）后作为"伪标签"，学生以常温 $\tau_s = 0.1$ 输出 $P_s$ 并与其做交叉熵；教师参数由学生参数的指数滑动平均（EMA）更新（$\theta_t \leftarrow m\theta_t + (1-m)\theta_s$，$m: 0.996 \to 1.0$）。"局部预测全局"的约束迫使学生从局部块推断整体语义。</div>
+<div class="svg-caption">图 2：DINO v1 自蒸馏框架示意 — 输入图像 $x$ 经增广得到 2 个全局视图 $x_1^g, x_2^g$ 与 1 个局部视图 $x^l$；教师网络 $g_{\theta_t}$ 只看全局视图，学生网络 $g_{\theta_s}$ 看全部视图。教师的输出分布 $P_t$ 经中心化（减 $c$）与低温锐化（$\tau_t = 0.04$）后作为"伪标签"，学生以常温 $\tau_s = 0.1$ 输出 $P_s$ 并与其做交叉熵；教师参数由学生参数的指数滑动平均（EMA）更新（$\theta_t \leftarrow m\theta_t + (1-m)\theta_s$，$m: 0.996 \to 1.0$）。"局部预测全局"的约束迫使学生从局部块推断整体语义。</div>
 </div>
 <div class="formula" data-eq="(16)" data-page-node-id="MxNGYLgqd26v5jU5bA1QrD">$$\min_{\theta_s}\; \frac{1}{|\mathcal{P}|}\sum_{x \in \{x_1^{g},\,x_2^{g}\}} \;\sum_{\substack{x' \in V,\; x' \neq x}} H\Big(P_t(x),\; P_s(x')\Big), \qquad H(a,b) = -\sum_{k} a_k \log b_k$$</div>
 <p data-page-node-id="lYT1DMNksWKXcwwAp8BYHk">其中 $V$ 包含 2 个全局视图（224×224 像素）与 8 个局部视图（96×96 像素），共 10 个视图：<strong data-page-node-id="JOv9siGIFKRBtCxqkuT72Y">教师只看 2 个全局视图，学生要看全部 10 个</strong>——这构成了一种"局部预测全局"的额外约束，迫使学生从局部块推断整体语义。两个网络的输出分布由温度控制，并在教师一侧加入中心化：</p>

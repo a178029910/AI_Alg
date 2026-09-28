@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Transformer — 自注意力 · 多头机制 · 位置编码 · 工程部署</title>
+<title>Transformer — Self-Attention Architecture 完整技术指南</title>
 <link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -64,7 +64,7 @@ em { color: var(--c-warn); font-style: normal; font-weight: 600; }
 .formula.core::before { content: '核心公式'; position: absolute; left: -1px; top: 0; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--c-accent); padding: 2px 9px; border-radius: 0 6px 6px 0; }
 .svg-box { background: var(--c-bg-card); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: clamp(14px, 2.4vw, 24px); margin: 24px 0; text-align: center; box-shadow: var(--shadow-sm); }
 .svg-box svg { max-width: 100%; height: auto; }
-.svg-cap { font-size: 13px; color: var(--c-text-soft); margin-top: 10px; text-align: center; }
+.svg-caption { font-size: 13px; color: var(--c-text-soft); margin-top: 10px; text-align: center; }
 .table-wrap { overflow-x: auto; margin: 18px 0; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: var(--shadow-xs); }
 table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--c-bg-card); }
 th { background: var(--c-primary-light); color: var(--c-primary-dark); padding: 11px 15px; text-align: left; font-weight: 650; }
@@ -168,7 +168,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-prim
 
   <div class="svg-box">
 <img src="transformer_arch.png" alt="Transformer 整体架构" style="max-width:100%;border-radius:8px" />
-  <div class="svg-cap">图 1　Transformer 整体架构。左侧编码器由 $N$ 层堆叠，每层含顺序固定的两个子层；右侧解码器每层多一个交叉注意力子层，其 K、V 来自编码器的最终输出——这是解码器看到输入的唯一通道。</div>
+  <div class="svg-caption">图 1：Transformer 整体架构 — 左侧编码器由 $N$ 层堆叠，每层含顺序固定的两个子层；右侧解码器每层多一个交叉注意力子层，其 K、V 来自编码器的最终输出——这是解码器看到输入的唯一通道。</div>
 </div>
 
   <h3>2.1 输入处理：词嵌入 + 位置编码</h3>
@@ -218,7 +218,7 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--c-prim
   <p>其中 $\mathbf{W}_Q, \mathbf{W}_K \in \mathbb{R}^{d_{\text{model}} \times d_k}$，$\mathbf{W}_V \in \mathbb{R}^{d_{\text{model}} \times d_v}$。用三组不同的投影，是为了让模型从<em>不同视角</em>看待同一序列。下面用一个具体的数值算例展示从线性投影到注意力输出的完整计算过程：</p>
   <div class="svg-box">
     <img src="fig_qkv_calculation.png" alt="Q、K、V 线性投影与 Attention 完整计算流程" style="max-width:100%;border-radius:8px" />
-    <div class="svg-cap">图 2　Q、K、V 计算与 Attention 完整流程。左侧：输入嵌入 $\mathbf{X} \in \mathbb{R}^{3 \times 4}$ 分别与三组权重 $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V \in \mathbb{R}^{4 \times 2}$ 相乘，得到 $\mathbf{Q}, \mathbf{K}, \mathbf{V} \in \mathbb{R}^{3 \times 2}$。右侧：按 $\text{Attention}(\mathbf{Q},\mathbf{K},\mathbf{V}) = \text{softmax}(\mathbf{Q}\mathbf{K}^\top / \sqrt{d_k})\mathbf{V}$ 依次完成点积、缩放（$d_k = 2$）、Softmax 归一化（每行和为 1）、与 $\mathbf{V}$ 加权求和，得到最终输出。</div>
+    <div class="svg-caption">图 2：Q、K、V 计算与 Attention 完整流程 — 左侧：输入嵌入 $\mathbf{X} \in \mathbb{R}^{3 \times 4}$ 分别与三组权重 $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V \in \mathbb{R}^{4 \times 2}$ 相乘，得到 $\mathbf{Q}, \mathbf{K}, \mathbf{V} \in \mathbb{R}^{3 \times 2}$。右侧：按 $\text{Attention}(\mathbf{Q},\mathbf{K},\mathbf{V}) = \text{softmax}(\mathbf{Q}\mathbf{K}^\top / \sqrt{d_k})\mathbf{V}$ 依次完成点积、缩放（$d_k = 2$）、Softmax 归一化（每行和为 1）、与 $\mathbf{V}$ 加权求和，得到最终输出。</div>
   </div>
   <div class="callout "><div class="callout-title">直觉：像在图书馆找书</div><p>查询需求即 Query，每本书的标题即 Key，书的内容即 Value。用查询需求比对每本书标题的相似度，相似度越高的书权重越大，最终按权重汇总书的内容——此即一次注意力计算。在自注意力中，序列中每个 token 同时充当「查询者」和「被查询对象」。</p></div>
 

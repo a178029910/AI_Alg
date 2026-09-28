@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Graphormer 详解 — 图 Transformer 完整技术指南</title>
+<title>Graphormer — Graph Transformer 完整技术指南</title>
 <link rel="icon" type="image/png" href="../favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -138,7 +138,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 </aside>
 <main id="main">
 <section id="hero" class="hero">
-  <h1>Graphormer 详解</h1>
+  <h1>Graphormer</h1>
   <div class="subtitle">Graph Transformer</div>
   <p class="hero-intro">将 Transformer 自注意力引入图学习，通过 Centrality Encoding 和 Spatial Encoding 编码图结构信息，在 OGB 基准上取得 SOTA。</p>
   <div class="badges">
@@ -334,12 +334,12 @@ Graphormer 没有修改注意力的 $QK^\top$ 本身，而是在注意力分数�
 <div class="svg-box">
 <svg viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg">
 <text x="400" y="25" text-anchor="middle" font-size="14" fill="#0f172a" font-weight="700">Graphormer 三种编码注入位置</text>
-<rect x="20" y="50" width="180" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+<rect x="20" y="50" width="180" height="48" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
 <text x="110" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8" font-weight="600">节点特征 $x_v$</text>
-<rect x="220" y="50" width="160" height="40" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+<rect x="220" y="50" width="160" height="48" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
 <text x="300" y="75" text-anchor="middle" font-size="12" fill="#7c3aed" font-weight="600">Centrality Encoding</text>
 <text x="300" y="92" text-anchor="middle" font-size="10" fill="#7c3aed">(入度/出度嵌入)</text>
-<rect x="410" y="50" width="180" height="40" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<rect x="410" y="50" width="180" height="48" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
 <text x="500" y="75" text-anchor="middle" font-size="12" fill="#1d4ed8">初始嵌入 $h^{(0)}$</text>
 <text x="210" y="70" text-anchor="middle" font-size="18" fill="#334155">+</text>
 <text x="400" y="70" text-anchor="middle" font-size="18" fill="#334155">→</text>

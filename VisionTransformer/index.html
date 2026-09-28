@@ -3,7 +3,7 @@
 <head data-page-node-id="z7qJ5ApUcOX0292vtlHZt1">
 <meta charset="UTF-8" data-page-node-id="0jxTQJM54kfZWDaEeDYJFa">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="fd2OsNRAwswvg4UmKxjiwZ">
-<title>视觉 Transformer — ViT · Swin · 变体横评 · DETR 完整技术指南</title>
+<title>视觉 Transformer — Vision Transformer 完整技术指南</title>
 <link rel="icon" type="image/png" href="../favicon.png" data-page-node-id="enJVm1fjfKx8uD7HZeLOBf">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" data-page-node-id="WrzYBUOG07OMSykjZRZe7E">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -111,6 +111,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 @media (max-width: 600px) { body { font-size: 15px; line-height: 1.7; } #main { padding: 56px 16px 20px; } .hero { padding: 32px 16px; border-radius: var(--radius-lg); } .hero .badge { font-size: 12px; padding: 4px 12px; } .formula { padding: 12px 16px; font-size: 15px; } .svg-box { padding: 12px; } .code-block pre { font-size: 12px; padding: 14px; } table { font-size: 13px; } th, td { padding: 8px 10px; } #back-to-top { bottom: 16px; right: 16px; width: 40px; height: 40px; } }
 @media (max-width: 400px) { body { font-size: 14px; } #main { padding: 52px 12px 16px; } .hero h1 { font-size: 28px; } .formula { font-size: 13px; padding: 10px 12px; } }
 @media print { #sidebar, #menu-toggle, #back-to-top, #progress-bar { display: none !important; } #main { margin-left: 0; padding: 0; } .svg-box { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; } section { page-break-inside: avoid; } }
+.svg-caption { font-size:13px; color:var(--c-text-soft); margin-top:10px; text-align:center; }
 </style>
 </head>
 
@@ -137,7 +138,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 
 <section id="hero" class="hero" data-page-node-id="1yBQkqCgtagLjGnHzRqtev">
   <h1 data-page-node-id="Mt1m28EzlPyigCv23HIHZI">视觉 Transformer</h1>
-  <div class="subtitle" data-page-node-id="XCCYbAZQvxpknow7iLQUBi">Vision Transformer · Swin</div>
+  <div class="subtitle" data-page-node-id="XCCYbAZQvxpknow7iLQUBi">Vision Transformer</div>
   <p class="hero-intro" data-page-node-id="Ng9yWmLqVTujURloZi4bOm">从 ViT 的图像分块到 Swin 的窗口注意力与层次化金字塔，横向评述 DeiT、MAE、DINO 等变体的真实动机，并深入 registers、attention sink 等内部机制，最后以 DETR 说明 Transformer 作为解码器如何改变检测范式。</p>
   <div class="badges" data-page-node-id="R0zDtT0azi1IZNgw7OGpKO">
     <span class="badge" data-page-node-id="hjFQf7GkwZ0VJiM0hMqZ9q">8 个章节</span>
@@ -259,7 +260,7 @@ tr:hover td { background: var(--c-primary-ghost); }
 <p data-page-node-id="wMurgfJ6gtNgrdSljGUKpM">因此 ViT 的论文最重要的不是架构本身（它几乎是 Transformer 编码器的原样搬用），而是那个<strong data-page-node-id="IoqAyGSsTtZZ2yzUVtv4W0">对照结论</strong>：在 ImageNet-1k 上单独训练，ViT 不如同规模的 ResNet；但在 JFT-300M 上预训练后，ViT 反超，且数据越多优势越大。这解释了为什么 ViT 明确把自己的适用场景限定为"大规模预训练 + 下游微调"。</p>
 <div class="svg-box" data-page-node-id="vitArchFigBox">
 <img src="vit_architecture.png" alt="ViT 完整架构示意图" />
-<div class="svg-cap">图 1　ViT 完整架构。输入图像 224×224×3 经 Patch Embedding（16×16 卷积）切分为 196 个 token，拼接 CLS token 后加位置编码得到 z₀ ∈ ℝ^{197×768}；经 L 层 Transformer Encoder（Pre-LN + MSA + MLP + 残差）后取 CLS 位置的输出，经 LayerNorm 与线性分类头得到预测。</div>
+<div class="svg-caption">图 1：ViT 完整架构 — 输入图像 224×224×3 经 Patch Embedding（16×16 卷积）切分为 196 个 token，拼接 CLS token 后加位置编码得到 z₀ ∈ ℝ^{197×768}；经 L 层 Transformer Encoder（Pre-LN + MSA + MLP + 残差）后取 CLS 位置的输出，经 LayerNorm 与线性分类头得到预测。</div>
 </div>
 <h3 data-page-node-id="TXBC5EIBGIRqGtgDM3yD2j">2.2 图像即序列：Patch Embedding</h3>
 <p data-page-node-id="EOWQW9k4BIVo1ATsDVA4cV">把图像 $\mathbf{x} \in \mathbb{R}^{H \times W \times C}$ 划分为 $N$ 个大小为 $P \times P$ 的不重叠块，$N = HW/P^2$。每块展平为长度 $P^2C$ 的向量，再经可学习的线性映射压缩到模型维度 $D$：</p>
@@ -768,7 +769,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <g fill="#c4b5fd" stroke="#7c3aed" stroke-width="1.5" data-page-node-id="6fL9s3TXqdPvDHeWWcDb58">
     <rect x="497" y="230" width="30" height="24" rx="4" data-page-node-id="7r5sS2DIFzvkPNPb1MZzAO"/><rect x="531" y="230" width="30" height="24" rx="4" data-page-node-id="9RHABKJS1gA8TKDUyFhzvg"/><rect x="565" y="230" width="30" height="24" rx="4" data-page-node-id="mNRNoC6lO0gKG9lKO4PTbm"/><rect x="599" y="230" width="30" height="24" rx="4" data-page-node-id="GZYe5KHOV4vfPHM9tapJoH"/>
   </g>
-  <text x="563" y="246" text-anchor="middle" font-size="9.5" fill="#5b21b6" font-weight="700" data-page-node-id="SfSk9sJOT9l9w07hmEtV6Q">r₁ r₂ r₃ r₄</text>
+  <text x="563" y="268" text-anchor="middle" font-size="9.5" fill="#5b21b6" font-weight="700" data-page-node-id="SfSk9sJOT9l9w07hmEtV6Q">r₁ r₂ r₃ r₄</text>
   <text x="645" y="246" font-size="11" fill="#5b21b6" font-weight="700" data-page-node-id="PAomuUXyEvwDbrA7mjmoAU">← register 承担 sink 角色</text>
   <text x="645" y="278" text-anchor="middle" font-size="11" fill="#64748b" data-page-node-id="GOvxamHi5XAqyiJlibx9WD">分类精度不变，密集预测任务显著提升</text>
 </svg>
