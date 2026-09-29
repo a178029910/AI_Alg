@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>线性代数·地狱终极卷</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;max-width:820px;margin:0 auto;padding:30px 20px;line-height:1.85;color:#1a1a1a;background:#fff}
+h1{text-align:center;color:#1e3a5f;font-size:26px;margin-bottom:6px}
+.meta{text-align:center;color:#666;font-size:15px;margin-bottom:16px}
+.format-info{background:#f0f4f8;padding:14px 18px;border-radius:8px;margin-bottom:28px;font-size:14px;color:#334155}
+.format-info strong{color:#1e3a5f}
+h2{color:#1e3a5f;font-size:20px;border-bottom:2px solid #1e3a5f;padding-bottom:6px;margin:32px 0 16px}
+.q{margin:18px 0;padding:14px 18px;background:#fafafa;border-radius:8px;border-left:3px solid #cbd5e1}
+.q-num{font-weight:700;color:#1e3a5f;font-size:16px}
+.q-points{color:#888;font-size:13px;margin-left:8px}
+.q-body{margin:8px 0 0 0}
+.q-body p{margin:6px 0}
+.opt{margin:4px 0 4px 28px;font-size:15px}
+.opt span{color:#475569}
+.blank{display:inline-block;min-width:120px;border-bottom:1.5px solid #64748b;text-align:center;padding:0 4px;height:20px}
+.sub-q{margin:8px 0 8px 28px}
+.sub-q-label{font-weight:600;color:#334155}
+.sub-pts{color:#888;font-size:13px;margin-left:6px}
+.answer-section{display:none;margin-top:40px}
+.answer-section h2{color:#059669;border-color:#059669}
+.ans-item{margin:12px 0;padding:10px 16px;background:#f0fdf4;border-radius:6px;border-left:4px solid #059669}
+.ans-item .q-num{color:#059669}
+.ans-detail{margin:6px 0 0 28px;font-size:14.5px;color:#334155}
+.ans-detail p{margin:4px 0}
+.toggle-btn{display:block;margin:36px auto 0;padding:12px 36px;background:#1e3a5f;color:#fff;border:none;border-radius:25px;font-size:16px;cursor:pointer;transition:background .2s}
+.toggle-btn:hover{background:#2d5a8f}
+@media print{.toggle-btn{display:none}.answer-section{display:block!important}}
+</style>
+</head>
+<body>
+
+<h1>线性代数·地狱终极卷</h1>
+<div class="meta">满分：100 分　　建议用时：150 分钟</div>
+<div class="format-info">
+<strong>题型分布：</strong>不定项选择题 6 题 × 3 分 = 18 分（漏选得 1 分，错选不得分）｜填空题 6 题 × 3 分 = 18 分｜解答题 6 题共 64 分
+</div>
+
+<!-- ========== 一、不定项选择题 ========== -->
+<h2>一、不定项选择题（每题 3 分，共 18 分。每题至少一个正确选项，漏选得 1 分，错选不得分）</h2>
+
+<div class="q">
+<div class="q-num">1.</div>
+<div class="q-body">
+<p>设 $A$ 是 $n$ 阶实矩阵，且 $A^2=A$。则下列结论正确的是（　　）</p>
+<p class="opt">A. $A$ 可对角化</p>
+<p class="opt">B. $\operatorname{tr}(A)=\operatorname{rank}(A)$</p>
+<p class="opt">C. $A$ 的特征值只能是 $0$ 或 $1$</p>
+<p class="opt">D. $A$ 一定是实对称矩阵</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">2.</div>
+<div class="q-body">
+<p>设 $A$ 是 $3$ 阶矩阵，特征值为 $1,2,3$。则下列行列式为零的是（　　）</p>
+<p class="opt">A. $\det(A-I)$</p>
+<p class="opt">B. $\det(A-2I)$</p>
+<p class="opt">C. $\det(A^2-3A+2I)$</p>
+<p class="opt">D. $\det(A^2-4A+3I)$</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">3.</div>
+<div class="q-body">
+<p>设 $A$ 是 $n$ 阶实对称矩阵，且 $A^3=A$。则下列结论正确的是（　　）</p>
+<p class="opt">A. $A$ 的特征值只能是 $0, 1, -1$</p>
+<p class="opt">B. $A$ 可对角化</p>
+<p class="opt">C. $A$ 的正惯性指数等于 $A$ 的特征值中 $1$ 的个数</p>
+<p class="opt">D. $A$ 的秩等于 $A$ 的非零特征值个数</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">4.</div>
+<div class="q-body">
+<p>设 $A$ 是 $4$ 阶矩阵，$\operatorname{rank}(A)=2$，且 $A^2=0$。则下列结论正确的是（　　）</p>
+<p class="opt">A. $A$ 的 Jordan 标准形中 Jordan 块个数为 $2$</p>
+<p class="opt">B. $A$ 的特征值全为 $0$</p>
+<p class="opt">C. $A$ 不可对角化</p>
+<p class="opt">D. $A$ 的极小多项式为 $\lambda^2$</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">5.</div>
+<div class="q-body">
+<p>设 $A=\begin{pmatrix}2&1&0\\0&2&1\\0&0&2\end{pmatrix}$。则下列结论正确的是（　　）</p>
+<p class="opt">A. $A$ 不可对角化</p>
+<p class="opt">B. $A$ 的极小多项式为 $(\lambda-2)^3$</p>
+<p class="opt">C. $A^{2026}$ 的第 $(1,3)$ 元素为 $2026\cdot 2025\cdot 2^{2023}$</p>
+<p class="opt">D. $A$ 的 Jordan 标准形只有一个 Jordan 块</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">6.</div>
+<div class="q-body">
+<p>设 $A$ 是 $4$ 阶矩阵，特征多项式为 $(\lambda-1)^2(\lambda-2)^2$，极小多项式为 $(\lambda-1)(\lambda-2)^2$。则下列结论正确的是（　　）</p>
+<p class="opt">A. $A$ 的 Jordan 标准形中 Jordan 块总数为 $3$</p>
+<p class="opt">B. 特征值 $1$ 对应两个 $1$ 阶 Jordan 块</p>
+<p class="opt">C. 特征值 $2$ 对应一个 $2$ 阶 Jordan 块</p>
+<p class="opt">D. $A$ 可对角化</p>
+</div>
+</div>
+
+<!-- ========== 二、填空题 ========== -->
+<h2>二、填空题（每题 3 分，共 18 分。答案必须化简到最简形式）</h2>
+
+<div class="q">
+<div class="q-num">7.</div>
+<div class="q-body">
+<p>设 $A$ 是 $3$ 阶矩阵，$\det(A)=2$，$A^*$ 是 $A$ 的伴随矩阵。则 $\det(A^*)=$<span class="blank"></span>。</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">8.</div>
+<div class="q-body">
+<p>设 $A$ 是 $4$ 阶矩阵，特征多项式为 $(\lambda-1)^2(\lambda-2)^2$，极小多项式为 $(\lambda-1)(\lambda-2)^2$。则 $A$ 的 Jordan 标准形中 Jordan 块的总数为<span class="blank"></span>。</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">9.</div>
+<div class="q-body">
+<p>设二次型 $f(x_1,x_2,x_3)=x_1^2+x_2^2+x_3^2+2ax_1x_2+2bx_1x_3+2cx_2x_3$ 的矩阵为 $A$。若 $A$ 的特征值为 $0,1,2$，则 $a^2+b^2+c^2=$<span class="blank"></span>。</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">10.</div>
+<div class="q-body">
+<p>设 $V$ 是 $3$ 维实线性空间，$T$ 是 $V$ 上的线性变换，且 $T^3=T$。若 $T\ne 0$，$T\ne I$，$T\ne -I$，则 $T$ 的特征值只能取的值为<span class="blank"></span>，且 $T$ 可对角化，其对角形矩阵的对角元（按重数写出所有可能的取值集合）为<span class="blank"></span>。</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">11.</div>
+<div class="q-body">
+<p>设 $\alpha_1=(3,1,1)^{\mathrm T}$，$\alpha_2=(2,3,a)^{\mathrm T}$，$\alpha_3=(1,a,3)^{\mathrm T}$。若 $\alpha_1,\alpha_2,\alpha_3$ 线性相关，则 $a=$<span class="blank"></span>。</p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">12.</div>
+<div class="q-body">
+<p>设 $A$ 是 $3$ 阶正交矩阵，且 $\det(A)=-1$。则 $A$ 一定有特征值<span class="blank"></span>。</p>
+</div>
+</div>
+
+<!-- ========== 三、解答题 ========== -->
+<h2>三、解答题（共 64 分。每题都需要完整推理，跳步扣分）</h2>
+
+<div class="q">
+<div class="q-num">13.</div><span class="q-points">（10 分）</span>
+<div class="q-body">
+<p>设 $A=\begin{pmatrix}1&2&0\\0&1&0\\0&0&2\end{pmatrix}$。</p>
+<p class="sub-q"><span class="sub-q-label">（1）</span>求 $A$ 的特征值与特征向量；<span class="sub-pts">（4 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（2）</span>判断 $A$ 是否可对角化，并说明理由；<span class="sub-pts">（2 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（3）</span>求 $A^n$（$n$ 为正整数）的表达式。<span class="sub-pts">（4 分）</span></p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">14.</div><span class="q-points">（10 分）</span>
+<div class="q-body">
+<p>设 $A=\begin{pmatrix}3&1&0\\-1&1&0\\0&0&2\end{pmatrix}$。</p>
+<p class="sub-q"><span class="sub-q-label">（1）</span>求 $A$ 的特征值与特征向量；<span class="sub-pts">（4 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（2）</span>判断 $A$ 是否可对角化，并说明理由；<span class="sub-pts">（2 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（3）</span>求 $A^{2026}$。<span class="sub-pts">（4 分）</span></p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">15.</div><span class="q-points">（10 分）</span>
+<div class="q-body">
+<p>设二次型 $f(x_1,x_2,x_3)=2x_1^2+2x_2^2+2x_3^2+2x_1x_2+2x_1x_3+2x_2x_3$。</p>
+<p class="sub-q"><span class="sub-q-label">（1）</span>写出该二次型的矩阵 $A$；<span class="sub-pts">（2 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（2）</span>求 $A$ 的特征值与特征向量；<span class="sub-pts">（4 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（3）</span>求正交矩阵 $Q$，使得 $Q^{\mathrm T}AQ$ 为对角矩阵，并判断正定性。<span class="sub-pts">（4 分）</span></p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">16.</div><span class="q-points">（10 分）</span>
+<div class="q-body">
+<p>设 $V$ 是 $3$ 维实线性空间，$\{\alpha_1,\alpha_2,\alpha_3\}$ 是基。线性变换 $T$ 满足</p>
+<p style="text-align:center">$T(\alpha_1)=2\alpha_1+\alpha_2$，$T(\alpha_2)=2\alpha_2+\alpha_3$，$T(\alpha_3)=2\alpha_3$。</p>
+<p class="sub-q"><span class="sub-q-label">（1）</span>求 $T$ 在基 $\{\alpha_1,\alpha_2,\alpha_3\}$ 下的矩阵 $A$；<span class="sub-pts">（2 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（2）</span>求 $A$ 的特征值与特征向量；<span class="sub-pts">（3 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（3）</span>判断 $A$ 是否可对角化，并说明理由；<span class="sub-pts">（2 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（4）</span>求 $A^n$（$n$ 为正整数）的表达式。<span class="sub-pts">（3 分）</span></p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">17.</div><span class="q-points">（12 分）</span>
+<div class="q-body">
+<p>设 $A=\begin{pmatrix}2&1\\-1&4\end{pmatrix}$。</p>
+<p class="sub-q"><span class="sub-q-label">（1）</span>求 $A$ 的特征值与特征向量；<span class="sub-pts">（4 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（2）</span>判断 $A$ 是否可对角化，并说明理由；<span class="sub-pts">（4 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（3）</span>求 $A^n$（$n$ 为正整数）的表达式。<span class="sub-pts">（4 分）</span></p>
+</div>
+</div>
+
+<div class="q">
+<div class="q-num">18.</div><span class="q-points">（12 分）</span>
+<div class="q-body">
+<p>设 $V$ 是二维实线性空间，$\{\alpha_1,\alpha_2\}$ 是基。线性变换 $T$ 满足</p>
+<p style="text-align:center">$T(\alpha_1)=\alpha_1+\alpha_2$，$T(\alpha_2)=-\alpha_1+\alpha_2$。</p>
+<p class="sub-q"><span class="sub-q-label">（1）</span>求 $T$ 在基 $\{\alpha_1,\alpha_2\}$ 下的矩阵 $A$；<span class="sub-pts">（4 分）</span></p>
+<p class="sub-q"><span class="sub-q-label">（2）</span>求 $A^{2026}$。<span class="sub-pts">（8 分）</span></p>
+</div>
+</div>
+
+<!-- ========== 参考答案 ========== -->
+<button class="toggle-btn" onclick="toggleAnswers()">显示 / 隐藏参考答案</button>
+
+<div class="answer-section" id="answer-section">
+<h2>参考答案</h2>
+
+<h3 style="color:#059669;margin:20px 0 10px">一、不定项选择题</h3>
+
+<div class="ans-item">
+<div class="q-num">1. ABC</div>
+<div class="ans-detail"><p>$A^2=A$ ⟹ 极小多项式整除 $\lambda(\lambda-1)$，无重根 ⟹ 可对角化（A ✓）；幂等矩阵可对角化为 $\operatorname{diag}(0,\ldots,0,1,\ldots,1)$，$\operatorname{tr}=$ $1$ 的个数 $=\operatorname{rank}$（B ✓）；$\lambda^2=\lambda$ ⟹ $\lambda\in\{0,1\}$（C ✓）；反例 $A=\begin{pmatrix}1&1\\0&0\end{pmatrix}$，$A^2=A$ 但不对称（D ✗）。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">2. ABCD</div>
+<div class="ans-detail"><p>$\det(A-\lambda I)=(1-\lambda)(2-\lambda)(3-\lambda)$。A: $\lambda=1$ ⟹ $0$ ✓；B: $\lambda=2$ ⟹ $0$ ✓；C: $A^2-3A+2I=(A-I)(A-2I)$，$\det=0\cdot 0=0$ ✓；D: $A^2-4A+3I=(A-I)(A-3I)$，含 $\lambda=1$ 因子 ⟹ $0$ ✓。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">3. ABCD</div>
+<div class="ans-detail"><p>$\lambda^3=\lambda$ ⟹ $\lambda\in\{0,1,-1\}$（A ✓）；实对称 ⟹ 正交相似对角化（B ✓）；正惯性指数 = 正特征值个数 = $1$ 的个数（C ✓）；可对角化 ⟹ $\operatorname{rank}=$ 非零特征值个数（D ✓）。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">4. ABCD</div>
+<div class="ans-detail"><p>$A^2=0$ ⟹ 特征值全 $0$（B ✓）；$A$ 是 $4$ 阶幂零矩阵，$\operatorname{rank}=2$ ⟹ Jordan 形为 $J_2(0)\oplus J_2(0)$，块数 $2$（A ✓）；含 $J_2$ 块 ⟹ 不可对角化（C ✓）；最大块尺寸 $2$ ⟹ 极小多项式 $\lambda^2$（D ✓）。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">5. ABCD</div>
+<div class="ans-detail"><p>$A=2I+N$，$N^3=0$ 且 $N^2\ne 0$ ⟹ 单个 $J_3(2)$ 块（D ✓），不可对角化（A ✓），极小多项式 $(\lambda-2)^3$（B ✓）；$A^n=\sum_{k=0}^{2}\binom{n}{k}2^{n-k}N^k$，$(1,3)$ 元素 $=\binom{n}{2}2^{n-2}=\frac{n(n-1)}{2}\cdot 2^{n-2}=n(n-1)\cdot 2^{n-3}$，$n=2026$ 时 $=2026\cdot 2025\cdot 2^{2023}$（C ✓）。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">6. ABC</div>
+<div class="ans-detail"><p>极小多项式 $(\lambda-1)(\lambda-2)^2$：$\lambda=1$ 最大块 $1$ 阶 + 代数重数 $2$ ⟹ 两个 $1$ 阶块（B ✓）；$\lambda=2$ 最大块 $2$ 阶 + 代数重数 $2$ ⟹ 一个 $2$ 阶块（C ✓）；总块数 $2+1=3$（A ✓）；极小多项式含重根 ⟹ 不可对角化（D ✗）。</p></div>
+</div>
+
+<h3 style="color:#059669;margin:20px 0 10px">二、填空题</h3>
+
+<div class="ans-item">
+<div class="q-num">7. $4$</div>
+<div class="ans-detail"><p>$\det(A^*)=\det(A)^{n-1}=2^{3-1}=4$。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">8. $3$</div>
+<div class="ans-detail"><p>同第 6 题：$\lambda=1$ 两个 $1$ 阶块 + $\lambda=2$ 一个 $2$ 阶块 = $3$ 个 Jordan 块。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">9. $1$</div>
+<div class="ans-detail"><p>$A=\begin{pmatrix}1&a&b\\a&1&c\\b&c&1\end{pmatrix}$，$\operatorname{tr}(A^2)=3+2(a^2+b^2+c^2)=0^2+1^2+2^2=5$，故 $a^2+b^2+c^2=1$。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">10. $\{0,1,-1\}$；$\{0,1,-1\}$</div>
+<div class="ans-detail"><p>$T^3=T$ ⟹ 极小多项式整除 $\lambda(\lambda-1)(\lambda+1)$，无重根 ⟹ 可对角化，特征值只能取 $0,1,-1$。对角元为这三个值按重数的某种排列。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">11. $a=3$ 或 $a=-2$</div>
+<div class="ans-detail"><p>$\det\begin{pmatrix}3&2&1\\1&3&a\\1&a&3\end{pmatrix}=3(9-a^2)-2(3-a)+(a-3)=-3a^2+3a+18=-3(a-3)(a+2)$。令 $\det=0$ 得 $a=3$ 或 $a=-2$。</p></div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">12. $-1$</div>
+<div class="ans-detail"><p>$A$ 正交 ⟹ $\det(A+I)=\det(A)\det(A^{\mathrm T}+I)=(-1)\det((I+A)^{\mathrm T})=-\det(A+I)$ ⟹ $\det(A+I)=0$，即 $-1$ 是特征值。</p></div>
+</div>
+
+<h3 style="color:#059669;margin:20px 0 10px">三、解答题</h3>
+
+<div class="ans-item">
+<div class="q-num">13.</div>
+<div class="ans-detail">
+<p><strong>（1）</strong>特征值 $\lambda_1=\lambda_2=1$，$\lambda_3=2$。</p>
+<p>$\lambda=1$：$(A-I)=\begin{pmatrix}0&2&0\\0&0&0\\0&0&1\end{pmatrix}$，特征向量 $k(1,0,0)^{\mathrm T}$。</p>
+<p>$\lambda=2$：$(A-2I)=\begin{pmatrix}-1&2&0\\0&-1&0\\0&0&0\end{pmatrix}$，特征向量 $k(0,0,1)^{\mathrm T}$。</p>
+<p><strong>（2）</strong>不可对角化。$\lambda=1$ 的几何重数 $=1<$ 代数重数 $2$。</p>
+<p><strong>（3）</strong>$$A^n=\begin{pmatrix}1&2n&0\\0&1&0\\0&0&2^n\end{pmatrix}$$</p>
+</div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">14.</div>
+<div class="ans-detail">
+<p><strong>（1）</strong>特征值 $\lambda=2$（三重）。$\lambda=2$：$(A-2I)=\begin{pmatrix}1&1&0\\-1&-1&0\\0&0&0\end{pmatrix}$，特征向量 $k(1,-1,0)^{\mathrm T}$ 和 $k(0,0,1)^{\mathrm T}$。</p>
+<p><strong>（2）</strong>不可对角化。几何重数 $2<$ 代数重数 $3$。</p>
+<p><strong>（3）</strong>设 $N=A-2I$，$N^2=0$。$A^{2026}=(2I+N)^{2026}=2^{2026}I+2026\cdot 2^{2025}N$。</p>
+<p>$$A^{2026}=2^{2025}\begin{pmatrix}2028&2026&0\\-2026&-2024&0\\0&0&2\end{pmatrix}$$</p>
+</div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">15.</div>
+<div class="ans-detail">
+<p><strong>（1）</strong>$$A=\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$$</p>
+<p><strong>（2）</strong>$A=I+J$（$J$ 为全 $1$ 矩阵），$J$ 的特征值为 $3,0,0$，故 $A$ 特征值 $\lambda_1=4$，$\lambda_2=\lambda_3=1$。</p>
+<p>$\lambda=4$：特征向量 $(1,1,1)^{\mathrm T}$。</p>
+<p>$\lambda=1$：$(A-I)=\begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$，特征向量 $(1,-1,0)^{\mathrm T}$，$(1,0,-1)^{\mathrm T}$。</p>
+<p><strong>（3）</strong>正交化：$\mathbf{v}_1=\frac{1}{\sqrt 3}(1,1,1)^{\mathrm T}$，$\mathbf{v}_2=\frac{1}{\sqrt 2}(1,-1,0)^{\mathrm T}$，$\mathbf{v}_3=\frac{1}{\sqrt 6}(1,1,-2)^{\mathrm T}$。</p>
+<p>$$Q=\begin{pmatrix}\frac{1}{\sqrt3}&\frac{1}{\sqrt2}&\frac{1}{\sqrt6}\\\frac{1}{\sqrt3}&-\frac{1}{\sqrt2}&\frac{1}{\sqrt6}\\\frac{1}{\sqrt3}&0&-\frac{2}{\sqrt6}\end{pmatrix},\quad Q^{\mathrm T}AQ=\operatorname{diag}(4,1,1)$$</p>
+<p>特征值全为正 ⟹ 正定。</p>
+</div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">16.</div>
+<div class="ans-detail">
+<p><strong>（1）</strong>$$A=\begin{pmatrix}2&0&0\\1&2&0\\0&1&2\end{pmatrix}$$</p>
+<p><strong>（2）</strong>特征值 $\lambda=2$（三重）。$(A-2I)=\begin{pmatrix}0&0&0\\1&0&0\\0&1&0\end{pmatrix}$，特征向量 $k(0,0,1)^{\mathrm T}$。</p>
+<p><strong>（3）</strong>不可对角化。几何重数 $1<$ 代数重数 $3$。</p>
+<p><strong>（4）</strong>设 $N=A-2I$，$N^2\ne 0$，$N^3=0$。</p>
+<p>$$A^n=2^n I+n\cdot 2^{n-1}N+\binom{n}{2}2^{n-2}N^2=\begin{pmatrix}2^n&0&0\\n2^{n-1}&2^n&0\\\binom{n}{2}2^{n-2}&n2^{n-1}&2^n\end{pmatrix}$$</p>
+</div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">17.</div>
+<div class="ans-detail">
+<p><strong>（1）</strong>特征多项式 $(\lambda-2)(\lambda-4)+1=(\lambda-3)^2$，特征值 $\lambda=3$（二重）。</p>
+<p>$(A-3I)=\begin{pmatrix}-1&1\\-1&1\end{pmatrix}$，特征向量 $k(1,1)^{\mathrm T}$。</p>
+<p><strong>（2）</strong>不可对角化。几何重数 $1<$ 代数重数 $2$。</p>
+<p><strong>（3）</strong>设 $N=A-3I$，$N^2=0$。</p>
+<p>$$A^n=(3I+N)^n=3^nI+n\cdot 3^{n-1}N=3^{n-1}\begin{pmatrix}3-n&n\\-n&3+n\end{pmatrix}$$</p>
+</div>
+</div>
+
+<div class="ans-item">
+<div class="q-num">18.</div>
+<div class="ans-detail">
+<p><strong>（1）</strong>$$A=\begin{pmatrix}1&-1\\1&1\end{pmatrix}$$</p>
+<p><strong>（2）</strong>$$A^2=\begin{pmatrix}0&-2\\2&0\end{pmatrix}=2\begin{pmatrix}0&-1\\1&0\end{pmatrix}$$</p>
+<p>$$A^4=(A^2)^2=\begin{pmatrix}-4&0\\0&-4\end{pmatrix}=-4I$$</p>
+<p>$2026=4\times 506+2$，故</p>
+<p>$$A^{2026}=(A^4)^{506}\cdot A^2=(-4)^{506}\cdot A^2=4^{506}\cdot 2\begin{pmatrix}0&-1\\1&0\end{pmatrix}=2^{1013}\begin{pmatrix}0&-1\\1&0\end{pmatrix}$$</p>
+</div>
+</div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false
+  });
+});
+function toggleAnswers() {
+  var s = document.getElementById('answer-section');
+  s.style.display = (s.style.display === 'none' || s.style.display === '') ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
