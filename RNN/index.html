@@ -459,7 +459,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">9 个章节</span>
     <span class="badge">12 张示例图</span>
-    <span class="badge">16 个公式</span>
+    <span class="badge">20 个公式</span>
     <span class="badge">15 篇参考文献</span>
   </div>
 </section>
@@ -1152,101 +1152,138 @@ $$y_2 = W_{hy} \cdot h_2 \approx [0.296,\; 0.444]$$
 <section id="ch4">
 <h2><span class="num">4</span>GRU：门控循环单元</h2>
 
+<h3>4.1 设计动机</h3>
+<p>LSTM 用「两个状态 + 三道门」换来了长程记忆能力，代价是每个时间步要维护四组仿射变换，参数量与计算量都偏大。GRU（Gated Recurrent Unit，门控循环单元）的思路是在门控框架内做减法：把细胞状态与隐藏状态合并为一个 $h_t$，把遗忘门与输入门合并为一个更新门，用更少的参数取得与 LSTM 相近的表达力。该结构由 Cho 等人于 2014 年提出。</p>
 
-<h3>4.1 设计思想</h3>
-<p>GRU（Gated Recurrent Unit）由 Cho 等人于 2014 年提出，是 LSTM 的简化版本：(1) 合并细胞状态和隐藏状态，只用 $h_t$ (2) 将三个门简化为两个门：更新门和重置门。</p>
+<h3>4.2 GRU 结构详解</h3>
+<p>GRU 在每个时间步只接收当前输入 $x_t$ 与上一时刻隐藏状态 $h_{t-1}$，直接输出新的 $h_t$ —— 不再有独立的细胞状态，记忆与输出由同一个向量承担。其内部只有两个门和一个候选状态，结构如图 7。</p>
 
 <!-- SVG: GRU 结构 -->
 <div class="svg-box">
-<svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <marker id="arrG5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
-    <marker id="arrP5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
-    <marker id="arrO5" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
+    <marker id="gruA-P" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
+    <marker id="gruA-G" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
+    <marker id="gruA-O" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
+    <marker id="gruA-B" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="gruA-N" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/></marker>
   </defs>
 
-  <rect x="10" y="10" width="740" height="360" rx="16" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="8,4"/>
-  <text x="380" y="32" text-anchor="middle" fill="#475569" font-size="14">GRU Cell</text>
+  <rect x="12" y="12" width="876" height="356" rx="16" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="450" y="36" text-anchor="middle" fill="#475569" font-size="14">GRU 单元结构</text>
 
-  <!-- 输入 -->
-  <rect x="30" y="170" width="60" height="35" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="60" y="193" text-anchor="middle" fill="#2563eb" font-size="14">x_t</text>
+  <!-- ── 隐藏状态干线（顶部）── -->
+  <rect x="40" y="50" width="86" height="40" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="83" y="76" text-anchor="middle" fill="#7c3aed" font-size="13">hₜ₋₁</text>
+  <line x1="126" y1="70" x2="598" y2="70" stroke="#7c3aed" stroke-width="2" marker-end="url(#gruA-P)"/>
+  <text x="360" y="60" text-anchor="middle" fill="#7c3aed" font-size="11">(1−zₜ)</text>
+  <circle cx="620" cy="70" r="18" fill="#f8fafc" stroke="#059669" stroke-width="2.5"/>
+  <text x="620" y="78" text-anchor="middle" fill="#059669" font-size="19">+</text>
+  <line x1="638" y1="70" x2="790" y2="70" stroke="#7c3aed" stroke-width="2" marker-end="url(#gruA-P)"/>
+  <rect x="790" y="50" width="78" height="40" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2.5"/>
+  <text x="829" y="76" text-anchor="middle" fill="#7c3aed" font-size="15" font-weight="bold">hₜ</text>
 
-  <!-- 上一隐藏状态 -->
-  <rect x="30" y="80" width="70" height="35" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
-  <text x="65" y="103" text-anchor="middle" fill="#7c3aed" font-size="13">h_{t-1}</text>
+  <!-- ── 输入与拼接总线 ── -->
+  <rect x="70" y="250" width="62" height="38" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="101" y="274" text-anchor="middle" fill="#2563eb" font-size="13">xₜ</text>
+  <line x1="110" y1="90" x2="148" y2="112" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#gruA-P)"/>
+  <line x1="132" y1="266" x2="148" y2="262" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruA-B)"/>
+  <line x1="150" y1="110" x2="150" y2="270" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="95" y="152" text-anchor="middle" fill="#475569" font-size="10.5">[hₜ₋₁, xₜ]</text>
 
-  <!-- 拼接 -->
-  <circle cx="160" cy="130" r="6" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
-  <line x1="100" y1="97" x2="155" y2="126" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrP5)"/>
-  <line x1="90" y1="187" x2="155" y2="138" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrG5)"/>
+  <!-- ── 更新门 / 重置门（同一行，输入自总线）── -->
+  <rect x="540" y="150" width="160" height="54" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="620" y="172" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">更新门</text>
+  <text x="620" y="192" text-anchor="middle" fill="#059669" font-size="10.5">zₜ = σ(W<tspan dy="1.9" font-size="5.7">z</tspan>·[hₜ₋₁, xₜ])</text>
+  <rect x="330" y="150" width="160" height="54" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="410" y="172" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">重置门</text>
+  <text x="410" y="192" text-anchor="middle" fill="#ea580c" font-size="10.5">rₜ = σ(W<tspan dy="1.9" font-size="5.7">r</tspan>·[hₜ₋₁, xₜ])</text>
+  <line x1="152" y1="143" x2="536" y2="147" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruA-N)"/>
+  <line x1="152" y1="178" x2="326" y2="178" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruA-N)"/>
 
-  <!-- 更新门 -->
-  <rect x="195" y="50" width="110" height="40" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
-  <text x="250" y="68" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">更新门</text>
-  <text x="250" y="84" text-anchor="middle" fill="#059669" font-size="11">z_t = σ(W_z·[h,x])</text>
-  <line x1="165" y1="127" x2="220" y2="88" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrG5)"/>
+  <!-- ── 重置门 → ⊙ → 候选状态 ── -->
+  <circle cx="410" cy="250" r="15" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="410" y="257" text-anchor="middle" fill="#ea580c" font-size="18">×</text>
+  <line x1="334" y1="200" x2="398" y2="245" stroke="#ea580c" stroke-width="1.5" marker-end="url(#gruA-O)"/>
+  <line x1="45" y1="90" x2="45" y2="320" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="45" y1="320" x2="410" y2="320" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="410" y1="320" x2="410" y2="269" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#gruA-P)"/>
+  <line x1="152" y1="270" x2="496" y2="270" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruA-N)"/>
 
-  <!-- 重置门 -->
-  <rect x="195" y="110" width="110" height="40" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
-  <text x="250" y="128" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">重置门</text>
-  <text x="250" y="144" text-anchor="middle" fill="#ea580c" font-size="11">r_t = σ(W_r·[h,x])</text>
-  <line x1="165" y1="133" x2="220" y2="130" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrG5)"/>
+  <rect x="500" y="240" width="220" height="62" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="610" y="264" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">候选状态</text>
+  <text x="610" y="286" text-anchor="middle" fill="#2563eb" font-size="10.5">h̃ₜ = tanh(W<tspan dy="1.9" font-size="5.7">h</tspan>·[rₜ⊙hₜ₋₁, xₜ])</text>
+  <line x1="425" y1="250" x2="496" y2="250" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruA-B)"/>
 
-  <!-- 候选状态 -->
-  <rect x="370" y="170" width="130" height="50" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="435" y="190" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="bold">候选状态</text>
-  <text x="435" y="207" text-anchor="middle" fill="#2563eb" font-size="9">h̃_t = tanh(W·[r_t⊙h_{t-1}, x_t])</text>
-  
-  <!-- 重置门作用于h_{t-1} -->
-  <circle cx="340" cy="180" r="14" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
-  <text x="340" y="186" text-anchor="middle" fill="#ea580c" font-size="16">×</text>
-  <line x1="100" y1="97" x2="328" y2="172" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrP5)"/>
-  <line x1="305" y1="130" x2="334" y2="170" stroke="#ea580c" stroke-width="1.5" marker-end="url(#arrO5)"/>
-  <line x1="90" y1="187" x2="368" y2="190" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrG5)"/>
-  <text x="335" y="160" text-anchor="end" fill="#ea580c" font-size="10">r_t</text>
+  <!-- ── 候选状态 → ⊕（绕过更新门右侧）── -->
+  <line x1="710" y1="240" x2="710" y2="100" stroke="#2563eb" stroke-width="1.5"/>
+  <line x1="710" y1="100" x2="640" y2="88" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruA-B)"/>
+  <text x="684" y="180" text-anchor="middle" fill="#2563eb" font-size="10.5">zₜh̃ₜ</text>
 
-  <!-- 更新融合 -->
-  <circle cx="580" cy="130" r="18" fill="#f8fafc" stroke="#059669" stroke-width="2.5" class="pulse-node"/>
-  <text x="580" y="137" text-anchor="middle" fill="#059669" font-size="18">⊕</text>
-  
-  <!-- z_t 控制 -->
-  <line x1="305" y1="70" x2="565" y2="118" stroke="#059669" stroke-width="1.5" marker-end="url(#arrG5)"/>
-  <text x="430" y="60" text-anchor="middle" fill="#059669" font-size="11">z_t (控制保留比例)</text>
-  
-  <!-- h̃_t -->
-  <line x1="500" y1="190" x2="565" y2="145" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrG5)"/>
-  
-  <!-- h_{t-1} 直连 -->
-  <line x1="100" y1="97" x2="565" y2="125" stroke="#7c3aed" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arrP5)"/>
+  <!-- ── 更新门 → ⊕ ── -->
+  <line x1="620" y1="150" x2="620" y2="94" stroke="#059669" stroke-width="1.5" marker-end="url(#gruA-G)"/>
 
-  <!-- 输出 -->
-  <rect x="650" y="110" width="65" height="40" rx="8" fill="#f8fafc" stroke="#7c3aed" stroke-width="2.5" class="pulse-node"/>
-  <text x="682" y="130" text-anchor="middle" fill="#7c3aed" font-size="15" font-weight="bold">h_t</text>
-  <text x="682" y="146" text-anchor="middle" fill="#475569" font-size="11">输出</text>
-  <line x1="598" y1="130" x2="648" y2="130" stroke="#059669" stroke-width="2" marker-end="url(#arrG5)"/>
-
-  <!-- 公式 -->
-  <text x="615" y="200" text-anchor="middle" fill="#059669" font-size="13" font-family="monospace">h_t = (1-z_t)⊙h_{t-1} + z_t⊙h̃_t</text>
-  
-  <!-- 图例 -->
-  <circle cx="40" cy="340" r="5" fill="#059669"/><text x="52" y="344" fill="#475569" font-size="11">更新门</text>
-  <circle cx="120" cy="340" r="5" fill="#ea580c"/><text x="132" y="344" fill="#475569" font-size="11">重置门</text>
-  <circle cx="200" cy="340" r="5" fill="#2563eb"/><text x="212" y="344" fill="#475569" font-size="11">候选状态</text>
-  <text x="290" y="344" fill="#475569" font-size="11">GRU 只需 2 个门，参数比 LSTM 少约 25%</text>
+  <!-- ── 图例 ── -->
+  <text x="450" y="344" text-anchor="middle" font-size="12" fill="#475569"><tspan fill="#059669">■</tspan> 更新门 zₜ　<tspan fill="#ea580c">■</tspan> 重置门 rₜ　<tspan fill="#2563eb">■</tspan> 候选状态 h̃ₜ　<tspan fill="#7c3aed">■</tspan> 隐藏状态 hₜ　　× 逐元素乘　+ 加权求和</text>
 </svg>
-<div class="svg-caption">图 7：GRU 单元结构 — 更新门（绿色）控制新旧信息比例，重置门（橙色）控制候选状态计算</div>
+<div class="svg-caption">图 7：GRU 单元结构 — 更新门（绿色）在旧状态与候选状态之间插值，重置门（橙色）控制候选状态对历史信息的取用比例</div>
 </div>
 
-<h3>4.2 GRU 的公式</h3>
-<div class="formula multi" data-eq="(13)">
-$$z_t = \sigma(W_z \cdot [h_{t-1}, x_t] + b_z)$$ <span class="tag tag-green">更新门</span>
-$$r_t = \sigma(W_r \cdot [h_{t-1}, x_t] + b_r)$$ <span class="tag tag-orange">重置门</span>
-$$\tilde{h}_t = \tanh(W_h \cdot [r_t \odot h_{t-1}, x_t] + b_h)$$ <span class="tag tag-blue">候选状态</span>
-$$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$$ <span class="tag tag-purple">状态更新</span>
+<h4>更新门（Update Gate）</h4>
+<div class="formula" data-eq="(13)">$$z_t = \sigma(W_z \cdot [h_{t-1}, x_t] + b_z)$$</div>
+<p>$z_t$ 的每个元素都在 $[0, 1]$ 之间，它一个系数就同时承担了 LSTM 中遗忘门与输入门的两项职责：$z_t$ 越大越偏向新信息，越小越保留旧状态。</p>
+
+<h4>重置门（Reset Gate）</h4>
+<div class="formula" data-eq="(14)">$$r_t = \sigma(W_r \cdot [h_{t-1}, x_t] + b_r)$$</div>
+<p>$r_t$ 只用于候选状态的计算。当 $r_t$ 接近 0 时，候选状态几乎不看历史、只由当前输入决定，相当于让隐藏状态「重新开始」；接近 1 时则完整沿用历史。</p>
+
+<h4>候选状态（Candidate State）</h4>
+<div class="formula" data-eq="(15)">$$\tilde{h}_t = \tanh(W_h \cdot [r_t \odot h_{t-1}, x_t] + b_h)$$</div>
+<p>先用重置门对上一时刻状态做逐元素缩放得到 $r_t \odot h_{t-1}$，再与当前输入拼接后做仿射变换并过 $\tanh$，得到待写入的新信息。</p>
+
+<h4>隐藏状态更新</h4>
+<div class="formula" data-eq="(16)">$$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$$</div>
+<p>更新门在旧状态与候选状态之间做<strong>线性插值</strong>：两项系数之和恒为 1，因此这是一个凸组合，而不是两个独立的门控乘法。</p>
+
+<h3>4.3 GRU 的工作原理</h3>
+<p>GRU 可以概括为「一条干线、两道闸门」：隐藏状态 $h_t$ 既是贯穿时间的信息干线，又直接充当输出；更新门与重置门在每个时间步决定历史保留多少、新信息写入多少。</p>
+<p>在单个时间步内，GRU 的前向计算分四步：</p>
+<ol>
+  <li><strong>拼接输入</strong>——把当前输入与上一时刻隐藏状态拼接为 $[h_{t-1}, x_t]$，作为两个门的共同输入。</li>
+  <li><strong>并行计算两个门</strong>——更新门 $z_t$ 与重置门 $r_t$ 分别经 sigmoid 得到 $[0, 1]$ 区间的系数（式 13、14）。</li>
+  <li><strong>计算候选状态</strong>——先用重置门缩放历史得到 $r_t \odot h_{t-1}$，再与 $x_t$ 一起生成候选状态 $\tilde{h}_t$（式 15）。</li>
+  <li><strong>更新隐藏状态</strong>——$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$，按更新门在旧状态与候选状态之间插值（式 16）。</li>
+</ol>
+<p>其中最关键的机制是：当更新门 $z_t$ 接近 0 时，$h_t$ 几乎原样等于 $h_{t-1}$。这条直连通路既让信息能跨越多个时间步传递，也让梯度得以沿时间回传。</p>
+<div class="callout">
+  <div class="callout-title">一句话理解</div>
+  GRU 把 LSTM 的「传送带 + 三道闸门」压缩成「一条干线 + 两道闸门」：更新门负责在旧记忆与新内容之间调配比例，重置门负责决定读历史时读多少。
 </div>
 
-<h3>4.3 GRU vs LSTM 对比</h3>
+<h3>4.4 GRU 缓解梯度消失的原理</h3>
+<p>标准 RNN 中梯度消失的原因是 $h_t$ 到 $h_{t-1}$ 的路径包含矩阵连乘 $\prod W_{hh}$。而 GRU 的状态更新是旧状态与候选状态的线性插值，对 $h_{t-1}$ 求偏导可得：</p>
+<div class="formula" data-eq="(17)">$$\frac{\partial h_t}{\partial h_{t-1}} = (1 - z_t) + z_t \frac{\partial \tilde{h}_t}{\partial h_{t-1}}$$</div>
+<p>式中第一项 $(1 - z_t)$ 是恒等直连项，不含任何矩阵乘法；当 $z_t$ 接近 0 时 $\partial h_t / \partial h_{t-1} \approx 1$，梯度可以近乎无损地沿时间回传。（严格说 $z_t$ 本身也依赖 $h_{t-1}$，但该项的贡献远小于直连项。）这与 LSTM 中遗忘门 $f_t$ 接近 1 时的效果同源。</p>
+
+<div class="callout">
+  <div class="callout-title">直觉理解</div>
+  把状态更新改写成 $h_t = h_{t-1} + z_t \odot (\tilde{h}_t - h_{t-1})$ 的形式，会看到一个残差结构：$h_{t-1}$ 被原封不动地保留下来，$z_t$ 只决定要「改动」多少。这条直通路径就是梯度回传的高速公路。
+</div>
+
+<h3>4.5 GRU 计算实例</h3>
+<p>假设输入维度 $d=2$，隐藏维度 $h=1$，输入 $x_t = [0.5, 0.3]$，$h_{t-1} = [0.1]$：</p>
+
+<div class="table-wrap"><table>
+<tr><th>门</th><th>计算</th><th>结果</th></tr>
+<tr><td>更新门 $z_t$</td><td>$\sigma(0.03 + 0.20 + 0.06) = \sigma(0.29)$</td><td>$\approx 0.572$</td></tr>
+<tr><td>重置门 $r_t$</td><td>$\sigma(0.01 + 0.10 + 0.09) = \sigma(0.20)$</td><td>$\approx 0.550$</td></tr>
+<tr><td>候选状态 $\tilde{h}_t$</td><td>$\tanh(0.011 + 0.15 + 0.03) = \tanh(0.191)$</td><td>$\approx 0.189$</td></tr>
+<tr><td>隐藏状态 $h_t$</td><td>$0.428 \times 0.1 + 0.572 \times 0.189$</td><td>$\approx 0.151$</td></tr>
+</table></div>
+<p>注意候选状态一项中的 $0.011$ 来自重置后的历史 $r_t \odot h_{t-1} = 0.550 \times 0.1 = 0.055$，而更新式中 $h_{t-1}$ 的系数正是 $1 - z_t = 0.428$。</p>
+
+<h3>4.6 GRU 与 LSTM 的对比与选型</h3>
+<p>两者同属门控循环网络，表达能力接近，差别主要在参数规模与训练代价：</p>
 <div class="table-wrap"><table>
 <tr><th>特性</th><th>LSTM</th><th>GRU</th></tr>
 <tr><td>门数量</td><td>3（遗忘、输入、输出）</td><td>2（更新、重置）</td></tr>
@@ -1256,23 +1293,14 @@ $$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$$ <span class="tag tag-p
 <tr><td>长距离依赖</td><td>较强</td><td>相近</td></tr>
 <tr><td>表达能力</td><td>较强</td><td>略弱但相当</td></tr>
 </table></div>
-
-<h3>4.4 GRU 计算实例</h3>
-<div class="table-wrap"><table>
-<tr><th>门</th><th>计算</th><th>结果</th></tr>
-<tr><td>更新门 $z_t$</td><td>$\sigma(0.03 + 0.20 + 0.06) = \sigma(0.29)$</td><td>$\approx 0.572$</td></tr>
-<tr><td>重置门 $r_t$</td><td>$\sigma(0.01 + 0.10 + 0.09) = \sigma(0.20)$</td><td>$\approx 0.550$</td></tr>
-<tr><td>候选状态 $\tilde{h}_t$</td><td>$\tanh(0.011 + 0.15 + 0.03) = \tanh(0.191)$</td><td>$\approx 0.189$</td></tr>
-<tr><td>隐藏状态 $h_t$</td><td>$0.428 \times 0.1 + 0.572 \times 0.189$</td><td>$\approx 0.151$</td></tr>
-</table></div>
-
-<h3>4.5 何时选择 GRU vs LSTM</h3>
+<p>选型时可以参考这几条经验：</p>
 <ul>
   <li><strong>数据量较大时</strong>：LSTM 通常表现更好，更强的表达能力可以充分利用更多数据</li>
   <li><strong>数据量较小时</strong>：GRU 参数更少，不易过拟合，常优于 LSTM</li>
   <li><strong>追求效率时</strong>：GRU 计算更快、内存占用更少，更适合资源受限的场景</li>
   <li><strong>长序列依赖</strong>：LSTM 的独立细胞状态在极长序列上可能略有优势</li>
 </ul>
+<p>因此更稳妥的做法是：<strong>先用 GRU 建立基线</strong>，若在验证集上明显欠拟合且数据量充足，再改用 LSTM —— 多数任务上两者的差距在几个百分点以内，取舍往往取决于算力与延迟预算。</p>
 
 </section>
 
@@ -1342,7 +1370,7 @@ $$h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$$ <span class="tag tag-p
 </div>
 
 <h3>5.2 计算公式</h3>
-<div class="formula multi" data-eq="(14)">
+<div class="formula multi" data-eq="(18)">
 $$\overrightarrow{h}_t = \tanh(W^{(f)} x_t + W^{(f)} \overrightarrow{h}_{t-1} + b^{(f)})$$
 $$\overleftarrow{h}_t = \tanh(W^{(b)} x_t + W^{(b)} \overleftarrow{h}_{t+1} + b^{(b)})$$
 $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
@@ -1519,7 +1547,7 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 
 <h3>6.2 注意力增强 Seq2Seq</h3>
 <p>基础 Seq2Seq 的瓶颈是：整个输入序列被压缩为一个固定长度的上下文向量。Bahdanau 注意力机制让解码器在每步动态关注编码器的不同位置：</p>
-<div class="formula" data-eq="(15)">$$e_{t,i} = \text{score}(s_{t-1}, h_i^{\text{enc}}) \;\rightarrow\; \alpha_{t,i} = \text{softmax}(e_{t,i}) \;\rightarrow\; c_t = \sum_i \alpha_{t,i} \cdot h_i^{\text{enc}}$$</div>
+<div class="formula" data-eq="(19)">$$e_{t,i} = \text{score}(s_{t-1}, h_i^{\text{enc}}) \;\rightarrow\; \alpha_{t,i} = \text{softmax}(e_{t,i}) \;\rightarrow\; c_t = \sum_i \alpha_{t,i} \cdot h_i^{\text{enc}}$$</div>
 
 </section>
 
@@ -1530,7 +1558,7 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 
 <h3>7.1 Minimal Gated Unit (MGU)</h3>
 <p>进一步简化 GRU，只保留一个门，参数量约为 GRU 的 2/3：</p>
-<div class="formula" data-eq="(16)">$$h_t = (1 - f_t) \odot h_{t-1} + f_t \odot \tanh(W \cdot [f_t \odot h_{t-1}, x_t])$$</div>
+<div class="formula" data-eq="(20)">$$h_t = (1 - f_t) \odot h_{t-1} + f_t \odot \tanh(W \cdot [f_t \odot h_{t-1}, x_t])$$</div>
 
 <h3>7.2 回声状态网络 (ESN)</h3>
 <p>储备池——随机初始化且不训练的递归层，只训练输出层线性权重。训练极快但表达能力有限。</p>
