@@ -459,7 +459,7 @@ tr:hover td { background: var(--c-primary-ghost); }
   <div class="badges">
     <span class="badge">9 个章节</span>
     <span class="badge">12 张示例图</span>
-    <span class="badge">20 个公式</span>
+    <span class="badge">21 个公式</span>
     <span class="badge">15 篇参考文献</span>
   </div>
 </section>
@@ -1160,71 +1160,92 @@ $$y_2 = W_{hy} \cdot h_2 \approx [0.296,\; 0.444]$$
 
 <!-- SVG: GRU 结构 -->
 <div class="svg-box">
-<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <marker id="gruA-P" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
-    <marker id="gruA-G" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
-    <marker id="gruA-O" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
-    <marker id="gruA-B" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
-    <marker id="gruA-N" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/></marker>
+    <marker id="gruB-P" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#7c3aed"/></marker>
+    <marker id="gruB-G" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
+    <marker id="gruB-O" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
+    <marker id="gruB-B" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+    <marker id="gruB-N" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/></marker>
   </defs>
 
-  <rect x="12" y="12" width="876" height="356" rx="16" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="8,4"/>
-  <text x="450" y="36" text-anchor="middle" fill="#475569" font-size="14">GRU 单元结构</text>
+  <rect x="12" y="12" width="936" height="536" rx="16" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="480" y="42" text-anchor="middle" fill="#475569" font-size="14">GRU 单元结构</text>
 
-  <!-- ── 隐藏状态干线（顶部）── -->
-  <rect x="40" y="50" width="86" height="40" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
-  <text x="83" y="76" text-anchor="middle" fill="#7c3aed" font-size="13">hₜ₋₁</text>
-  <line x1="126" y1="70" x2="598" y2="70" stroke="#7c3aed" stroke-width="2" marker-end="url(#gruA-P)"/>
-  <text x="360" y="60" text-anchor="middle" fill="#7c3aed" font-size="11">(1−zₜ)</text>
-  <circle cx="620" cy="70" r="18" fill="#f8fafc" stroke="#059669" stroke-width="2.5"/>
-  <text x="620" y="78" text-anchor="middle" fill="#059669" font-size="19">+</text>
-  <line x1="638" y1="70" x2="790" y2="70" stroke="#7c3aed" stroke-width="2" marker-end="url(#gruA-P)"/>
-  <rect x="790" y="50" width="78" height="40" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2.5"/>
-  <text x="829" y="76" text-anchor="middle" fill="#7c3aed" font-size="15" font-weight="bold">hₜ</text>
+  <!-- 输入 x_t（左列） -->
+  <rect x="70" y="150" width="170" height="44" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="155" y="177" text-anchor="middle" fill="#2563eb" font-size="14">x<tspan dy="3" font-size="8">t</tspan></text>
 
-  <!-- ── 输入与拼接总线 ── -->
-  <rect x="70" y="250" width="62" height="38" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="101" y="274" text-anchor="middle" fill="#2563eb" font-size="13">xₜ</text>
-  <line x1="110" y1="90" x2="148" y2="112" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#gruA-P)"/>
-  <line x1="132" y1="266" x2="148" y2="262" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruA-B)"/>
-  <line x1="150" y1="110" x2="150" y2="270" stroke="#94a3b8" stroke-width="1.5"/>
-  <text x="95" y="152" text-anchor="middle" fill="#475569" font-size="10.5">[hₜ₋₁, xₜ]</text>
+  <!-- 输入 h_{t-1}（左列） -->
+  <rect x="70" y="300" width="170" height="44" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="155" y="327" text-anchor="middle" fill="#7c3aed" font-size="14">h<tspan dy="3" font-size="8">t−1</tspan></text>
 
-  <!-- ── 更新门 / 重置门（同一行，输入自总线）── -->
-  <rect x="540" y="150" width="160" height="54" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
-  <text x="620" y="172" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">更新门</text>
-  <text x="620" y="192" text-anchor="middle" fill="#059669" font-size="10.5">zₜ = σ(W<tspan dy="1.9" font-size="5.7">z</tspan>·[hₜ₋₁, xₜ])</text>
-  <rect x="330" y="150" width="160" height="54" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
-  <text x="410" y="172" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">重置门</text>
-  <text x="410" y="192" text-anchor="middle" fill="#ea580c" font-size="10.5">rₜ = σ(W<tspan dy="1.9" font-size="5.7">r</tspan>·[hₜ₋₁, xₜ])</text>
-  <line x1="152" y1="143" x2="536" y2="147" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruA-N)"/>
-  <line x1="152" y1="178" x2="326" y2="178" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruA-N)"/>
+  <!-- 拼接总线 [h_{t-1}, x_t] -->
+  <line x1="240" y1="172" x2="290" y2="172" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#gruB-N)"/>
+  <line x1="240" y1="322" x2="290" y2="322" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#gruB-N)"/>
+  <line x1="290" y1="172" x2="290" y2="330" stroke="#94a3b8" stroke-width="1.5"/>
+  <circle cx="290" cy="172" r="3" fill="#f8fafc" stroke="#94a3b8"/>
+  <circle cx="290" cy="250" r="3" fill="#f8fafc" stroke="#94a3b8"/>
+  <circle cx="290" cy="330" r="3" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="330" y="212" text-anchor="middle" fill="#475569" font-size="11">[h<tspan dy="2" font-size="6.6">t−1</tspan>, x<tspan dy="2" font-size="6.6">t</tspan>]</text>
 
-  <!-- ── 重置门 → ⊙ → 候选状态 ── -->
-  <circle cx="410" cy="250" r="15" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
-  <text x="410" y="257" text-anchor="middle" fill="#ea580c" font-size="18">×</text>
-  <line x1="334" y1="200" x2="398" y2="245" stroke="#ea580c" stroke-width="1.5" marker-end="url(#gruA-O)"/>
-  <line x1="45" y1="90" x2="45" y2="320" stroke="#7c3aed" stroke-width="1.5"/>
-  <line x1="45" y1="320" x2="410" y2="320" stroke="#7c3aed" stroke-width="1.5"/>
-  <line x1="410" y1="320" x2="410" y2="269" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#gruA-P)"/>
-  <line x1="152" y1="270" x2="496" y2="270" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruA-N)"/>
+  <!-- 更新门 z_t -->
+  <rect x="400" y="220" width="210" height="60" rx="8" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
+  <text x="505" y="245" text-anchor="middle" fill="#059669" font-size="13" font-weight="bold">更新门 z<tspan dy="2.5" font-size="7.5">t</tspan></text>
+  <text x="505" y="265" text-anchor="middle" fill="#059669" font-size="10">z<tspan dy="1.8" font-size="6">t</tspan> = σ(W<tspan dy="1.8" font-size="6">z</tspan>·[h<tspan dy="1.8" font-size="6">t−1</tspan>, x<tspan dy="1.8" font-size="6">t</tspan>])</text>
+  <line x1="290" y1="250" x2="396" y2="250" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruB-N)"/>
 
-  <rect x="500" y="240" width="220" height="62" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="610" y="264" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">候选状态</text>
-  <text x="610" y="286" text-anchor="middle" fill="#2563eb" font-size="10.5">h̃ₜ = tanh(W<tspan dy="1.9" font-size="5.7">h</tspan>·[rₜ⊙hₜ₋₁, xₜ])</text>
-  <line x1="425" y1="250" x2="496" y2="250" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruA-B)"/>
+  <!-- 重置门 r -->
+  <rect x="400" y="300" width="210" height="60" rx="8" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="505" y="325" text-anchor="middle" fill="#ea580c" font-size="13" font-weight="bold">重置门 r<tspan dy="2.5" font-size="7.5">t</tspan></text>
+  <text x="505" y="345" text-anchor="middle" fill="#ea580c" font-size="10">r<tspan dy="1.8" font-size="6">t</tspan> = σ(W<tspan dy="1.8" font-size="6">r</tspan>·[h<tspan dy="1.8" font-size="6">t−1</tspan>, x<tspan dy="1.8" font-size="6">t</tspan>])</text>
+  <line x1="290" y1="330" x2="396" y2="330" stroke="#94a3b8" stroke-width="1" marker-end="url(#gruB-N)"/>
 
-  <!-- ── 候选状态 → ⊕（绕过更新门右侧）── -->
-  <line x1="710" y1="240" x2="710" y2="100" stroke="#2563eb" stroke-width="1.5"/>
-  <line x1="710" y1="100" x2="640" y2="88" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruA-B)"/>
-  <text x="684" y="180" text-anchor="middle" fill="#2563eb" font-size="10.5">zₜh̃ₜ</text>
+  <!-- 重置门 → ⊙（r_t） -->
+  <line x1="505" y1="360" x2="505" y2="384" stroke="#ea580c" stroke-width="1.5" marker-end="url(#gruB-O)"/>
 
-  <!-- ── 更新门 → ⊕ ── -->
-  <line x1="620" y1="150" x2="620" y2="94" stroke="#059669" stroke-width="1.5" marker-end="url(#gruA-G)"/>
+  <!-- ⊙（r_t ⊙ h_{t-1}） -->
+  <circle cx="505" cy="402" r="18" fill="#f8fafc" stroke="#ea580c" stroke-width="2"/>
+  <text x="505" y="410" text-anchor="middle" fill="#ea580c" font-size="18">×</text>
 
-  <!-- ── 图例 ── -->
-  <text x="450" y="344" text-anchor="middle" font-size="12" fill="#475569"><tspan fill="#059669">■</tspan> 更新门 zₜ　<tspan fill="#ea580c">■</tspan> 重置门 rₜ　<tspan fill="#2563eb">■</tspan> 候选状态 h̃ₜ　<tspan fill="#7c3aed">■</tspan> 隐藏状态 hₜ　　× 逐元素乘　+ 加权求和</text>
+  <!-- h_{t-1} → ⊙ -->
+  <line x1="155" y1="344" x2="155" y2="470" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="155" y1="470" x2="487" y2="470" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="487" y1="470" x2="487" y2="404" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#gruB-P)"/>
+  <text x="330" y="462" text-anchor="middle" fill="#7c3aed" font-size="10.5">r<tspan dy="2" font-size="6.3">t</tspan>⊙h<tspan dy="2" font-size="6.3">t−1</tspan></text>
+
+  <!-- ⊙ → 候选状态 -->
+  <line x1="523" y1="402" x2="618" y2="402" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruB-B)"/>
+  <rect x="620" y="390" width="280" height="60" rx="8" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
+  <text x="760" y="415" text-anchor="middle" fill="#2563eb" font-size="13" font-weight="bold">候选状态 h̃<tspan dy="2.5" font-size="7.5">t</tspan></text>
+  <text x="760" y="437" text-anchor="middle" fill="#2563eb" font-size="10">h̃<tspan dy="1.8" font-size="6">t</tspan> = tanh(W<tspan dy="1.8" font-size="6">h</tspan>·[r<tspan dy="1.8" font-size="6">t</tspan>⊙h<tspan dy="1.8" font-size="6">t−1</tspan>, x<tspan dy="1.8" font-size="6">t</tspan>])</text>
+
+  <!-- 候选状态 → ⊕（z_t h̃_t，从 ⊕ 底部进入） -->
+  <line x1="760" y1="390" x2="760" y2="268" stroke="#2563eb" stroke-width="1.5" marker-end="url(#gruB-B)"/>
+  <text x="700" y="310" text-anchor="middle" fill="#2563eb" font-size="10.5">z<tspan dy="2" font-size="6.3">t</tspan>h̃<tspan dy="2" font-size="6.3">t</tspan></text>
+
+  <!-- h_{t-1} → ⊕（(1−z_t)h_{t-1}，从 ⊕ 顶部进入） -->
+  <line x1="70" y1="322" x2="40" y2="322" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="40" y1="322" x2="40" y2="120" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="40" y1="120" x2="760" y2="120" stroke="#7c3aed" stroke-width="1.5"/>
+  <line x1="760" y1="120" x2="760" y2="232" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#gruB-P)"/>
+  <text x="470" y="112" text-anchor="middle" fill="#7c3aed" font-size="11">(1−z<tspan dy="2" font-size="6.6">t</tspan>)h<tspan dy="2" font-size="6.6">t−1</tspan></text>
+
+  <!-- 更新门 → ⊕（z_t，从 ⊕ 左侧进入） -->
+  <line x1="610" y1="250" x2="742" y2="250" stroke="#059669" stroke-width="1.5" marker-end="url(#gruB-G)"/>
+  <text x="676" y="242" text-anchor="middle" fill="#059669" font-size="10.5">z<tspan dy="2" font-size="6.3">t</tspan></text>
+
+  <!-- ⊕ 加权求和（上：(1−z)h；左：z；下：z h̃；右：h_t） -->
+  <circle cx="760" cy="250" r="18" fill="#f8fafc" stroke="#059669" stroke-width="2.5"/>
+  <text x="760" y="258" text-anchor="middle" fill="#059669" font-size="19">+</text>
+
+  <!-- ⊕ → h_t -->
+  <line x1="778" y1="250" x2="828" y2="250" stroke="#7c3aed" stroke-width="2" marker-end="url(#gruB-P)"/>
+  <rect x="830" y="228" width="96" height="44" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="2.5"/>
+  <text x="878" y="255" text-anchor="middle" fill="#7c3aed" font-size="15" font-weight="bold">h<tspan dy="2.5" font-size="8.5">t</tspan></text>
+
+  <!-- 图例 -->
+  <text x="480" y="532" text-anchor="middle" font-size="12" fill="#475569"><tspan fill="#059669">■</tspan> 更新门 z<tspan dy="2" font-size="7.2">t</tspan>　<tspan fill="#ea580c">■</tspan> 重置门 r<tspan dy="2" font-size="7.2">t</tspan>　<tspan fill="#2563eb">■</tspan> 候选状态 h̃<tspan dy="2" font-size="7.2">t</tspan>　<tspan fill="#7c3aed">■</tspan> 隐藏状态 h<tspan dy="2" font-size="7.2">t</tspan>　　× 逐元素乘　+ 加权求和</text>
 </svg>
 <div class="svg-caption">图 7：GRU 单元结构 — 更新门（绿色）在旧状态与候选状态之间插值，重置门（橙色）控制候选状态对历史信息的取用比例</div>
 </div>
@@ -1309,7 +1330,7 @@ $$y_2 = W_{hy} \cdot h_2 \approx [0.296,\; 0.444]$$
 <h2><span class="num">5</span>双向与深层 RNN</h2>
 
 
-<h3>5.1 动机</h3>
+<h3>5.1 双向 RNN 的动机</h3>
 <p>标准 RNN 只能利用当前时刻之前的信息。但在许多任务中，当前时刻的判断依赖于<strong>未来信息</strong>。例如命名实体识别："我 去 了 苹果 发布会"中的"苹果"是公司名还是水果？只看到"我 去 了 苹果"无法确定，但看到后面的"发布会"就可以确定是公司名。</p>
 
 <p>双向 RNN（BiRNN）由 Schuster 和 Paliwal 于 1997 年提出，通过同时从前向后和从后向前处理序列，使每个时间步的输出都融合了全局上下文信息。</p>
@@ -1323,26 +1344,26 @@ $$y_2 = W_{hy} \cdot h_2 \approx [0.296,\; 0.444]$$
   </defs>
   <text x="30" y="55" fill="#2563eb" font-size="14" font-weight="bold">前向层 →</text>
   <rect x="140" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="180" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₁</text>
+  <text x="180" y="55" text-anchor="middle" fill="#2563eb" font-size="12">→h₁</text>
   <rect x="300" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="340" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₂</text>
+  <text x="340" y="55" text-anchor="middle" fill="#2563eb" font-size="12">→h₂</text>
   <rect x="460" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="500" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₃</text>
+  <text x="500" y="55" text-anchor="middle" fill="#2563eb" font-size="12">→h₃</text>
   <rect x="620" y="30" width="80" height="50" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
-  <text x="660" y="55" text-anchor="middle" fill="#2563eb" font-size="13">→h₄</text>
-  <line x1="220" y1="55" x2="298" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)" class="flow-line" stroke-dasharray="6,4"/>
-  <line x1="380" y1="55" x2="458" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)" class="flow-line" stroke-dasharray="6,4"/>
-  <line x1="540" y1="55" x2="618" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)" class="flow-line" stroke-dasharray="6,4"/>
+  <text x="660" y="55" text-anchor="middle" fill="#2563eb" font-size="12">→h₄</text>
+  <line x1="220" y1="55" x2="298" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)"/>
+  <line x1="380" y1="55" x2="458" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)"/>
+  <line x1="540" y1="55" x2="618" y2="55" stroke="#2563eb" stroke-width="2" marker-end="url(#arrF6)"/>
 
   <text x="30" y="135" fill="#475569" font-size="14" font-weight="bold">输入</text>
   <rect x="140" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-  <text x="180" y="140" text-anchor="middle" fill="#475569" font-size="13">x₁</text>
+  <text x="180" y="140" text-anchor="middle" fill="#475569" font-size="12">x₁</text>
   <rect x="300" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-  <text x="340" y="140" text-anchor="middle" fill="#475569" font-size="13">x₂</text>
+  <text x="340" y="140" text-anchor="middle" fill="#475569" font-size="12">x₂</text>
   <rect x="460" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-  <text x="500" y="140" text-anchor="middle" fill="#475569" font-size="13">x₃</text>
+  <text x="500" y="140" text-anchor="middle" fill="#475569" font-size="12">x₃</text>
   <rect x="620" y="115" width="80" height="40" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-  <text x="660" y="140" text-anchor="middle" fill="#475569" font-size="13">x₄</text>
+  <text x="660" y="140" text-anchor="middle" fill="#475569" font-size="12">x₄</text>
   <line x1="180" y1="80" x2="180" y2="113" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
   <line x1="340" y1="80" x2="340" y2="113" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
   <line x1="500" y1="80" x2="500" y2="113" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
@@ -1350,13 +1371,13 @@ $$y_2 = W_{hy} \cdot h_2 \approx [0.296,\; 0.444]$$
 
   <text x="30" y="215" fill="#059669" font-size="14" font-weight="bold">反向层 ←</text>
   <rect x="140" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
-  <text x="180" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₁</text>
+  <text x="180" y="215" text-anchor="middle" fill="#059669" font-size="12">←h₁</text>
   <rect x="300" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
-  <text x="340" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₂</text>
+  <text x="340" y="215" text-anchor="middle" fill="#059669" font-size="12">←h₂</text>
   <rect x="460" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
-  <text x="500" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₃</text>
+  <text x="500" y="215" text-anchor="middle" fill="#059669" font-size="12">←h₃</text>
   <rect x="620" y="190" width="80" height="50" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
-  <text x="660" y="215" text-anchor="middle" fill="#059669" font-size="13">←h₄</text>
+  <text x="660" y="215" text-anchor="middle" fill="#059669" font-size="12">←h₄</text>
   <line x1="300" y1="215" x2="222" y2="215" stroke="#059669" stroke-width="2" marker-end="url(#arrB6)"/>
   <line x1="460" y1="215" x2="382" y2="215" stroke="#059669" stroke-width="2" marker-end="url(#arrB6)"/>
   <line x1="620" y1="215" x2="542" y2="215" stroke="#059669" stroke-width="2" marker-end="url(#arrB6)"/>
@@ -1364,19 +1385,19 @@ $$y_2 = W_{hy} \cdot h_2 \approx [0.296,\; 0.444]$$
   <line x1="340" y1="155" x2="340" y2="188" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
   <line x1="500" y1="155" x2="500" y2="188" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
   <line x1="660" y1="155" x2="660" y2="188" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
-  <text x="30" y="265" fill="#ea580c" font-size="13" font-weight="bold">输出 y_t = [→h_t; ←h_t]</text>
+  <text x="30" y="265" fill="#ea580c" font-size="13" font-weight="bold">输出 y<tspan dy="2" font-size="7.8">t</tspan> = [→h<tspan dy="2" font-size="7.8">t</tspan>; ←h<tspan dy="2" font-size="7.8">t</tspan>]</text>
 </svg>
 <div class="svg-caption">图 8：双向 RNN 结构 — 前向层（蓝色）从左到右，反向层（绿色）从右到左，输出拼接两层隐藏状态</div>
 </div>
 
-<h3>5.2 计算公式</h3>
+<h3>5.2 双向 RNN 的计算公式</h3>
 <div class="formula multi" data-eq="(18)">
 $$\overrightarrow{h}_t = \tanh(W^{(f)} x_t + W^{(f)} \overrightarrow{h}_{t-1} + b^{(f)})$$
 $$\overleftarrow{h}_t = \tanh(W^{(b)} x_t + W^{(b)} \overleftarrow{h}_{t+1} + b^{(b)})$$
 $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 </div>
 
-<h3>5.3 适用场景</h3>
+<h3>5.3 双向 RNN 的适用场景</h3>
 <div class="table-wrap"><table>
 <tr><th>适用（完整序列可见）</th><th>不适用（实时/流式）</th></tr>
 <tr><td>文本分类、命名实体识别</td><td>实时语音识别、实时股票预测</td></tr>
@@ -1384,7 +1405,7 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 </table></div>
 
 
-<h3>5.4 动机</h3>
+<h3>5.4 深层 RNN 的动机</h3>
 <p>单层 RNN 表达能力受限于隐藏维度。深层 RNN 通过堆叠多层增加深度，低层输出作高层输入，每层学习不同抽象层次的特征。</p>
 
 <!-- SVG: 深层RNN -->
@@ -1462,12 +1483,20 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 <div class="svg-caption">图 9：深层堆叠 RNN — 3 层 RNN，每层 4 个时间步，低层输出作高层输入</div>
 </div>
 
-<h3>5.5 层数选择与残差连接</h3>
+<h3>5.5 深层 RNN 的计算公式</h3>
+<p>第 $l$ 层在时刻 $t$ 的隐藏状态由两路驱动：同层上一时刻 $h_{t-1}^{(l)}$（层内循环连接）与当前时刻的低层输出 $h_t^{(l-1)}$（层间传递）：</p>
+<div class="formula multi" data-eq="(19)">
+$$h_t^{(l)} = \tanh\left(W^{(l)} h_{t-1}^{(l)} + V^{(l)} h_t^{(l-1)} + b^{(l)}\right)$$
+$$h_t^{(l)} = h_t^{(l-1)} + \text{RNN}^{(l)}(h_t^{(l-1)}, h_{t-1}^{(l)}) \quad \text{（可选残差连接）}$$
+</div>
+
+<h3>5.6 深层 RNN 的层数选择与适用场景</h3>
 <ul>
   <li><strong>1-2 层</strong>：适合简单任务（情感分析、短文本分类）</li>
   <li><strong>2-4 层</strong>：适合中等复杂度任务（机器翻译编码器/解码器）</li>
   <li><strong>4 层以上</strong>：可引入残差连接 $h_t^{(l)} = h_t^{(l-1)} + \text{RNN}^{(l)}(\ldots)$ 缓解梯度消失</li>
 </ul>
+<p>深层 RNN 适合需要层次化建模的任务，如语音识别（底层音素 → 高层语义）、机器翻译（编码器逐层压缩语义）、语言模型与序列标注（局部与全局特征组合）；受梯度消失与训练难度限制，数据稀缺或实时性要求高的场景宜采用浅层结构。</p>
 
 </section>
 
@@ -1483,9 +1512,9 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 <div class="svg-box">
 <svg viewBox="0 0 820 360" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <marker id="arr8" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
-    <marker id="arr8g" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker>
-    <marker id="arr8o" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ea580c"/></marker>
+    <marker id="arr8" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L0,7 L7,3.5 z" fill="#2563eb"/></marker>
+    <marker id="arr8g" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L0,7 L7,3.5 z" fill="#059669"/></marker>
+    <marker id="arr8o" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L0,7 L7,3.5 z" fill="#ea580c"/></marker>
   </defs>
   <text x="200" y="25" text-anchor="middle" fill="#2563eb" font-size="16" font-weight="bold">编码器 (Encoder)</text>
   <rect x="60" y="80" width="80" height="55" rx="10" fill="#f8fafc" stroke="#2563eb" stroke-width="2"/>
@@ -1507,10 +1536,10 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
   <line x1="220" y1="135" x2="220" y2="158" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr8)"/>
   <line x1="340" y1="135" x2="340" y2="158" stroke="#cbd5e1" stroke-width="1" marker-end="url(#arr8)"/>
 
-  <rect x="400" y="85" width="60" height="45" rx="10" fill="#f8fafc" stroke="#ea580c" stroke-width="2.5" class="pulse-node"/>
+  <rect x="400" y="85" width="60" height="45" rx="10" fill="#f8fafc" stroke="#ea580c" stroke-width="2.5"/>
   <text x="430" y="105" text-anchor="middle" fill="#ea580c" font-size="12" font-weight="bold">context</text>
   <text x="430" y="120" text-anchor="middle" fill="#ea580c" font-size="11">c</text>
-  <line x1="380" y1="107" x2="398" y2="107" stroke="#ea580c" stroke-width="2.5" class="pulse-node" marker-end="url(#arr8o)"/>
+  <line x1="380" y1="107" x2="398" y2="107" stroke="#ea580c" stroke-width="2.5" marker-end="url(#arr8o)"/>
 
   <text x="650" y="25" text-anchor="middle" fill="#059669" font-size="16" font-weight="bold">解码器 (Decoder)</text>
   <rect x="500" y="80" width="80" height="55" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="2"/>
@@ -1547,7 +1576,7 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 
 <h3>6.2 注意力增强 Seq2Seq</h3>
 <p>基础 Seq2Seq 的瓶颈是：整个输入序列被压缩为一个固定长度的上下文向量。Bahdanau 注意力机制让解码器在每步动态关注编码器的不同位置：</p>
-<div class="formula" data-eq="(19)">$$e_{t,i} = \text{score}(s_{t-1}, h_i^{\text{enc}}) \;\rightarrow\; \alpha_{t,i} = \text{softmax}(e_{t,i}) \;\rightarrow\; c_t = \sum_i \alpha_{t,i} \cdot h_i^{\text{enc}}$$</div>
+<div class="formula" data-eq="(20)">$$e_{t,i} = \text{score}(s_{t-1}, h_i^{\text{enc}}) \;\rightarrow\; \alpha_{t,i} = \text{softmax}(e_{t,i}) \;\rightarrow\; c_t = \sum_i \alpha_{t,i} \cdot h_i^{\text{enc}}$$</div>
 
 </section>
 
@@ -1558,7 +1587,7 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
 
 <h3>7.1 Minimal Gated Unit (MGU)</h3>
 <p>进一步简化 GRU，只保留一个门，参数量约为 GRU 的 2/3：</p>
-<div class="formula" data-eq="(20)">$$h_t = (1 - f_t) \odot h_{t-1} + f_t \odot \tanh(W \cdot [f_t \odot h_{t-1}, x_t])$$</div>
+<div class="formula" data-eq="(21)">$$h_t = (1 - f_t) \odot h_{t-1} + f_t \odot \tanh(W \cdot [f_t \odot h_{t-1}, x_t])$$</div>
 
 <h3>7.2 回声状态网络 (ESN)</h3>
 <p>储备池——随机初始化且不训练的递归层，只训练输出层线性权重。训练极快但表达能力有限。</p>
@@ -1589,7 +1618,7 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
   <text x="390" y="45" text-anchor="middle" fill="#ea580c" font-size="16" font-weight="bold">LSTM</text>
   <text x="390" y="65" text-anchor="middle" fill="#475569" font-size="12">3 个门 · 2 个状态</text>
   <rect x="300" y="90" width="180" height="60" rx="10" fill="#f8fafc" stroke="#ea580c" stroke-width="1.5"/>
-  <text x="390" y="112" text-anchor="middle" fill="#ea580c" font-size="12">f_t, i_t, C̃_t, o_t</text>
+  <text x="390" y="112" text-anchor="middle" fill="#ea580c" font-size="12">f<tspan dy="2" font-size="7.2">t</tspan><tspan dy="-2">, i</tspan><tspan dy="2" font-size="7.2">t</tspan><tspan dy="-2">, C̃</tspan><tspan dy="2" font-size="7.2">t</tspan><tspan dy="-2">, o</tspan><tspan dy="2" font-size="7.2">t</tspan></text>
   <text x="390" y="132" text-anchor="middle" fill="#475569" font-size="11">遗忘+输入+输出门</text>
   <text x="390" y="195" text-anchor="middle" fill="#ea580c" font-size="13">复杂度：高</text>
   <text x="390" y="218" text-anchor="middle" fill="#475569" font-size="11">参数：12h(h+d)</text>
@@ -1601,7 +1630,7 @@ $$y_t = W_{hy} [\overrightarrow{h}_t;\; \overleftarrow{h}_t] + b_y$$
   <text x="645" y="45" text-anchor="middle" fill="#059669" font-size="16" font-weight="bold">GRU</text>
   <text x="645" y="65" text-anchor="middle" fill="#475569" font-size="12">2 个门 · 1 个状态</text>
   <rect x="560" y="90" width="170" height="60" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
-  <text x="645" y="112" text-anchor="middle" fill="#059669" font-size="13">z_t, r_t, h̃_t</text>
+  <text x="645" y="112" text-anchor="middle" fill="#059669" font-size="13">z<tspan dy="2.2" font-size="7.8">t</tspan><tspan dy="-2.2">, r</tspan><tspan dy="2.2" font-size="7.8">t</tspan><tspan dy="-2.2">, h̃</tspan><tspan dy="2.2" font-size="7.8">t</tspan></text>
   <text x="645" y="132" text-anchor="middle" fill="#475569" font-size="11">更新+重置门</text>
   <text x="645" y="195" text-anchor="middle" fill="#059669" font-size="13">复杂度：中</text>
   <text x="645" y="218" text-anchor="middle" fill="#475569" font-size="11">参数：9h(h+d)</text>
@@ -1863,7 +1892,7 @@ criterion = nn.CrossEntropyLoss()
 
 <!-- SVG: 演进时间线 -->
 <div class="svg-box">
-<svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 130 800 290" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <marker id="arr13" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
   </defs>
@@ -1954,21 +1983,21 @@ criterion = nn.CrossEntropyLoss()
 <section id="refs">
 <h2>参考文献</h2>
 <ol>
-  <li>Rumelhart, D. E., Hinton, G. E., & Williams, R. J. (1986). <em>Learning representations by back-propagating errors</em>. Nature, 323(6088), 533-536.</li>
-  <li>Elman, J. L. (1990). <em>Finding structure in time</em>. Cognitive Science, 14(2), 179-211.</li>
-  <li>Hochreiter, S. (1991). <em>Untersuchungen zu dynamischen neuronalen Netzen</em>. Diplomarbeit, TU München.</li>
-  <li>Hochreiter, S., & Schmidhuber, J. (1997). <em>Long short-term memory</em>. Neural Computation, 9(8), 1735-1780.</li>
-  <li>Schuster, M., & Paliwal, K. K. (1997). <em>Bidirectional recurrent neural networks</em>. IEEE TSP, 45(11), 2673-2681.</li>
-  <li>Jaeger, H. (2001). <em>The "echo state" approach to analysing and training recurrent neural networks</em>. GMD Report 148.</li>
-  <li>Graves, A., & Schmidhuber, J. (2005). <em>Framewise phoneme classification with bidirectional LSTM</em>. Neural Networks, 18(5-6), 602-610.</li>
-  <li>Cho, K., et al. (2014). <em>Learning phrase representations using RNN encoder-decoder for statistical machine translation</em>. EMNLP 2014.</li>
-  <li>Sutskever, I., Vinyals, O., & Le, Q. V. (2014). <em>Sequence to sequence learning with neural networks</em>. NeurIPS 2014.</li>
-  <li>Bahdanau, D., Cho, K., & Bengio, Y. (2015). <em>Neural machine translation by jointly learning to align and translate</em>. ICLR 2015.</li>
-  <li>Huang, Z., Xu, W., & Yu, K. (2015). <em>Bidirectional LSTM-CRF models for sequence tagging</em>. arXiv:1508.01991.</li>
-  <li>Vaswani, A., et al. (2017). <em>Attention is all you need</em>. NeurIPS 2017.</li>
-  <li>Peng, B. L., et al. (2023). <em>RWKV: Reinventing RNNs for the transformer era</em>. arXiv:2305.13048.</li>
-  <li>Gu, A., & Dao, T. (2024). <em>Mamba: Linear-time sequence modeling with selective state spaces</em>. arXiv:2312.00752.</li>
-  <li>Pascanu, R., Mikolov, T., & Bengio, Y. (2013). <em>On the difficulty of training recurrent neural networks</em>. ICML 2013.</li>
+  <li>Rumelhart, D. E., Hinton, G. E., & Williams, R. J. (1986). <em>Learning representations by back-propagating errors</em>. Nature, 323(6088), 533-536. (反向传播奠基论文，BP 算法/多层网络学习/循环网络训练基石)</li>
+  <li>Elman, J. L. (1990). <em>Finding structure in time</em>. Cognitive Science, 14(2), 179-211. (Elman 网络提出，简单循环网络/隐藏状态记忆/时间结构建模)</li>
+  <li>Hochreiter, S. (1991). <em>Untersuchungen zu dynamischen neuronalen Netzen</em>. Diplomarbeit, TU München. (梯度消失问题首次系统分析，长序列训练困难/误差流衰减)</li>
+  <li>Hochreiter, S., & Schmidhuber, J. (1997). <em>Long short-term memory</em>. Neural Computation, 9(8), 1735-1780. (LSTM 原始论文，记忆单元/门控机制/长程依赖/细胞状态)</li>
+  <li>Schuster, M., & Paliwal, K. K. (1997). <em>Bidirectional recurrent neural networks</em>. IEEE TSP, 45(11), 2673-2681. (双向 RNN 原始论文，前后向隐藏层/未来上下文/序列标注)</li>
+  <li>Jaeger, H. (2001). <em>The "echo state" approach to analysing and training recurrent neural networks</em>. GMD Report 148. (回声状态网络奠基，储备池/仅训练输出层/快速训练)</li>
+  <li>Graves, A., & Schmidhuber, J. (2005). <em>Framewise phoneme classification with bidirectional LSTM</em>. Neural Networks, 18(5-6), 602-610. (双向 LSTM 语音应用，CTC/帧级音素分类/序列标注)</li>
+  <li>Cho, K., et al. (2014). <em>Learning phrase representations using RNN encoder-decoder for statistical machine translation</em>. EMNLP 2014. (GRU 原始论文，编码器-解码器/门控循环单元/短语表示)</li>
+  <li>Sutskever, I., Vinyals, O., & Le, Q. V. (2014). <em>Sequence to sequence learning with neural networks</em>. NeurIPS 2014. (Seq2Seq 奠基论文，序列映射/编码器解码器/语言建模训练)</li>
+  <li>Bahdanau, D., Cho, K., & Bengio, Y. (2015). <em>Neural machine translation by jointly learning to align and translate</em>. ICLR 2015. (注意力机制原始论文，软对齐/上下文向量/神经机器翻译)</li>
+  <li>Huang, Z., Xu, W., & Yu, K. (2015). <em>Bidirectional LSTM-CRF models for sequence tagging</em>. arXiv:1508.01991. (BiLSTM-CRF 经典架构，序列标注/条件随机场/命名实体识别)</li>
+  <li>Vaswani, A., et al. (2017). <em>Attention is all you need</em>. NeurIPS 2017. (Transformer 原始论文，自注意力/多头注意力/并行化/位置编码)</li>
+  <li>Peng, B. L., et al. (2023). <em>RWKV: Reinventing RNNs for the transformer era</em>. arXiv:2305.13048. (RWKV 架构论文，线性注意力/循环与注意力混合/高效推理)</li>
+  <li>Gu, A., & Dao, T. (2024). <em>Mamba: Linear-time sequence modeling with selective state spaces</em>. arXiv:2312.00752. (Mamba 状态空间模型，选择性扫描/线性时间序列建模/硬件感知算法)</li>
+  <li>Pascanu, R., Mikolov, T., & Bengio, Y. (2013). <em>On the difficulty of training recurrent neural networks</em>. ICML 2013. (RNN 训练困难分析，梯度消失与爆炸/梯度截断/雅可比范数)</li>
 </ol>
 </section>
 
